@@ -1,0 +1,4 @@
+MODULO,VERSION_ODOO,CLIENTE,ENTORNO,VERSION_MODULO,FECHA,ULTIMO_UPDATE,ESTADO,RUTA
+bcv_rate_update_venezuela,19.0,integraiadev_19,development,19.0.1.0.0,2026-04-26,,migrado,shared/bcv_rate_update_venezuela/19.0
+chat_bot_integra,19.0,integraiadev_19,development,19.0.1.0.0,2026-04-26,,migrado,shared/chat_bot_integra/19.0
+chat_bot_n8n_ia,19.0,integraiadev_19,development,19.0.1.0.0,2026-04-26,,migrado,shared/chat_bot_n8n_ia/19.0
