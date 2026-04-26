@@ -15,8 +15,8 @@
                     <field name="campo_destino"/>
                     <field name="es_requerido"/>
                     <field name="es_paso_telefono"/>
-                    <field name="mensaje_prompt"/>
-                    <field name="mensaje_error"/>
+                    <!-- <field name="mensaje_prompt"/>
+                    <field name="mensaje_error"/> -->
                 </list>
             </field>
         </record>
@@ -42,12 +42,12 @@
                         <group string="Mensajes">
                             <field name="nombre_mostrar" 
                                 placeholder="Ej: Teléfono, Nombre completo, Correo electrónico"/>
-                            <field name="mensaje_prompt" 
+                            <!-- <field name="mensaje_prompt" 
                                 widget="textarea" 
                                 placeholder="Ej: Por favor, ingresa tu número de teléfono:"/>
                             <field name="mensaje_error" 
                                 widget="textarea" 
-                                placeholder="Ej: Número inválido, intenta de nuevo."/>
+                                placeholder="Ej: Número inválido, intenta de nuevo."/> -->
                         </group>
                     </sheet>
                 </form>

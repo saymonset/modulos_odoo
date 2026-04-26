@@ -36,8 +36,8 @@
                                         <field name="tipo_dato"/>
                                         <field name="campo_destino"/>
                                         <field name="es_requerido"/>
-                                        <field name="mensaje_prompt"/>
-                                        <field name="mensaje_error"/>
+                                        <!-- <field name="mensaje_prompt"/>
+                                        <field name="mensaje_error"/> -->
                                     </list>
                                 </field>
                             </page>

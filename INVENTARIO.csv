@@ -25,3 +25,6 @@ base_menu_visibility_restriction,18.0,cliente1,development,18.0.1.0.0,2026-04-26
 base_user_role,18.0,cliente1,development,18.0.1.0.0,2026-04-26,,migrado,shared/base_user_role/18.0
 web_responsive,18.0,cliente1,development,18.0.1.0.0,2026-04-26,,migrado,shared/web_responsive/18.0
 website_whatsapp,18.0,cliente1,development,18.0.1.0.0,2026-04-26,,migrado,shared/website_whatsapp/18.0
+chat_bot_n8n_ia,19.0,integraiadev_19,development,19.0.1.0.0,2026-04-26,,migrado,shared/chat_bot_n8n_ia/19.0
+bcv_rate_update_venezuela,19.0,integraiadev_19,development,19.0.1.0.0,2026-04-26,,migrado,shared/bcv_rate_update_venezuela/19.0
+chat_bot_integra,19.0,integraiadev_19,development,19.0.1.0.0,2026-04-26,,migrado,shared/chat_bot_integra/19.0
