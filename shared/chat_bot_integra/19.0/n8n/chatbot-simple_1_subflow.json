@@ -1,4 +1,4 @@
- {
+{
   "name": "chatbot-simple_1_subflow",
   "nodes": [
     {
@@ -29,7 +29,7 @@
             {
               "id": "f85334e7-e910-4938-8c4b-4555f55c7ba0",
               "name": "text",
-              "value": "={{ $json.text || '0'}}",
+              "value": "={{ $json.text || $json.image_url}}",
               "type": "string"
             },
             {
@@ -580,8 +580,8 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        288,
-        800
+        16,
+        704
       ],
       "id": "8239e884-b952-44d9-bf55-89d574c25f5a",
       "name": "When clicking ‘Execute workflow’"
@@ -731,21 +731,12 @@
     "When clicking ‘Execute workflow’": [
       {
         "json": {
-          "text": "0424271145",
+          "text": "",
           "session_id": "584142711347",
-          "image_url": "",
-          "platform": "whatsapp",
           "account_id": "1",
           "conversation_id": "3",
-          "message_type": "{{$json.message_type}}",
-          "user_name": "integraia",
-          "user_number": "+584142711347",
-          "channel": null,
-          "content": null,
-          "file_type": null,
-          "phone_number": null,
-          "user_message": null,
-          "agente_desactivado": null
+          "platform": "whatsapp",
+          "image_url": "https://chatwoot.integraia.lat/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBHUT09IiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--3f42b7fded35a0ba0e5f6fc53b60809331cff77d/File.jpg"
         }
       }
     ]
@@ -935,7 +926,7 @@
       "main": [
         [
           {
-            "node": "Consultar_estado_Odoo",
+            "node": "Preparar_Input_AI",
             "type": "main",
             "index": 0
           }
@@ -975,7 +966,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "ef9e2769-a447-44d3-98a6-48fef609aa03",
+  "versionId": "92918aef-79a7-4cdc-9ad9-e15b6dac350b",
   "meta": {
     "instanceId": "ac8b8e9b824b3711008329bf41bf68736c3261debaa6dcb0eaceede9a0a7edac"
   },
