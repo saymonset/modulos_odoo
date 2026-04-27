@@ -29,4 +29,7 @@
     'installable': True,
     'auto_install': False,
     'license': 'LGPL-3',
+     'images': [
+        'chat_bot_n8n_ia/static/description/icon.png'
+    ],
 }
