@@ -352,7 +352,7 @@ class SessionState(models.Model):
                 registro.write({'estado': estado_actual})
                 
                 # Respuesta pidiendo más o finalizar
-                mensaje_recibido = f"¡Excelente! He recibido la imagen ✅. ¿Deseas agregar otra imagen? O si ya terminaste, escribe *'listo'* para continuar con los demás pasos."
+                mensaje_recibido = f"¡Excelente! He recibido la imagen ✅. ¿Deseas agregar otra imagen? O si ya finalizastes, escribe *'listo'* para continuar."
                 return {
                     'success': True,
                     'finalizado': False,
