@@ -13,7 +13,7 @@ git clone -b 19.0 --single-branch --depth 1 git@github.com:OCA/account-financial
 
 0-) Te bajaras del github pero solom buscaras las carpetas necesarias, lo mueves a la carpeta oca y luego borras la carpeta la carpeta original que tiene un .git
 1-) install account_usability
-1-1-) reposrt_xlsx_helper,   report_xlsx
+1-1-) report_xlsx_helper,   report_xlsx
 ### account_asset_management > este es de activos fijos, solo esta en odoo 18 
 # Solo version 18
 2-) account_asset_management
