@@ -6,6 +6,7 @@
 __pycache__/
 *.log
 logs/
+oca_original/
 *.bak
 .DS_Store
 *.swp
