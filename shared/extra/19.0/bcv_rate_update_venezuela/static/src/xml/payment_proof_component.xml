@@ -19,18 +19,20 @@
                     <div t-elif="state.bank_details.error">
                         <span class="text-danger">Error: <t t-esc="state.bank_details.error"/></span>
                     </div>
-                    <div t-elif="state.bank_details.bank_name">
-                        <p><strong>Banco destino:</strong> <t t-esc="state.bank_details.bank_name"/></p>
-                        <p><strong>Número de cuenta:</strong> <t t-esc="state.bank_details.account_number or 'No especificado'"/></p>
-                        <p><strong>Titular de la cuenta:</strong> <t t-esc="state.bank_details.account_holder or state.bank_details.company_name"/></p>
-                        <p t-if="state.bank_details.phone"><strong>Teléfono de contacto:</strong> <t t-esc="state.bank_details.phone"/></p>
-                        <p t-if="state.bank_details.email"><strong>Email:</strong> <t t-esc="state.bank_details.email"/></p>
-                        <p t-if="state.bank_details.routing_number"><strong>Código de banco (BIC):</strong> <t t-esc="state.bank_details.routing_number"/></p>
-                        <p t-if="state.bank_details.instructions"><strong>Instrucciones adicionales:</strong> <t t-esc="state.bank_details.instructions"/></p>
-                        <hr/>
-                        <p><strong>Referencia de pago:</strong> Número de orden <span class="badge bg-secondary" t-esc="state.reference or 'XXXXXX'"/></p>
-                        <p class="text-muted small mb-0">Realice su transferencia o pago móvil a los datos indicados y luego adjunte el comprobante.</p>
-                    </div>
+                    <div t-if="state.bank_details.bank_name">
+                            <p><strong>Banco destino:</strong> <t t-esc="state.bank_details.bank_name"/></p>
+                            <p><strong>Número de cuenta:</strong> <t t-esc="state.bank_details.account_number or 'No especificado'"/></p>
+                            <p><strong>Titular de la cuenta:</strong> <t t-esc="state.bank_details.account_holder or state.bank_details.company_name"/></p>
+                            <p t-if="state.bank_details.phone"><strong>Teléfono de contacto:</strong> <t t-esc="state.bank_details.phone"/></p>
+                            <p t-if="state.bank_details.company_rif"><strong>RIF (VAT):</strong> <t t-esc="state.bank_details.company_rif"/></p>   <!-- ← Nueva línea -->
+                            <!-- <p><strong>(Cedula):</strong> <t t-esc="state.bank_details.company_rif or 'No disponible'"/></p> -->
+                            <p t-if="state.bank_details.email"><strong>Email:</strong> <t t-esc="state.bank_details.email"/></p>
+                            <p t-if="state.bank_details.routing_number"><strong>Código de banco (BIC):</strong> <t t-esc="state.bank_details.routing_number"/></p>
+                            <p t-if="state.bank_details.instructions"><strong>Instrucciones adicionales:</strong> <t t-esc="state.bank_details.instructions"/></p>
+                            <hr/>
+                            <p><strong>Referencia de pago:</strong> Número de orden <span class="badge bg-secondary" t-esc="state.reference or 'XXXXXX'"/></p>
+                            <p class="text-muted small mb-0">Realice su transferencia o pago móvil a los datos indicados y luego adjunte el comprobante.</p>
+                        </div>
                     <div t-else="">
                         <p>Seleccione un banco destino para ver las instrucciones de pago.</p>
                         <p class="text-muted small mb-0">Luego adjunte el comprobante de pago.</p>

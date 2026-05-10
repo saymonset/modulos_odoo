@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+
+
     <!-- ======================== 1. LISTADO DE PRODUCTOS ======================== -->
     <template id="products_item_price_usd" inherit_id="website_sale.products_item" name="Product Grid Price with USD">
         <xpath expr="//div[hasclass('product_price')]" position="after">
