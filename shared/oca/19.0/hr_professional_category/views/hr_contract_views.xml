@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="hr_version_view_tree" model="ir.ui.view">
+        <field name="name">hr.version.tree</field>
+        <field name="model">hr.version</field>
+        <field name="inherit_id" ref="hr.hr_version_list_view" />
+        <field name="arch" type="xml">
+            <field name="job_id" position="after">
+                <field name="professional_category_id" optional="show" />
+            </field>
+        </field>
+    </record>
+    <record id="hr_version_view_search" model="ir.ui.view">
+        <field name="name">hr.version.search</field>
+        <field name="model">hr.version</field>
+        <field name="inherit_id" ref="hr.hr_version_search_view" />
+        <field name="arch" type="xml">
+            <field name="job_id" position="after">
+                <field name="professional_category_id" />
+            </field>
+            <filter name="group_by_job" position="after">
+                <filter
+                    string="Professional Category"
+                    name="group_by_professional_category_id"
+                    domain="[]"
+                    context="{'group_by': 'professional_category_id'}"
+                />
+            </filter>
+        </field>
+    </record>
+<!-- No form view for hr.version in Community? Commenting out for now -->
+<!--
+    <record id="hr_contract_view_form" model="ir.ui.view">
+        <field name="name">hr.contract.form</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form" />
+        <field name="arch" type="xml">
+            <field name="department_id" position="after">
+                <field name="professional_category_id" />
+            </field>
+        </field>
+    </record>
+-->
+</odoo>
