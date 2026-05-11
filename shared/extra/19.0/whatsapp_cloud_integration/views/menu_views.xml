@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_whatsapp_root" name="WhatsApp" sequence="10" web_icon="whatsapp_cloud_integration,static/description/icon.png"/>
+    <menuitem id="menu_waba_account" name="Cuentas WABA" parent="menu_whatsapp_root" action="action_waba_account" sequence="10"/>
+</odoo>

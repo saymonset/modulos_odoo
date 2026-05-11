@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Server action para enviar mensaje (opcional, se puede llamar desde un botón en partner) -->
+    <record id="ir_action_send_whatsapp_partner" model="ir.actions.server">
+        <field name="name">Send WhatsApp Message (from partner)</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="binding_model_id" ref="base.model_res_partner"/>
+        <field name="binding_view_types">form</field>
+        <field name="state">code</field>
+        <field name="code">
+            action = {
+                'type': 'ir.actions.act_window',
+                'res_model': 'whatsapp.message',
+                'view_mode': 'form',
+                'target': 'new',
+                'context': {
+                    'default_partner_id': record.id,
+                    'default_waba_account_id': env.ref('whatsapp_cloud_integration.default_waba_account', False) and env.ref('whatsapp_cloud_integration.default_waba_account').id,
+                }
+            }
+        </field>
+    </record>
+
+    <!-- Cron: Revisar webhook o mensajes no entregados (placeholder) -->
+    <record id="cron_check_whatsapp_incoming" model="ir.cron">
+        <field name="name">Check WhatsApp Incoming Messages</field>
+        <field name="model_id" ref="model_waba_account"/>
+        <field name="state">code</field>
+        <field name="code">model._check_incoming_messages()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="doall">False</field>
+        <field name="active">False</field>
+    </record>
+
+    <!-- Definir un registro por defecto de WABA account (opcional) -->
+    <record id="default_waba_account" model="waba.account">
+        <field name="name">Test WhatsApp Account</field>
+        <field name="phone_number">+1 555-190-5155</field>
+        <field name="phone_number_id">1062113076989009</field>
+        <field name="access_token">EAAUQgN2MLxIBR...</field>
+        <field name="business_account_id">1634570824541885</field>
+        <field name="verify_token">my_secure_verify_token</field>
+        <field name="company_id" ref="base.main_company"/>
+    </record>
+</odoo>

@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_waba_account_user,waba.account.user,model_waba_account,base.group_user,1,1,1,1
+access_whatsapp_history_user,whatsapp.history.user,model_whatsapp_history,base.group_user,1,1,1,1
+access_whatsapp_message_wizard_user,whatsapp.message.wizard.user,model_whatsapp_message_wizard,base.group_user,1,1,1,1

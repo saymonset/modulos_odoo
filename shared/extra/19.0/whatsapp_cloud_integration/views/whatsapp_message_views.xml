@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_send_whatsapp_message" model="ir.actions.act_window">
+        <field name="name">Send WhatsApp Message</field>
+        <field name="res_model">whatsapp.message.wizard</field>   <!-- ← cambiado -->
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="base.model_res_partner"/>
+        <field name="binding_view_types">form</field>
+        <field name="help" type="html">
+            <p>Send a templated message via WhatsApp Cloud API.</p>
+        </field>
+    </record>
+
+    <record id="view_whatsapp_message_form" model="ir.ui.view">
+    <field name="name">whatsapp.message.wizard.form</field>
+    <field name="model">whatsapp.message.wizard</field>
+    <field name="arch" type="xml">
+        <form>
+            <sheet>
+                <group>
+                    <field name="partner_id"/>
+                    <field name="waba_account_id" options="{'no_create': True}"/>
+                    <field name="template_name" placeholder="ej: hello_world"/>
+                    <field name="language_code" widget="radio"/>   <!-- ← nuevo -->
+                    <field name="parameter_values" placeholder='["valor1", "valor2"]'/>
+                </group>
+                <footer>
+                    <button name="action_send_whatsapp_message" string="Enviar" type="object" class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </sheet>
+        </form>
+    </field>
+</record>
+</odoo>
