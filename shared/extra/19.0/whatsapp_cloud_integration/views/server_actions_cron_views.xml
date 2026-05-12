@@ -10,7 +10,7 @@
         <field name="code">
             action = {
                 'type': 'ir.actions.act_window',
-                'res_model': 'whatsapp.message',
+                'res_model': 'whatsapp.message.wizard',
                 'view_mode': 'form',
                 'target': 'new',
                 'context': {
@@ -21,7 +21,7 @@
         </field>
     </record>
 
-    <!-- Cron: Revisar webhook o mensajes no entregados (placeholder) -->
+    <!-- Cron desactivado (placeholder) – Adaptado a Odoo 19 -->
     <record id="cron_check_whatsapp_incoming" model="ir.cron">
         <field name="name">Check WhatsApp Incoming Messages</field>
         <field name="model_id" ref="model_waba_account"/>
@@ -29,9 +29,8 @@
         <field name="code">model._check_incoming_messages()</field>
         <field name="interval_number">5</field>
         <field name="interval_type">minutes</field>
-        <field name="numbercall">-1</field>
-        <field name="doall">False</field>
         <field name="active">False</field>
+        <!-- En Odoo 19 los campos numbercall y doall ya no existen, los omitimos -->
     </record>
 
     <!-- Definir un registro por defecto de WABA account (opcional) -->

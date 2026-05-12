@@ -13,15 +13,11 @@ class WhatsappMessageWizard(models.TransientModel):
     partner_id = fields.Many2one('res.partner', string='Cliente', required=True)
     waba_account_id = fields.Many2one('waba.account', string='Cuenta WhatsApp', required=True,
                                       domain=[('active', '=', True)])
-    template_name = fields.Char(string='Nombre de la Plantilla', required=True,
-                                help='Ej: hello_world, pedido_confirmado_con_ubicacion')
-    language_code = fields.Selection([
-        ('en_US', 'Inglés (US)'),
-        ('es', 'Español'),
-    ], string='Idioma de la plantilla', required=True, default='es',
-        help='Selecciona el idioma en que está creada la plantilla en Meta.')
-    parameter_values = fields.Text(string='Valores de Parámetros (JSON)',
-                                   help='Ej: ["Simón", "s0003", "+58414271652", "Mi Tienda"]')
+    template_id = fields.Many2one('whatsapp.template', string='Plantilla', required=True)
+    parameter_values = fields.Text(
+        string='Valores de Parámetros (JSON)',
+        help='Ej: ["Simón", "s0003", "CC El Mercado", "7:00 p.m.", "+584142711347", "integraia.lat"]'
+    )
 
     def action_send_whatsapp_message(self):
         self.ensure_one()
@@ -39,13 +35,15 @@ class WhatsappMessageWizard(models.TransientModel):
             'Content-Type': 'application/json'
         }
 
+        # Obtener nombre técnico e idioma de la plantilla maestra
+        template = self.template_id
         payload = {
             'messaging_product': 'whatsapp',
             'to': recipient,
             'type': 'template',
             'template': {
-                'name': self.template_name,
-                'language': {'code': self.language_code}   # ← usa el idioma seleccionado
+                'name': template.name,
+                'language': {'code': template.language_code}
             }
         }
 
@@ -74,7 +72,7 @@ class WhatsappMessageWizard(models.TransientModel):
                 'partner_id': self.partner_id.id,
                 'waba_account_id': self.waba_account_id.id,
                 'direction': 'outgoing',
-                'template_name': self.template_name,
+                'template_name': template.display_name,   # guardamos el nombre visible
                 'recipient_number': recipient,
                 'message_body': json.dumps(payload, indent=2),
                 'response_data': json.dumps(result, indent=2),
@@ -104,7 +102,7 @@ class WhatsappMessageWizard(models.TransientModel):
                 'partner_id': self.partner_id.id,
                 'waba_account_id': self.waba_account_id.id,
                 'direction': 'outgoing',
-                'template_name': self.template_name,
+                'template_name': template.display_name,
                 'recipient_number': recipient,
                 'message_body': json.dumps(payload, indent=2),
                 'response_data': error_detail,

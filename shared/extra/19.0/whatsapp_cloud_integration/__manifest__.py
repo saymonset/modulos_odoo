@@ -11,14 +11,15 @@
     'author': 'Simon Alberto Rodriguez Pacheco',
     'website': 'https://integraia.lat',
     'maintainer': 'Simon Alberto Rodriguez Pacheco',
-    'depends': ['base', 'mail', 'contacts'],
+    'depends': ['base', 'mail'],
     'data': [
         'security/ir.model.access.csv',
-        'views/waba_account_views.xml',          # acciones y vistas
-        'views/whatsapp_message_views.xml',
+        'views/waba_account_views.xml',
         'views/whatsapp_history_views.xml',
-        'views/menu_views.xml',                  # menús, después de las acciones
-        'data/server_actions_cron.xml',
+        'views/whatsapp_message_views.xml',
+        'views/whatsapp_template_views.xml',   # ← nuevo
+        'views/menu_views.xml',
+        'views/server_actions_cron_views.xml',
     ],
     'installable': True,
     'application': True,

@@ -2,4 +2,6 @@
 <odoo>
     <menuitem id="menu_whatsapp_root" name="WhatsApp" sequence="10" web_icon="whatsapp_cloud_integration,static/description/icon.png"/>
     <menuitem id="menu_waba_account" name="Cuentas WABA" parent="menu_whatsapp_root" action="action_waba_account" sequence="10"/>
+    <menuitem id="menu_whatsapp_templates" name="Plantillas" parent="menu_whatsapp_root" action="action_whatsapp_template" sequence="15"/>
+    <menuitem id="menu_whatsapp_history" name="Historial" parent="menu_whatsapp_root" action="action_whatsapp_history" sequence="20"/>
 </odoo>
