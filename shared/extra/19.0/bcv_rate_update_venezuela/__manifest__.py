@@ -20,6 +20,7 @@
         'point_of_sale',
         'website_sale', 
         'payment',
+        'whatsapp_cloud_integration',
          
     ],
 
