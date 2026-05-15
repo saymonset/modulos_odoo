@@ -10,72 +10,35 @@
 
             <!-- Insertar campos nuevos -->
             <xpath expr="//field[@name='rate']" position="after">
-                <field name="is_bcv_rate"/>
-                <field name="source"/>
-
-                <!-- Campo editable solo si is_bcv_editable = True -->
-                <field name="bcv_rate_value" widget="monetary"
-                       options="{'currency_field': 'currency_id'}"
-                       readonly="not is_bcv_editable"
-                       string="Tasa BCV (1 USD = X)"/>
+                <field name="provider_id" readonly="1"/>
+                <field name="original_value" string="Valor Original (Tasa)"/>
+                <field name="is_bcv_rate" invisible="1"/>
             </xpath>
 
         </field>
     </record>
 
 
-    <!-- Formulario actualización manual -->
-    <record id="view_bcv_rate_update_form" model="ir.ui.view">
-        <field name="name">bcv.rate.update.form</field>
-        <field name="model">bcv.rate.update</field>
-        <field name="arch" type="xml">
-            <form string="Actualizar Tasa BCV">
-
-                <header>
-                    <button name="update_ves_rate_now" type="object"
-                            string="Actualizar Ahora" class="btn-primary"/>
-                </header>
-
-                <sheet>
-                    <group>
-                        <group>
-                            <field name="name"/>
-                            <field name="status"/>
-                        </group>
-
-                        <group>
-                            <field name="update_date"/>
-                            <field name="last_rate"/>
-                        </group>
-                    </group>
-
-                    <div class="alert alert-info" role="status">
-                        La tasa se actualiza automáticamente todos los días a las 8:00 AM.
-                    </div>
-
-                </sheet>
-
-            </form>
-        </field>
-    </record>
-
-
-    <!-- Acción -->
+    <!-- Acción (Redirigida al nuevo modelo genérico para mostrar TODOS los proveedores) -->
     <record id="action_bcv_rate_update" model="ir.actions.act_window">
-        <field name="name">Actualizador BCV</field>
-        <field name="res_model">bcv.rate.update</field>
-        <field name="view_mode">form</field>
+        <field name="name">Actualización de Tasas (BCV, Colombia, Costa Rica)</field>
+        <field name="res_model">currency.rate.provider</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
         <field name="target">current</field>
     </record>
 
-    <!-- Menú -->
+    <!-- Menú Genérico para Odoo Community (bajo Facturación) -->
     <menuitem id="menu_bcv_rate_update_root"
-              name="Tasas BCV"
-              parent="account.menu_finance"/>
+              name="Tasas de Cambio"
+              parent="account.menu_finance"
+              sequence="100"/>
 
     <menuitem id="menu_bcv_rate_update"
-              name="Actualizador BCV"
+              name="Actualización Multi-País"
               parent="menu_bcv_rate_update_root"
-              action="action_bcv_rate_update"/>
+              action="action_bcv_rate_update"
+              sequence="10"/>
 
 </odoo>

@@ -87,7 +87,7 @@ export class PaymentProofComponent extends Component {
                         amount_vef: this.state.amount_vef,
                         amount_usd: this.state.amount_usd,
                     });
-                    this._validateAmounts();
+                    // NO validar aquí aún, esperar a que se determine el método de pago
                 } else {
                     console.warn("No se encontraron los spans con los valores originales");
                     this.notification.add("No se pudieron cargar los montos de la orden.", { type: "warning" });
@@ -103,6 +103,10 @@ export class PaymentProofComponent extends Component {
         onMounted(() => {
             console.log("✅ Componente montado");
             this._bindPaymentMethodChange();
+        });
+
+        onWillUnmount(() => {
+            // Limpiar si es necesario
         });
 
         onWillUnmount(() => {
@@ -265,14 +269,22 @@ async _loadBankDetails(journalId) {
 
     // Verifica ambas condiciones (monto + comprobante)
     _checkAndTogglePaymentButton() {
-        const isAmountValid = this.state.is_valid_amount;
-        const hasValidProof = this.state.proof_valid;
-        const canEnable = isAmountValid && hasValidProof;
-        
-        console.log("=== Verificando condiciones para habilitar botón ===");
-        console.log("Monto válido:", isAmountValid);
-        console.log("Comprobante válido:", hasValidProof);
-        console.log("¿Habilitar botón?", canEnable);
+        // Estrategia: Siempre habilitar a menos que estemos en modo transferencia y falte validación
+        let canEnable = true;
+
+        if (this.state.showSection) {
+            const isAmountValid = this.state.is_valid_amount;
+            const hasValidProof = this.state.proof_valid;
+            canEnable = isAmountValid && hasValidProof;
+            
+            console.log("🔒 Validación de transferencia bancaria activa:", {
+                isAmountValid,
+                hasValidProof,
+                canEnable
+            });
+        } else {
+            console.log("🔓 No es transferencia bancaria, el botón debe estar habilitado");
+        }
         
         this._togglePaymentButton(canEnable);
     }
@@ -282,9 +294,7 @@ async _loadBankDetails(journalId) {
 
         const paymentButton = document.querySelector('button[name="o_payment_submit_button"]') ||
             document.querySelector('.o_payment_btn') ||
-            document.querySelector('#o_payment_form button[type="submit"]') ||
-            document.querySelector('.btn-primary[type="submit"]') ||
-            document.querySelector('button[type="submit"]');
+            document.querySelector('#o_payment_form button[type="submit"]');
         
         console.log("Botón encontrado:", paymentButton);
         
@@ -390,6 +400,7 @@ async _loadBankDetails(journalId) {
             if (!selectedRadio) {
                 console.log("❌ No hay radio seleccionado");
                 this.state.showSection = false;
+                this._togglePaymentButton(true);
                 return;
             }
 
@@ -445,8 +456,9 @@ async _loadBankDetails(journalId) {
                 console.log("HTML del radio:", selectedRadio.outerHTML);
             }
 
-            console.log("🎯 Debe mostrar sección:", shouldShow);
+            console.log("🎯 Resultado de detección - showSection:", shouldShow);
             this.state.showSection = shouldShow;
+            this._checkAndTogglePaymentButton();
         }
 
     async uploadFile(file) {

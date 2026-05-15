@@ -6,19 +6,26 @@
     <!-- ======================== 1. LISTADO DE PRODUCTOS ======================== -->
     <template id="products_item_price_usd" inherit_id="website_sale.products_item" name="Product Grid Price with USD">
         <xpath expr="//div[hasclass('product_price')]" position="after">
-            <div class="product_price_usd text-muted small mt-1">
+            <div class="product_price_usd_container mt-1">
+                <t t-set="rate_info" t-value="website.get_rate_info()"/>
                 <t t-set="usd_currency" t-value="website.env['res.currency'].search([('name','=','USD')], limit=1)"/>
-                <span t-out="product.list_price * website.get_conversion_factor_ves_to_usd()"
-                      t-options="{'widget': 'monetary', 'display_currency': usd_currency}"/>
-            </div>
-        </xpath>
-        <!-- Agregar información de la tasa BCV debajo del precio en USD -->
-        <xpath expr="//div[hasclass('product_price')]" position="after">
-            <div class="bcv_rate_hint text-muted small mt-1" style="font-size: 0.7rem;">
-                <t t-set="bcv_info" t-value="website.get_bcv_rate_info()"/>
-                <i class="fa fa-info-circle"></i>
-                <span t-out="bcv_info['rate_display']"/>
-                <t t-if="bcv_info['date_formatted']"> (<t t-out="bcv_info['date_formatted']"/>)</t>
+                
+                <!-- Precio en USD -->
+                <div class="product_price_usd text-muted small">
+                    <t t-if="rate_info.get('rate') and rate_info.get('rate') != 1.0">
+                        <span t-out="product.list_price * website.get_conversion_factor_ves_to_usd()"
+                              t-options="{'widget': 'monetary', 'display_currency': usd_currency}"/>
+                    </t>
+                    <t t-else="">
+                        <span class="text-danger" style="font-size: 0.7rem;">USD: N/A</span>
+                    </t>
+                </div>
+
+                <!-- Información de la tasa -->
+                <div class="bcv_rate_hint text-muted small" style="font-size: 0.65rem; line-height: 1;">
+                    <i class="fa fa-info-circle"></i>
+                    <span t-out="rate_info['rate_display']"/>
+                </div>
             </div>
         </xpath>
     </template>
@@ -26,19 +33,27 @@
     <!-- ======================== 2. PÁGINA DE DETALLE DEL PRODUCTO ======================== -->
     <template id="product_price_usd" inherit_id="website_sale.product_price" name="Product Detail Price with USD">
         <xpath expr="//div[@name='product_price_container']" position="after">
-            <div class="text-muted small mt-1">
+            <div class="product_price_usd_detail_container mt-2">
+                <t t-set="rate_info" t-value="website.get_rate_info()"/>
                 <t t-set="usd_currency" t-value="website.env['res.currency'].search([('name','=','USD')], limit=1)"/>
-                <span t-out="combination_info['price'] * website.get_conversion_factor_ves_to_usd()"
-                      t-options="{'widget': 'monetary', 'display_currency': usd_currency}"/>
-            </div>
-        </xpath>
-        <!-- Agregar tasa BCV debajo del precio en USD en detalle -->
-        <xpath expr="//div[@name='product_price_container']" position="after">
-            <div class="bcv_rate_hint text-muted small mt-1" style="font-size: 0.8rem;">
-                <t t-set="bcv_info" t-value="website.get_bcv_rate_info()"/>
-                <i class="fa fa-info-circle"></i>
-                <strong>Tasa de cambio oficial:</strong> <span t-out="bcv_info['rate_display']"/>
-                <t t-if="bcv_info['date_formatted']"> (vigente al <t t-out="bcv_info['date_formatted']"/>)</t>
+                
+                <!-- Precio en USD -->
+                <div class="text-muted mb-1">
+                    <t t-if="rate_info.get('rate') and rate_info.get('rate') != 1.0">
+                        <span class="h5" t-out="combination_info['price'] * website.get_conversion_factor_ves_to_usd()"
+                              t-options="{'widget': 'monetary', 'display_currency': usd_currency}"/>
+                    </t>
+                    <t t-else="">
+                        <span class="text-danger small">Conversión USD no disponible</span>
+                    </t>
+                </div>
+
+                <!-- Tasa BCV -->
+                <div class="bcv_rate_hint text-muted small" style="font-size: 0.85rem;">
+                    <i class="fa fa-info-circle"></i>
+                    <strong>Tasa de cambio oficial:</strong> <span t-out="rate_info['rate_display']"/>
+                    <t t-if="rate_info['date_formatted']"> (vigente al <t t-out="rate_info['date_formatted']"/>)</t>
+                </div>
             </div>
         </xpath>
     </template>
@@ -46,23 +61,29 @@
     <!-- ======================== 3. LÍNEAS DEL CARRITO ======================== -->
     <template id="cart_lines_price_usd" inherit_id="website_sale.cart_lines_price" name="Cart Lines Price with USD">
         <xpath expr="//h6[@name='website_sale_cart_line_price']" position="after">
-            <div class="d-md-none text-muted small mt-1">
-                <span t-field="line.price_subtotal_usd_bcv"
-                    t-options="{'widget': 'monetary', 'display_currency': website_sale_order.currency_aux}"/>
-            </div>
-            <div class="d-none d-md-block text-end text-muted small">
-                <span t-field="line.price_subtotal_usd_bcv"
-                    t-options="{'widget': 'monetary', 'display_currency': website_sale_order.currency_aux}"/>
-            </div>
+            <t t-set="rate_info" t-value="website.get_rate_info()"/>
+            <t t-if="rate_info.get('rate') and rate_info.get('rate') != 1.0">
+                <div class="d-md-none text-muted small mt-1">
+                    <span t-field="line.price_subtotal_usd_bcv"
+                        t-options="{'widget': 'monetary', 'display_currency': website_sale_order.currency_aux}"/>
+                </div>
+                <div class="d-none d-md-block text-end text-muted small">
+                    <span t-field="line.price_subtotal_usd_bcv"
+                        t-options="{'widget': 'monetary', 'display_currency': website_sale_order.currency_aux}"/>
+                </div>
+            </t>
         </xpath>
     </template>
 
     <!-- ======================== 4. RESUMEN LATERAL DEL CARRITO (filas de productos) ======================== -->
     <template id="cart_summary_content_usd" inherit_id="website_sale.cart_summary_content" name="Cart Summary with USD">
         <xpath expr="//td[hasclass('td-price')]" position="after">
+            <t t-set="rate_info" t-value="website.get_rate_info()"/>
             <td class="td-price-usd pe-0 pt-3 text-end">
-                <span t-field="line.price_subtotal_usd_bcv"
-                      t-options="{'widget': 'monetary', 'display_currency': website_sale_order.currency_aux}"/>
+                <t t-if="rate_info.get('rate') and rate_info.get('rate') != 1.0">
+                    <span t-field="line.price_subtotal_usd_bcv"
+                          t-options="{'widget': 'monetary', 'display_currency': website_sale_order.currency_aux}"/>
+                </t>
             </td>
         </xpath>
     </template>
@@ -105,13 +126,15 @@
     </template>
 
     <!-- ======================== 6. FOOTER GLOBAL (aparece en todas las páginas) ======================== -->
-    <template id="bcv_rate_info_footer" inherit_id="website.layout" name="BCV Rate Info in Footer">
+    <template id="bcv_rate_info_footer" inherit_id="website.layout" name="Currency Rate Info in Footer">
         <xpath expr="//footer" position="inside">
             <div class="container mt-3 text-center small text-muted border-top pt-2">
-                <t t-set="bcv_info" t-value="website.get_bcv_rate_info()"/>
-                <i class="fa fa-exchange-alt"></i>
-                <strong>Tasa BCV oficial:</strong> <span t-out="bcv_info['rate_display']"/>
-                <t t-if="bcv_info['date_formatted']"> (actualizada el <t t-out="bcv_info['date_formatted']"/>)</t>
+                <t t-set="rate_info" t-value="website.get_rate_info()"/>
+                <t t-if="rate_info.get('date')">
+                    <i class="fa fa-exchange-alt"></i>
+                    <strong>Tasa de cambio oficial:</strong> <span t-out="rate_info['rate_display']"/>
+                    <t t-if="rate_info['date_formatted']"> (actualizada el <t t-out="rate_info['date_formatted']"/>)</t>
+                </t>
             </div>
         </xpath>
     </template>

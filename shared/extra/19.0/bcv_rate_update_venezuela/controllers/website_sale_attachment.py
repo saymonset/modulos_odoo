@@ -9,6 +9,85 @@ _logger = logging.getLogger(__name__)
 class WebsiteSaleAttachment(WebsiteSale):
 
     # -------------------------------------------------------------------------
+    # Búsqueda de partner por email o teléfono (para auto-llenado y evitar duplicados)
+    # -------------------------------------------------------------------------
+    @http.route('/shop/get_partner_data', type='json', auth='public', website=True)
+    def get_partner_data(self, email=None, phone=None):
+        """
+        Busca un partner por email o teléfono y devuelve sus datos de contacto.
+        Solo devuelve datos si el partner NO tiene un usuario asociado (seguridad).
+        """
+        if not email and not phone:
+            return {}
+            
+        domain = []
+        if email:
+            domain.append(('email', '=', email))
+        if phone:
+            domain.append(('phone', '=', phone))
+            
+        if not domain:
+            return {}
+            
+        # Buscar el partner. Si ambos están presentes, buscar por email O teléfono.
+        search_domain = ['|'] * (len(domain) - 1) + domain if len(domain) > 1 else domain
+        
+        partner = request.env['res.partner'].sudo().search(search_domain, limit=1)
+        
+        if partner:
+            # Seguridad: No devolver datos si el partner tiene un usuario de portal/interno
+            # o si es el usuario público.
+            if partner.user_ids or partner.id == request.website.partner_id.id:
+                _logger.info(f"Partner found but has users or is public. Skipping auto-fill for security.")
+                return {'has_user': True}
+                
+            return {
+                'name': partner.name,
+                'street': partner.street,
+                'street2': partner.street2,
+                'city': partner.city,
+                'zip': partner.zip,
+                'country_id': partner.country_id.id,
+                'state_id': partner.state_id.id,
+                'phone': partner.phone,
+                'email': partner.email,
+                'vat': partner.vat,
+            }
+        return {}
+
+    @http.route(['/shop/address/submit'], type='http', methods=['POST'], auth='public', website=True, sitemap=False)
+    def shop_address_submit(self, partner_id=None, **form_data):
+        """
+        Sobrescribe la subida de dirección para intentar vincular a un partner existente
+        si el cliente es un invitado y proporciona un email/teléfono ya registrado.
+        """
+        _logger.info(f"=== shop_address_submit override (partner_id: {partner_id}) ===")
+        
+        # Solo intentar vincular si no viene un partner_id explícito y el carrito es anónimo
+        if not partner_id and request.cart and request.cart._is_anonymous_cart():
+            email = form_data.get('email')
+            phone = form_data.get('phone')
+            
+            domain = []
+            if email:
+                domain.append(('email', '=', email))
+            if phone:
+                domain.append(('phone', '=', phone))
+            
+            if domain:
+                search_domain = ['|'] * (len(domain) - 1) + domain if len(domain) > 1 else domain
+                # Solo vincular si el partner encontrado NO tiene usuarios (evitar hijacking de cuentas)
+                existing_partner = request.env['res.partner'].sudo().search(search_domain + [('user_ids', '=', False)], limit=1)
+                
+                if existing_partner:
+                    _logger.info(f"Vínculando orden a partner existente ID {existing_partner.id} ({existing_partner.name})")
+                    partner_id = existing_partner.id
+                    
+        return super().shop_address_submit(partner_id=partner_id, **form_data)
+
+
+
+    # -------------------------------------------------------------------------
     # Endpoint JSON: obtener total de orden + tasa BCV + equivalente USD
     # -------------------------------------------------------------------------
     @http.route('/payment_proof/get_order_total_and_rate', type='json', auth='public', csrf=False)
@@ -30,35 +109,27 @@ class WebsiteSaleAttachment(WebsiteSale):
             amount_vef = order.amount_total
             _logger.info(f"Monto en VES: {amount_vef}")
 
-            # Consultar directamente la tasa BCV
-            Rate = request.env['res.currency.rate']
-            rate_record = Rate.sudo().search([
-                ('currency_id.name', '=', 'VES'),
-                ('is_bcv_rate', '=', True),
-                ('company_id', '=', request.env.company.id),
-            ], order='name desc', limit=1)
+            # Consultar la tasa usando el método estandarizado del website
+            rate_info = request.website.get_rate_info()
+            exchange_rate = rate_info.get('rate', 0.0)
 
-            if rate_record and rate_record.bcv_rate_value and rate_record.bcv_rate_value > 0:
-                exchange_rate = rate_record.bcv_rate_value
-                # Formatear fecha
-                fecha = rate_record.name
-                fecha_formateada = fecha.strftime('%d/%m/%Y') if fecha else ''
+            if exchange_rate and exchange_rate > 1.0:
                 amount_usd = amount_vef / exchange_rate
                 _logger.info(f"Tasa encontrada: {exchange_rate}, USD: {amount_usd}")
                 return {
                     'amount_vef': amount_vef,
                     'exchange_rate': exchange_rate,
-                    'rate_date': fecha_formateada,
+                    'rate_date': rate_info.get('date_formatted', ''),
                     'amount_usd': amount_usd,
                 }
             else:
-                _logger.warning("No se encontró tasa BCV válida (is_bcv_rate=True y bcv_rate_value>0)")
+                _logger.warning("No se encontró tasa válida a través de get_rate_info()")
                 return {
                     'amount_vef': amount_vef,
                     'exchange_rate': 0.0,
                     'rate_date': '',
                     'amount_usd': 0.0,
-                    'error': 'Tasa BCV no disponible temporalmente'
+                    'error': 'Tasa de cambio no disponible temporalmente'
                 }
         except Exception as e:
             _logger.error(f"Error en get_order_total_and_rate: {str(e)}", exc_info=True)

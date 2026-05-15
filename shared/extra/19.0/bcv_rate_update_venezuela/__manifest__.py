@@ -21,7 +21,8 @@
         'website_sale', 
         'payment',
         'whatsapp_cloud_integration',
-         
+        'currency_rate_update_base',
+        'currency_rate_update_venezuela',
     ],
 
     'external_dependencies': {
@@ -30,7 +31,6 @@
     
     'data': [
         'security/ir.model.access.csv',
-        'data/cron_data.xml',
         'data/res_bank_data.xml',  
         'views/res_currency_views.xml',
         'views/sale_order_tree_debug.xml',
@@ -51,6 +51,7 @@
          "web.assets_frontend": [
             'bcv_rate_update_venezuela/static/src/css/payment_proof_component.css',
             'bcv_rate_update_venezuela/static/src/js/payment_proof_component.js',  
+            'bcv_rate_update_venezuela/static/src/js/website_checkout_autofill.js',
             'bcv_rate_update_venezuela/static/src/xml/payment_proof_component.xml'
             
         ],
