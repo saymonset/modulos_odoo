@@ -1,0 +1,32 @@
+/* === ADDRESS AUTOFILL - OCULTAR CAMPOS === */
+#shop_checkout form.address_autoformat,
+#shop_checkout .o_address_form {
+    position: relative;
+}
+
+/* Ocultar todo excepto email y teléfono */
+#shop_checkout input[name="name"],
+#shop_checkout input[name="street"],
+#shop_checkout input[name="street2"],
+#shop_checkout input[name="city"],
+#shop_checkout input[name="zip"],
+#shop_checkout input[name="vat"],
+#shop_checkout select[name="country_id"],
+#shop_checkout select[name="state_id"],
+#shop_checkout label[for*="name"],
+#shop_checkout label[for*="street"],
+#shop_checkout label[for*="city"],
+#shop_checkout label[for*="zip"],
+#shop_checkout label[for*="vat"],
+#shop_checkout label[for*="country_id"],
+#shop_checkout label[for*="state_id"] {
+    display: none !important;
+}
+
+/* Mostrar solo los que queremos al inicio */
+#shop_checkout input[name="email"],
+#shop_checkout input[name="phone"],
+#shop_checkout label[for*="email"],
+#shop_checkout label[for*="phone"] {
+    display: block !important;
+}

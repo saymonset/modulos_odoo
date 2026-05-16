@@ -40,7 +40,7 @@ class SendWhatsappConfirmationUseCase:
         ]
 
         try:
-            template.send_to_partner(order.partner_id, parameter_values)
+            #template.send_to_partner(order.partner_id, parameter_values)
             order.write({'whatsapp_sent': True})
             _logger.info(f"WhatsApp enviado correctamente para orden {order.name} con plantilla 'pedido_confirmado_ubicacion'")
             return True, f"WhatsApp enviado correctamente para orden {order.name}"
