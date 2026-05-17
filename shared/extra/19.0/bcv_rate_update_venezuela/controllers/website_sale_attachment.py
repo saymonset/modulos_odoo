@@ -3,6 +3,7 @@ from odoo.http import request
 from odoo.addons.website_sale.controllers.main import WebsiteSale
 import base64
 import logging
+import re  # Añadido por si lo usas en el futuro
 
 _logger = logging.getLogger(__name__)
 
@@ -148,7 +149,22 @@ class WebsiteSaleAttachment(WebsiteSale):
         file_data = file.read()
         file_base64 = base64.b64encode(file_data).decode('utf-8')
         filename = file.filename
-        mimetype = getattr(file, 'content_type', 'application/octet-stream')
+        
+        # ---- MEJORA: Detectar correctamente el mimetype para que la imagen se vea en el chatter ----
+        mimetype = file.content_type
+        if not mimetype or mimetype == 'application/octet-stream':
+            ext = filename.split('.')[-1].lower()
+            if ext in ('jpg', 'jpeg'):
+                mimetype = 'image/jpeg'
+            elif ext == 'png':
+                mimetype = 'image/png'
+            elif ext == 'gif':
+                mimetype = 'image/gif'
+            elif ext == 'pdf':
+                mimetype = 'application/pdf'
+            else:
+                mimetype = 'application/octet-stream'
+        # ---------------------------------------------------------------------------------------
 
         payment_data = {
             'payment_date': post.get('payment_date'),
@@ -330,7 +346,7 @@ class WebsiteSaleAttachment(WebsiteSale):
                     'datas': proof['data'],
                     'res_model': 'sale.order',
                     'res_id': order.id,
-                    'mimetype': proof.get('mimetype'),
+                    'mimetype': proof.get('mimetype', 'application/octet-stream'),
                     'description': 'Comprobante de pago - Transferencia / Pago Móvil',
                 })
                 _logger.info(f"✅ Attachment creado en Sale Order {order.name} desde sesión")

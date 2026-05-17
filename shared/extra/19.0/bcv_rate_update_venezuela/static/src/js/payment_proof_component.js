@@ -4,10 +4,18 @@ import { registry } from "@web/core/registry";
 import { rpc } from "@web/core/network/rpc";
 import { useService } from "@web/core/utils/hooks";
 
+let instanceCount = 0;   // ← Control para evitar duplicados
+
 export class PaymentProofComponent extends Component {
     static template = "bcv_rate_update_venezuela.PaymentProofComponent";
 
     setup() {
+        instanceCount++;
+        if (instanceCount > 1) {
+            console.warn("⚠️ PaymentProofComponent ya montado, ignorando instancia duplicada");
+            return;
+        }
+
         this.notification = useService("notification");
         this.state = useState({
             showSection: false,
@@ -74,7 +82,6 @@ export class PaymentProofComponent extends Component {
                     this.state.rate_date = rateDateSpan ? rateDateSpan.innerText : '';
                     this.state.amount_vef = this.state.original_amount_vef;
                     this.state.amount_usd = this.state.original_amount_usd;
-                    // 🔴 IMPORTANTE: validar montos inmediatamente después de cargarlos
                     this._validateAmounts();
                 } else {
                     console.warn("No se encontraron los spans con los valores originales");

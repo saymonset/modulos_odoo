@@ -66,6 +66,8 @@
     'application': False,
     'installable': True,
     'auto_install': False,
+    'post_init_hook': '_clean_orphan_views',
+    'uninstall_hook': '_uninstall_cleanup',
     'images': [
         'bcv_rate_update_venezuela/static/description/icon.png'
     ],

@@ -80,7 +80,7 @@
                 <!-- Referencia (obligatoria) -->
                 <div class="row g-3">
                     <div class="col-md-6 mb-3">
-                        <label for="reference" class="form-label">Referencia *</label>
+                        <label for="reference" class="form-label">Referencia <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="reference" t-att-value="state.reference" t-on-change="_updateField" data-field="reference" required="required"/>
                         <div t-if="state.referenceRequired" class="text-danger small mt-1">
                             <i class="fa fa-exclamation-circle"></i> La referencia es obligatoria.
@@ -118,15 +118,12 @@
                     </t>
                 </div>
 
-                <!-- Alerta de comprobante pendiente -->
-                <div t-if="state.is_valid_amount and !state.uploadSuccess and !state.fileUploading and !state.loading" class="alert alert-warning mt-2">
-                    <i class="fa fa-warning"></i> Debe adjuntar el comprobante de pago para continuar.
-                </div>
-
-                <!-- Campo de archivo -->
+                <!-- Campo de archivo (obligatorio) -->
                 <div class="mb-3">
-                    <label for="payment_proof_file" class="form-label">Comprobante de pago (imagen o PDF)</label>
-                    <input type="file" id="payment_proof_file" accept="image/*,.pdf" class="form-control" t-on-change="_handleFileChange"/>
+                    <label for="payment_proof_file" class="form-label">
+                        Comprobante de pago (imagen o PDF) <span class="text-danger">*</span>
+                    </label>
+                    <input type="file" id="payment_proof_file" accept="image/*,.pdf" class="form-control" t-on-change="_handleFileChange" required="required"/>
                     <div t-if="state.selectedFileName" class="mt-1">
                         <i class="fa fa-file-text-o me-1"></i>
                         <span t-esc="state.selectedFileName"/>
@@ -139,6 +136,11 @@
                     </div>
                     <div t-if="state.uploadError" class="text-danger mt-1">
                         <i class="fa fa-exclamation-circle"></i> <t t-esc="state.uploadError"/>
+                    </div>
+                    <!-- Alerta roja cuando falta el archivo (solo si el monto ya es válido) -->
+                    <div t-if="state.is_valid_amount and !state.uploadSuccess and !state.fileUploading and !state.loading" class="alert alert-danger mt-2">
+                        <i class="fa fa-exclamation-circle"></i> 
+                        <strong>Obligatorio:</strong> Adjunta el comprobante de pago para continuar.
                     </div>
                 </div>
             </div>
