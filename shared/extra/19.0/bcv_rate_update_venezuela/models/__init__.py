@@ -5,3 +5,4 @@ from . import sale_order_line
 from . import account_move_line
 from . import website_cart_usd
 from . import payment_provider
+from . import whatsapp_history_extension

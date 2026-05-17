@@ -23,6 +23,20 @@ class SendWhatsappConfirmationUseCase:
             _logger.error(msg)
             return False, msg
 
+
+        # --- Verificar si ya se envió para esta orden y plantilla ---
+        existing = self.env['whatsapp.history'].sudo().search([
+            ('sale_order_id', '=', order.id),
+            ('template_name', '=', template.name),
+            ('direction', '=', 'outgoing'),
+        ], limit=1)
+
+        if existing:
+            msg = f"El mensaje para la orden {order.name} ya fue enviado el {existing.timestamp}"
+            _logger.warning(msg)
+            # Consideramos éxito lógico (ya estaba enviado)
+            return True, msg
+
         # Parámetros según la nueva plantilla:
         # {{1}} = nombre_cliente
         # {{2}} = numero_pedido
@@ -40,8 +54,20 @@ class SendWhatsappConfirmationUseCase:
         ]
 
         try:
-            #template.send_to_partner(order.partner_id, parameter_values)
+            template.send_to_partner(order.partner_id, parameter_values)
             order.write({'whatsapp_sent': True})
+
+            # Buscar el registro de historial recién creado (último para este partner/plantilla)
+            last_history = self.env['whatsapp.history'].sudo().search([
+                ('partner_id', '=', order.partner_id.id),
+                ('template_name', '=', template.name),
+                ('direction', '=', 'outgoing'),
+                ('sale_order_id', '=', False)   # Aún sin asociar
+            ], order='create_date desc', limit=1)
+            if last_history:
+                last_history.sudo().write({'sale_order_id': order.id})
+                _logger.info(f"Asociada orden {order.name} al historial ID {last_history.id}")
+
             _logger.info(f"WhatsApp enviado correctamente para orden {order.name} con plantilla 'pedido_confirmado_ubicacion'")
             return True, f"WhatsApp enviado correctamente para orden {order.name}"
         except Exception as e:

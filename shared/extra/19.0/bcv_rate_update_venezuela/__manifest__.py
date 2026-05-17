@@ -14,6 +14,7 @@
     #'website_sale', 'base_address_city', 'contacts'
     'depends': [
         'base',
+        'web',
         'sale_management',
         'account',          # Contabilidad base
         'stock',            # Inventario
@@ -39,7 +40,7 @@
         'views/website_cart_usd.xml',
         'views/payment_attachment_templates.xml',
         'views/payment_provider_views.xml',
-         'views/website_sale_templates.xml',
+    # 'views/website_sale_templates.xml',
         # 'views/invoice_report_templates.xml',
     ],
     
