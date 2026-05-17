@@ -1,4 +1,5 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 from odoo.http import request
 import logging
 
@@ -75,7 +76,6 @@ class SaleOrder(models.Model):
                         'res_id': invoice.id,
                         'description': 'Comprobante de pago - Transferencia / Pago Móvil',
                     })
-                    # Publicar en el chatter de la factura
                     invoice.sudo().message_post(
                         body=f"🧾 Comprobante de pago adjunto desde la orden {order.name}",
                         attachment_ids=[new_att.id]
@@ -83,6 +83,29 @@ class SaleOrder(models.Model):
                     _logger.info(f"Comprobante copiado a factura {invoice.name} desde orden {order.name}")
 
         return invoices
+
+    @api.constrains('state', 'payment_method', 'reference', 'bank_origin', 'bank_destination', 'amount_vef')
+    def _check_payment_required_fields(self):
+        for order in self:
+            # Solo validar cuando la orden se está confirmando (state = 'sale')
+            # y el método de pago es transferencia o pago móvil
+            if order.state == 'sale' and order.payment_method in ['transfer', 'movil']:
+                if not order.reference:
+                    raise UserError(_('La referencia es obligatoria para pagos por transferencia bancaria.'))
+                if not order.bank_origin:
+                    raise UserError(_('Debe seleccionar el banco origen.'))
+                if not order.bank_destination or order.bank_destination == 'N/A':
+                    raise UserError(_('Debe seleccionar el banco destino.'))
+                attachment = self.env['ir.attachment'].sudo().search([
+                    ('res_model', '=', 'sale.order'),
+                    ('res_id', '=', order.id),
+                    ('description', '=', 'Comprobante de pago - Transferencia / Pago Móvil'),
+                ], limit=1)
+                if not attachment:
+                    raise UserError(_('Debe adjuntar el comprobante de pago.'))
+                if order.amount_vef < (order.amount_total - 0.01):
+                    raise UserError(_('El monto pagado (%.2f Bs.) es menor al total de la orden (%.2f Bs.).') 
+                                    % (order.amount_vef, order.amount_total))
 
     def action_confirm(self):
         _logger.warning(f"=== INICIO action_confirm: self = {self}, ids = {self.ids}, len = {len(self)} ===")
@@ -136,12 +159,10 @@ class SaleOrder(models.Model):
         """Procesa una orden ya confirmada: guarda datos de pago y envía WhatsApp si corresponde."""
         _logger.info(f"Procesando orden {order.name} (ID {order.id}) después de confirmación.")
 
-        # Guardar datos de pago desde la sesión (solo si no se guardaron antes)
         try:
             if request and hasattr(request, 'session') and 'payment_data' in request.session:
                 payment_data = request.session.pop('payment_data')
                 _logger.info(f"Datos de pago encontrados en sesión para orden {order.name}: {payment_data}")
-                # Solo escribir si los campos están vacíos (para no pisar lo que ya se guardó en upload)
                 if not order.payment_date:
                     order.sudo().write({
                         'payment_date': payment_data.get('payment_date'),
@@ -161,7 +182,6 @@ class SaleOrder(models.Model):
         except Exception as e:
             _logger.exception(f"❌ Error guardando datos de pago para orden {order.name}: {e}")
 
-        # Enviar WhatsApp si cumple condiciones
         if order.whatsapp_sent:
             _logger.info(f"La orden {order.name} ya tiene whatsapp_sent = True, se omite envío.")
             return

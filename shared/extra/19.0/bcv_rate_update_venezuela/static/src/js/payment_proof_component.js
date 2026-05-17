@@ -4,7 +4,7 @@ import { registry } from "@web/core/registry";
 import { rpc } from "@web/core/network/rpc";
 import { useService } from "@web/core/utils/hooks";
 
-let instanceCount = 0;   // ← Control para evitar duplicados
+let instanceCount = 0;
 
 export class PaymentProofComponent extends Component {
     static template = "bcv_rate_update_venezuela.PaymentProofComponent";
@@ -13,6 +13,7 @@ export class PaymentProofComponent extends Component {
         instanceCount++;
         if (instanceCount > 1) {
             console.warn("⚠️ PaymentProofComponent ya montado, ignorando instancia duplicada");
+            this.state = useState({ showSection: false });
             return;
         }
 
@@ -27,7 +28,8 @@ export class PaymentProofComponent extends Component {
             selectedFileName: null,
             proof_valid: false,
             referenceRequired: false,
-
+            bankOriginRequired: false,
+            bankDestRequired: false,
             payment_date: new Date().toISOString().slice(0, 10),
             payment_method: 'movil',
             bank_origin: '',
@@ -62,19 +64,14 @@ export class PaymentProofComponent extends Component {
             try {
                 const providerId = await rpc("/payment_proof/get_transfer_provider_id");
                 this.state.transferProviderId = providerId;
-
                 const banks = await rpc("/payment_proof/get_bank_list");
                 this.state.bankList = banks;
-
                 const journalBanks = await rpc("/payment_proof/get_bank_journal_list");
                 this.state.bankJournalList = journalBanks;
-                console.log("Bancos desde diarios contables:", journalBanks);
-
                 const origVefSpan = document.getElementById('original_amount_vef');
                 const origUsdSpan = document.getElementById('original_amount_usd');
                 const rateSpan = document.getElementById('bcv_exchange_rate');
                 const rateDateSpan = document.getElementById('bcv_rate_date');
-
                 if (origVefSpan && origUsdSpan && rateSpan) {
                     this.state.original_amount_vef = this._normalizeNumber(origVefSpan.innerText);
                     this.state.original_amount_usd = this._normalizeNumber(origUsdSpan.innerText);
@@ -92,12 +89,15 @@ export class PaymentProofComponent extends Component {
                 this.notification.add("Error al cargar datos de la orden", { type: "danger" });
             } finally {
                 this.state.loading = false;
+                this._updateValidationMessages();
+                this._checkAndTogglePaymentButton();
             }
         });
 
         onMounted(() => {
             console.log("✅ Componente montado");
             this._bindPaymentMethodChange();
+            this._interceptPaymentButton();
         });
 
         onWillUnmount(() => {
@@ -110,13 +110,10 @@ export class PaymentProofComponent extends Component {
     _normalizeNumber(value) {
         if (value === undefined || value === null) return 0;
         if (typeof value !== 'string') value = String(value);
-        
         let clean = value.trim();
         clean = clean.replace(/[^\d.,-]/g, '');
-        
         const hasThousandsDot = /\.\d{3}/.test(clean);
         const hasCommaDecimal = /,\d{1,2}$/.test(clean);
-        
         if (hasThousandsDot && hasCommaDecimal) {
             clean = clean.replace(/\./g, '');
             clean = clean.replace(',', '.');
@@ -127,7 +124,6 @@ export class PaymentProofComponent extends Component {
                 clean = parts[0] + parts.slice(1).join('');
             }
         }
-        
         const num = parseFloat(clean);
         return isNaN(num) ? 0 : num;
     }
@@ -160,17 +156,11 @@ export class PaymentProofComponent extends Component {
             if (details.error) {
                 this.state.bank_details.error = details.error;
             } else {
-                this.state.bank_details = {
-                    ...this.state.bank_details,
-                    ...details,
-                    loading: false,
-                };
+                this.state.bank_details = { ...this.state.bank_details, ...details, loading: false };
             }
         } catch (err) {
             console.error("Error cargando detalles del banco:", err);
             this.state.bank_details.error = "No se pudieron cargar los datos del banco";
-            this.state.bank_details.loading = false;
-        } finally {
             this.state.bank_details.loading = false;
         }
     }
@@ -185,9 +175,8 @@ export class PaymentProofComponent extends Component {
                 this.state.bank_details = { ...this.state.bank_details, bank_name: '', account_number: '', loading: false, error: null };
             }
         }
-        if (field === 'reference') {
-            this._checkAndTogglePaymentButton();
-        }
+        this._updateValidationMessages();
+        this._checkAndTogglePaymentButton();
     }
 
     _onAmountVefInput(event) {
@@ -195,8 +184,7 @@ export class PaymentProofComponent extends Component {
         let value = this._normalizeNumber(rawValue);
         this.state.amount_vef = value;
         if (this.state.exchange_rate > 0) {
-            let usd = value / this.state.exchange_rate;
-            this.state.amount_usd = this._round(usd);
+            this.state.amount_usd = this._round(value / this.state.exchange_rate);
         } else {
             this.state.amount_usd = 0;
         }
@@ -208,8 +196,7 @@ export class PaymentProofComponent extends Component {
         let value = this._normalizeNumber(rawValue);
         this.state.amount_usd = value;
         if (this.state.exchange_rate > 0) {
-            let vef = value * this.state.exchange_rate;
-            this.state.amount_vef = this._round(vef);
+            this.state.amount_vef = this._round(value * this.state.exchange_rate);
         } else {
             this.state.amount_vef = 0;
         }
@@ -222,28 +209,40 @@ export class PaymentProofComponent extends Component {
         const isValid = amountVef >= (originalAmountVef - 0.01);
         this.state.is_valid_amount = isValid;
         console.log("Validación montos:", { amountVef, originalAmountVef, isValid });
+        this._updateValidationMessages();
         this._checkAndTogglePaymentButton();
     }
 
+    _updateValidationMessages() {
+        if (this.state.showSection) {
+            this.state.referenceRequired = !(this.state.reference && this.state.reference.trim() !== '');
+            this.state.bankOriginRequired = !(this.state.bank_origin && this.state.bank_origin !== '');
+            this.state.bankDestRequired = !(this.state.bank_destination && this.state.bank_destination !== '');
+        } else {
+            this.state.referenceRequired = false;
+            this.state.bankOriginRequired = false;
+            this.state.bankDestRequired = false;
+        }
+    }
+
     _checkAndTogglePaymentButton() {
-        let canEnable = true;
+        let enable = true;
         if (this.state.showSection) {
             const isAmountValid = this.state.is_valid_amount;
             const hasValidProof = this.state.proof_valid;
             const hasReference = this.state.reference && this.state.reference.trim() !== '';
-            this.state.referenceRequired = !hasReference;
-            canEnable = isAmountValid && hasValidProof && hasReference;
-            console.log("Validación botón:", { isAmountValid, hasValidProof, hasReference, canEnable });
-        } else {
-            this.state.referenceRequired = false;
+            const hasBankOrigin = this.state.bank_origin && this.state.bank_origin !== '';
+            const hasBankDest = this.state.bank_destination && this.state.bank_destination !== '';
+            enable = isAmountValid && hasValidProof && hasReference && hasBankOrigin && hasBankDest;
+            console.log("Validación botón:", { isAmountValid, hasValidProof, hasReference, hasBankOrigin, hasBankDest, enable });
         }
-        this._togglePaymentButton(canEnable);
+        this._setPaymentButtonEnabled(enable);
     }
 
-    _togglePaymentButton(enable) {
+    _setPaymentButtonEnabled(enable) {
         const paymentButton = document.querySelector('button[name="o_payment_submit_button"]') ||
-            document.querySelector('.o_payment_btn') ||
-            document.querySelector('#o_payment_form button[type="submit"]');
+                              document.querySelector('.o_payment_btn') ||
+                              document.querySelector('#o_payment_form button[type="submit"]');
         if (paymentButton) {
             if (enable) {
                 paymentButton.removeAttribute('disabled');
@@ -257,13 +256,69 @@ export class PaymentProofComponent extends Component {
         }
     }
 
+    _interceptPaymentButton() {
+        // Obtenemos el botón de pago original (sin clonar)
+        const paymentButton = document.querySelector('button[name="o_payment_submit_button"]') ||
+                              document.querySelector('.o_payment_btn') ||
+                              document.querySelector('#o_payment_form button[type="submit"]');
+        if (!paymentButton) {
+            setTimeout(() => this._interceptPaymentButton(), 300);
+            return;
+        }
+        if (paymentButton.hasAttribute('data-validated')) return;
+        paymentButton.setAttribute('data-validated', 'true');
+        
+        // Guardamos el manejador original (si existe) para ejecutarlo después
+        const self = this;
+        // Añadimos nuestro evento antes que cualquier otro (capture fase)
+        paymentButton.addEventListener('click', (event) => {
+            if (self.state.showSection) {
+                if (!self._validateBeforeSubmit()) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    return false;
+                }
+            }
+            // Si pasa la validación, permitimos que se ejecuten otros manejadores
+            return true;
+        }, { capture: true }); // capture: true para interceptar antes
+    }
+
+    _validateBeforeSubmit() {
+        const hasValidProof = this.state.proof_valid;
+        const hasReference = this.state.reference && this.state.reference.trim() !== '';
+        const hasBankOrigin = this.state.bank_origin && this.state.bank_origin !== '';
+        const hasBankDest = this.state.bank_destination && this.state.bank_destination !== '';
+        const isAmountValid = this.state.is_valid_amount;
+        if (!hasValidProof) {
+            this.notification.add("Debe adjuntar el comprobante de pago.", { type: "danger" });
+            return false;
+        }
+        if (!hasReference) {
+            this.notification.add("La referencia es obligatoria.", { type: "danger" });
+            return false;
+        }
+        if (!hasBankOrigin) {
+            this.notification.add("Debe seleccionar el banco origen.", { type: "danger" });
+            return false;
+        }
+        if (!hasBankDest) {
+            this.notification.add("Debe seleccionar el banco destino.", { type: "danger" });
+            return false;
+        }
+        if (!isAmountValid) {
+            this.notification.add("El monto pagado debe ser igual o mayor al total de la orden.", { type: "danger" });
+            return false;
+        }
+        return true;
+    }
+
     _bindPaymentMethodChange() {
         let radioContainer = document.querySelector("div[id='payment_method']") ||
             document.querySelector(".o_payment_methods") ||
             document.querySelector("[data-payment-methods]") ||
             document.querySelector(".payment_methods") ||
             document.querySelector("#payment_method");
-        console.log("🔎 Contenedor de métodos de pago encontrado:", radioContainer);
         if (radioContainer) {
             radioContainer.addEventListener("change", this._onPaymentMethodChange.bind(this));
             const radios = radioContainer.querySelectorAll('input[type="radio"]');
@@ -272,7 +327,6 @@ export class PaymentProofComponent extends Component {
             });
             this._onPaymentMethodChange();
         } else {
-            console.warn("⚠️ No se encontró contenedor de métodos de pago, observando cambios en body");
             const targetNode = document.body;
             const config = { childList: true, subtree: true };
             this.observer = new MutationObserver((mutations, obs) => {
@@ -282,7 +336,6 @@ export class PaymentProofComponent extends Component {
                     document.querySelector(".payment_methods") ||
                     document.querySelector("#payment_method");
                 if (container) {
-                    console.log("✅ Contenedor detectado dinámicamente:", container);
                     obs.disconnect();
                     container.addEventListener("change", this._onPaymentMethodChange.bind(this));
                     const radios = container.querySelectorAll('input[type="radio"]');
@@ -312,7 +365,8 @@ export class PaymentProofComponent extends Component {
             document.querySelector('.o_payment_methods input[type="radio"]:checked');
         if (!selectedRadio) {
             this.state.showSection = false;
-            this._togglePaymentButton(true);
+            this._updateValidationMessages();
+            this._checkAndTogglePaymentButton();
             return;
         }
         let providerId = selectedRadio.getAttribute("data-payment-option-id") ||
@@ -340,6 +394,7 @@ export class PaymentProofComponent extends Component {
             }
         }
         this.state.showSection = shouldShow;
+        this._updateValidationMessages();
         this._checkAndTogglePaymentButton();
     }
 
@@ -348,7 +403,7 @@ export class PaymentProofComponent extends Component {
         this.state.uploadError = null;
         this.state.uploadSuccess = false;
         this.state.proof_valid = false;
-        this._togglePaymentButton(false);
+        this._setPaymentButtonEnabled(false);
         try {
             const formData = new FormData();
             formData.append("payment_proof_file", file);
@@ -369,14 +424,14 @@ export class PaymentProofComponent extends Component {
             this.notification.add("Comprobante adjuntado correctamente.", { type: "success" });
             this.state.uploadSuccess = true;
             this.state.proof_valid = true;
-            this._checkAndTogglePaymentButton();
         } catch (err) {
             this.state.uploadError = err.message;
             this.state.proof_valid = false;
             this.notification.add("Error al adjuntar el comprobante. Intente nuevamente.", { type: "danger" });
-            this._togglePaymentButton(false);
         } finally {
             this.state.fileUploading = false;
+            this._updateValidationMessages();
+            this._checkAndTogglePaymentButton();
         }
     }
 
@@ -387,12 +442,12 @@ export class PaymentProofComponent extends Component {
             this.state.proof_valid = false;
             this.state.uploadSuccess = false;
             this.state.uploadError = null;
-            this._togglePaymentButton(false);
             this.uploadFile(file);
         } else {
             this.state.selectedFileName = null;
             this.state.proof_valid = false;
             this.state.uploadSuccess = false;
+            this._updateValidationMessages();
             this._checkAndTogglePaymentButton();
         }
     }

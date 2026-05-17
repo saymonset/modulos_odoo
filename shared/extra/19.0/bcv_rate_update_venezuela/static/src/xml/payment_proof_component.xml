@@ -51,11 +51,11 @@
                     </div>
                 </div>
 
-                <!-- Bancos -->
+                <!-- Bancos (ambos obligatorios) -->
                 <div class="row g-3">
                     <div class="col-md-6 mb-3">
-                        <label for="bank_origin" class="form-label">Banco origen</label>
-                        <select class="form-control" id="bank_origin" t-on-change="_updateField" data-field="bank_origin">
+                        <label for="bank_origin" class="form-label">Banco origen <span class="text-danger">*</span></label>
+                        <select class="form-control" id="bank_origin" t-on-change="_updateField" data-field="bank_origin" required="required">
                             <option value="">Seleccione un banco</option>
                             <t t-foreach="state.bankList" t-as="bank" t-key="bank.id">
                                 <option t-att-value="bank.id" t-att-selected="state.bank_origin == bank.id">
@@ -63,10 +63,13 @@
                                 </option>
                             </t>
                         </select>
+                        <div t-if="state.bankOriginRequired" class="text-danger small mt-1">
+                            <i class="fa fa-exclamation-circle"></i> El banco origen es obligatorio.
+                        </div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="bank_destination" class="form-label">Banco destino</label>
-                        <select class="form-control" id="bank_destination" t-on-change="_updateField" data-field="bank_destination">
+                        <label for="bank_destination" class="form-label">Banco destino <span class="text-danger">*</span></label>
+                        <select class="form-control" id="bank_destination" t-on-change="_updateField" data-field="bank_destination" required="required">
                             <option value="">Seleccione un banco</option>
                             <t t-foreach="state.bankJournalList" t-as="journal" t-key="journal.id">
                                 <option t-att-value="journal.id" t-att-selected="state.bank_destination == journal.id">
@@ -74,6 +77,9 @@
                                 </option>
                             </t>
                         </select>
+                        <div t-if="state.bankDestRequired" class="text-danger small mt-1">
+                            <i class="fa fa-exclamation-circle"></i> El banco destino es obligatorio.
+                        </div>
                     </div>
                 </div>
 
@@ -137,7 +143,6 @@
                     <div t-if="state.uploadError" class="text-danger mt-1">
                         <i class="fa fa-exclamation-circle"></i> <t t-esc="state.uploadError"/>
                     </div>
-                    <!-- Alerta roja cuando falta el archivo (solo si el monto ya es válido) -->
                     <div t-if="state.is_valid_amount and !state.uploadSuccess and !state.fileUploading and !state.loading" class="alert alert-danger mt-2">
                         <i class="fa fa-exclamation-circle"></i> 
                         <strong>Obligatorio:</strong> Adjunta el comprobante de pago para continuar.

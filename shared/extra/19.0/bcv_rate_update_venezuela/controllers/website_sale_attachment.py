@@ -3,7 +3,7 @@ from odoo.http import request
 from odoo.addons.website_sale.controllers.main import WebsiteSale
 import base64
 import logging
-import re  # Añadido por si lo usas en el futuro
+import re
 
 _logger = logging.getLogger(__name__)
 
@@ -208,16 +208,37 @@ class WebsiteSaleAttachment(WebsiteSale):
                     'amount_usd': payment_data['amount_usd'],
                 })
                 
-                # 3. Publicar en el chatter (historial) de la orden
+                # 3. Publicar en el chatter con la imagen en línea (si es imagen)
+                # Construir URL del attachment para mostrarla en línea
+                # Usar un timestamp para evitar caché, si no hay write_date se omite
+                timestamp = int(attachment.write_date.timestamp()) if attachment.write_date else ''
+                attachment_url = f"/web/image/{attachment.id}" + (f"?unique={timestamp}" if timestamp else "")
+                
+                # Generar cuerpo HTML
+                if mimetype.startswith('image/'):
+                    img_tag = f'<div style="margin-top: 10px;"><img src="{attachment_url}" style="max-width: 100%; max-height: 300px; border: 1px solid #ccc; padding: 5px;" /></div>'
+                else:
+                    img_tag = f'<div style="margin-top: 10px;"><a href="{attachment_url}" target="_blank">📄 Ver archivo adjunto</a></div>'
+                
+                body_html = f"""
+                <p>🧾 <strong>Comprobante de pago adjunto</strong></p>
+                <ul>
+                    <li>📅 Fecha: {payment_data.get('payment_date', 'No especificada')}</li>
+                    <li>💳 Método: {payment_data.get('payment_method', 'No especificado')}</li>
+                    <li>🔢 Referencia: {payment_data.get('reference', 'No especificada')}</li>
+                    <li>₿ Monto Bs: {payment_data.get('amount_vef', 0):,.2f}</li>
+                    <li>💱 Tasa BCV: {payment_data.get('exchange_rate', 0):,.4f}</li>
+                    <li>💵 Monto USD: {payment_data.get('amount_usd', 0):,.2f}</li>
+                </ul>
+                {img_tag}
+                <p><em>Adjunto: {filename}</em></p>
+                """
+                
                 order.sudo().message_post(
-                    body=f"🧾 **Comprobante de pago adjunto**\n\n"
-                         f"• Fecha: {payment_data.get('payment_date', 'No especificada')}\n"
-                         f"• Método: {payment_data.get('payment_method', 'No especificado')}\n"
-                         f"• Referencia: {payment_data.get('reference', 'No especificada')}\n"
-                         f"• Monto Bs: {payment_data.get('amount_vef', 0):,.2f}\n"
-                         f"• Tasa BCV: {payment_data.get('exchange_rate', 0):,.4f}\n"
-                         f"• Monto USD: {payment_data.get('amount_usd', 0):,.2f}",
-                    attachment_ids=[attachment.id]
+                    body=body_html,
+                    attachment_ids=[attachment.id],
+                    message_type='comment',
+                    subtype_id=request.env.ref('mail.mt_comment').id
                 )
                 _logger.info(f"✅ Comprobante guardado y publicado en orden {order.name}")
                 return request.make_response('OK')
@@ -354,10 +375,20 @@ class WebsiteSaleAttachment(WebsiteSale):
                     'payment_proof': proof['data'],
                     'payment_proof_filename': proof['filename'],
                 })
-                # Publicar en chatter
+                # Publicar en chatter con vista previa de imagen (similar al método anterior)
+                timestamp = int(attachment.write_date.timestamp()) if attachment.write_date else ''
+                attachment_url = f"/web/image/{attachment.id}" + (f"?unique={timestamp}" if timestamp else "")
+                mimetype = proof.get('mimetype', '')
+                if mimetype.startswith('image/'):
+                    img_tag = f'<div style="margin-top: 10px;"><img src="{attachment_url}" style="max-width: 100%; max-height: 300px; border: 1px solid #ccc; padding: 5px;" /></div>'
+                else:
+                    img_tag = f'<div style="margin-top: 10px;"><a href="{attachment_url}" target="_blank">📄 Ver archivo adjunto</a></div>'
+                body_html = f"<p>🧾 <strong>Comprobante de pago adjunto</strong> (recuperado desde sesión)</p>{img_tag}<p><em>Adjunto: {proof['filename']}</em></p>"
                 order.sudo().message_post(
-                    body="🧾 **Comprobante de pago adjunto** (recuperado desde sesión)",
-                    attachment_ids=[attachment.id]
+                    body=body_html,
+                    attachment_ids=[attachment.id],
+                    message_type='comment',
+                    subtype_id=request.env.ref('mail.mt_comment').id
                 )
             except Exception as e:
                 _logger.error(f"Error creando attachment desde sesión: {e}", exc_info=True)
