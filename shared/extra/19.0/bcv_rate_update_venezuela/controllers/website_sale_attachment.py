@@ -1,6 +1,7 @@
 from odoo import http
 from odoo.http import request
 from odoo.addons.website_sale.controllers.main import WebsiteSale
+from markupsafe import Markup   # ← CORRECCIÓN: importar desde markupsafe
 import base64
 import logging
 import re
@@ -150,7 +151,7 @@ class WebsiteSaleAttachment(WebsiteSale):
         file_base64 = base64.b64encode(file_data).decode('utf-8')
         filename = file.filename
         
-        # ---- MEJORA: Detectar correctamente el mimetype para que la imagen se vea en el chatter ----
+        # Detectar correctamente el mimetype
         mimetype = file.content_type
         if not mimetype or mimetype == 'application/octet-stream':
             ext = filename.split('.')[-1].lower()
@@ -164,7 +165,6 @@ class WebsiteSaleAttachment(WebsiteSale):
                 mimetype = 'application/pdf'
             else:
                 mimetype = 'application/octet-stream'
-        # ---------------------------------------------------------------------------------------
 
         payment_data = {
             'payment_date': post.get('payment_date'),
@@ -209,12 +209,9 @@ class WebsiteSaleAttachment(WebsiteSale):
                 })
                 
                 # 3. Publicar en el chatter con la imagen en línea (si es imagen)
-                # Construir URL del attachment para mostrarla en línea
-                # Usar un timestamp para evitar caché, si no hay write_date se omite
                 timestamp = int(attachment.write_date.timestamp()) if attachment.write_date else ''
                 attachment_url = f"/web/image/{attachment.id}" + (f"?unique={timestamp}" if timestamp else "")
                 
-                # Generar cuerpo HTML
                 if mimetype.startswith('image/'):
                     img_tag = f'<div style="margin-top: 10px;"><img src="{attachment_url}" style="max-width: 100%; max-height: 300px; border: 1px solid #ccc; padding: 5px;" /></div>'
                 else:
@@ -235,7 +232,7 @@ class WebsiteSaleAttachment(WebsiteSale):
                 """
                 
                 order.sudo().message_post(
-                    body=body_html,
+                    body=Markup(body_html),
                     attachment_ids=[attachment.id],
                     message_type='comment',
                     subtype_id=request.env.ref('mail.mt_comment').id
@@ -246,7 +243,7 @@ class WebsiteSaleAttachment(WebsiteSale):
                 _logger.error(f"Error guardando comprobante: {e}", exc_info=True)
                 return request.make_response('ERROR', status=500)
 
-        # Si no hay orden, guardar en sesión (fallback para cuando aún no se ha creado)
+        # Si no hay orden, guardar en sesión (fallback)
         request.session['payment_proof'] = {
             'data': file_base64,
             'filename': filename,
@@ -375,7 +372,7 @@ class WebsiteSaleAttachment(WebsiteSale):
                     'payment_proof': proof['data'],
                     'payment_proof_filename': proof['filename'],
                 })
-                # Publicar en chatter con vista previa de imagen (similar al método anterior)
+                # Publicar en chatter con vista previa de imagen
                 timestamp = int(attachment.write_date.timestamp()) if attachment.write_date else ''
                 attachment_url = f"/web/image/{attachment.id}" + (f"?unique={timestamp}" if timestamp else "")
                 mimetype = proof.get('mimetype', '')
@@ -385,7 +382,7 @@ class WebsiteSaleAttachment(WebsiteSale):
                     img_tag = f'<div style="margin-top: 10px;"><a href="{attachment_url}" target="_blank">📄 Ver archivo adjunto</a></div>'
                 body_html = f"<p>🧾 <strong>Comprobante de pago adjunto</strong> (recuperado desde sesión)</p>{img_tag}<p><em>Adjunto: {proof['filename']}</em></p>"
                 order.sudo().message_post(
-                    body=body_html,
+                    body=Markup(body_html),
                     attachment_ids=[attachment.id],
                     message_type='comment',
                     subtype_id=request.env.ref('mail.mt_comment').id
