@@ -44,12 +44,22 @@ class SendWhatsappConfirmationUseCase:
         # {{4}} = horario (puedes ajustarlo según tu lógica)
         # {{5}} = telefono del cliente
         # {{6}} = la empresa
+
+        company_address = f"{order.company_id.street or ''} {order.company_id.city or ''} {order.company_id.zip or ''}".strip()
+        if not company_address:
+            company_address = "CC El Mercado, Av. Llano Adentro, Porlamar"
+        persona_address= order.partner_id.street 
+        if persona_address:
+            persona_address += ", "
+        persona_address += f"{order.partner_id.city or ''} {order.partner_id.zip or ''}".strip()
+        
         parameter_values = [
             order.partner_id.name,                                   # 1
             order.name,                                              # 2
-            order.partner_id.street or "CC El Mercado, Av. Llano Adentro, Porlamar",  # 3 (dirección)
-            "Abierto - Cierra a las 7:00 p.m.",                      # 4 (horario fijo o dinámico)
-            order.partner_id.phone,                                  # 5
+            #order.partner_id.street or "CC El Mercado, Av. Llano Adentro, Porlamar",  # 3 (dirección)
+            company_address,
+            order.company_id.schedule_info or "Abierto - Cierra a las 7:00 p.m.",  # 4 (horario desde company)
+            order.company_id.phone,                                  # 5
             order.company_id.name,                                   # 6
         ]
 

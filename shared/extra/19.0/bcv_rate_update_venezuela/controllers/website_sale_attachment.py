@@ -85,8 +85,6 @@ class WebsiteSaleAttachment(WebsiteSale):
                     
         return super().shop_address_submit(partner_id=partner_id, **form_data)
 
-
-
     # -------------------------------------------------------------------------
     # Endpoint JSON: obtener total de orden + tasa BCV + equivalente USD
     # -------------------------------------------------------------------------
@@ -95,7 +93,6 @@ class WebsiteSaleAttachment(WebsiteSale):
         """Devuelve el total de la orden actual en VES, la tasa BCV y el equivalente en USD"""
         _logger.info("=== get_order_total_and_rate called ===")
         try:
-            # Obtener la orden desde la sesión
             sale_order_id = request.session.get('sale_order_id') or request.session.get('sale_last_order_id')
             if not sale_order_id:
                 _logger.warning("No hay sale_order_id en sesión")
@@ -109,7 +106,6 @@ class WebsiteSaleAttachment(WebsiteSale):
             amount_vef = order.amount_total
             _logger.info(f"Monto en VES: {amount_vef}")
 
-            # Consultar la tasa usando el método estandarizado del website
             rate_info = request.website.get_rate_info()
             exchange_rate = rate_info.get('rate', 0.0)
 
@@ -144,19 +140,16 @@ class WebsiteSaleAttachment(WebsiteSale):
         if not file or not file.filename:
             return request.make_response('ERROR', status=400)
 
-        # Obtener la orden de venta actual desde la sesión
         sale_order_id = request.session.get('sale_order_id') or request.session.get('sale_last_order_id')
         order = None
         if sale_order_id:
             order = request.env['sale.order'].sudo().browse(int(sale_order_id)).exists()
 
-        # Leer el archivo una sola vez
         file_data = file.read()
         file_base64 = base64.b64encode(file_data).decode('utf-8')
         filename = file.filename
         mimetype = getattr(file, 'content_type', 'application/octet-stream')
 
-        # Extraer campos adicionales del formulario (vienen en request.params)
         payment_data = {
             'payment_date': post.get('payment_date'),
             'payment_method': post.get('payment_method'),
@@ -169,13 +162,13 @@ class WebsiteSaleAttachment(WebsiteSale):
         }
         _logger.info(f"📝 Datos de pago recibidos: {payment_data}")
 
-        # Guardar en sesión (para ser recuperados en confirmación)
+        # Guardar en sesión por si se necesita después
         request.session['payment_data'] = payment_data
 
         if order:
             try:
-                # Crear el attachment con la descripción específica (para copia a factura)
-                request.env['ir.attachment'].sudo().create({
+                # 1. Crear attachment
+                attachment = request.env['ir.attachment'].sudo().create({
                     'name': filename,
                     'type': 'binary',
                     'datas': file_base64,
@@ -184,18 +177,39 @@ class WebsiteSaleAttachment(WebsiteSale):
                     'mimetype': mimetype,
                     'description': 'Comprobante de pago - Transferencia / Pago Móvil',
                 })
-                # Actualizar los campos binarios de la orden (para visualización)
+                
+                # 2. Escribir campos binarios y metadata directamente en la orden
                 order.sudo().write({
                     'payment_proof': file_base64,
                     'payment_proof_filename': filename,
+                    'payment_date': payment_data['payment_date'],
+                    'payment_method': payment_data['payment_method'],
+                    'bank_origin': payment_data['bank_origin'],
+                    'bank_destination': payment_data['bank_destination'],
+                    'reference': payment_data['reference'],
+                    'amount_vef': payment_data['amount_vef'],
+                    'exchange_rate': payment_data['exchange_rate'],
+                    'amount_usd': payment_data['amount_usd'],
                 })
-                _logger.info(f"✅ Comprobante guardado en orden {order.name}")
+                
+                # 3. Publicar en el chatter (historial) de la orden
+                order.sudo().message_post(
+                    body=f"🧾 **Comprobante de pago adjunto**\n\n"
+                         f"• Fecha: {payment_data.get('payment_date', 'No especificada')}\n"
+                         f"• Método: {payment_data.get('payment_method', 'No especificado')}\n"
+                         f"• Referencia: {payment_data.get('reference', 'No especificada')}\n"
+                         f"• Monto Bs: {payment_data.get('amount_vef', 0):,.2f}\n"
+                         f"• Tasa BCV: {payment_data.get('exchange_rate', 0):,.4f}\n"
+                         f"• Monto USD: {payment_data.get('amount_usd', 0):,.2f}",
+                    attachment_ids=[attachment.id]
+                )
+                _logger.info(f"✅ Comprobante guardado y publicado en orden {order.name}")
                 return request.make_response('OK')
             except Exception as e:
                 _logger.error(f"Error guardando comprobante: {e}", exc_info=True)
                 return request.make_response('ERROR', status=500)
 
-        # Si no hay orden, guardar en sesión (fallback)
+        # Si no hay orden, guardar en sesión (fallback para cuando aún no se ha creado)
         request.session['payment_proof'] = {
             'data': file_base64,
             'filename': filename,
@@ -209,7 +223,6 @@ class WebsiteSaleAttachment(WebsiteSale):
     # -------------------------------------------------------------------------
     @http.route('/payment_proof/get_transfer_provider_id', type='json', auth='public', csrf=False)
     def get_transfer_provider_id(self):
-        """Devuelve el ID del proveedor de pago marcado como transferencia bancaria"""
         provider = request.env['payment.provider'].sudo().search([('is_wire_transfer', '=', True)], limit=1)
         _logger.info(f"Transfer provider ID: {provider.id if provider else 0}")
         return provider.id if provider else 0
@@ -219,32 +232,19 @@ class WebsiteSaleAttachment(WebsiteSale):
     # -------------------------------------------------------------------------
     @http.route('/payment_proof/get_bank_list', type='json', auth='public', csrf=False)
     def get_bank_list(self):
-        """
-        Devuelve la lista de bancos venezolanos desde la tabla res.bank,
-        ordenados alfabéticamente por nombre.
-        """
         try:
-            # Buscar bancos activos en Venezuela (o todos si no filtras por país)
-            banks = request.env['res.bank'].sudo().search([
-                ('active', '=', True),
-                # ('country', '=', request.env.ref('base.ve').id)  # Opcional: filtrar solo Venezuela
-            ], order='name ASC')  # Orden alfabético por nombre
-            
-            # Construir la respuesta con el formato que espera tu frontend
+            banks = request.env['res.bank'].sudo().search([('active', '=', True)], order='name ASC')
             bank_list = []
             for bank in banks:
                 bank_list.append({
-                    'id': bank.bic,           # Usamos el código BIC (0102, 0134, etc.)
-                    'name': bank.name,        # Nombre del banco
-                    'bic': bank.bic,          # Incluimos también el BIC por si lo necesitas
+                    'id': bank.bic,
+                    'name': bank.name,
+                    'bic': bank.bic,
                 })
-            
             _logger.info(f"Devolviendo {len(bank_list)} bancos desde res.bank")
             return bank_list
-            
         except Exception as e:
             _logger.error(f"Error al obtener lista de bancos: {str(e)}")
-            # Fallback: lista estática por si hay error
             return [
                 {'id': '0102', 'name': 'Banco de Venezuela', 'bic': '0102'},
                 {'id': '0134', 'name': 'Banesco Banco Universal', 'bic': '0134'},
@@ -256,34 +256,22 @@ class WebsiteSaleAttachment(WebsiteSale):
     # -------------------------------------------------------------------------
     @http.route('/payment_proof/get_bank_journal_list', type='json', auth='public', csrf=False)
     def get_bank_journal_list(self):
-        """
-        Devuelve la lista de bancos (diarios) activos donde la empresa recibe pagos.
-        """
         try:
-            # Buscar diarios de tipo 'bank' que están activos
             bank_journals = request.env['account.journal'].sudo().search([
                 ('type', '=', 'bank'),
                 ('active', '=', True),
             ], order='name ASC')
-
             bank_list = []
             for journal in bank_journals:
-                # Obtenemos el nombre del banco asociado al diario (si existe)
                 bank_name = journal.bank_id.name if journal.bank_id else journal.name
-                
-                # Usamos el código del banco (bic) si existe, sino el ID del diario
-                bank_code = journal.bank_id.bic if journal.bank_id and journal.bank_id.bic else str(journal.id)
-                
                 bank_list.append({
                     'id': journal.id,
                     'name': bank_name,
                     'journal_id': journal.id,
                     'bic': journal.bank_id.bic if journal.bank_id else '',
                 })
-            
             _logger.info(f"Devolviendo {len(bank_list)} bancos desde los diarios contables")
             return bank_list
-            
         except Exception as e:
             _logger.error(f"Error al obtener lista de bancos: {str(e)}")
             return []
@@ -291,30 +279,18 @@ class WebsiteSaleAttachment(WebsiteSale):
     # -------------------------------------------------------------------------
     # Endpoint JSON: obtener datos del banco destino (para instrucciones de pago)
     # -------------------------------------------------------------------------
-    # -------------------------------------------------------------------------
-    # Endpoint JSON: obtener datos del banco destino (para instrucciones de pago)
-    # -------------------------------------------------------------------------
     @http.route('/payment_proof/get_bank_details', type='json', auth='public', csrf=False)
     def get_bank_details(self, journal_id):
-        """
-        Devuelve los detalles del banco destino para mostrar en instrucciones de pago.
-        """
         try:
             if not journal_id:
                 return {'error': 'No se especificó banco destino'}
-            
-            # Convertir a entero
             try:
                 journal_id = int(journal_id)
             except (ValueError, TypeError):
                 return {'error': f'ID de banco inválido: {journal_id}'}
-            
-            # Buscar el diario contable
             journal = request.env['account.journal'].sudo().browse(journal_id).exists()
             if not journal:
                 return {'error': f'Banco destino no encontrado con ID: {journal_id}'}
-            
-            # Obtener los datos bancarios
             bank_details = {
                 'bank_name': journal.bank_id.name if journal.bank_id else journal.name,
                 'account_number': journal.bank_acc_number or 'No especificado',
@@ -324,20 +300,17 @@ class WebsiteSaleAttachment(WebsiteSale):
                 'routing_number': journal.bank_id and journal.bank_id.bic or '',
                 'instructions': 'Transferencia bancaria - Por favor use su número de orden como referencia',
             }
-            
-            # También obtener datos desde la compañía
             company = request.env.company
             bank_details['company_name'] = company.name
             bank_details['company_rif'] = company.vat or ''
-            
             _logger.info(f"Detalles del banco destino para journal {journal_id}: {bank_details}")
             return bank_details
-            
         except Exception as e:
             _logger.error(f"Error al obtener detalles del banco: {str(e)}", exc_info=True)
             return {'error': str(e)}
+
     # -------------------------------------------------------------------------
-    # Hook _process_payment (mantenido original)
+    # Hook _process_payment (recupera datos de sesión si no se guardaron antes)
     # -------------------------------------------------------------------------
     def _process_payment(self, **kwargs):
         """Procesa el pago y recupera los datos de sesión si aún no se han guardado"""
@@ -347,7 +320,7 @@ class WebsiteSaleAttachment(WebsiteSale):
         if sale_order_id:
             order = request.env['sale.order'].sudo().browse(int(sale_order_id)).exists()
 
-        # Si existe el comprobante en sesión y no se ha guardado aún, lo creamos
+        # Si existe el comprobante en sesión y no se ha guardado aún (fallback)
         if order and 'payment_proof' in request.session:
             proof = request.session.pop('payment_proof')
             try:
@@ -360,15 +333,20 @@ class WebsiteSaleAttachment(WebsiteSale):
                     'mimetype': proof.get('mimetype'),
                     'description': 'Comprobante de pago - Transferencia / Pago Móvil',
                 })
-                _logger.info(f"✅ Attachment creado en Sale Order {order.name}! Archivo: {proof['filename']}")
+                _logger.info(f"✅ Attachment creado en Sale Order {order.name} desde sesión")
                 order.sudo().write({
                     'payment_proof': proof['data'],
                     'payment_proof_filename': proof['filename'],
                 })
+                # Publicar en chatter
+                order.sudo().message_post(
+                    body="🧾 **Comprobante de pago adjunto** (recuperado desde sesión)",
+                    attachment_ids=[attachment.id]
+                )
             except Exception as e:
-                _logger.error(f"Error creando attachment: {e}", exc_info=True)
+                _logger.error(f"Error creando attachment desde sesión: {e}", exc_info=True)
 
-        # También recuperar datos de pago adicionales si existen
+        # También recuperar datos de pago adicionales si existen y aún no se han escrito
         if order and 'payment_data' in request.session:
             payment_data = request.session.pop('payment_data')
             try:

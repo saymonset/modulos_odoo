@@ -40,6 +40,7 @@
         'views/website_cart_usd.xml',
         'views/payment_attachment_templates.xml',
         'views/payment_provider_views.xml',
+        'views/res_company_views.xml',
     # 'views/website_sale_templates.xml',
         # 'views/invoice_report_templates.xml',
     ],

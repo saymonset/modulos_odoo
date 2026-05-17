@@ -54,7 +54,7 @@ class SaleOrder(models.Model):
             order.currency_aux = usd
 
     def _create_invoices(self, grouped=False, final=False, date=None):
-        """Copia automáticamente el comprobante de pago de la orden de venta a la factura"""
+        """Copia automáticamente el comprobante de pago de la orden de venta a la factura y lo publica en el chatter"""
         invoices = super()._create_invoices(grouped=grouped, final=final, date=date)
 
         for order in self:
@@ -66,7 +66,7 @@ class SaleOrder(models.Model):
 
             for invoice in invoices:
                 for att in attachments:
-                    self.env['ir.attachment'].sudo().create({
+                    new_att = self.env['ir.attachment'].sudo().create({
                         'name': att.name,
                         'type': att.type,
                         'datas': att.datas,
@@ -75,6 +75,11 @@ class SaleOrder(models.Model):
                         'res_id': invoice.id,
                         'description': 'Comprobante de pago - Transferencia / Pago Móvil',
                     })
+                    # Publicar en el chatter de la factura
+                    invoice.sudo().message_post(
+                        body=f"🧾 Comprobante de pago adjunto desde la orden {order.name}",
+                        attachment_ids=[new_att.id]
+                    )
                     _logger.info(f"Comprobante copiado a factura {invoice.name} desde orden {order.name}")
 
         return invoices
@@ -82,13 +87,8 @@ class SaleOrder(models.Model):
     def action_confirm(self):
         _logger.warning(f"=== INICIO action_confirm: self = {self}, ids = {self.ids}, len = {len(self)} ===")
 
-        # ------------------------------------------------------------
-        # Caso 1: self está vacío -> intentar recuperar orden desde transacción de pago
-        # ------------------------------------------------------------
         if not self:
             _logger.warning("self está VACÍO. Intentando recuperar orden desde payment.transaction...")
-
-            # Intentamos buscar la transacción
             try:
                 _logger.info("Buscando payment.transaction con referencia like 'S%' y estado pending/authorized...")
                 transaction = self.env['payment.transaction'].sudo().search([
@@ -100,12 +100,10 @@ class SaleOrder(models.Model):
                 _logger.exception(f"ERROR en la búsqueda de payment.transaction: {e}")
                 return self.env['sale.order']
 
-            # Si encontramos transacción y tiene sale_order_ids asociados
             if transaction and transaction.sale_order_ids:
                 order = transaction.sale_order_ids[0]
                 _logger.warning(f"Orden recuperada desde transacción: {order.name} (ID {order.id})")
 
-                # Si la orden ya está confirmada, solo post-procesa
                 if order.state == 'sale':
                     _logger.info(f"La orden {order.name} ya está confirmada. Ejecutando post-procesamiento...")
                     self._process_order_post_confirm(order)
@@ -119,19 +117,14 @@ class SaleOrder(models.Model):
                 _logger.error("No se pudo recuperar la orden. No hay transacción válida o no tiene sale_order_ids.")
                 return self.env['sale.order']
 
-        # ------------------------------------------------------------
-        # Caso 2: self tiene registros (una o más órdenes)
-        # ------------------------------------------------------------
         _logger.warning(f"self NO está vacío. Procesando {len(self)} orden(es) normalmente.")
         for idx, order in enumerate(self):
             _logger.info(f"Orden #{idx+1}: name={order.name}, id={order.id}, state={order.state}")
 
-        # Confirmamos la(s) orden(es) llamando al método original
         _logger.info("Llamando a super().action_confirm() para confirmar las órdenes...")
         res = super().action_confirm()
         _logger.info(f"super().action_confirm() ha retornado: {res}")
 
-        # Ahora, para cada orden, ejecutamos el post-procesamiento (pago + WhatsApp)
         for order in self:
             self._process_order_post_confirm(order)
 
@@ -143,33 +136,32 @@ class SaleOrder(models.Model):
         """Procesa una orden ya confirmada: guarda datos de pago y envía WhatsApp si corresponde."""
         _logger.info(f"Procesando orden {order.name} (ID {order.id}) después de confirmación.")
 
-        # --------------------------------------------------------
-        # Guardar datos de pago desde la sesión (si aplica)
-        # --------------------------------------------------------
+        # Guardar datos de pago desde la sesión (solo si no se guardaron antes)
         try:
-            # Verificar si estamos en un contexto HTTP con sesión activa
             if request and hasattr(request, 'session') and 'payment_data' in request.session:
                 payment_data = request.session.pop('payment_data')
                 _logger.info(f"Datos de pago encontrados en sesión para orden {order.name}: {payment_data}")
-                order.sudo().write({
-                    'payment_date': payment_data.get('payment_date'),
-                    'payment_method': payment_data.get('payment_method'),
-                    'bank_origin': payment_data.get('bank_origin'),
-                    'bank_destination': payment_data.get('bank_destination', 'N/A'),
-                    'reference': payment_data.get('reference'),
-                    'amount_vef': payment_data.get('amount_vef', 0),
-                    'exchange_rate': payment_data.get('exchange_rate', 0),
-                    'amount_usd': payment_data.get('amount_usd', 0),
-                })
-                _logger.warning(f"✅ Datos de pago guardados correctamente para orden {order.name}")
+                # Solo escribir si los campos están vacíos (para no pisar lo que ya se guardó en upload)
+                if not order.payment_date:
+                    order.sudo().write({
+                        'payment_date': payment_data.get('payment_date'),
+                        'payment_method': payment_data.get('payment_method'),
+                        'bank_origin': payment_data.get('bank_origin'),
+                        'bank_destination': payment_data.get('bank_destination', 'N/A'),
+                        'reference': payment_data.get('reference'),
+                        'amount_vef': payment_data.get('amount_vef', 0),
+                        'exchange_rate': payment_data.get('exchange_rate', 0),
+                        'amount_usd': payment_data.get('amount_usd', 0),
+                    })
+                    _logger.warning(f"✅ Datos de pago guardados correctamente para orden {order.name}")
+                else:
+                    _logger.info(f"Los datos de pago ya existían en la orden, se omite escritura desde sesión.")
             else:
-                _logger.info(f"No hay datos de pago en sesión (request={request}, session tiene payment_data? = {hasattr(request, 'session') and 'payment_data' in request.session if request else False})")
+                _logger.info(f"No hay datos de pago en sesión o ya fueron consumidos.")
         except Exception as e:
             _logger.exception(f"❌ Error guardando datos de pago para orden {order.name}: {e}")
 
-        # --------------------------------------------------------
         # Enviar WhatsApp si cumple condiciones
-        # --------------------------------------------------------
         if order.whatsapp_sent:
             _logger.info(f"La orden {order.name} ya tiene whatsapp_sent = True, se omite envío.")
             return
