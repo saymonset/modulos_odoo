@@ -83,18 +83,18 @@
                     </div>
                 </div>
 
-                <!-- Referencia (obligatoria) -->
+                <!-- Referencia (obligatoria) - CAMBIADO a t-on-input -->
                 <div class="row g-3">
                     <div class="col-md-6 mb-3">
                         <label for="reference" class="form-label">Referencia <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="reference" t-att-value="state.reference" t-on-change="_updateField" data-field="reference" required="required"/>
+                        <input type="text" class="form-control" id="reference" t-att-value="state.reference" t-on-input="_updateField" data-field="reference" required="required"/>
                         <div t-if="state.referenceRequired" class="text-danger small mt-1">
                             <i class="fa fa-exclamation-circle"></i> La referencia es obligatoria.
                         </div>
                     </div>
                 </div>
 
-                <!-- Campos de monto -->
+                <!-- Campos de monto - CAMBIADOS a t-on-input -->
                 <div class="row g-3">
                     <div class="col-md-4 mb-3">
                         <label for="amount_vef" class="form-label">Monto en bolívares</label>

@@ -33,7 +33,7 @@ export class PaymentProofComponent extends Component {
             payment_date: new Date().toISOString().slice(0, 10),
             payment_method: 'movil',
             bank_origin: '',
-            bank_destination: 'N/A',
+            bank_destination: '',
             reference: '',
             amount_vef: 0,
             exchange_rate: 0,
@@ -58,6 +58,11 @@ export class PaymentProofComponent extends Component {
                 error: null,
             },
         });
+
+        this.buttonObserver = null;
+        this.radioObserver = null;
+        this.buttonPollInterval = null;
+        this.resizeListener = null;
 
         onWillStart(async () => {
             this.state.loading = true;
@@ -95,18 +100,25 @@ export class PaymentProofComponent extends Component {
         });
 
         onMounted(() => {
-            console.log("✅ Componente montado");
+            console.log("✅ Componente montado (móvil/desktop)");
             this._bindPaymentMethodChange();
             this._interceptPaymentButton();
+            this._startButtonWatchdog();
+            this._bindResizeEvent(); // NUEVO: manejar redimensionamiento
         });
 
         onWillUnmount(() => {
             console.log("🔌 Desmontando componente, limpiando listeners");
             this._unbindPaymentMethodChange();
             if (this.observer) this.observer.disconnect();
+            if (this.buttonObserver) this.buttonObserver.disconnect();
+            if (this.radioObserver) this.radioObserver.disconnect();
+            if (this.buttonPollInterval) clearInterval(this.buttonPollInterval);
+            if (this.resizeListener) window.removeEventListener('resize', this.resizeListener);
         });
     }
 
+    // ---------- Métodos auxiliares ----------
     _normalizeNumber(value) {
         if (value === undefined || value === null) return 0;
         if (typeof value !== 'string') value = String(value);
@@ -234,15 +246,13 @@ export class PaymentProofComponent extends Component {
             const hasBankOrigin = this.state.bank_origin && this.state.bank_origin !== '';
             const hasBankDest = this.state.bank_destination && this.state.bank_destination !== '';
             enable = isAmountValid && hasValidProof && hasReference && hasBankOrigin && hasBankDest;
-            console.log("Validación botón:", { isAmountValid, hasValidProof, hasReference, hasBankOrigin, hasBankDest, enable });
+            console.log("Validación botón (móvil):", { isAmountValid, hasValidProof, hasReference, hasBankOrigin, hasBankDest, enable });
         }
         this._setPaymentButtonEnabled(enable);
     }
 
     _setPaymentButtonEnabled(enable) {
-        const paymentButton = document.querySelector('button[name="o_payment_submit_button"]') ||
-                              document.querySelector('.o_payment_btn') ||
-                              document.querySelector('#o_payment_form button[type="submit"]');
+        const paymentButton = this._findPaymentButton();
         if (paymentButton) {
             if (enable) {
                 paymentButton.removeAttribute('disabled');
@@ -251,16 +261,58 @@ export class PaymentProofComponent extends Component {
                 paymentButton.setAttribute('disabled', 'disabled');
                 paymentButton.classList.add('disabled');
             }
+            console.log(`Botón de pago ${enable ? 'HABILITADO' : 'DESHABILITADO'}`);
         } else {
-            console.warn("No se encontró el botón de pago");
+            console.warn("No se encontró el botón de pago al intentar cambiar estado");
         }
     }
 
+    _findPaymentButton() {
+        let button = document.querySelector('button[name="o_payment_submit_button"]') ||
+                     document.querySelector('.o_payment_btn') ||
+                     document.querySelector('#o_payment_form button[type="submit"]') ||
+                     document.querySelector('.payment-submit-button') ||
+                     document.querySelector('button[data-action="submit"]');
+        if (!button) {
+            const forms = document.querySelectorAll('form');
+            for (let form of forms) {
+                if (form.id.includes('payment') || form.classList.contains('o_payment_form')) {
+                    const btns = form.querySelectorAll('button[type="submit"]');
+                    if (btns.length) button = btns[0];
+                    break;
+                }
+            }
+        }
+        return button;
+    }
+
+    _startButtonWatchdog() {
+        this.buttonPollInterval = setInterval(() => {
+            const btn = this._findPaymentButton();
+            if (btn && !btn.hasAttribute('data-proof-watchdog')) {
+                btn.setAttribute('data-proof-watchdog', 'true');
+                this._checkAndTogglePaymentButton();
+                if (this.buttonObserver) this.buttonObserver.disconnect();
+                this.buttonObserver = new MutationObserver((mutations) => {
+                    for (let mut of mutations) {
+                        if (mut.attributeName === 'disabled') {
+                            console.log("⚠️ Otro script modificó el disabled, corrigiendo...");
+                            this._checkAndTogglePaymentButton();
+                            break;
+                        }
+                    }
+                });
+                this.buttonObserver.observe(btn, { attributes: true });
+            } else if (btn && btn.hasAttribute('data-proof-watchdog')) {
+                // ya observado
+            } else if (!btn) {
+                console.log("Esperando que aparezca el botón de pago...");
+            }
+        }, 1000);
+    }
+
     _interceptPaymentButton() {
-        // Obtenemos el botón de pago original (sin clonar)
-        const paymentButton = document.querySelector('button[name="o_payment_submit_button"]') ||
-                              document.querySelector('.o_payment_btn') ||
-                              document.querySelector('#o_payment_form button[type="submit"]');
+        const paymentButton = this._findPaymentButton();
         if (!paymentButton) {
             setTimeout(() => this._interceptPaymentButton(), 300);
             return;
@@ -268,9 +320,7 @@ export class PaymentProofComponent extends Component {
         if (paymentButton.hasAttribute('data-validated')) return;
         paymentButton.setAttribute('data-validated', 'true');
         
-        // Guardamos el manejador original (si existe) para ejecutarlo después
         const self = this;
-        // Añadimos nuestro evento antes que cualquier otro (capture fase)
         paymentButton.addEventListener('click', (event) => {
             if (self.state.showSection) {
                 if (!self._validateBeforeSubmit()) {
@@ -279,9 +329,8 @@ export class PaymentProofComponent extends Component {
                     return false;
                 }
             }
-            // Si pasa la validación, permitimos que se ejecuten otros manejadores
             return true;
-        }, { capture: true }); // capture: true para interceptar antes
+        }, { capture: true });
     }
 
     _validateBeforeSubmit() {
@@ -314,75 +363,55 @@ export class PaymentProofComponent extends Component {
     }
 
     _bindPaymentMethodChange() {
-        let radioContainer = document.querySelector("div[id='payment_method']") ||
-            document.querySelector(".o_payment_methods") ||
-            document.querySelector("[data-payment-methods]") ||
-            document.querySelector(".payment_methods") ||
-            document.querySelector("#payment_method");
-        if (radioContainer) {
-            radioContainer.addEventListener("change", this._onPaymentMethodChange.bind(this));
-            const radios = radioContainer.querySelectorAll('input[type="radio"]');
-            radios.forEach(radio => {
-                radio.addEventListener("click", this._onPaymentMethodChange.bind(this));
-            });
-            this._onPaymentMethodChange();
-        } else {
-            const targetNode = document.body;
-            const config = { childList: true, subtree: true };
-            this.observer = new MutationObserver((mutations, obs) => {
-                let container = document.querySelector("div[id='payment_method']") ||
-                    document.querySelector(".o_payment_methods") ||
-                    document.querySelector("[data-payment-methods]") ||
-                    document.querySelector(".payment_methods") ||
-                    document.querySelector("#payment_method");
-                if (container) {
-                    obs.disconnect();
-                    container.addEventListener("change", this._onPaymentMethodChange.bind(this));
-                    const radios = container.querySelectorAll('input[type="radio"]');
-                    radios.forEach(radio => {
-                        radio.addEventListener("click", this._onPaymentMethodChange.bind(this));
-                    });
-                    this._onPaymentMethodChange();
-                }
-            });
-            this.observer.observe(targetNode, config);
-        }
+        document.body.addEventListener('change', this._onPaymentMethodChange.bind(this));
+        document.body.addEventListener('click', this._onPaymentMethodChange.bind(this));
+        const targetNode = document.body;
+        const config = { childList: true, subtree: true };
+        this.radioObserver = new MutationObserver((mutations, obs) => {
+            const radios = document.querySelectorAll('input[type="radio"][name*="payment"]');
+            if (radios.length) {
+                this._onPaymentMethodChange();
+            }
+        });
+        this.radioObserver.observe(targetNode, config);
+        this._onPaymentMethodChange();
     }
 
     _unbindPaymentMethodChange() {
-        const radioContainer = document.querySelector("div[id='payment_method']") ||
-            document.querySelector(".o_payment_methods") ||
-            document.querySelector("[data-payment-methods]");
-        if (radioContainer) {
-            radioContainer.removeEventListener("change", this._onPaymentMethodChange);
-        }
+        document.body.removeEventListener('change', this._onPaymentMethodChange);
+        document.body.removeEventListener('click', this._onPaymentMethodChange);
+        if (this.radioObserver) this.radioObserver.disconnect();
     }
 
     _onPaymentMethodChange() {
         let selectedRadio = document.querySelector('input[name="o_payment_radio"]:checked') ||
-            document.querySelector('input[name="payment_method"]:checked') ||
-            document.querySelector('input[type="radio"][name*="payment"]:checked') ||
-            document.querySelector('.o_payment_methods input[type="radio"]:checked');
+                            document.querySelector('input[name="payment_method"]:checked') ||
+                            document.querySelector('input[type="radio"][name*="payment"]:checked') ||
+                            document.querySelector('.o_payment_methods input[type="radio"]:checked');
+        
         if (!selectedRadio) {
             this.state.showSection = false;
             this._updateValidationMessages();
             this._checkAndTogglePaymentButton();
             return;
         }
+
         let providerId = selectedRadio.getAttribute("data-payment-option-id") ||
-            selectedRadio.getAttribute("data-provider-id") ||
-            selectedRadio.getAttribute("data-id") ||
-            selectedRadio.value;
+                         selectedRadio.getAttribute("data-provider-id") ||
+                         selectedRadio.getAttribute("data-id") ||
+                         selectedRadio.value;
+        
         let paymentText = "";
-        const label = selectedRadio.closest('label') ||
-            selectedRadio.parentElement.querySelector('label, span') ||
-            selectedRadio.parentElement;
+        const label = selectedRadio.closest('label') || 
+                      selectedRadio.parentElement?.querySelector('label, span') ||
+                      selectedRadio.parentElement;
         if (label) paymentText = label.innerText.trim();
         const parentDiv = selectedRadio.closest('.payment_method');
         if (parentDiv) {
             const titleElem = parentDiv.querySelector('.payment_method_title, .method-name, h4, strong');
             if (titleElem) paymentText = titleElem.innerText.trim();
         }
+        
         let shouldShow = false;
         if (providerId && this.state.transferProviderId && String(providerId) === String(this.state.transferProviderId)) {
             shouldShow = true;
@@ -393,9 +422,32 @@ export class PaymentProofComponent extends Component {
                 shouldShow = true;
             }
         }
+        
+        console.log("Método de pago seleccionado:", { providerId, paymentText, shouldShow });
         this.state.showSection = shouldShow;
         this._updateValidationMessages();
         this._checkAndTogglePaymentButton();
+    }
+
+    // NUEVO: Manejar redimensionamiento de la ventana (especialmente para móviles simulados)
+    _bindResizeEvent() {
+        let resizeTimeout;
+        this.resizeListener = () => {
+            // Debounce para no saturar
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                console.log("🔄 Ventana redimensionada, re-evaluando método de pago y botón");
+                // Forzar la re-detección del método de pago seleccionado
+                this._onPaymentMethodChange();
+                // Además, asegurar que el botón se encuentra y tiene el estado correcto
+                const btn = this._findPaymentButton();
+                if (btn && !btn.hasAttribute('data-proof-watchdog')) {
+                    this._startButtonWatchdog(); // reintenta asignar watchdog
+                }
+                this._checkAndTogglePaymentButton();
+            }, 250);
+        };
+        window.addEventListener('resize', this.resizeListener);
     }
 
     async uploadFile(file) {
