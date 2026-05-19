@@ -1,22 +1,31 @@
 /** @odoo-module **/
-import { Component, useState, onWillStart, onMounted } from "@odoo/owl";
+import { Component, useState, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { rpc } from "@web/core/network/rpc";
 import { useService } from "@web/core/utils/hooks";
+
+let alreadyMounted = false;
 
 export class PaymentProofComponent extends Component {
     static template = "bcv_rate_update_venezuela.PaymentProofComponent";
 
     setup() {
+        if (alreadyMounted || document.getElementById('payment_proof_form_container')) {
+            console.warn("⚠️ PaymentProofComponent ya está montado, ignorando duplicado");
+            this.state = useState({ loading: false });
+            return;
+        }
+        alreadyMounted = true;
+
         this.notification = useService("notification");
         this.state = useState({
-            showSection: true,   // FORZADO: siempre visible
-            loading: true,
+            loading: false,
             bankList: [],
             bankJournalList: [],
             original_amount_vef: 0,
             exchange_rate: 0,
             amount_vef: 0,
+            amount_usd: 0,
             is_valid_amount: false,
             rate_date: '',
             payment_date: new Date().toISOString().slice(0, 10),
@@ -46,23 +55,25 @@ export class PaymentProofComponent extends Component {
                     this.state.exchange_rate = this._normalizeNumber(rateSpan.innerText);
                     this.state.rate_date = rateDateSpan ? rateDateSpan.innerText : '';
                     this.state.amount_vef = this.state.original_amount_vef;
+                    // Calcular USD inicial
+                    this.state.amount_usd = this._round(this.state.amount_vef / this.state.exchange_rate);
                     this._validateAmounts();
                 }
             } catch (err) {
                 console.error(err);
-            } finally {
-                this.state.loading = false;
+                this.notification.add("Error al cargar datos de pago", { type: "danger" });
             }
-        });
-
-        onMounted(() => {
-            // El formulario siempre visible, no necesitamos detectar nada
-            console.log("Formulario de comprobante siempre visible");
         });
     }
 
-    _normalizeNumber(v) { let n = parseFloat(String(v).replace(/[^\d.,-]/g, '').replace(',', '.')); return isNaN(n) ? 0 : n; }
-    _round(v) { return Math.round(v * 100) / 100; }
+    _normalizeNumber(v) {
+        let n = parseFloat(String(v).replace(/[^\d.,-]/g, '').replace(',', '.'));
+        return isNaN(n) ? 0 : n;
+    }
+
+    _round(v) {
+        return Math.round(v * 100) / 100;
+    }
 
     async _loadBankDetails(journalId) {
         if (!journalId) {
@@ -74,7 +85,7 @@ export class PaymentProofComponent extends Component {
             const details = await rpc("/payment_proof/get_bank_details", { journal_id: journalId });
             this.state.bank_details = { ...this.state.bank_details, ...details, loading: false, error: null };
         } catch (err) {
-            this.state.bank_details = { ...this.state.bank_details, error: "Error", loading: false };
+            this.state.bank_details = { ...this.state.bank_details, error: "Error cargando banco", loading: false };
         }
     }
 
@@ -84,8 +95,26 @@ export class PaymentProofComponent extends Component {
     }
 
     _onAmountVefInput(e) {
-        this.state.amount_vef = this._normalizeNumber(e.target.value);
-        if (this.state.exchange_rate) this.state.amount_usd = this._round(this.state.amount_vef / this.state.exchange_rate);
+        let rawValue = e.target.value;
+        let value = this._normalizeNumber(rawValue);
+        this.state.amount_vef = value;
+        if (this.state.exchange_rate > 0) {
+            this.state.amount_usd = this._round(value / this.state.exchange_rate);
+        } else {
+            this.state.amount_usd = 0;
+        }
+        this._validateAmounts();
+    }
+
+    _onAmountUsdInput(e) {
+        let rawValue = e.target.value;
+        let value = this._normalizeNumber(rawValue);
+        this.state.amount_usd = value;
+        if (this.state.exchange_rate > 0) {
+            this.state.amount_vef = this._round(value * this.state.exchange_rate);
+        } else {
+            this.state.amount_vef = 0;
+        }
         this._validateAmounts();
     }
 
@@ -106,7 +135,7 @@ export class PaymentProofComponent extends Component {
             formData.append("reference", this.state.reference);
             formData.append("amount_vef", this.state.amount_vef);
             formData.append("exchange_rate", this.state.exchange_rate);
-            formData.append("amount_usd", this.state.amount_usd);
+            formData.append("amount_usd", this.state.amount_usd || 0);
             const response = await fetch("/shop/upload_payment_proof", {
                 method: "POST",
                 body: formData,

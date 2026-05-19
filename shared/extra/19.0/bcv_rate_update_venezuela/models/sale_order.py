@@ -39,11 +39,8 @@ class SaleOrder(models.Model):
         for order in self:
             order.currency_aux = usd
 
-    # ------------------------------------------------------------
-    # GUARDAR DATOS DEL COMPROBANTE (desde frontend)
-    # ------------------------------------------------------------
     def action_save_payment_data(self, payment_data):
-        _logger.info(f"*** SALVANDO: Datos de pago para orden {self.name}: {payment_data}")
+        _logger.info(f"*** SALVANDO: Datos de pago para orden {self.name}")
         self.sudo().write({
             'payment_date': payment_data.get('payment_date'),
             'payment_method': payment_data.get('payment_method'),
@@ -56,39 +53,30 @@ class SaleOrder(models.Model):
         })
         return True
 
-    # ------------------------------------------------------------
-    # VALIDACIÓN DE CAMPOS OBLIGATORIOS (lanza UserError)
-    # ------------------------------------------------------------
     def validate_payment_required_fields(self):
         _logger.info(f"*** VALIDANDO: {len(self)} orden(es)")
         for order in self:
             if order.payment_method in ['transfer', 'movil']:
                 if not order.reference:
-                    raise UserError(_('❌ La referencia es obligatoria para pagos por transferencia.'))
+                    raise UserError(_('✏️ Falta la referencia del pago. Por favor, indique el número de referencia de su transferencia.'))
                 if not order.bank_origin:
-                    raise UserError(_('❌ Debe seleccionar el banco origen.'))
+                    raise UserError(_('🏦 Falta el banco origen. Seleccione desde qué banco realiza la transferencia.'))
                 if not order.bank_destination or order.bank_destination == 'N/A':
-                    raise UserError(_('❌ Debe seleccionar el banco destino.'))
+                    raise UserError(_('🏦 Falta el banco destino. Seleccione el banco al que depositará.'))
                 attachment = self.env['ir.attachment'].sudo().search([
                     ('res_model', '=', 'sale.order'),
                     ('res_id', '=', order.id),
                     ('description', '=', 'Comprobante de pago - Transferencia / Pago Móvil'),
                 ], limit=1)
                 if not attachment:
-                    raise UserError(_('❌ Debe adjuntar el comprobante de pago.'))
+                    raise UserError(_('📎 Falta adjuntar el comprobante de pago. Por favor, suba la imagen o PDF del comprobante.'))
                 if order.amount_vef < (order.amount_total - 0.01):
-                    raise UserError(_('❌ El monto pagado (%.2f Bs.) es menor al total (%.2f Bs.)')
-                                    % (order.amount_vef, order.amount_total))
+                    raise UserError(_('💰 El monto pagado (%.2f Bs.) es menor al total de la orden (%.2f Bs.). Por favor, verifique el monto.'))
                 _logger.info(f"*** VALIDACIÓN EXITOSA para orden {order.name}")
 
-    # ------------------------------------------------------------
-    # CONFIRMACIÓN DE LA ORDEN (con recuperación de sesión y validación)
-    # ------------------------------------------------------------
     def action_confirm(self):
         _logger.info(f"*** CONFIRMANDO: action_confirm llamado con órdenes {self.ids}")
-        # Si no tenemos órdenes (caso típico desde el flujo de pago)
         if not self:
-            # Buscar la última transacción pendiente
             tx = self.env['payment.transaction'].sudo().search([
                 ('reference', 'like', 'S%'),
                 ('state', 'in', ['pending', 'authorized']),
@@ -96,20 +84,15 @@ class SaleOrder(models.Model):
             if tx and tx.sale_order_ids:
                 order = tx.sale_order_ids[0]
                 _logger.info(f"*** CONFIRMANDO: Orden recuperada desde transacción: {order.name}")
-                # Recuperar datos de sesión si existen
                 if request and hasattr(request, 'session') and 'payment_data' in request.session:
                     payment_data = request.session.pop('payment_data')
                     if payment_data.get('sale_order_id') == order.id:
                         order.action_save_payment_data(payment_data)
-                # Validar campos obligatorios
                 order.validate_payment_required_fields()
-                # Confirmar la orden
                 return super(SaleOrder, order).action_confirm()
             else:
-                _logger.warning("*** CONFIRMANDO: No se encontró transacción para recuperar orden")
                 return self.env['sale.order']
         else:
-            # Confirmación normal (desde botón)
             for order in self:
                 if request and hasattr(request, 'session') and 'payment_data' in request.session:
                     payment_data = request.session.pop('payment_data')
@@ -118,9 +101,6 @@ class SaleOrder(models.Model):
             return super().action_confirm()
 
 
-# ------------------------------------------------------------
-# HERENCIA DEL PROVEEDOR DE PAGO (validación extra)
-# ------------------------------------------------------------
 class PaymentProvider(models.Model):
     _inherit = 'payment.provider'
 
@@ -130,7 +110,6 @@ class PaymentProvider(models.Model):
         if sale_order_id:
             sale_order = self.env['sale.order'].browse(sale_order_id)
             if sale_order and sale_order.payment_method in ['transfer', 'movil']:
-                # Intentar recuperar datos de sesión si aún no están guardados
                 if not sale_order.reference and request and hasattr(request, 'session') and 'payment_data' in request.session:
                     payment_data = request.session.get('payment_data')
                     if payment_data and payment_data.get('sale_order_id') == sale_order_id:

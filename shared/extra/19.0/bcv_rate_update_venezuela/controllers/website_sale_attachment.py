@@ -4,16 +4,12 @@ from odoo.addons.website_sale.controllers.main import WebsiteSale
 from markupsafe import Markup
 import base64
 import logging
-import re
 
 _logger = logging.getLogger(__name__)
 
 
 class WebsiteSaleAttachment(WebsiteSale):
 
-    # -------------------------------------------------------------------------
-    # Búsqueda de partner por email o teléfono
-    # -------------------------------------------------------------------------
     @http.route('/shop/get_partner_data', type='json', auth='public', website=True)
     def get_partner_data(self, email=None, phone=None):
         if not email and not phone:
@@ -29,7 +25,7 @@ class WebsiteSaleAttachment(WebsiteSale):
         partner = request.env['res.partner'].sudo().search(search_domain, limit=1)
         if partner:
             if partner.user_ids or partner.id == request.website.partner_id.id:
-                _logger.info("Partner found but has users or is public. Skipping auto-fill for security.")
+                _logger.info("Partner found but has users or is public. Skipping auto-fill.")
                 return {'has_user': True}
             return {
                 'name': partner.name,
@@ -60,27 +56,21 @@ class WebsiteSaleAttachment(WebsiteSale):
                 search_domain = ['|'] * (len(domain) - 1) + domain if len(domain) > 1 else domain
                 existing_partner = request.env['res.partner'].sudo().search(search_domain + [('user_ids', '=', False)], limit=1)
                 if existing_partner:
-                    _logger.info(f"Vínculando orden a partner existente ID {existing_partner.id} ({existing_partner.name})")
+                    _logger.info(f"Vínculando orden a partner existente ID {existing_partner.id}")
                     partner_id = existing_partner.id
         return super().shop_address_submit(partner_id=partner_id, **form_data)
 
-    # -------------------------------------------------------------------------
-    # Endpoint JSON: total orden + tasa BCV
-    # -------------------------------------------------------------------------
     @http.route('/payment_proof/get_order_total_and_rate', type='json', auth='public', csrf=False)
     def get_order_total_and_rate(self):
         _logger.info("=== get_order_total_and_rate called ===")
         try:
             sale_order_id = request.session.get('sale_order_id') or request.session.get('sale_last_order_id')
             if not sale_order_id:
-                _logger.warning("No hay sale_order_id en sesión")
                 return {'error': 'No hay orden activa'}
             order = request.env['sale.order'].sudo().browse(int(sale_order_id)).exists()
             if not order:
-                _logger.warning(f"No se encontró la orden con ID {sale_order_id}")
                 return {'error': 'No se encontró la orden'}
             amount_vef = order.amount_total
-            _logger.info(f"Monto en VES: {amount_vef}")
             rate_info = request.website.get_rate_info()
             exchange_rate = rate_info.get('rate', 0.0)
             if exchange_rate and exchange_rate > 1.0:
@@ -121,7 +111,6 @@ class WebsiteSaleAttachment(WebsiteSale):
         file_base64 = base64.b64encode(file_data).decode('utf-8')
         filename = file.filename
 
-        # Detectar mimetype
         mimetype = file.content_type
         if not mimetype or mimetype == 'application/octet-stream':
             ext = filename.split('.')[-1].lower()
@@ -129,16 +118,14 @@ class WebsiteSaleAttachment(WebsiteSale):
                 mimetype = 'image/jpeg'
             elif ext == 'png':
                 mimetype = 'image/png'
-            elif ext == 'gif':
-                mimetype = 'image/gif'
             elif ext == 'pdf':
                 mimetype = 'application/pdf'
             else:
                 mimetype = 'application/octet-stream'
 
-        # === MODIFICACIÓN CLAVE: AÑADIR sale_order_id A payment_data ===
+        # IMPORTANTE: incluir sale_order_id
         payment_data = {
-            'sale_order_id': sale_order_id,                     # <-- Línea añadida
+            'sale_order_id': sale_order_id,
             'payment_date': post.get('payment_date'),
             'payment_method': post.get('payment_method'),
             'bank_origin': post.get('bank_origin'),
@@ -146,16 +133,14 @@ class WebsiteSaleAttachment(WebsiteSale):
             'reference': post.get('reference'),
             'amount_vef': float(post.get('amount_vef', 0)),
             'exchange_rate': float(post.get('exchange_rate', 0)),
-            'amount_usd': float(post.get('amount_usd', 0)),
+            'amount_usd': float(post.get('amount_usd', 0)) if post.get('amount_usd') and post.get('amount_usd') != 'undefined' else 0.0,
         }
         _logger.info(f"📝 Datos de pago recibidos: {payment_data}")
 
-        # Guardar en sesión
         request.session['payment_data'] = payment_data
 
         if order:
             try:
-                # Crear attachment
                 attachment = request.env['ir.attachment'].sudo().create({
                     'name': filename,
                     'type': 'binary',
@@ -165,8 +150,6 @@ class WebsiteSaleAttachment(WebsiteSale):
                     'mimetype': mimetype,
                     'description': 'Comprobante de pago - Transferencia / Pago Móvil',
                 })
-
-                # Escribir directamente en la orden
                 order.sudo().write({
                     'payment_proof': file_base64,
                     'payment_proof_filename': filename,
@@ -179,15 +162,12 @@ class WebsiteSaleAttachment(WebsiteSale):
                     'exchange_rate': payment_data['exchange_rate'],
                     'amount_usd': payment_data['amount_usd'],
                 })
-
-                # Publicar en chatter
                 timestamp = int(attachment.write_date.timestamp()) if attachment.write_date else ''
                 attachment_url = f"/web/image/{attachment.id}" + (f"?unique={timestamp}" if timestamp else "")
                 if mimetype.startswith('image/'):
-                    img_tag = f'<div style="margin-top: 10px;"><img src="{attachment_url}" style="max-width: 100%; max-height: 300px; border: 1px solid #ccc; padding: 5px;" /></div>'
+                    img_tag = f'<div><img src="{attachment_url}" style="max-width:100%; max-height:300px;"/></div>'
                 else:
-                    img_tag = f'<div style="margin-top: 10px;"><a href="{attachment_url}" target="_blank">📄 Ver archivo adjunto</a></div>'
-
+                    img_tag = f'<div><a href="{attachment_url}" target="_blank">📄 Ver archivo adjunto</a></div>'
                 body_html = f"""
                 <p>🧾 <strong>Comprobante de pago adjunto</strong></p>
                 <ul>
@@ -207,24 +187,20 @@ class WebsiteSaleAttachment(WebsiteSale):
                     message_type='comment',
                     subtype_id=request.env.ref('mail.mt_comment').id
                 )
-                _logger.info(f"✅ Comprobante guardado y publicado en orden {order.name}")
+                _logger.info(f"✅ Comprobante guardado en orden {order.name}")
                 return request.make_response('OK')
             except Exception as e:
                 _logger.error(f"Error guardando comprobante: {e}", exc_info=True)
                 return request.make_response('ERROR', status=500)
 
-        # Fallback: guardar en sesión
+        # Fallback en sesión
         request.session['payment_proof'] = {
             'data': file_base64,
             'filename': filename,
             'mimetype': mimetype,
         }
-        _logger.info(f"📤 Comprobante guardado en sesión: {filename}")
         return request.make_response('OK')
 
-    # -------------------------------------------------------------------------
-    # Endpoint JSON: ID del proveedor de transferencia
-    # -------------------------------------------------------------------------
     @http.route('/payment_proof/get_transfer_provider_id', type='json', auth='public', csrf=False)
     def get_transfer_provider_id(self):
         provider = request.env['payment.provider'].sudo().search([('is_wire_transfer', '=', True)], limit=1)
@@ -232,14 +208,23 @@ class WebsiteSaleAttachment(WebsiteSale):
         return provider.id if provider else 0
 
     # -------------------------------------------------------------------------
-    # Endpoint JSON: lista de bancos (res.bank)
+    # LISTA DE BANCOS ORIGEN (corregida para eliminar duplicados por BIC)
     # -------------------------------------------------------------------------
     @http.route('/payment_proof/get_bank_list', type='json', auth='public', csrf=False)
     def get_bank_list(self):
         try:
             banks = request.env['res.bank'].sudo().search([('active', '=', True)], order='name ASC')
-            bank_list = [{'id': bank.bic, 'name': bank.name, 'bic': bank.bic} for bank in banks]
-            _logger.info(f"Devolviendo {len(bank_list)} bancos desde res.bank")
+            unique = {}
+            for bank in banks:
+                bic = bank.bic
+                if bic and bic not in unique:
+                    unique[bic] = {
+                        'id': bic,
+                        'name': bank.name,
+                        'bic': bic,
+                    }
+            bank_list = list(unique.values())
+            _logger.info(f"Devolviendo {len(bank_list)} bancos únicos desde res.bank")
             return bank_list
         except Exception as e:
             _logger.error(f"Error al obtener lista de bancos: {str(e)}")
@@ -249,9 +234,6 @@ class WebsiteSaleAttachment(WebsiteSale):
                 {'id': '0105', 'name': 'Banco Mercantil', 'bic': '0105'},
             ]
 
-    # -------------------------------------------------------------------------
-    # Endpoint JSON: lista de bancos desde diarios contables (banco destino)
-    # -------------------------------------------------------------------------
     @http.route('/payment_proof/get_bank_journal_list', type='json', auth='public', csrf=False)
     def get_bank_journal_list(self):
         try:
@@ -274,9 +256,6 @@ class WebsiteSaleAttachment(WebsiteSale):
             _logger.error(f"Error al obtener lista de bancos: {str(e)}")
             return []
 
-    # -------------------------------------------------------------------------
-    # Endpoint JSON: obtener datos del banco destino
-    # -------------------------------------------------------------------------
     @http.route('/payment_proof/get_bank_details', type='json', auth='public', csrf=False)
     def get_bank_details(self, journal_id):
         try:
@@ -307,16 +286,12 @@ class WebsiteSaleAttachment(WebsiteSale):
             _logger.error(f"Error al obtener detalles del banco: {str(e)}", exc_info=True)
             return {'error': str(e)}
 
-    # -------------------------------------------------------------------------
-    # Hook _process_payment (recupera datos de sesión si no se guardaron antes)
-    # -------------------------------------------------------------------------
     def _process_payment(self, **kwargs):
         _logger.info("🔄 Entrando en _process_payment (Payment Custom)")
         sale_order_id = request.session.get('sale_order_id') or request.session.get('sale_last_order_id')
         order = None
         if sale_order_id:
             order = request.env['sale.order'].sudo().browse(int(sale_order_id)).exists()
-
         if order and 'payment_proof' in request.session:
             proof = request.session.pop('payment_proof')
             try:
@@ -329,7 +304,6 @@ class WebsiteSaleAttachment(WebsiteSale):
                     'mimetype': proof.get('mimetype', 'application/octet-stream'),
                     'description': 'Comprobante de pago - Transferencia / Pago Móvil',
                 })
-                _logger.info(f"✅ Attachment creado en Sale Order {order.name} desde sesión")
                 order.sudo().write({
                     'payment_proof': proof['data'],
                     'payment_proof_filename': proof['filename'],
@@ -338,9 +312,9 @@ class WebsiteSaleAttachment(WebsiteSale):
                 attachment_url = f"/web/image/{attachment.id}" + (f"?unique={timestamp}" if timestamp else "")
                 mimetype = proof.get('mimetype', '')
                 if mimetype.startswith('image/'):
-                    img_tag = f'<div style="margin-top: 10px;"><img src="{attachment_url}" style="max-width: 100%; max-height: 300px; border: 1px solid #ccc; padding: 5px;" /></div>'
+                    img_tag = f'<div><img src="{attachment_url}" style="max-width:100%; max-height:300px;"/></div>'
                 else:
-                    img_tag = f'<div style="margin-top: 10px;"><a href="{attachment_url}" target="_blank">📄 Ver archivo adjunto</a></div>'
+                    img_tag = f'<div><a href="{attachment_url}" target="_blank">📄 Ver archivo adjunto</a></div>'
                 body_html = f"<p>🧾 <strong>Comprobante de pago adjunto</strong> (recuperado desde sesión)</p>{img_tag}<p><em>Adjunto: {proof['filename']}</em></p>"
                 order.sudo().message_post(
                     body=Markup(body_html),
@@ -350,7 +324,6 @@ class WebsiteSaleAttachment(WebsiteSale):
                 )
             except Exception as e:
                 _logger.error(f"Error creando attachment desde sesión: {e}", exc_info=True)
-
         if order and 'payment_data' in request.session:
             payment_data = request.session.pop('payment_data')
             try:
@@ -367,5 +340,4 @@ class WebsiteSaleAttachment(WebsiteSale):
                 _logger.info(f"✅ Datos de pago adicionales guardados en orden {order.name}")
             except Exception as e:
                 _logger.error(f"Error guardando datos de pago adicionales: {e}", exc_info=True)
-
         return super()._process_payment(**kwargs)
