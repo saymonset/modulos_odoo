@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="payment_submit_button_inherit" name="Payment Submit Button with ID" inherit_id="payment.submit_button" priority="50">
+        <xpath expr="//button" position="replace">
+            <button name="o_payment_submit_button"
+                    id="payment_submit_btn"
+                    type="submit"
+                    t-out="submit_button_label"
+                    class="btn btn-primary w-100 w-md-auto ms-auto px-5"
+                    disabled="true"
+            />
+        </xpath>
+    </template>
+</odoo>

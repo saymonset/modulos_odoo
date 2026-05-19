@@ -33,7 +33,7 @@
     
     'data': [
         'security/ir.model.access.csv',
-        'data/res_bank_data.xml',  
+        'data/res_bank_data.xml',
         'views/res_currency_views.xml',
         'views/sale_order_tree_debug.xml',
         'views/sale_order_views.xml',
@@ -41,8 +41,9 @@
         'views/payment_attachment_templates.xml',
         'views/payment_provider_views.xml',
         'views/res_company_views.xml',
-    # 'views/website_sale_templates.xml',
+        # 'views/website_sale_templates.xml',
         # 'views/invoice_report_templates.xml',
+        'views/payment_templates_inherit.xml',
     ],
     
     'assets': {
