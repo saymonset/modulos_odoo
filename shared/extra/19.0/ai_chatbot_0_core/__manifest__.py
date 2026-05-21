@@ -3,6 +3,7 @@
     'name': 'ai_chatbot_0_core',
     'version': '19.0.1.0.0',
     'summary': """ ai_chatbot_0_core Summary """,
+    'description': """Módulo Core para Chatbot de IA. Contiene la lógica y modelos core para el Chatbot de Inteligencia Artificial.""",
     'author': '',
     'website': '',
     'category': '',
