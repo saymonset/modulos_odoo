@@ -131,10 +131,10 @@ class SessionState(models.Model):
             if valido:
                 return True, resultado_trad, ''
             else:
-                return False, None, resultado_trad  # mensaje original (posiblemente robótico)
+                return False, None, resultado_trad
 
     # ==================================================================
-    #  MÉTODOS ORIGINALES (modificados para usar IA)
+    #  MÉTODOS ORIGINALES (modificados para usar IA y saltar opcionales)
     # ==================================================================
     @api.model
     def iniciar_flujo(self, session_id, flow_name, steps, equipo_asignado):
@@ -297,7 +297,7 @@ class SessionState(models.Model):
             return {
                 'success': True,
                 'finalizado': False,
-                'modo': 'COMPLETADO',     # Cambiamos de COMPLETADO 
+                'modo': 'COMPLETADO',
                 'texto_para_usuario': mensaje,
                 'text': mensaje,
                 'session_id': session_id,
@@ -305,123 +305,129 @@ class SessionState(models.Model):
                 'account_id': account_id,
             }
 
-        # (Ya definidos arriba)
-        # paso_actual = registro.pasos_pendientes[0]
-        # tipo = paso_actual.get('tipo_dato', 'text')
-        # campo_destino = paso_actual.get('campo_destino')
-        
+        # Ya definidos arriba
         es_paso_telefono = paso_actual.get('es_paso_telefono', False) or campo_destino == 'solicitar_phone'
-
         nombre_mostrar = paso_actual.get('nombre_mostrar', '')
         
         # Palabras clave para saltar pasos (especialmente imágenes) o finalizar carga
         es_palabra_salto = valor.strip().lower() in ['no', 'omitir', 'saltar', 'no tengo', 'no la tengo', 'después', 'luego', 'n', 'skip']
         es_finalizar_carga = valor.strip().lower() in ['listo', 'finalizar', 'terminar', 'ya está', 'ya esta']
 
-        # --- LÓGICA DE SALTO PARA IMÁGENES/ARCHIVOS (Simples) ---
-        if tipo in ['image', 'file'] and es_palabra_salto and campo_destino != 'solicitar_imagenes_adicionales':
-            _logger.info("El usuario decidió saltar el paso de imagen/archivo: %s", campo_destino)
+        # ========== NUEVO: SALTAR PASOS OPCIONALES (ej. correo electrónico) ==========
+        es_paso_opcional = not paso_actual.get('es_requerido', True)
+        palabras_skip_opcional = ['omitir', 'saltar', 'skip', 'no', 'ninguno', 'ninguna', 'n']
+        if es_paso_opcional and valor.strip().lower() in palabras_skip_opcional:
+            _logger.info("Usuario omitió paso opcional: %s", campo_destino)
             valido = True
-            resultado = "No proporcionada"
+            resultado = None
             mensaje_error = ""
-        # --- NUEVA LÓGICA: BUCLE DE CARGA MÚLTIPLE PARA IMÁGENES ADICIONALES ---
-        elif campo_destino == 'solicitar_imagenes_adicionales':
-            # 1. Intentar validar como imagen primero
-            valido_img, resultado_img, _ = self._validar_con_ia(valor, 'image', paso, nombre_mostrar)
-            
-            if valido_img:
-                # Es una imagen válida, la agregamos a la lista
-                estado_actual = registro.estado or {}
-                datos_p = estado_actual.get('datos_paciente', {})
-                
-                # Inicializar o recuperar lista
-                imgs_adicionales = datos_p.get('solicitar_imagenes_adicionales', [])
-                if isinstance(imgs_adicionales, str):
-                    try:
-                        imgs_adicionales = json.loads(imgs_adicionales)
-                    except:
-                        imgs_adicionales = [imgs_adicionales] if imgs_adicionales else []
-                
-                if resultado_img not in imgs_adicionales:
-                    imgs_adicionales.append(resultado_img)
-                
-                datos_p['solicitar_imagenes_adicionales'] = imgs_adicionales
-                estado_actual['datos_paciente'] = datos_p
-                estado_actual['timestamp'] = fields.Datetime.now().isoformat()
-                
-                registro.write({'estado': estado_actual})
-                
-                # Respuesta pidiendo más o finalizar
-                mensaje_recibido = f"¡Excelente! He recibido la imagen ✅. ¿Deseas agregar otra imagen? O si ya finalizastes, escribe *'listo'* para continuar."
-                return {
-                    'success': True,
-                    'finalizado': False,
-                    'modo': 'FLUJO',
-                    'texto_para_usuario': mensaje_recibido,
-                    'text': mensaje_recibido,
-                    'session_id': session_id,
-                    'conversation_id': conversation_id,
-                    'account_id': account_id,
-                    'paso_actual': paso,
-                    'mensaje_prompt': mensaje_recibido,
-                }
-            else:
-                # Ver si el usuario quiere terminar o no tiene la imagen
-                if not (es_palabra_salto or es_finalizar_carga):
-                    res_fin = self._get_gpt_service().detectar_intencion_finalizar_carga(valor)
-                
-                if es_palabra_salto or es_finalizar_carga or res_fin.get('termino'):
-                    # El usuario terminó de subir fotos o saltó el paso
-                    _logger.info("El usuario decidió finalizar carga de imágenes o saltar el paso.")
-                    resultado = registro.estado.get('datos_paciente', {}).get(campo_destino, [])
-                    valido = True
-                    # Continuamos con la lógica normal de avance
-                else:
-                    # Ni es imagen ni quiere terminar, error amigable
-                    valido, resultado, mensaje_error = self._validar_con_ia(valor, tipo, paso, nombre_mostrar)
-                    if not valido:
-                        return {
-                            'success': True,
-                            'finalizado': False,
-                            'modo': 'FLUJO',
-                            'texto_para_usuario': mensaje_error,
-                            'text': mensaje_error,
-                            'session_id': session_id,
-                            'conversation_id': conversation_id,
-                            'account_id': account_id,
-                            'paso_actual': paso,
-                            'mensaje_prompt': paso_actual.get('mensaje_prompt'),
-                        }
+            # Saltamos toda la validación; iremos directamente a guardar el resultado
         else:
-            # 1. Intentar validación tradicional primero (más rápida y sin costo)
-            _logger.info("Procesando valor '%s' para paso '%s' (tipo: %s)", valor, paso, tipo)
-            utils_trad = ChatBotUtils()
-            valido_trad, resultado_trad = utils_trad.validar_valor(valor, tipo, paso)
-            
-            if valido_trad:
-                _logger.info("Validación tradicional exitosa para '%s': %s", paso, resultado_trad)
+            # --- LÓGICA DE SALTO PARA IMÁGENES/ARCHIVOS (Simples) ---
+            if tipo in ['image', 'file'] and es_palabra_salto and campo_destino != 'solicitar_imagenes_adicionales':
+                _logger.info("El usuario decidió saltar el paso de imagen/archivo: %s", campo_destino)
                 valido = True
-                resultado = resultado_trad
+                resultado = "No proporcionada"
                 mensaje_error = ""
+            # --- NUEVA LÓGICA: BUCLE DE CARGA MÚLTIPLE PARA IMÁGENES ADICIONALES ---
+            elif campo_destino == 'solicitar_imagenes_adicionales':
+                # 1. Intentar validar como imagen primero
+                valido_img, resultado_img, _ = self._validar_con_ia(valor, 'image', paso, nombre_mostrar)
+                
+                if valido_img:
+                    # Es una imagen válida, la agregamos a la lista
+                    estado_actual = registro.estado or {}
+                    datos_p = estado_actual.get('datos_paciente', {})
+                    
+                    # Inicializar o recuperar lista
+                    imgs_adicionales = datos_p.get('solicitar_imagenes_adicionales', [])
+                    if isinstance(imgs_adicionales, str):
+                        try:
+                            imgs_adicionales = json.loads(imgs_adicionales)
+                        except:
+                            imgs_adicionales = [imgs_adicionales] if imgs_adicionales else []
+                    
+                    if resultado_img not in imgs_adicionales:
+                        imgs_adicionales.append(resultado_img)
+                    
+                    datos_p['solicitar_imagenes_adicionales'] = imgs_adicionales
+                    estado_actual['datos_paciente'] = datos_p
+                    estado_actual['timestamp'] = fields.Datetime.now().isoformat()
+                    
+                    registro.write({'estado': estado_actual})
+                    
+                    # Respuesta pidiendo más o finalizar
+                    mensaje_recibido = f"¡Excelente! He recibido la imagen ✅. ¿Deseas agregar otra imagen? O si ya finalizastes, escribe *'listo'* para continuar."
+                    return {
+                        'success': True,
+                        'finalizado': False,
+                        'modo': 'FLUJO',
+                        'texto_para_usuario': mensaje_recibido,
+                        'text': mensaje_recibido,
+                        'session_id': session_id,
+                        'conversation_id': conversation_id,
+                        'account_id': account_id,
+                        'paso_actual': paso,
+                        'mensaje_prompt': mensaje_recibido,
+                    }
+                else:
+                    # Ver si el usuario quiere terminar o no tiene la imagen
+                    if not (es_palabra_salto or es_finalizar_carga):
+                        res_fin = self._get_gpt_service().detectar_intencion_finalizar_carga(valor)
+                    
+                    if es_palabra_salto or es_finalizar_carga or res_fin.get('termino'):
+                        # El usuario terminó de subir fotos o saltó el paso
+                        _logger.info("El usuario decidió finalizar carga de imágenes o saltar el paso.")
+                        resultado = registro.estado.get('datos_paciente', {}).get(campo_destino, [])
+                        valido = True
+                        # Continuamos con la lógica normal de avance
+                    else:
+                        # Ni es imagen ni quiere terminar, error amigable
+                        valido, resultado, mensaje_error = self._validar_con_ia(valor, tipo, paso, nombre_mostrar)
+                        if not valido:
+                            return {
+                                'success': True,
+                                'finalizado': False,
+                                'modo': 'FLUJO',
+                                'texto_para_usuario': mensaje_error,
+                                'text': mensaje_error,
+                                'session_id': session_id,
+                                'conversation_id': conversation_id,
+                                'account_id': account_id,
+                                'paso_actual': paso,
+                                'mensaje_prompt': paso_actual.get('mensaje_prompt'),
+                            }
             else:
-                _logger.info("Validación tradicional falló para '%s', intentando con IA...", paso)
-                # 2. Si falla la tradicional, intentar con IA para extraer valor o generar error amigable
-                valido, resultado, mensaje_error = self._validar_con_ia(valor, tipo, paso, nombre_mostrar)
+                # 1. Intentar validación tradicional primero (más rápida y sin costo)
+                _logger.info("Procesando valor '%s' para paso '%s' (tipo: %s)", valor, paso, tipo)
+                utils_trad = ChatBotUtils()
+                valido_trad, resultado_trad = utils_trad.validar_valor(valor, tipo, paso)
+                
+                if valido_trad:
+                    _logger.info("Validación tradicional exitosa para '%s': %s", paso, resultado_trad)
+                    valido = True
+                    resultado = resultado_trad
+                    mensaje_error = ""
+                else:
+                    _logger.info("Validación tradicional falló para '%s', intentando con IA...", paso)
+                    # 2. Si falla la tradicional, intentar con IA para extraer valor o generar error amigable
+                    valido, resultado, mensaje_error = self._validar_con_ia(valor, tipo, paso, nombre_mostrar)
 
-            if not valido:
-                return {
-                    'success': True,
-                    'finalizado': False,
-                    'modo': 'FLUJO',
-                    'texto_para_usuario': mensaje_error,
-                    'text': mensaje_error,
-                    'session_id': session_id,
-                    'conversation_id': conversation_id,
-                    'account_id': account_id,
-                    'paso_actual': paso_actual.get('nombre_interno'),
-                    'mensaje_prompt': paso_actual.get('mensaje_prompt'),
-                }
+                if not valido:
+                    return {
+                        'success': True,
+                        'finalizado': False,
+                        'modo': 'FLUJO',
+                        'texto_para_usuario': mensaje_error,
+                        'text': mensaje_error,
+                        'session_id': session_id,
+                        'conversation_id': conversation_id,
+                        'account_id': account_id,
+                        'paso_actual': paso_actual.get('nombre_interno'),
+                        'mensaje_prompt': paso_actual.get('mensaje_prompt'),
+                    }
 
+        # Guardar el resultado (ya sea validado u omitido)
         estado_actual = registro.estado or {}
         if 'datos_paciente' not in estado_actual:
             estado_actual['datos_paciente'] = {}
@@ -519,6 +525,7 @@ class SessionState(models.Model):
                 'conversation_id': conversation_id,
                 'account_id': account_id
             }
+
     # ==================================================================
     #  MÉTODOS ORIGINALES (SIN MODIFICACIONES, SE MANTIENEN IGUAL)
     # ==================================================================
@@ -544,7 +551,6 @@ class SessionState(models.Model):
                 record.paso = ''
                 record.timestamp_estado = False
 
-    # MÉTODO PARA GRABAR/ACTUALIZAR CON MERGE RECURSIVO
     @api.model
     def guardar_estado(self, session_id, estado_data):
         """

@@ -619,11 +619,11 @@ class ChatBotUtils:
                 return True, valor
             if isinstance(valor, str):
                 v = valor.lower()
-                if v in ['true', '1', 'yes', 'sí']:
+                if v in ['true', '1', 'yes', 'sí', 'si']:
                     return True, True
                 elif v in ['false', '0', 'no']:
                     return True, False
-            return False, "Debe ser un booleano (true/false)"
+            return False, "Debe ser un booleano (sí/no)"
         elif tipo_dato == 'image':
             return True, valor
         elif tipo_dato == 'selection':
