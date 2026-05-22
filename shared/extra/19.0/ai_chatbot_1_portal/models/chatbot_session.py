@@ -454,6 +454,11 @@ class SessionState(models.Model):
                         auto_map['solicitar_birthdate'] = partner.birthdate.isoformat()
                     except Exception as e:
                         _logger.warning("Error al formatear fecha de nacimiento: %s", e)
+                if partner.email:
+                    auto_map['solicitar_email'] = partner.email          # campo destino corregido
+                if partner.consentimiento_whatsapp:
+                    auto_map['consentimiento'] = True 
+                
                 auto_map['solicitar_es_paciente_nuevo'] = 'no'
                 
                 for campo, valor_auto in auto_map.items():
@@ -794,12 +799,20 @@ class SessionState(models.Model):
             env = self.env
             # Crear o actualizar contacto
             _logger.info("Actualizando/Creando contacto...")
-            partner = ChatBotUtils.update_create_contact(env, {
+            # Preparar datos del partner incluyendo email y consentimiento
+            partner_data = {
                 'solicitar_vat': datos.get('solicitar_vat', ''),
                 'solicitar_phone': datos.get('solicitar_phone', ''),
                 'solicitar_name': datos.get('solicitar_name', ''),
                 'solicitar_birthdate': datos.get('solicitar_birthdate', '')
-            })
+            }
+            # ---- NUEVO: añadir email y consentimiento si existen ----
+            if 'solicitar_email' in datos:
+                partner_data['solicitar_email'] = datos['solicitar_email']
+            if 'consentimiento' in datos:
+                partner_data['consentimiento'] = datos['consentimiento']
+            
+            partner = ChatBotUtils.update_create_contact(env, partner_data)
             # Configurar UTM y etiquetas
             plataforma = datos.get('plataforma', 'whatsapp')
             medium, source, campaign = ChatBotUtils.setup_utm(env, plataforma)

@@ -223,7 +223,7 @@ class ChatbotFlujo(models.Model):
                     "nombre_interno": "solicitar_email",
                     "nombre_mostrar": "Correo electrónico",
                     "tipo_dato": "text",
-                    "campo_destino": "email",
+                    "campo_destino": "solicitar_email",
                     "es_requerido": False,
                     "es_paso_telefono": False,
                     "mensaje_prompt": "Opcional: ingresa tu correo electrónico para recibir información adicional. Si no deseas proporcionarlo, escribe 'omitir'.",
