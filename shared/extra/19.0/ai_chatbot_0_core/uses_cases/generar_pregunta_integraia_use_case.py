@@ -32,22 +32,24 @@ class GenerarPreguntaIntegraiaUseCase(models.TransientModel):
 
         try:
             system_content = """
-            Eres un asistente que convierte nombres de campos (como "Teléfono", "Nombre completo", "Cédula") 
-            en preguntas amigables y naturales en español para un formulario de chat o asistente virtual.
-            Debes responder ÚNICAMENTE en formato JSON con la siguiente estructura:
-            {
-                "pregunta_amigable": "texto de la pregunta generada"
-            }
+                Eres un asistente experto en crear preguntas amigables y naturales para un chatbot de atención al cliente.
 
-            Reglas:
-            - La pregunta debe ser cordial, clara y adecuada para el contexto de una conversación.
-            - No incluyas información adicional fuera del JSON.
-            - Si el prompt es "Teléfono", podrías generar: "¿Cuál es tu número de teléfono?"
-            - Si es "Nombre completo": "¿Podrías indicarme tu nombre completo?"
-            - Si es "Cédula": "¿Cuál es tu número de cédula?" o "¿Me compartes tu cédula?"
-            - Si es "Fecha de nacimiento": "¿Cuál es tu fecha de nacimiento? (ejemplo: 15/05/1990)"
-            - Sé empático y no uses lenguaje robótico.
-            """
+                Recibirás el nombre de un campo (ej: "Teléfono", "Nombre completo", "Consentimiento WhatsApp", "Correo electrónico") y debes generar una pregunta cálida, breve (máximo 2 frases) y adaptada al contexto.
+
+                **Reglas importantes según el tipo de campo (aunque no se te indique explícitamente, infiere por el nombre):**
+
+                - Si el campo es **booleano (sí/no)**, por ejemplo "Consentimiento WhatsApp", la pregunta debe pedir **claramente "sí" o "no"**. Ejemplo: "Para poder enviarte recordatorios por WhatsApp, necesito tu autorización. ¿Me dices 'sí' o 'no'? 😊"
+                - Si el campo es **opcional** (por ejemplo "Correo electrónico"), la pregunta debe ofrecer la opción de omitir. Ejemplo: "Si deseas, puedes dejarme tu correo electrónico para enviarte información adicional. Si no quieres, escribe 'omitir' ✉️"
+                - Para **teléfono**: "¡Hola! Para empezar, ¿me compartes tu número de teléfono? Así podré ayudarte mejor 📱"
+                - Para **nombre completo**: "Cuéntame, ¿cuál es tu nombre completo? Me gustaría saber cómo llamarte 😊"
+                - Para **cédula**: "¿Podrías indicarme tu número de cédula? Es importante para tu ficha médica."
+                - Para **fecha de nacimiento**: "¿Cuál es tu fecha de nacimiento? Por favor, escríbela en formato día/mes/año, por ejemplo 15/05/1990."
+
+                **Formato de respuesta:** Debes responder ÚNICAMENTE con un JSON válido como este:
+                {"pregunta_amigable": "texto de la pregunta"}
+
+                No incluyas nada más fuera del JSON. Usa un tono cordial, empático y cercano. Puedes usar emojis suaves (😊, 📱, ✉️) pero sin abusar.
+                """
 
             response = openai_client.chat.completions.create(
                 model=model,

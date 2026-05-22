@@ -80,28 +80,57 @@ class SessionState(models.Model):
     def _generar_pregunta_amigable(self, nombre_mostrar, tipo=None, max_tokens=100):
         """
         Convierte un nombre de campo (ej: 'Teléfono') en una pregunta amigable.
-        Si la IA falla, devuelve un fallback.
+        Primero intenta con IA (prioridad), si falla usa fallbacks manuales.
         """
+        # Preparamos el prompt enriquecido con el tipo de dato
+        prompt = nombre_mostrar
+        if tipo == 'boolean':
+            prompt += " (recuerda que la respuesta debe ser 'sí' o 'no')"
+        elif tipo in ['image', 'file']:
+            prompt += " (el usuario puede enviar una imagen o escribir 'saltar' si no la tiene)"
+        elif tipo == 'date':
+            prompt += " (formato DD/MM/AAAA)"
+
+        # 1. Intento con IA (prioridad)
         service = self._get_gpt_service()
         pregunta = ""
         try:
-            resultado = service.GenerarPreguntaIntegraia(nombre_mostrar, max_tokens=max_tokens)
+            resultado = service.GenerarPreguntaIntegraia(prompt, max_tokens=max_tokens)
             if resultado.get('status') == 'success':
                 pregunta = resultado['generated_question']
+                # Limpieza por si la IA devuelve algo con comillas o formato extraño
+                pregunta = pregunta.strip().strip('"')
         except Exception as e:
-            _logger.error(f"Error generando pregunta amigable para '{nombre_mostrar}': {e}")
-        
+            _logger.error(f"Error generando pregunta amigable con IA para '{nombre_mostrar}': {e}")
+
+        # 2. Si la IA no generó una pregunta válida, usamos fallbacks manuales
         if not pregunta:
-            # Fallback humanizado
-            pregunta = f"Por favor, ingresa tu {nombre_mostrar.lower()}"
-            
-        # --- MEJORA: Agregar instrucción de salto para imágenes/archivos ---
-        if tipo in ['image', 'file']:
-            if "\n" in pregunta:
-                pregunta += "\n(O escribe *'saltar'* si no la tienes a mano)"
+            fallbacks = {
+                "Teléfono": "Por favor, indíquenos su número de teléfono para poder contactarle si es necesario.",
+                "Nombre completo": "Por favor, proporcione su nombre completo.",
+                "Cédula": "Por favor, ingrese su número de cédula o documento de identidad.",
+                "Fecha de nacimiento": "Por favor, indique su fecha de nacimiento en formato DD/MM/AAAA.",
+                "Consentimiento WhatsApp": "Para poder enviarle recordatorios e información relevante por WhatsApp, necesitamos su autorización. ¿Acepta? Responda 'sí' o 'no'.",
+                "Correo electrónico": "Si lo desea, puede proporcionarnos su correo electrónico para recibir información adicional. En caso contrario, escriba 'omitir'.",
+            }
+            if nombre_mostrar in fallbacks:
+                pregunta = fallbacks[nombre_mostrar]
             else:
-                pregunta += "\n\n(O escribe *'saltar'* si no la tienes a mano)"
-                
+                # Fallback genérico profesional
+                if tipo == 'boolean':
+                    pregunta = f"Por favor, responda 'sí' o 'no' para: {nombre_mostrar}."
+                else:
+                    pregunta = f"Por favor, ingrese su {nombre_mostrar.lower()}."
+
+        # 3. Mejoras post-generación (independientemente de si vino de IA o fallback)
+        # Instrucción de salto para imágenes/archivos (si no la incluyó la IA)
+        if tipo in ['image', 'file'] and 'saltar' not in pregunta.lower():
+            pregunta += " Si no dispone de ello en este momento, puede escribir 'saltar' para omitir este paso."
+
+        # Para booleanos, si la pregunta no menciona explícitamente 'sí' o 'no', lo añadimos
+        if tipo == 'boolean' and ('sí' not in pregunta.lower() and 'si' not in pregunta.lower()):
+            pregunta += " Por favor, responda 'sí' o 'no'."
+
         return pregunta
 
     def _validar_con_ia(self, valor, tipo_dato, paso, nombre_mostrar):
