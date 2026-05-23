@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Tree view for goals inside appraisal form -->
+    <record id="hr_appraisal_goal_tree_view" model="ir.ui.view">
+        <field name="name">hr.appraisal.goal.tree</field>
+        <field name="model">hr.appraisal.goal</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="weight" widget="percentage"/>
+                <field name="progress" widget="percentage"/>
+                <field name="scored_points" sum="Total scored"/>
+                <field name="deadline" widget="date"/>
+                <field name="state" widget="badge" decoration-success="state == 'achieved'" decoration-danger="state == 'failed'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form view for goals (used in modal if needed) -->
+    <record id="hr_appraisal_goal_form_view" model="ir.ui.view">
+        <field name="name">hr.appraisal.goal.form</field>
+        <field name="model">hr.appraisal.goal</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="description" widget="html"/>
+                        <field name="weight" widget="percentage"/>
+                        <field name="progress" widget="percentage"/>
+                        <field name="start_date"/>
+                        <field name="deadline"/>
+                        <field name="state"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for goals (optional) -->
+    <record id="hr_appraisal_goal_action" model="ir.actions.act_window">
+        <field name="name">Goals</field>
+        <field name="res_model">hr.appraisal.goal</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('appraisal_id.active', '=', True)]</field>
+        <field name="context">{'default_appraisal_id': active_id}</field>
+    </record>
+
+</odoo>
