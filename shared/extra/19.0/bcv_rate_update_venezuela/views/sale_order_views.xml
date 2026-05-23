@@ -33,6 +33,7 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
            <xpath expr="//field[@name='order_line']/list/field[@name='price_subtotal']" position="before">
+                <field name="rate_value" string="Tasa BCV" readonly="1" optional="show"/>
                 <field name="price_subtotal_usd_bcv" string="Subtotal USD" readonly="1" />
             </xpath>
           <xpath expr="//group[@name='sale_total']" position="inside">

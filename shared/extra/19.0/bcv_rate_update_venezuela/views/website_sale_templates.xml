@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Punto de montaje -->
+    <template id="address_autofill_mount" inherit_id="website_sale.checkout" name="Address Autofill Mount">
+        <xpath expr="//div[@id='shop_checkout']" position="before">
+            <div id="address_autofill_root"></div>
+        </xpath>
+    </template>
+
+    <!-- 2. Script de montaje FORZADO -->
+    <template id="address_autofill_script" inherit_id="web.assets_frontend" name="Address Autofill Script">
+        <xpath expr="." position="inside">
+            <script>
+                console.log("📌 AddressAutofill script cargado");
+                
+                (function() {
+                    function mountComponent() {
+                        const root = document.getElementById('address_autofill_root');
+                        if (!root || root.hasAttribute('data-mounted')) return;
+                        
+                        root.setAttribute('data-mounted', 'true');
+
+                        if (!odoo || !odoo.__WOWL__ || !odoo.__WOWL__.public_components) {
+                            setTimeout(mountComponent, 400);
+                            return;
+                        }
+
+                        const Component = odoo.__WOWL__.public_components.get('bcv_rate_update_venezuela.AddressAutofill');
+                        if (Component) {
+                            const app = new odoo.__WOWL__.App(Component, { env: odoo.__WOWL__.services });
+                            app.mount(root).then(() => {
+                                console.log("✅✅✅ AddressAutofill MONTADO CORRECTAMENTE con OWL");
+                            }).catch(err => {
+                                console.error("❌ Error al montar componente:", err);
+                            });
+                        } else {
+                            console.error("❌ Componente 'bcv_rate_update_venezuela.AddressAutofill' NO encontrado en registry");
+                        }
+                    }
+
+                    // Intentos múltiples
+                    setTimeout(mountComponent, 800);
+                    setTimeout(mountComponent, 2000);
+                    setTimeout(mountComponent, 4000);
+                })();
+            </script>
+        </xpath>
+    </template>
+</odoo>

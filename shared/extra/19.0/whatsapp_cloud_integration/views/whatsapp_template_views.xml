@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Acción de ventana para gestionar plantillas -->
+    <record id="action_whatsapp_template" model="ir.actions.act_window">
+        <field name="name">Plantillas WhatsApp</field>
+        <field name="res_model">whatsapp.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p>Define aquí las plantillas que has creado y aprobado en Meta (Business Manager).</p>
+            <p>El nombre técnico debe coincidir exactamente con el que registraste en Meta.</p>
+        </field>
+    </record>
+
+    <!-- Vista lista -->
+    <record id="view_whatsapp_template_list" model="ir.ui.view">
+        <field name="name">whatsapp.template.list</field>
+        <field name="model">whatsapp.template</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="friendly_name"/>
+                <field name="name"/>
+                <field name="language_code"/>
+                <field name="parameter_count"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista formulario -->
+    <record id="view_whatsapp_template_form" model="ir.ui.view">
+        <field name="name">whatsapp.template.form</field>
+        <field name="model">whatsapp.template</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="friendly_name"/>
+                        <field name="name"/>
+                        <field name="language_code"/>
+                        <field name="parameter_schema" widget="ace" options="{'mode': 'json'}"/>
+                        <field name="parameter_count"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista búsqueda -->
+    <record id="view_whatsapp_template_search" model="ir.ui.view">
+        <field name="name">whatsapp.template.search</field>
+        <field name="model">whatsapp.template</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="friendly_name"/>
+                <field name="name"/>
+                <separator/>
+                <filter name="active" string="Activas" domain="[('active','=',True)]"/>
+            </search>
+        </field>
+    </record>
+</odoo>

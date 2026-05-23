@@ -11,16 +11,20 @@
     'website': 'https://github.com/simonrodriguezpacheco',
     'maintainer': 'Simon Alberto Rodriguez Pacheco',
     'license': 'LGPL-3',
-    
+    #'website_sale', 'base_address_city', 'contacts'
     'depends': [
         'base',
+        'web',
         'sale_management',
         'account',          # Contabilidad base
         'stock',            # Inventario
         'point_of_sale',
         'website_sale', 
+        'contacts',
         'payment',
-         
+        'whatsapp_cloud_integration',
+        'currency_rate_update_base',
+        'currency_rate_update_venezuela',
     ],
 
     'external_dependencies': {
@@ -29,15 +33,17 @@
     
     'data': [
         'security/ir.model.access.csv',
-        'data/cron_data.xml',
-        'data/res_bank_data.xml',  
+        'data/res_bank_data.xml',
         'views/res_currency_views.xml',
         'views/sale_order_tree_debug.xml',
         'views/sale_order_views.xml',
         'views/website_cart_usd.xml',
         'views/payment_attachment_templates.xml',
         'views/payment_provider_views.xml',
+        'views/res_company_views.xml',
+        # 'views/website_sale_templates.xml',
         # 'views/invoice_report_templates.xml',
+        'views/payment_templates_inherit.xml',
     ],
     
     'assets': {
@@ -50,7 +56,10 @@
          "web.assets_frontend": [
             'bcv_rate_update_venezuela/static/src/css/payment_proof_component.css',
             'bcv_rate_update_venezuela/static/src/js/payment_proof_component.js',  
-            'bcv_rate_update_venezuela/static/src/xml/payment_proof_component.xml'
+            'bcv_rate_update_venezuela/static/src/xml/payment_proof_component.xml',
+            'bcv_rate_update_venezuela/static/src/css/address_autofill.css',  # ← nuevo
+            'bcv_rate_update_venezuela/static/src/js/address_autofill.js',
+            'bcv_rate_update_venezuela/static/src/xml/address_autofill.xml',
             
         ],
     },
@@ -58,6 +67,8 @@
     'application': False,
     'installable': True,
     'auto_install': False,
+    'post_init_hook': '_clean_orphan_views',
+    'uninstall_hook': '_uninstall_cleanup',
     'images': [
         'bcv_rate_update_venezuela/static/description/icon.png'
     ],

@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="bcv_rate_update_venezuela.PaymentProofComponent" owl="1">
-        <div class="mt-3" t-if="state.showSection">
-            <!-- Spinner de carga -->
+        <div class="mt-3" id="payment_proof_form_container">
             <div t-if="state.loading" class="text-center p-4">
                 <i class="fa fa-spinner fa-spin fa-2x"></i>
                 <p class="mt-2">Cargando información de pago...</p>
             </div>
-
-            <!-- Formulario normal -->
             <div t-else="">
                 <!-- Instrucciones de pago dinámicas -->
                 <div class="alert alert-info">
@@ -19,11 +16,12 @@
                     <div t-elif="state.bank_details.error">
                         <span class="text-danger">Error: <t t-esc="state.bank_details.error"/></span>
                     </div>
-                    <div t-elif="state.bank_details.bank_name">
+                    <div t-if="state.bank_details.bank_name">
                         <p><strong>Banco destino:</strong> <t t-esc="state.bank_details.bank_name"/></p>
                         <p><strong>Número de cuenta:</strong> <t t-esc="state.bank_details.account_number or 'No especificado'"/></p>
                         <p><strong>Titular de la cuenta:</strong> <t t-esc="state.bank_details.account_holder or state.bank_details.company_name"/></p>
                         <p t-if="state.bank_details.phone"><strong>Teléfono de contacto:</strong> <t t-esc="state.bank_details.phone"/></p>
+                        <p t-if="state.bank_details.company_rif"><strong>RIF (VAT):</strong> <t t-esc="state.bank_details.company_rif"/></p>
                         <p t-if="state.bank_details.email"><strong>Email:</strong> <t t-esc="state.bank_details.email"/></p>
                         <p t-if="state.bank_details.routing_number"><strong>Código de banco (BIC):</strong> <t t-esc="state.bank_details.routing_number"/></p>
                         <p t-if="state.bank_details.instructions"><strong>Instrucciones adicionales:</strong> <t t-esc="state.bank_details.instructions"/></p>
@@ -53,11 +51,11 @@
                     </div>
                 </div>
 
-                <!-- Bancos -->
+                <!-- Bancos (ambos obligatorios) -->
                 <div class="row g-3">
                     <div class="col-md-6 mb-3">
-                        <label for="bank_origin" class="form-label">Banco origen</label>
-                        <select class="form-control" id="bank_origin" t-on-change="_updateField" data-field="bank_origin">
+                        <label for="bank_origin" class="form-label">Banco origen <span class="text-danger">*</span></label>
+                        <select class="form-control" id="bank_origin" t-on-change="_updateField" data-field="bank_origin" required="required">
                             <option value="">Seleccione un banco</option>
                             <t t-foreach="state.bankList" t-as="bank" t-key="bank.id">
                                 <option t-att-value="bank.id" t-att-selected="state.bank_origin == bank.id">
@@ -67,8 +65,8 @@
                         </select>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="bank_destination" class="form-label">Banco destino</label>
-                        <select class="form-control" id="bank_destination" t-on-change="_updateField" data-field="bank_destination">
+                        <label for="bank_destination" class="form-label">Banco destino <span class="text-danger">*</span></label>
+                        <select class="form-control" id="bank_destination" t-on-change="_updateField" data-field="bank_destination" required="required">
                             <option value="">Seleccione un banco</option>
                             <t t-foreach="state.bankJournalList" t-as="journal" t-key="journal.id">
                                 <option t-att-value="journal.id" t-att-selected="state.bank_destination == journal.id">
@@ -79,11 +77,11 @@
                     </div>
                 </div>
 
-                <!-- Referencia -->
+                <!-- Referencia (obligatoria) -->
                 <div class="row g-3">
                     <div class="col-md-6 mb-3">
-                        <label for="reference" class="form-label">Referencia</label>
-                        <input type="text" class="form-control" id="reference" t-att-value="state.reference" t-on-change="_updateField" data-field="reference"/>
+                        <label for="reference" class="form-label">Referencia <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="reference" t-att-value="state.reference" t-on-change="_updateField" data-field="reference" required="required"/>
                     </div>
                 </div>
 
@@ -107,7 +105,7 @@
                 </div>
 
                 <!-- Alerta de validación de monto -->
-                <div t-if="!state.is_valid_amount and !state.loading" class="alert alert-danger mt-2">
+                <div t-if="!state.is_valid_amount" class="alert alert-danger mt-2">
                     <i class="fa fa-warning"></i> 
                     <t t-if="state.amount_vef &lt; state.original_amount_vef">
                         El monto pagado (<t t-esc="state.amount_vef"/> Bs.) es menor al total de la orden (<t t-esc="state.original_amount_vef"/> Bs.).
@@ -117,16 +115,12 @@
                     </t>
                 </div>
 
-                <!-- Alerta de comprobante pendiente -->
-                <div t-if="state.is_valid_amount and !state.uploadSuccess and !state.fileUploading and !state.loading" class="alert alert-warning mt-2">
-                    <i class="fa fa-warning"></i> Debe adjuntar el comprobante de pago para continuar.
-                </div>
-
-                <!-- Campo de archivo -->
+                <!-- Campo de archivo (obligatorio) -->
                 <div class="mb-3">
-                    <label for="payment_proof_file" class="form-label">Comprobante de pago (imagen o PDF)</label>
-                    <input type="file" id="payment_proof_file" accept="image/*,.pdf" class="form-control" t-on-change="_handleFileChange"/>
-
+                    <label for="payment_proof_file" class="form-label">
+                        Comprobante de pago (imagen o PDF) <span class="text-danger">*</span>
+                    </label>
+                    <input type="file" id="payment_proof_file" accept="image/*,.pdf" class="form-control" t-on-change="_handleFileChange" required="required"/>
                     <div t-if="state.selectedFileName" class="mt-1">
                         <i class="fa fa-file-text-o me-1"></i>
                         <span t-esc="state.selectedFileName"/>
@@ -134,13 +128,15 @@
                         <span t-if="state.fileUploading" class="text-info"><i class="fa fa-spinner fa-spin ms-1"/> Subiendo...</span>
                         <span t-if="state.uploadSuccess" class="text-success"><i class="fa fa-check ms-1"/> Adjuntado</span>
                     </div>
-                    
                     <div t-if="state.fileUploading" class="progress mt-2" style="height: 5px;">
                         <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%;"></div>
                     </div>
-                    
                     <div t-if="state.uploadError" class="text-danger mt-1">
                         <i class="fa fa-exclamation-circle"></i> <t t-esc="state.uploadError"/>
+                    </div>
+                    <div t-if="state.is_valid_amount and !state.uploadSuccess and !state.fileUploading" class="alert alert-danger mt-2">
+                        <i class="fa fa-exclamation-circle"></i> 
+                        <strong>Obligatorio:</strong> Adjunta el comprobante de pago para continuar.
                     </div>
                 </div>
             </div>

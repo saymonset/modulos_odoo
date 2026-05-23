@@ -1,16 +1,16 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 from odoo.http import request
 import logging
 
 _logger = logging.getLogger(__name__)
+
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
     payment_proof = fields.Binary('Comprobante de pago', attachment=True)
     payment_proof_filename = fields.Char('Nombre del archivo')
-
-        # Nuevos campos
     payment_date = fields.Date('Fecha de pago')
     payment_method = fields.Selection([
         ('transfer', 'Transferencia'),
@@ -24,19 +24,9 @@ class SaleOrder(models.Model):
     exchange_rate = fields.Float('Tasa de cambio')
     amount_usd = fields.Float('Monto USD')
 
-    currency_aux = fields.Many2one(
-        'res.currency',
-        string='Moneda Auxiliar USD',
-        compute='_compute_currency_aux',
-        store=True
-    )
-
-    amount_total_usd = fields.Monetary(
-        string='Total USD (BCV)',
-        currency_field='currency_aux',
-        compute='_compute_amount_total_usd',
-        store=True
-    )
+    currency_aux = fields.Many2one('res.currency', string='Moneda Auxiliar USD', compute='_compute_currency_aux', store=True)
+    amount_total_usd = fields.Monetary(string='Total USD (BCV)', currency_field='currency_aux', compute='_compute_amount_total_usd', store=True)
+    whatsapp_sent = fields.Boolean(string="WhatsApp enviado", default=False)
 
     @api.depends('order_line.price_subtotal_usd_bcv')
     def _compute_amount_total_usd(self):
@@ -49,76 +39,80 @@ class SaleOrder(models.Model):
         for order in self:
             order.currency_aux = usd
 
-    def _create_invoices(self, grouped=False, final=False, date=None):
-        """Copia automáticamente el comprobante de pago de la orden de venta a la factura"""
-        invoices = super()._create_invoices(grouped=grouped, final=final, date=date)
+    def action_save_payment_data(self, payment_data):
+        _logger.info(f"*** SALVANDO: Datos de pago para orden {self.name}")
+        self.sudo().write({
+            'payment_date': payment_data.get('payment_date'),
+            'payment_method': payment_data.get('payment_method'),
+            'bank_origin': payment_data.get('bank_origin'),
+            'bank_destination': payment_data.get('bank_destination', 'N/A'),
+            'reference': payment_data.get('reference'),
+            'amount_vef': float(payment_data.get('amount_vef', 0)),
+            'exchange_rate': float(payment_data.get('exchange_rate', 0)),
+            'amount_usd': float(payment_data.get('amount_usd', 0)),
+        })
+        return True
 
+    def validate_payment_required_fields(self):
+        _logger.info(f"*** VALIDANDO: {len(self)} orden(es)")
         for order in self:
-            attachments = self.env['ir.attachment'].sudo().search([
-                ('res_model', '=', 'sale.order'),
-                ('res_id', '=', order.id),
-                ('description', '=', 'Comprobante de pago - Transferencia / Pago Móvil'),
-            ])
-
-            for invoice in invoices:
-                for att in attachments:
-                    self.env['ir.attachment'].sudo().create({
-                        'name': att.name,
-                        'type': att.type,
-                        'datas': att.datas,
-                        'mimetype': att.mimetype,
-                        'res_model': 'account.move',
-                        'res_id': invoice.id,
-                        'description': 'Comprobante de pago - Transferencia / Pago Móvil',
-                    })
-                    _logger.info(f"Comprobante copiado a factura {invoice.name} desde orden {order.name}")
-
-        return invoices
+            if order.payment_method in ['transfer', 'movil']:
+                if not order.reference:
+                    raise UserError(_('✏️ Falta la referencia del pago. Por favor, indique el número de referencia de su transferencia.'))
+                if not order.bank_origin:
+                    raise UserError(_('🏦 Falta el banco origen. Seleccione desde qué banco realiza la transferencia.'))
+                if not order.bank_destination or order.bank_destination == 'N/A':
+                    raise UserError(_('🏦 Falta el banco destino. Seleccione el banco al que depositará.'))
+                attachment = self.env['ir.attachment'].sudo().search([
+                    ('res_model', '=', 'sale.order'),
+                    ('res_id', '=', order.id),
+                    ('description', '=', 'Comprobante de pago - Transferencia / Pago Móvil'),
+                ], limit=1)
+                if not attachment:
+                    raise UserError(_('📎 Falta adjuntar el comprobante de pago. Por favor, suba la imagen o PDF del comprobante.'))
+                if order.amount_vef < (order.amount_total - 0.01):
+                    raise UserError(_('💰 El monto pagado (%.2f Bs.) es menor al total de la orden (%.2f Bs.). Por favor, verifique el monto.'))
+                _logger.info(f"*** VALIDACIÓN EXITOSA para orden {order.name}")
 
     def action_confirm(self):
-        """Intentar crear el attachment si viene del website (por si no se creó antes)"""
-        res = super().action_confirm()
-
-        try:
-            if request and hasattr(request, 'session'):
-                # Manejar comprobante (ya existente)
-                if 'payment_proof' in request.session:
-                    proof = request.session.pop('payment_proof')
-                    order = self
-
-                    self.env['ir.attachment'].sudo().create({
-                        'name': proof['filename'],
-                        'type': 'binary',
-                        'datas': proof['data'],
-                        'res_model': 'sale.order',
-                        'res_id': order.id,
-                        'mimetype': proof.get('mimetype'),
-                        'description': 'Comprobante de pago - Transferencia / Pago Móvil',
-                    })
-                    _logger.info(f"✅ Attachment creado en action_confirm para orden {order.name}")
-
-                    order.sudo().write({
-                        'payment_proof': proof['data'],
-                        'payment_proof_filename': proof['filename'],
-                    })
-
-                # ⚠️ NUEVO: Manejar datos de pago adicionales
-                if 'payment_data' in request.session:
+        _logger.info(f"*** CONFIRMANDO: action_confirm llamado con órdenes {self.ids}")
+        if not self:
+            tx = self.env['payment.transaction'].sudo().search([
+                ('reference', 'like', 'S%'),
+                ('state', 'in', ['pending', 'authorized']),
+            ], order='id desc', limit=1)
+            if tx and tx.sale_order_ids:
+                order = tx.sale_order_ids[0]
+                _logger.info(f"*** CONFIRMANDO: Orden recuperada desde transacción: {order.name}")
+                if request and hasattr(request, 'session') and 'payment_data' in request.session:
                     payment_data = request.session.pop('payment_data')
-                    order = self
-                    order.sudo().write({
-                        'payment_date': payment_data.get('payment_date'),
-                        'payment_method': payment_data.get('payment_method'),
-                        'bank_origin': payment_data.get('bank_origin'),
-                        'bank_destination': payment_data.get('bank_destination', 'N/A'),
-                        'reference': payment_data.get('reference'),
-                        'amount_vef': payment_data.get('amount_vef', 0),
-                        'exchange_rate': payment_data.get('exchange_rate', 0),
-                        'amount_usd': payment_data.get('amount_usd', 0),
-                    })
-                    _logger.info(f"✅ Datos de pago adicionales guardados en action_confirm para orden {order.name}")
+                    if payment_data.get('sale_order_id') == order.id:
+                        order.action_save_payment_data(payment_data)
+                order.validate_payment_required_fields()
+                return super(SaleOrder, order).action_confirm()
+            else:
+                return self.env['sale.order']
+        else:
+            for order in self:
+                if request and hasattr(request, 'session') and 'payment_data' in request.session:
+                    payment_data = request.session.pop('payment_data')
+                    order.action_save_payment_data(payment_data)
+                order.validate_payment_required_fields()
+            return super().action_confirm()
 
-        except Exception as e:
-            _logger.exception("Error en action_confirm guardando datos de sesión: %s", e)
 
-        return res
+class PaymentProvider(models.Model):
+    _inherit = 'payment.provider'
+
+    def _get_processing_values(self, values):
+        _logger.info(f"*** PAYMENT: _get_processing_values llamado para proveedor {self.code}")
+        sale_order_id = values.get('sale_order_id')
+        if sale_order_id:
+            sale_order = self.env['sale.order'].browse(sale_order_id)
+            if sale_order and sale_order.payment_method in ['transfer', 'movil']:
+                if not sale_order.reference and request and hasattr(request, 'session') and 'payment_data' in request.session:
+                    payment_data = request.session.get('payment_data')
+                    if payment_data and payment_data.get('sale_order_id') == sale_order_id:
+                        sale_order.action_save_payment_data(payment_data)
+                sale_order.validate_payment_required_fields()
+        return super()._get_processing_values(values)
