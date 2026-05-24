@@ -224,7 +224,7 @@ class SessionState(models.Model):
             'pasos_pendientes': registro.pasos_pendientes
         }
 
-    def procesar_paso(self, session_id, valor, paso, conversation_id, account_id):
+    def procesar_paso(self, session_id, valor, paso, conversation_id, account_id, platform):  
         _logger.info("Iniciando procesar_paso para session_id: %s", session_id)
         registro = self.sudo().search([('session_id', '=', session_id)], limit=1)
         
@@ -238,7 +238,8 @@ class SessionState(models.Model):
                 'modo': 'COMPLETADO',
                 'session_id': session_id,
                 'conversation_id': conversation_id,
-                'account_id': account_id
+                'account_id': account_id,
+                'platform': platform
             }
 
         if registro.modo == 'COMPLETADO':
@@ -252,7 +253,8 @@ class SessionState(models.Model):
                 'modo': 'MENU_PRINCIPAL',
                 'session_id': session_id,
                 'conversation_id': conversation_id,
-                'account_id': account_id
+                'account_id': account_id,
+                'platform': platform
             }
         
         _logger.info("Sesión encontrada (ID: %s). Modo actual: %s", registro.id, registro.modo)
@@ -272,6 +274,7 @@ class SessionState(models.Model):
                 'session_id': session_id,
                 'conversation_id': conversation_id,
                 'account_id': account_id,
+                'platform': platform
             }
 
         paso_actual = registro.pasos_pendientes[0] if registro.pasos_pendientes else {}
@@ -305,7 +308,8 @@ class SessionState(models.Model):
                 'text': mensaje_salida,
                 'session_id': session_id,
                 'conversation_id': conversation_id,
-                'account_id': account_id
+                'account_id': account_id,
+                'platform': platform
             }
 
         registro.write({'last_activity': fields.Datetime.now()})
@@ -321,6 +325,7 @@ class SessionState(models.Model):
                 'session_id': session_id,
                 'conversation_id': conversation_id,
                 'account_id': account_id,
+                'platform': platform
             }
 
         es_paso_telefono = paso_actual.get('es_paso_telefono', False) or campo_destino == 'solicitar_phone'
@@ -375,6 +380,7 @@ class SessionState(models.Model):
                         'account_id': account_id,
                         'paso_actual': paso,
                         'mensaje_prompt': mensaje_recibido,
+                        'platform': platform
                     }
                 else:
                     if not (es_palabra_salto or es_finalizar_carga):
@@ -397,6 +403,7 @@ class SessionState(models.Model):
                                 'account_id': account_id,
                                 'paso_actual': paso,
                                 'mensaje_prompt': paso_actual.get('mensaje_prompt'),
+                                'platform': platform
                             }
             else:
                 # Validación tradicional + IA
@@ -423,6 +430,7 @@ class SessionState(models.Model):
                         'account_id': account_id,
                         'paso_actual': paso_actual.get('nombre_interno'),
                         'mensaje_prompt': paso_actual.get('mensaje_prompt'),
+                        'platform': platform
                     }
 
         # Guardar el resultado (solo si no es None)
@@ -500,7 +508,8 @@ class SessionState(models.Model):
                 'paso_actual': estado_actual['paso'],
                 'session_id': session_id,
                 'conversation_id': conversation_id,
-                'account_id': account_id
+                'account_id': account_id,
+                'platform': platform
             }
         else:
             # Flujo completado
@@ -519,7 +528,8 @@ class SessionState(models.Model):
                 'lead_resultado': lead_resultado,
                 'session_id': session_id,
                 'conversation_id': conversation_id,
-                'account_id': account_id
+                'account_id': account_id,
+                'platform': platform
             }
 
     # ==================================================================
