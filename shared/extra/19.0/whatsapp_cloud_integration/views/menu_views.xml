@@ -4,4 +4,9 @@
     <menuitem id="menu_waba_account" name="Cuentas WABA" parent="menu_whatsapp_root" action="action_waba_account" sequence="10"/>
     <menuitem id="menu_whatsapp_templates" name="Plantillas" parent="menu_whatsapp_root" action="action_whatsapp_template" sequence="15"/>
     <menuitem id="menu_whatsapp_history" name="Historial" parent="menu_whatsapp_root" action="action_whatsapp_history" sequence="20"/>
+    <menuitem id="menu_whatsapp_mailing" 
+          name="Campañas WhatsApp" 
+          parent="menu_whatsapp_root" 
+          action="action_whatsapp_mailing" 
+          sequence="5"/>
 </odoo>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_whatsapp_mailing" model="ir.actions.act_window">
+        <field name="name">Campañas WhatsApp</field>
+        <field name="res_model">whatsapp.mailing</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Crea tu primera campaña de WhatsApp Marketing.</p>
+            <p>Define el mensaje, adjunta un video y selecciona tus listas de contacto.</p>
+        </field>
+    </record>
+
+    <record id="view_whatsapp_mailing_form" model="ir.ui.view">
+        <field name="name">whatsapp.mailing.form</field>
+        <field name="model">whatsapp.mailing</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_send_mailing" type="object" string="Enviar" class="btn-primary" 
+                            invisible="state not in ['draft']"/>
+                    <field name="state" widget="badge"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Nombre interno..."/></h1>
+                    </div>
+                    <group>
+                        <field name="subject" required="1" placeholder="Asunto interno (no se envía)"/>
+                        <field name="contact_list_ids" widget="many2many_tags" 
+                               options="{'no_create': True}" required="1"/>
+                        <field name="schedule_type" widget="radio"/>
+                        <field name="scheduled_date" invisible="schedule_type != 'later'" 
+                               required="schedule_type == 'later'"/>
+                    </group>
+                    <group string="Contenido del Mensaje de WhatsApp">
+                        <field name="use_template"/>
+                        <field name="campaign_whatsapp_template_id" 
+                               invisible="not use_template" 
+                               required="use_template"/>
+                        <field name="whatsapp_text" widget="html" 
+                               placeholder="Texto del mensaje (puedes usar {{ partner.name }}, etc.)"
+                               invisible="use_template"/>
+                        <field name="whatsapp_media_url" 
+                               placeholder="https://tudominio.com/video.mp4"
+                               invisible="use_template"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_whatsapp_mailing_list" model="ir.ui.view">
+        <field name="name">whatsapp.mailing.list</field>
+        <field name="model">whatsapp.mailing</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="subject"/>
+                <field name="state" widget="badge"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+</odoo>
