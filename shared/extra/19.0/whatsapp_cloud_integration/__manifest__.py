@@ -24,4 +24,7 @@
     'installable': True,
     'application': True,
     'license': 'LGPL-3',
+     'images': [
+        'whatsapp_cloud_integration/static/description/icon.png'
+    ],
 }
