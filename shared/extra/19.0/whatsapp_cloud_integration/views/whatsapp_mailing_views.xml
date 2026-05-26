@@ -39,12 +39,15 @@
                         <field name="campaign_whatsapp_template_id" 
                                invisible="not use_template" 
                                required="use_template"/>
+                        <!-- El campo whatsapp_text se oculta si usamos plantilla -->
                         <field name="whatsapp_text" widget="html" 
                                placeholder="Texto del mensaje (puedes usar {{ partner.name }}, etc.)"
                                invisible="use_template"/>
+                        <!-- El campo whatsapp_media_url ahora es visible siempre -->
+                        <!-- Es obligatorio si la plantilla seleccionada tiene encabezado de video -->
                         <field name="whatsapp_media_url" 
                                placeholder="https://tudominio.com/video.mp4"
-                               invisible="use_template"/>
+                               help="Obligatorio si la plantilla seleccionada tiene encabezado de video."/>
                     </group>
                 </sheet>
             </form>

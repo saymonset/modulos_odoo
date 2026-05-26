@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Acción de ventana para gestionar plantillas -->
     <record id="action_whatsapp_template" model="ir.actions.act_window">
         <field name="name">Plantillas WhatsApp</field>
         <field name="res_model">whatsapp.template</field>
@@ -11,7 +10,6 @@
         </field>
     </record>
 
-    <!-- Vista lista -->
     <record id="view_whatsapp_template_list" model="ir.ui.view">
         <field name="name">whatsapp.template.list</field>
         <field name="model">whatsapp.template</field>
@@ -21,24 +19,38 @@
                 <field name="name"/>
                 <field name="language_code"/>
                 <field name="parameter_count"/>
+                <field name="has_video_header"/>
                 <field name="active"/>
             </list>
         </field>
     </record>
 
-    <!-- Vista formulario -->
     <record id="view_whatsapp_template_form" model="ir.ui.view">
         <field name="name">whatsapp.template.form</field>
         <field name="model">whatsapp.template</field>
         <field name="arch" type="xml">
             <form>
                 <sheet>
+                    <div class="oe_title">
+                        <h1><field name="friendly_name" placeholder="Nombre para mostrar..."/></h1>
+                    </div>
                     <group>
-                        <field name="friendly_name"/>
-                        <field name="name"/>
+                        <field name="name" required="1" placeholder="nombre_tecnico_plantilla"/>
                         <field name="language_code"/>
-                        <field name="parameter_schema" widget="ace" options="{'mode': 'json'}"/>
-                        <field name="parameter_count"/>
+                        <field name="has_video_header"/>
+                        <field name="parameter_schema" widget="ace" options="{'mode': 'json'}" 
+                               placeholder='{"1": "nombre_cliente", "2": "fecha_cita"}'/>
+                        <div class="alert alert-info" role="alert" style="margin-top: 5px; margin-bottom: 5px;">
+                            <i class="fa fa-info-circle"></i> 
+                            <strong>¿Cómo usar el esquema de parámetros?</strong><br/>
+                            • <strong>Sin parámetros:</strong> Deja el campo vacío o escribe <code>{}</code><br/>
+                            • <strong>Un parámetro (texto):</strong> <code>{"1": "nombre_cliente"}</code><br/>
+                            • <strong>Para plantillas con video (encabezado activado):</strong> El primer parámetro debe ser la URL del video: <code>{"1": "url_video"}</code><br/>
+                            • <strong>Varios parámetros:</strong> <code>{"1": "nombre", "2": "producto", "3": "precio"}</code><br/>
+                            La <strong>clave</strong> (1,2,3...) es el número de la variable en Meta (<code>{{1}}</code>, <code>{{2}}</code>).<br/>
+                            El <strong>valor</strong> es solo una etiqueta interna para recordar qué significa cada parámetro.
+                        </div>
+                        <field name="parameter_count" readonly="1"/>
                         <field name="active"/>
                     </group>
                 </sheet>
@@ -46,7 +58,6 @@
         </field>
     </record>
 
-    <!-- Vista búsqueda -->
     <record id="view_whatsapp_template_search" model="ir.ui.view">
         <field name="name">whatsapp.template.search</field>
         <field name="model">whatsapp.template</field>

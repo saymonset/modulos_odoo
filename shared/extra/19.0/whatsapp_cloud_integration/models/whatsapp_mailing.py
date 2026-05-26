@@ -13,9 +13,8 @@ class WhatsAppMailing(models.Model):
     _rec_name = 'subject'
     _order = 'create_date desc'
 
-    # Campos básicos
-    name = fields.Char(string='Nombre interno', help='Nombre descriptivo de la campaña')
-    subject = fields.Char(string='Asunto', required=True, help='Asunto interno (no se envía)')
+    name = fields.Char(string='Nombre interno')
+    subject = fields.Char(string='Asunto', required=True)
     mailing_type = fields.Selection([
         ('whatsapp', 'WhatsApp')
     ], default='whatsapp', required=True)
@@ -25,14 +24,13 @@ class WhatsAppMailing(models.Model):
         ('sending', 'Enviando'),
         ('sent', 'Enviado'),
         ('canceled', 'Cancelado')
-    ], default='draft', string='Estado', tracking=True)
+    ], default='draft', string='Estado')
     schedule_type = fields.Selection([
         ('now', 'Enviar ahora'),
         ('later', 'Programar para más tarde')
     ], default='now', string='Programación')
     scheduled_date = fields.Datetime(string='Fecha programada')
 
-    # ----- CAMBIO: Selección directa de contactos con consentimiento -----
     partner_ids = fields.Many2many(
         'res.partner',
         'whatsapp_mailing_partner_rel',
@@ -42,28 +40,20 @@ class WhatsAppMailing(models.Model):
         domain=[('consentimiento_whatsapp', '=', True)],
         help='Selecciona uno o varios contactos que hayan aceptado recibir WhatsApp.'
     )
-    # --------------------------------------------------------------------
 
-    # Campos específicos de WhatsApp
     whatsapp_text = fields.Html(
         string='Texto del Mensaje',
         help='Cuerpo del mensaje de WhatsApp. Puedes usar placeholders como {{ partner.name }}'
     )
     whatsapp_media_url = fields.Char(
         string='URL del Video o Imagen',
-        help='Enlace público al video/imagen que se enviará como multimedia. Si está vacío, solo texto.'
+        help='Enlace público al video/imagen que se enviará como multimedia.'
     )
     campaign_whatsapp_template_id = fields.Many2one(
         'whatsapp.template',
-        string='Plantilla WhatsApp (aprobada)',
-        help='Si usas plantilla aprobada por Meta, selecciona aquí. Sobrescribe el texto libre.'
+        string='Plantilla WhatsApp (aprobada)'
     )
-    use_template = fields.Boolean(
-        string='Usar plantilla aprobada',
-        help='Marca para usar plantilla (obligatorio para marketing masivo). Si no, se envía texto libre (solo permitido en ventana de 24h).'
-    )
-
-    # Adjuntos (opcional)
+    use_template = fields.Boolean(string='Usar plantilla aprobada')
     whatsapp_attachment_ids = fields.Many2many(
         'ir.attachment',
         'whatsapp_mailing_whatsapp_attachment_rel',
@@ -72,23 +62,18 @@ class WhatsAppMailing(models.Model):
         string='Adjuntos de WhatsApp'
     )
 
-    # -------------------------------------------------------------------------
-    # Métodos principales
-    # -------------------------------------------------------------------------
     def action_send_mailing(self):
-        """Envía la campaña por WhatsApp"""
         for campaign in self:
             if campaign.state != 'draft':
                 raise UserError(_('La campaña ya fue enviada o está en proceso.'))
 
-            # Obtener partners seleccionados directamente
             partners = campaign._get_recipient_partners()
             if not partners:
                 raise UserError(_('No hay destinatarios seleccionados.'))
 
             waba = self.env['waba.account'].search([('active', '=', True)], limit=1)
             if not waba:
-                raise UserError(_('No hay cuenta WABA activa. Configúrala en WhatsApp > Cuentas WABA.'))
+                raise UserError(_('No hay cuenta WABA activa.'))
 
             if campaign.use_template and not campaign.campaign_whatsapp_template_id:
                 raise UserError(_('Debes seleccionar una plantilla aprobada.'))
@@ -110,15 +95,10 @@ class WhatsAppMailing(models.Model):
             campaign.write({'state': 'sent'})
         return True
 
-    # -------------------------------------------------------------------------
-    # Métodos auxiliares
-    # -------------------------------------------------------------------------
     def _get_recipient_partners(self):
-        """Devuelve los partners seleccionados directamente en la campaña."""
         return self.partner_ids
 
     def _render_whatsapp_text(self, partner):
-        """Renderiza el html del mensaje, convierte a texto plano y reemplaza placeholders"""
         if not self.whatsapp_text:
             return ''
         plain = html2plaintext(self.whatsapp_text)
@@ -128,22 +108,36 @@ class WhatsAppMailing(models.Model):
         return rendered
 
     def _extract_template_params(self, partner):
-        """Devuelve una lista de parámetros según la cantidad esperada por la plantilla."""
+        """Devuelve una lista de parámetros según la plantilla seleccionada.
+        Si la plantilla tiene encabezado de video, el primer parámetro es la URL del video (campo whatsapp_media_url).
+        Los siguientes parámetros (si los hay) se extraen del texto o de otros campos.
+        """
         template = self.campaign_whatsapp_template_id
         expected_count = template.parameter_count if template else 0
-        
         if expected_count == 0:
             return []
-        elif expected_count == 1:
-            return [partner.name or '']
-        elif expected_count == 2:
-            return [partner.name or '', partner.phone or '']
+        params = []
+        # Si la plantilla tiene video header, el primer parámetro es la URL del video
+        if template.has_video_header:
+            if self.whatsapp_media_url:
+                params.append(self.whatsapp_media_url)
+            else:
+                raise UserError(_('La plantilla seleccionada requiere una URL de video. Por favor, completa el campo "URL del Video o Imagen".'))
+            remaining = expected_count - 1
         else:
-            # Si espera más, puedes personalizar
-            return [partner.name or ''] + [''] * (expected_count - 1)
+            remaining = expected_count
+
+        # Completar con valores de partner según los parámetros restantes
+        if remaining >= 1:
+            params.append(partner.name or '')
+        if remaining >= 2:
+            params.append(partner.phone or '')
+        # Si se necesitan más, puedes añadir lógica adicional
+        while len(params) < expected_count:
+            params.append('')
+        return params
 
     def _send_free_text_message(self, partner, message_body, media_url, waba):
-        """Envía mensaje de texto (opcionalmente con multimedia) vía API de Meta."""
         to_number = partner.phone.strip().replace(' ', '').replace('+', '')
 
         url = f"https://graph.facebook.com/v25.0/{waba.phone_number_id}/messages"
