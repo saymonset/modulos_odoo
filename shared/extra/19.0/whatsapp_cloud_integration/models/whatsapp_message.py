@@ -47,16 +47,18 @@ class WhatsappMessageWizard(models.TransientModel):
             }
         }
 
-        # Incorporar parámetros si existen
+        # Incorporar parámetros SOLO si existen y la lista NO está vacía
         if self.parameter_values:
             try:
                 params = json.loads(self.parameter_values)
                 if isinstance(params, list):
-                    components = [{
-                        'type': 'body',
-                        'parameters': [{'type': 'text', 'text': str(p)} for p in params]
-                    }]
-                    payload['template']['components'] = components
+                    if params:  # <- Solo añadir components si hay al menos un parámetro
+                        components = [{
+                            'type': 'body',
+                            'parameters': [{'type': 'text', 'text': str(p)} for p in params]
+                        }]
+                        payload['template']['components'] = components
+                    # Si params es una lista vacía, NO se añade la clave 'components'
                 else:
                     raise UserError(_('Los parámetros deben ser un array JSON.'))
             except json.JSONDecodeError:
@@ -64,6 +66,12 @@ class WhatsappMessageWizard(models.TransientModel):
 
         # Enviar petición
         try:
+            # --- LOG DEL PAYLOAD (para depuración) ---
+            _logger.info("=== PAYLOAD A ENVIAR A WHATSAPP ===")
+            _logger.info(json.dumps(payload, indent=2))
+            _logger.info("===================================")
+            # -----------------------------------------
+            
             response = requests.post(url, headers=headers, json=payload, timeout=15)
             response.raise_for_status()
             result = response.json()
@@ -72,7 +80,7 @@ class WhatsappMessageWizard(models.TransientModel):
                 'partner_id': self.partner_id.id,
                 'waba_account_id': self.waba_account_id.id,
                 'direction': 'outgoing',
-                'template_name': template.display_name,   # guardamos el nombre visible
+                'template_name': template.display_name,
                 'recipient_number': recipient,
                 'message_body': json.dumps(payload, indent=2),
                 'response_data': json.dumps(result, indent=2),

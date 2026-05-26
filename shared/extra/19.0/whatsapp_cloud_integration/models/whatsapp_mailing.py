@@ -13,7 +13,7 @@ class WhatsAppMailing(models.Model):
     _rec_name = 'subject'
     _order = 'create_date desc'
 
-    # Campos básicos (similares a mailing.mailing pero sin herencia)
+    # Campos básicos
     name = fields.Char(string='Nombre interno', help='Nombre descriptivo de la campaña')
     subject = fields.Char(string='Asunto', required=True, help='Asunto interno (no se envía)')
     mailing_type = fields.Selection([
@@ -32,14 +32,17 @@ class WhatsAppMailing(models.Model):
     ], default='now', string='Programación')
     scheduled_date = fields.Datetime(string='Fecha programada')
 
-    # Listas de destinatarios (Many2many a mailing.list)
-    contact_list_ids = fields.Many2many(
-        'mailing.list',
-        'whatsapp_mailing_list_rel',
+    # ----- CAMBIO: Selección directa de contactos con consentimiento -----
+    partner_ids = fields.Many2many(
+        'res.partner',
+        'whatsapp_mailing_partner_rel',
         'whatsapp_mailing_id',
-        'list_id',
-        string='Listas de correo'
+        'partner_id',
+        string='Contactos con consentimiento',
+        domain=[('consentimiento_whatsapp', '=', True)],
+        help='Selecciona uno o varios contactos que hayan aceptado recibir WhatsApp.'
     )
+    # --------------------------------------------------------------------
 
     # Campos específicos de WhatsApp
     whatsapp_text = fields.Html(
@@ -78,10 +81,10 @@ class WhatsAppMailing(models.Model):
             if campaign.state != 'draft':
                 raise UserError(_('La campaña ya fue enviada o está en proceso.'))
 
-            # Obtener partners de las listas seleccionadas
+            # Obtener partners seleccionados directamente
             partners = campaign._get_recipient_partners()
             if not partners:
-                raise UserError(_('No hay destinatarios en la(s) lista(s) seleccionada(s).'))
+                raise UserError(_('No hay destinatarios seleccionados.'))
 
             waba = self.env['waba.account'].search([('active', '=', True)], limit=1)
             if not waba:
@@ -111,12 +114,8 @@ class WhatsAppMailing(models.Model):
     # Métodos auxiliares
     # -------------------------------------------------------------------------
     def _get_recipient_partners(self):
-        """Devuelve los partners de las listas seleccionadas (sin duplicados)"""
-        Partner = self.env['res.partner']
-        partners = Partner
-        for lst in self.contact_list_ids:
-            partners |= lst.partner_ids
-        return partners
+        """Devuelve los partners seleccionados directamente en la campaña."""
+        return self.partner_ids
 
     def _render_whatsapp_text(self, partner):
         """Renderiza el html del mensaje, convierte a texto plano y reemplaza placeholders"""
@@ -129,8 +128,19 @@ class WhatsAppMailing(models.Model):
         return rendered
 
     def _extract_template_params(self, partner):
-        """Extrae parámetros para la plantilla desde el texto (básico). Puedes personalizar."""
-        return [partner.name or '']
+        """Devuelve una lista de parámetros según la cantidad esperada por la plantilla."""
+        template = self.campaign_whatsapp_template_id
+        expected_count = template.parameter_count if template else 0
+        
+        if expected_count == 0:
+            return []
+        elif expected_count == 1:
+            return [partner.name or '']
+        elif expected_count == 2:
+            return [partner.name or '', partner.phone or '']
+        else:
+            # Si espera más, puedes personalizar
+            return [partner.name or ''] + [''] * (expected_count - 1)
 
     def _send_free_text_message(self, partner, message_body, media_url, waba):
         """Envía mensaje de texto (opcionalmente con multimedia) vía API de Meta."""
