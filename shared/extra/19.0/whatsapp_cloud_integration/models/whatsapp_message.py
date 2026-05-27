@@ -16,17 +16,15 @@ class WhatsappMessageWizard(models.TransientModel):
     template_id = fields.Many2one('whatsapp.template', string='Plantilla', required=True)
     parameter_values = fields.Text(
         string='Valores de Parámetros (JSON)',
-        help='Ej: ["Simón", "s0003", "CC El Mercado", "7:00 p.m.", "+584142711347", "integraia.lat"]'
+        help='Ej: ["https://urlvideo.mp4", "Simón"] (primero la URL del video si la plantilla tiene header)'
     )
 
     def action_send_whatsapp_message(self):
         self.ensure_one()
-        # Validar que el partner tenga teléfono
         recipient = self.partner_id.phone
         if not recipient:
             raise UserError(_('El cliente no tiene número de teléfono.'))
 
-        # Limpiar formato
         recipient = recipient.strip().replace(' ', '').replace('+', '')
 
         url = f"https://graph.facebook.com/v25.0/{self.waba_account_id.phone_number_id}/messages"
@@ -35,7 +33,6 @@ class WhatsappMessageWizard(models.TransientModel):
             'Content-Type': 'application/json'
         }
 
-        # Obtener nombre técnico e idioma de la plantilla maestra
         template = self.template_id
         payload = {
             'messaging_product': 'whatsapp',
@@ -47,32 +44,68 @@ class WhatsappMessageWizard(models.TransientModel):
             }
         }
 
-        # Incorporar parámetros si existen
+        # Procesar parámetros
+        params = []
         if self.parameter_values:
             try:
                 params = json.loads(self.parameter_values)
-                if isinstance(params, list):
-                    components = [{
-                        'type': 'body',
-                        'parameters': [{'type': 'text', 'text': str(p)} for p in params]
-                    }]
-                    payload['template']['components'] = components
-                else:
+                if not isinstance(params, list):
                     raise UserError(_('Los parámetros deben ser un array JSON.'))
             except json.JSONDecodeError:
                 raise UserError(_('El campo de parámetros no es un JSON válido.'))
 
+        # Construir componentes según el tipo de plantilla
+        components = []
+
+        # Si tiene video header, el primer parámetro debe ser la URL del video
+        if template.has_video_header:
+            if not params or len(params) < 1:
+                raise UserError(_('La plantilla con video requiere al menos la URL del video como primer parámetro.'))
+            video_url = params[0]
+            components.append({
+                'type': 'header',
+                'parameters': [{
+                    'type': 'video',
+                    'video': {'link': video_url}
+                }]
+            })
+            # El resto de parámetros van al body (si hay)
+            body_params = params[1:]
+            if body_params:
+                # Meta prohíbe terminantemente enviar saltos de línea dentro de las variables (como {{1}}).
+                # Esto causa el error "132018 There’s an issue with the parameters".
+                # Limpiamos los saltos de línea de todos los parámetros de texto.
+                cleaned_body_params = [str(p).replace('\n', '  ').replace('\r', '') for p in body_params]
+                components.append({
+                    'type': 'body',
+                    'parameters': [{'type': 'text', 'text': p} for p in cleaned_body_params]
+                })
+        else:
+            # Plantilla sin header de video: todos los parámetros van al body
+            if params:
+                cleaned_params = [str(p).replace('\n', '  ').replace('\r', '') for p in params]
+                components.append({
+                    'type': 'body',
+                    'parameters': [{'type': 'text', 'text': p} for p in cleaned_params]
+                })
+
+        if components:
+            payload['template']['components'] = components
+
         # Enviar petición
         try:
+            _logger.info("=== PAYLOAD A ENVIAR A WHATSAPP ===")
+            _logger.info(json.dumps(payload, indent=2))
+            _logger.info("===================================")
+
             response = requests.post(url, headers=headers, json=payload, timeout=15)
             response.raise_for_status()
             result = response.json()
-            # Registrar historial
             history_vals = {
                 'partner_id': self.partner_id.id,
                 'waba_account_id': self.waba_account_id.id,
                 'direction': 'outgoing',
-                'template_name': template.display_name,   # guardamos el nombre visible
+                'template_name': template.display_name,
                 'recipient_number': recipient,
                 'message_body': json.dumps(payload, indent=2),
                 'response_data': json.dumps(result, indent=2),

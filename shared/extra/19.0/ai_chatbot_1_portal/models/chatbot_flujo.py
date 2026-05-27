@@ -200,6 +200,36 @@ class ChatbotFlujo(models.Model):
                     "mensaje_error": "",
                 },
             ),
+            # Dentro de _default_pasos, después del último paso existente (secuencia 21), añade:
+
+            (
+                0, 0,
+                {
+                    "secuencia": 22,
+                    "nombre_interno": "solicitar_consentimiento",
+                    "nombre_mostrar": "Consentimiento WhatsApp",
+                    "tipo_dato": "boolean",
+                    "campo_destino": "consentimiento",
+                    "es_requerido": True,
+                    "es_paso_telefono": False,
+                    "mensaje_prompt": "¿Aceptas que te enviemos mensajes informativos y recordatorios por WhatsApp? Responde sí o no.",
+                    "mensaje_error": "Por favor responde 'sí' o 'no'.",
+                },
+            ),
+            (
+                0, 0,
+                {
+                    "secuencia": 23,
+                    "nombre_interno": "solicitar_email",
+                    "nombre_mostrar": "Correo electrónico",
+                    "tipo_dato": "text",
+                    "campo_destino": "solicitar_email",
+                    "es_requerido": False,
+                    "es_paso_telefono": False,
+                    "mensaje_prompt": "Opcional: ingresa tu correo electrónico para recibir información adicional. Si no deseas proporcionarlo, escribe 'omitir'.",
+                    "mensaje_error": "El correo no parece válido. Intenta de nuevo o escribe 'omitir' para saltar este paso.",
+                },
+            ),
         ]
 
     @api.model_create_multi

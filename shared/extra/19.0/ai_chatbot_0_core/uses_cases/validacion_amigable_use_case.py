@@ -127,7 +127,7 @@ class ValidacionAmigableUseCase(models.TransientModel):
                 return True, valor
             if isinstance(valor, str):
                 v = valor.lower()
-                if v in ['true', '1', 'yes', 'sí']:
+                if v in ['true', '1', 'yes', 'sí', 'si']:
                     return True, True
                 elif v in ['false', '0', 'no']:
                     return True, False
@@ -153,26 +153,30 @@ class ValidacionAmigableUseCase(models.TransientModel):
                                       error_tradicional, openai_client, model, max_tokens):
         """Usa OpenAI para crear un mensaje de error empático y claro."""
         system_content = f"""
-Eres un asistente experto en atención al cliente. Tu tarea es convertir mensajes de error técnicos y fríos en explicaciones amigables, empáticas y útiles para un usuario final en un chat.
+                Eres un asistente experto en atención al cliente. Tu tarea es convertir mensajes de error técnicos en explicaciones amigables, empáticas y útiles para un usuario final en un chat.
 
-El usuario intentó ingresar un valor para el campo "{nombre_mostrar}" (tipo de dato: {tipo_dato}).
-- Valor ingresado: "{valor}"
-- Razón del error técnico: "{error_tradicional}"
+                El usuario intentó ingresar un valor para el campo "{nombre_mostrar}" (tipo de dato: {tipo_dato}).
+                - Valor ingresado: "{valor}"
+                - Razón del error técnico: "{error_tradicional}"
 
-Debes generar un único mensaje de error que:
-- Sea cordial y no culpabilice al usuario.
-- Explique brevemente qué salió mal y cómo solucionarlo.
-- Use un tono cercano, como si fuera un asistente humano.
-- No incluya tecnicismos como "formato inválido" a menos que sea muy necesario.
-- Sea corto (máximo 2 frases).
+                **Reglas IMPORTANTES:**
+                - Si el tipo de dato es "boolean" (sí/no), NUNCA uses las palabras "true" o "false" en tu mensaje. En su lugar, pide explícitamente "sí" o "no".
+                - Si el campo se relaciona con consentimiento, permiso o decisión binaria, refuerza que responda con "sí" o "no".
+                - Adapta el mensaje al español natural, sin tecnicismos.
+                - Sé cordial, empático y breve (máximo 2 frases).
 
-Ejemplos:
-- Para un teléfono muy corto: "El número que ingresaste parece muy corto 😅. Por favor, escríbelo completo con el código de área, por ejemplo 0412 1234567."
-- Para una fecha con formato equivocado: "No pude reconocer la fecha. ¿Podrías escribirla como día/mes/año? Por ejemplo: 15/05/1990."
-- Para un error de imagen (no es URL o no carga): "¡Ups! No pude abrir la imagen que enviaste 🖼️. ¿Podrías intentar enviarla de nuevo o asegurarte de que sea un enlace válido?"
+                **Ejemplos para campos booleanos / consentimiento:**
+                - "No entendí si quieres que te contactemos. ¿Podrías responder solo 'sí' o 'no'? 😊"
+                - "Para poder continuar, necesito que me digas claramente 'sí' o 'no'."
+                - "Parece que tu respuesta no fue clara. Escríbeme 'sí' si estás de acuerdo, o 'no' si no lo estás."
 
-Responde ÚNICAMENTE con un JSON en este formato: {{ "mensaje_amigable": "texto del mensaje" }}
-"""
+                **Ejemplos para otros tipos de error (mantén el estilo):**
+                - Teléfono muy corto: "El número que ingresaste parece muy corto 😅. Por favor, escríbelo completo con el código de área, por ejemplo 0412 1234567."
+                - Fecha incorrecta: "No pude reconocer la fecha. ¿Podrías escribirla como día/mes/año? Ejemplo: 15/05/1990."
+                - Imagen no válida: "¡Ups! No pude abrir la imagen que enviaste 🖼️. ¿Podrías intentar enviarla de nuevo o asegurarte de que sea un enlace válido?"
+
+                Responde ÚNICAMENTE con un JSON en este formato: {{ "mensaje_amigable": "texto del mensaje" }}
+                """
         try:
             response = openai_client.chat.completions.create(
                 model=model,

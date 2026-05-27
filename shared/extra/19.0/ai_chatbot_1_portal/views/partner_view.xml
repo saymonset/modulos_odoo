@@ -1,18 +1,32 @@
-<!-- views/partner_view.xml -->
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="view_partner_form_inherit_birthdate" model="ir.ui.view">
-        <field name="name">res.partner.form.inherit.birthdate</field>
+    <!-- Vista formulario: añadir página de Información Personal con consentimiento -->
+    <record id="view_partner_form_inherit_birthdate_consent" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.birthdate.consent</field>
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <!-- Inserta el campo en la pestaña 'Información' -->
+            <!-- Inserta la página 'Información Personal' antes de la pestaña 'Internal Notes' -->
             <xpath expr="//page[@name='internal_notes']" position="before">
                 <page string="Información Personal">
                     <group>
                         <field name="birthdate"/>
                         <field name="age" widget="integer" readonly="1"/>
+                        <field name="consentimiento_whatsapp" string="Consentimiento WhatsApp" widget="boolean_toggle"/>
                     </group>
                 </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Vista tree (lista): mostrar el consentimiento como columna adicional -->
+    <record id="view_partner_tree_inherit_consent" model="ir.ui.view">
+        <field name="name">res.partner.tree.inherit.consent</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='phone']" position="after">
+                <field name="consentimiento_whatsapp" string="WhatsApp Consent" widget="boolean_toggle"/>
             </xpath>
         </field>
     </record>

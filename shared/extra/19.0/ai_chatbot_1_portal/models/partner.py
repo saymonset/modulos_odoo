@@ -5,11 +5,9 @@ from datetime import datetime
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
-    # Agrega el campo birthdate. Usa el tipo fields.Date.
     birthdate = fields.Date(string='Fecha de Nacimiento')
-
-    # (OPCIONAL) Puedes agregar un campo calculado para la edad.
     age = fields.Integer(string='Edad', compute='_compute_age', store=False)
+    consentimiento_whatsapp = fields.Boolean(string='Consentimiento WhatsApp', default=False)
 
     @api.depends('birthdate')
     def _compute_age(self):

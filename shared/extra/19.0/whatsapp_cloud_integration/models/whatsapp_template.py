@@ -9,7 +9,7 @@ class WhatsappTemplate(models.Model):
     _name = 'whatsapp.template'
     _description = 'Plantilla de WhatsApp (maestro)'
     _rec_name = 'friendly_name'
-    _order = 'friendly_name'   # ordenar por el nombre amigable
+    _order = 'friendly_name'
 
     name = fields.Char(
         string='Nombre técnico',
@@ -27,13 +27,27 @@ class WhatsappTemplate(models.Model):
     ], string='Idioma', default='es', required=True)
     parameter_schema = fields.Text(
         string='Esquema de parámetros (JSON)',
-        help='Define los nombres de los parámetros que espera la plantilla. '
-             'Ejemplo: {"1": "nombre_cliente", "2": "numero_pedido", "3": "direccion"}'
+        help="""Define los parámetros que espera la plantilla en formato JSON.
+
+Ejemplos:
+• Sin parámetros: {} o dejar vacío
+• Un parámetro de texto: {"1": "nombre_cliente"}
+• Dos parámetros: {"1": "url_video", "2": "nombre_cliente"}
+• Para plantillas con ENCABEZADO DE VIDEO: el primer parámetro (1) debe ser la URL del video.
+
+La cantidad de parámetros se calcula automáticamente a partir del número de claves (1,2,3...)."""
     )
     parameter_count = fields.Integer(
         string='Cantidad de parámetros',
         compute='_compute_parameter_count',
         store=False
+    )
+    has_video_header = fields.Boolean(
+        string='Encabezado de video',
+        default=False,
+        help="""Activa esta opción si la plantilla que creaste en Meta tiene un encabezado de tipo VIDEO.
+        IMPORTANTE: El primer parámetro ({{1}}) será la URL del video.
+        Debes incluir al menos {"1": "url_video"} en el esquema de parámetros."""
     )
     active = fields.Boolean(default=True)
 
@@ -47,7 +61,6 @@ class WhatsappTemplate(models.Model):
                 rec.parameter_count = 0
 
     def _get_parameter_schema(self):
-        """Retorna el diccionario de parámetros o una lista ordenada."""
         if not self.parameter_schema:
             return {}
         try:

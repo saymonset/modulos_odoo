@@ -4,3 +4,4 @@ access_whatsapp_history_user,whatsapp.history.user,model_whatsapp_history,base.g
 access_whatsapp_message_wizard_user,whatsapp.message.wizard.user,model_whatsapp_message_wizard,base.group_user,1,1,1,1
 access_whatsapp_template_user,whatsapp.template.user,model_whatsapp_template,base.group_user,1,1,1,1
 access_whatsapp_template_system,whatsapp.template.system,model_whatsapp_template,base.group_system,1,1,1,1
+access_whatsapp_mailing_user,whatsapp.mailing.user,model_whatsapp_mailing,base.group_user,1,1,1,1

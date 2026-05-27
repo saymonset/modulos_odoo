@@ -227,6 +227,7 @@ class InicioAgendarController(http.Controller):
             session_id = data.get('session_id')
             conversation_id = data.get('conversation_id')
             account_id = data.get('account_id')
+            platform = data.get('platform')
             valor = data.get('valor') or data.get('text')
             paso = data.get('paso')
 
@@ -237,6 +238,8 @@ class InicioAgendarController(http.Controller):
                 return Response(json.dumps({'success': False, 'error': 'conversation_id requerido'}), status=400, content_type='application/json')
             if not account_id:
                 return Response(json.dumps({'success': False, 'error': 'account_id requerido'}), status=400, content_type='application/json')
+            if not platform:
+                return Response(json.dumps({'success': False, 'error': 'platform requerido'}), status=400, content_type='application/json')
             if valor is None:
                 return Response(json.dumps({'success': False, 'error': 'Se requiere text o valor'}), status=400, content_type='application/json')
 
@@ -259,6 +262,7 @@ class InicioAgendarController(http.Controller):
                         'text': valor,
                         'session_id': session_id,
                         'conversation_id': conversation_id,
+                        'platform': platform,
                         'account_id': account_id,
                     }), status=200, content_type='application/json', headers=[('Access-Control-Allow-Origin', '*')])
 
@@ -268,7 +272,8 @@ class InicioAgendarController(http.Controller):
                 valor=valor,
                 paso=paso,
                 conversation_id=conversation_id,
-                account_id=account_id
+                account_id=account_id,
+                platform=platform
             )
 
             return Response(
