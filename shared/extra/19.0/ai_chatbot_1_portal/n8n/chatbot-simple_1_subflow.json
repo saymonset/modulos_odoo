@@ -13,11 +13,11 @@
         -1312,
         544
       ],
-      "id": "2065c4ab-a627-4c77-949f-6b567e79742f",
+      "id": "6ffa7c0a-1e72-411c-950d-596ee7d5a23d",
       "name": "Audio_a_Texto_whatsapp",
       "credentials": {
         "openAiApi": {
-          "id": "SynY9HmZH2SsZkWD",
+          "id": "wzfIhmJQeemUpcNG",
           "name": "OpenAi account"
         }
       }
@@ -132,7 +132,7 @@
         320,
         576
       ],
-      "id": "d384a1f7-fec4-4e81-96aa-b81595b4d20f",
+      "id": "ecf07bb2-d384-4960-97e5-5a8f682ab73f",
       "name": "Preparar_Input_AI"
     },
     {
@@ -224,7 +224,7 @@
         -1712,
         528
       ],
-      "id": "8533cf7b-a608-47a1-993a-4b12dd21f49f",
+      "id": "f8ddf232-d40e-4dd5-9858-8599b0345d9e",
       "name": "Texto_o_Audio?"
     },
     {
@@ -277,7 +277,7 @@
         -1312,
         704
       ],
-      "id": "a786b76e-58e6-4e71-9ae5-aecb3f0b7215",
+      "id": "dc8abce4-381f-43a9-842a-7791ad36c1df",
       "name": "Procesar_Imagen_whatsapp"
     },
     {
@@ -324,7 +324,7 @@
         -1152,
         544
       ],
-      "id": "4ce1a3e8-eb03-42dd-a7d3-b1d7d5ba0140",
+      "id": "83367447-c0d9-4ce4-bc62-6c8f15b5a998",
       "name": "Extraer_Texto_Audio"
     },
     {
@@ -340,11 +340,11 @@
         -336,
         208
       ],
-      "id": "3e34d351-d990-4876-8680-b33b71e1f11f",
+      "id": "45394d88-395c-48c2-a2ea-13a3b1c525a3",
       "name": "Get_buffer_data",
       "credentials": {
         "redis": {
-          "id": "GsXqpDjFeodKzf4H",
+          "id": "ygrIqBvLRKXhlewc",
           "name": "Redis account"
         }
       }
@@ -362,11 +362,11 @@
         -816,
         208
       ],
-      "id": "98e41c59-c621-4f27-a5cc-6b53ed64a6ce",
+      "id": "0a7c52fe-9736-405a-ab1b-c6db0122dbcd",
       "name": "Buffer",
       "credentials": {
         "redis": {
-          "id": "GsXqpDjFeodKzf4H",
+          "id": "ygrIqBvLRKXhlewc",
           "name": "Redis account"
         }
       }
@@ -381,7 +381,7 @@
         -560,
         208
       ],
-      "id": "93bf0621-3e4d-49e2-996e-d24a85733604",
+      "id": "dc8482db-c28e-4310-8bde-64ebe6062cc6",
       "name": "Wait",
       "webhookId": "d7bd6fc5-bbb3-451a-bbb4-b01a45635946"
     },
@@ -415,7 +415,7 @@
         -112,
         208
       ],
-      "id": "4ff6aee6-0bf3-4c8a-b88b-227f4e38457a",
+      "id": "d8d74c89-c275-401f-bda7-0bcaf646bdc4",
       "name": "If"
     },
     {
@@ -426,7 +426,7 @@
         16,
         336
       ],
-      "id": "7f783296-15d7-4909-8efa-1c6b8cd28d77",
+      "id": "fa736a20-0820-4993-b0e4-74afd7030ef9",
       "name": "No Operation, do nothing"
     },
     {
@@ -437,7 +437,7 @@
         -1040,
         208
       ],
-      "id": "be964505-6eec-4600-8e36-41035322b420",
+      "id": "5491aed3-8b0f-4d0e-9096-aa3401b4c417",
       "name": "Merge"
     },
     {
@@ -451,11 +451,11 @@
         224,
         0
       ],
-      "id": "b784b95c-0cda-4977-a55a-8bad3f25aa22",
+      "id": "3b97ee20-ace0-4b23-b895-7f4cc20fde51",
       "name": "Borrar_mensajes_buffer",
       "credentials": {
         "redis": {
-          "id": "GsXqpDjFeodKzf4H",
+          "id": "ygrIqBvLRKXhlewc",
           "name": "Redis account"
         }
       }
@@ -522,13 +522,13 @@
         0,
         0
       ],
-      "id": "9b78da9f-614a-4dc6-99ac-e41c24089660",
+      "id": "62bfb64f-314c-4db2-b444-e8fcf4abd432",
       "name": "Agrupar_texto_acumulado_resto_variables_enviar"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://integraiadev.integraia.lat/ai_chatbot_1_portal/procesar_paso",
+        "url": "https://integraiadev.unisasalud.com/ai_chatbot_1_portal/procesar_paso",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -547,6 +547,10 @@
             {
               "name": "valor",
               "value": "={{ $json.text }}"
+            },
+            {
+              "name": "=platform",
+              "value": "={{ $json.platform }}"
             }
           ]
         },
@@ -558,7 +562,7 @@
         528,
         576
       ],
-      "id": "03b0e224-c736-43a1-919c-36e2626fc557",
+      "id": "7547910d-0816-43d3-8ac0-3a7ae53d44fb",
       "name": "Consultar_estado_Odoo",
       "alwaysOutputData": true,
       "onError": "continueErrorOutput"
@@ -571,7 +575,7 @@
         560,
         304
       ],
-      "id": "d998a0ba-f70b-455c-8b7f-853126dd8964",
+      "id": "1688ceea-66d3-4b35-9a38-e419f4905ac0",
       "name": "Combinar_entrada_session_odoo",
       "disabled": true
     },
@@ -580,10 +584,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        16,
-        704
+        288,
+        816
       ],
-      "id": "8239e884-b952-44d9-bf55-89d574c25f5a",
+      "id": "368bc373-074c-4fb9-80c4-6e12763ae651",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -666,7 +670,7 @@
         -1600,
         192
       ],
-      "id": "6597325f-2972-4d15-bca7-3d73733a7969",
+      "id": "709cb626-1c60-4607-b2c9-e495ab224613",
       "name": "Obtener_Info"
     },
     {
@@ -680,7 +684,7 @@
         -1888,
         544
       ],
-      "id": "4f3639d2-1d5b-4c44-83bc-cdd01c24922f",
+      "id": "a858efb5-c8b7-4da2-9ae3-f1a38a0a4508",
       "name": "answer_chatbot_sdimple_0"
     },
     {
@@ -693,7 +697,7 @@
         752,
         304
       ],
-      "id": "5a8b69c0-ec3b-458d-a54c-9c13c2752e39",
+      "id": "c1e41b85-c044-49f1-aaad-5a635d5f5698",
       "name": "Recuperar_paso",
       "disabled": true
     },
@@ -716,12 +720,12 @@
         -1488,
         544
       ],
-      "id": "c037859d-1a11-48c7-bbf2-f74919721ba0",
+      "id": "f5389b44-85ce-4bbd-b38c-b4c9a0d601cb",
       "name": "Obtenemos_imagen",
       "alwaysOutputData": true,
       "credentials": {
         "httpBearerAuth": {
-          "id": "SxSs5ggMU2LgbDMZ",
+          "id": "dRiDGxP0dv4x5jGC",
           "name": "Bearer Auth account"
         }
       }
@@ -731,12 +735,21 @@
     "When clicking ‘Execute workflow’": [
       {
         "json": {
-          "text": "",
+          "text": "hola",
           "session_id": "584142711347",
-          "account_id": "1",
-          "conversation_id": "3",
+          "image_url": "",
           "platform": "whatsapp",
-          "image_url": "https://chatwoot.integraia.lat/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBHUT09IiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--3f42b7fded35a0ba0e5f6fc53b60809331cff77d/File.jpg"
+          "account_id": "1",
+          "conversation_id": "1",
+          "message_type": "{{$json.message_type}}",
+          "user_name": "UNISA Salud",
+          "user_number": "+584142711347",
+          "channel": null,
+          "content": null,
+          "file_type": null,
+          "phone_number": null,
+          "user_message": null,
+          "agente_desactivado": null
         }
       }
     ]
@@ -895,11 +908,6 @@
         ]
       ]
     },
-    "Consultar_estado_Odoo": {
-      "main": [
-        []
-      ]
-    },
     "Combinar_entrada_session_odoo": {
       "main": [
         [
@@ -926,7 +934,7 @@
       "main": [
         [
           {
-            "node": "Preparar_Input_AI",
+            "node": "Consultar_estado_Odoo",
             "type": "main",
             "index": 0
           }
@@ -942,11 +950,6 @@
             "index": 0
           }
         ]
-      ]
-    },
-    "Recuperar_paso": {
-      "main": [
-        []
       ]
     },
     "Obtenemos_imagen": {
@@ -966,10 +969,11 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "92918aef-79a7-4cdc-9ad9-e15b6dac350b",
+  "versionId": "86a16e4d-9ed9-460a-ae6b-108dfd14ee90",
   "meta": {
-    "instanceId": "ac8b8e9b824b3711008329bf41bf68736c3261debaa6dcb0eaceede9a0a7edac"
+    "templateCredsSetupCompleted": true,
+    "instanceId": "27f2fbd44aea77cdc4ee5b60d7a4eb1783a710ad686d97e24edf8a6f5832f241"
   },
-  "id": "Er44fSL1mNP20oKt",
+  "id": "zg-VijB4F9ZE4KyUiChne",
   "tags": []
 }
