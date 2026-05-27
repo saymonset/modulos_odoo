@@ -72,16 +72,21 @@ class WhatsappMessageWizard(models.TransientModel):
             # El resto de parámetros van al body (si hay)
             body_params = params[1:]
             if body_params:
+                # Meta prohíbe terminantemente enviar saltos de línea dentro de las variables (como {{1}}).
+                # Esto causa el error "132018 There’s an issue with the parameters".
+                # Limpiamos los saltos de línea de todos los parámetros de texto.
+                cleaned_body_params = [str(p).replace('\n', '  ').replace('\r', '') for p in body_params]
                 components.append({
                     'type': 'body',
-                    'parameters': [{'type': 'text', 'text': str(p)} for p in body_params]
+                    'parameters': [{'type': 'text', 'text': p} for p in cleaned_body_params]
                 })
         else:
             # Plantilla sin header de video: todos los parámetros van al body
             if params:
+                cleaned_params = [str(p).replace('\n', '  ').replace('\r', '') for p in params]
                 components.append({
                     'type': 'body',
-                    'parameters': [{'type': 'text', 'text': str(p)} for p in params]
+                    'parameters': [{'type': 'text', 'text': p} for p in cleaned_params]
                 })
 
         if components:
