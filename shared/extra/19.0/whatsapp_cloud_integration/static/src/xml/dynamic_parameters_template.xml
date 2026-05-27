@@ -21,10 +21,19 @@
                                     <t t-esc="input.paramName"/>
                                 </label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" t-att-id="'param_' + input.index"
-                                           t-att-placeholder="input.placeholder"
-                                           t-att-value="input.value"
-                                           t-on-change="(ev) => _onInputChange(ev, input_index)"/>
+                                    <t t-if="input.isUrl">
+                                        <input type="text" class="form-control" t-att-id="'param_' + input.index"
+                                               t-att-placeholder="input.placeholder"
+                                               t-att-value="input.value"
+                                               t-on-change="(ev) => this._onInputChange(ev, input_index)"/>
+                                    </t>
+                                    <t t-else="">
+                                        <textarea class="form-control" t-att-id="'param_' + input.index"
+                                                  t-att-placeholder="input.placeholder"
+                                                  rows="4"
+                                                  t-on-change="(ev) => this._onInputChange(ev, input_index)"
+                                                  t-esc="input.value"></textarea>
+                                    </t>
                                 </div>
                             </div>
                         </t>
