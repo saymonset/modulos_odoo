@@ -4,10 +4,6 @@
         <field name="name">Campañas WhatsApp</field>
         <field name="res_model">whatsapp.mailing</field>
         <field name="view_mode">list,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">Crea tu primera campaña de WhatsApp Marketing.</p>
-            <p>Define el mensaje, adjunta un video y selecciona los contactos que hayan dado su consentimiento.</p>
-        </field>
     </record>
 
     <record id="view_whatsapp_mailing_form" model="ir.ui.view">
@@ -25,30 +21,23 @@
                         <h1><field name="name" placeholder="Nombre interno..."/></h1>
                     </div>
                     <group>
-                        <field name="subject" required="1" placeholder="Asunto interno (no se envía)"/>
-                        <!-- Campo de selección de contactos con consentimiento -->
-                        <field name="partner_ids" widget="many2many_tags" 
-                               options="{'no_create': True, 'no_create_edit': True}" 
-                               placeholder="Buscar contactos que aceptaron WhatsApp..."/>
+                        <field name="subject" required="1"/>
+                        <field name="partner_ids" widget="many2many_tags"/>
                         <field name="schedule_type" widget="radio"/>
-                        <field name="scheduled_date" invisible="schedule_type != 'later'" 
-                               required="schedule_type == 'later'"/>
+                        <field name="scheduled_date" invisible="schedule_type != 'later'" required="schedule_type == 'later'"/>
                     </group>
                     <group string="Contenido del Mensaje de WhatsApp">
                         <field name="use_template"/>
-                        <field name="campaign_whatsapp_template_id" 
-                               invisible="not use_template" 
-                               required="use_template"/>
-                        <!-- El campo whatsapp_text se oculta si usamos plantilla -->
-                        <field name="whatsapp_text" widget="html" 
-                               placeholder="Texto del mensaje (puedes usar {{ partner.name }}, etc.)"
-                               invisible="use_template"/>
-                        <!-- El campo whatsapp_media_url ahora es visible siempre -->
-                        <!-- Es obligatorio si la plantilla seleccionada tiene encabezado de video -->
-                        <field name="whatsapp_media_url" 
-                               placeholder="https://tudominio.com/video.mp4"
-                               help="Obligatorio si la plantilla seleccionada tiene encabezado de video."/>
+                        <field name="campaign_whatsapp_template_id" invisible="not use_template" required="use_template"/>
+                        <field name="whatsapp_text" widget="html" placeholder="Texto libre" invisible="use_template"/>
+                        <field name="whatsapp_media_url" placeholder="URL de video/imagen" invisible="use_template"/>
                     </group>
+                    <!-- Widget dinámico – ahora funciona correctamente -->
+                    <field name="parameter_values" 
+                           widget="dynamic_parameters" 
+                           invisible="not use_template"
+                           nolabel="1"
+                           help="Parámetros dinámicos de la plantilla"/>
                 </sheet>
             </form>
         </field>

@@ -41,6 +41,7 @@ class WhatsAppMailing(models.Model):
         help='Selecciona uno o varios contactos que hayan aceptado recibir WhatsApp.'
     )
 
+    # Campos para envío sin plantilla (texto libre)
     whatsapp_text = fields.Html(
         string='Texto del Mensaje',
         help='Cuerpo del mensaje de WhatsApp. Puedes usar placeholders como {{ partner.name }}'
@@ -49,11 +50,21 @@ class WhatsAppMailing(models.Model):
         string='URL del Video o Imagen',
         help='Enlace público al video/imagen que se enviará como multimedia.'
     )
+
+    # Campos para plantilla aprobada
+    use_template = fields.Boolean(string='Usar plantilla aprobada')
     campaign_whatsapp_template_id = fields.Many2one(
         'whatsapp.template',
         string='Plantilla WhatsApp (aprobada)'
     )
-    use_template = fields.Boolean(string='Usar plantilla aprobada')
+    # Almacena los valores de los parámetros en formato JSON
+    parameter_values = fields.Text(
+        string='Valores de parámetros',
+        default='[]', 
+        help='Almacena los valores de los parámetros en formato JSON según el esquema de la plantilla. '
+             'Ejemplo: ["https://.../video.mp4", "Texto del mensaje"]'
+    )
+
     whatsapp_attachment_ids = fields.Many2many(
         'ir.attachment',
         'whatsapp_mailing_whatsapp_attachment_rel',
@@ -108,51 +119,49 @@ class WhatsAppMailing(models.Model):
         return rendered
 
     def _extract_template_params(self, partner):
-        """Devuelve una lista de parámetros según la plantilla seleccionada.
-        Si la plantilla tiene encabezado de video, el primer parámetro es la URL del video (campo whatsapp_media_url).
-        Los siguientes parámetros (si los hay) se extraen del texto o de otros campos.
-        """
         template = self.campaign_whatsapp_template_id
         expected_count = template.parameter_count if template else 0
         if expected_count == 0:
             return []
-        params = []
-        # Si la plantilla tiene video header, el primer parámetro es la URL del video
-        if template.has_video_header:
-            if self.whatsapp_media_url:
-                params.append(self.whatsapp_media_url)
-            else:
-                raise UserError(_('La plantilla seleccionada requiere una URL de video. Por favor, completa el campo "URL del Video o Imagen".'))
-            remaining = expected_count - 1
-        else:
-            remaining = expected_count
 
-        # Completar con valores de partner según los parámetros restantes
-        if remaining >= 1:
-            params.append(partner.name or '')
-        if remaining >= 2:
-            params.append(partner.phone or '')
-        # Si se necesitan más, puedes añadir lógica adicional
-        while len(params) < expected_count:
-            params.append('')
-        return params
+        try:
+            params = json.loads(self.parameter_values or '[]')
+            if not isinstance(params, list):
+                params = []
+        except json.JSONDecodeError:
+            params = []
+
+        if len(params) != expected_count:
+            raise UserError(_(
+                'La plantilla "%s" espera %s parámetros, pero se proporcionaron %s.',
+                template.name, expected_count, len(params)
+            ))
+
+        rendered_params = []
+        for idx, val in enumerate(params, start=1):
+            if template.has_video_header and idx == 1:
+                rendered_params.append(val)
+            else:
+                rendered = self.env['mail.render.mixin']._render_template(
+                    str(val), 'res.partner', partner.ids
+                ).get(partner.id, val)
+                rendered_params.append(rendered)
+        return rendered_params
 
     def _send_free_text_message(self, partner, message_body, media_url, waba):
+        # (el mismo código que ya tenías, sin cambios)
         to_number = partner.phone.strip().replace(' ', '').replace('+', '')
-
         url = f"https://graph.facebook.com/v25.0/{waba.phone_number_id}/messages"
         headers = {
             'Authorization': f'Bearer {waba.access_token}',
             'Content-Type': 'application/json'
         }
-
         payload = {
             'messaging_product': 'whatsapp',
             'to': to_number,
             'type': 'text',
             'text': {'body': message_body[:1024]}
         }
-
         if media_url:
             ext = media_url.split('.')[-1].lower()
             if ext in ['mp4', 'mov', 'avi', 'mpeg']:
@@ -162,7 +171,6 @@ class WhatsAppMailing(models.Model):
                 payload['type'] = 'image'
                 payload['image'] = {'link': media_url}
             del payload['text']
-
         try:
             response = requests.post(url, headers=headers, json=payload, timeout=15)
             response.raise_for_status()

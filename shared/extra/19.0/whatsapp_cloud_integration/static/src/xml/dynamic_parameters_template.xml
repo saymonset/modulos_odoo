@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="whatsapp_cloud_integration.DynamicParametersWidget" owl="1">
+        <div class="o_dynamic_parameters" style="margin-top: 16px; margin-bottom: 16px;">
+            <t t-if="state.loading">
+                <div class="text-center py-2">
+                    <i class="fa fa-spinner fa-spin"/> Cargando parámetros...
+                </div>
+            </t>
+            <t t-elif="state.error">
+                <div class="alert alert-danger mb-0">
+                    <i class="fa fa-exclamation-circle"/> Error: <t t-esc="state.error"/>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="card">
+                    <div class="card-body">
+                        <t t-foreach="state.inputs" t-as="input" t-key="input_index">
+                            <div class="form-group row mb-3">
+                                <label class="col-sm-3 col-form-label font-weight-bold" t-att-for="'param_' + input.index">
+                                    <t t-esc="input.paramName"/>
+                                </label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" t-att-id="'param_' + input.index"
+                                           t-att-placeholder="input.placeholder"
+                                           t-att-value="input.value"
+                                           t-on-change="(ev) => _onInputChange(ev, input_index)"/>
+                                </div>
+                            </div>
+                        </t>
+                        <t t-if="state.inputs.length === 0">
+                            <div class="alert alert-info mb-0">
+                                <i class="fa fa-info-circle"/> Esta plantilla no tiene parámetros.
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>
