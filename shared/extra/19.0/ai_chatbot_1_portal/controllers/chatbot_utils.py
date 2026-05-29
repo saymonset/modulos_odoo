@@ -69,32 +69,134 @@ class ChatBotUtils:
         return False
 
     @staticmethod
+    def normalizar_telefono_internacional(phone):
+        """
+        Normaliza un número de teléfono a formato internacional con +58.
+        Ejemplos:
+        - 04141234567 → +584141234567
+        - 4141234567 → +584141234567
+        - +584141234567 → +584141234567 (se mantiene)
+        - 584141234567 → +584141234567
+        - 0412-1234567 → +584121234567
+        """
+        if not phone:
+            return ''
+        
+        phone_str = str(phone).strip()
+        digits = ''.join(filter(str.isdigit, phone_str))
+        
+        if not digits:
+            return phone_str
+        
+        # Si ya tiene el formato con + y 58, devolverlo
+        if phone_str.startswith('+58') and len(digits) >= 11:
+            return f"+{digits}"
+        
+        # Si tiene 58 al inicio (sin +)
+        if digits.startswith('58') and len(digits) >= 11:
+            return f"+{digits}"
+        
+        # Si comienza con 0 (ej: 04141234567)
+        if digits.startswith('0') and len(digits) >= 11:
+            return f"+58{digits[1:]}"
+        
+        # Si tiene 10 dígitos y comienza con 4 (ej: 4141234567)
+        if len(digits) == 10 and digits.startswith('4'):
+            return f"+58{digits}"
+        
+        # Si tiene menos de 10 dígitos, devolver como está
+        if len(digits) < 10:
+            return phone_str
+        
+        # Fallback: agregar +58
+        return f"+58{digits}"
+
+    @staticmethod
     def find_partner_by_phone(env, phone):
-        """Busca un partner por teléfono normalizando a solo dígitos."""
+        """
+        Busca un partner por teléfono usando comparación de dígitos.
+        Esto permite encontrar coincidencias independientemente del formato.
+        """
         if not phone:
             return None
+        
+        # Extraer solo dígitos del teléfono ingresado
         phone_digits = ''.join(filter(str.isdigit, phone))
-        if not phone_digits:
+        if not phone_digits or len(phone_digits) < 7:
+            _logger.warning("Teléfono inválido o muy corto: %s", phone)
             return None
-        search_suffix = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
-        if len(search_suffix) < 7:
-            return None
-        domain = [('phone', '=like', f'%{search_suffix}'), ('active', '=', True)]
-        partner = env['res.partner'].sudo().search(domain, limit=1)
-        if not partner:
+        
+        _logger.info("=== BUSCANDO PARTNER POR TELÉFONO ===")
+        _logger.info("Teléfono original: %s", phone)
+        _logger.info("Dígitos extraídos: %s", phone_digits)
+        
+        partner = None
+        
+        # ESTRATEGIA 1: Buscar por últimos 10 dígitos
+        search_term = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
+        if len(search_term) >= 7:
+            _logger.info("Estrategia 1 - Buscando por sufijo: %s", search_term)
             partner = env['res.partner'].sudo().search([
-                ('phone', 'ilike', phone_digits),
+                ('phone', '=like', f'%{search_term}'),
                 ('active', '=', True)
             ], limit=1)
-        return partner
+            if partner:
+                _logger.info("✅ Partner encontrado por sufijo: %s (ID: %s) - Tel: %s", 
+                             partner.name, partner.id, partner.phone)
+                return partner
+        
+        # ESTRATEGIA 2: Buscar por dígitos completos
+        _logger.info("Estrategia 2 - Buscando por dígitos completos: %s", phone_digits)
+        partner = env['res.partner'].sudo().search([
+            ('phone', 'ilike', phone_digits),
+            ('active', '=', True)
+        ], limit=1)
+        if partner:
+            _logger.info("✅ Partner encontrado por dígitos completos: %s (ID: %s) - Tel: %s", 
+                         partner.name, partner.id, partner.phone)
+            return partner
+        
+        # ESTRATEGIA 3: Buscar por últimos 8 dígitos
+        if len(phone_digits) >= 8:
+            search_term_8 = phone_digits[-8:]
+            _logger.info("Estrategia 3 - Buscando por últimos 8 dígitos: %s", search_term_8)
+            partner = env['res.partner'].sudo().search([
+                ('phone', '=like', f'%{search_term_8}'),
+                ('active', '=', True)
+            ], limit=1)
+            if partner:
+                _logger.info("✅ Partner encontrado por últimos 8 dígitos: %s (ID: %s) - Tel: %s", 
+                             partner.name, partner.id, partner.phone)
+                return partner
+        
+        # ESTRATEGIA 4: Búsqueda manual por comparación de dígitos
+        _logger.info("Estrategia 4 - Búsqueda manual por comparación de dígitos")
+        all_partners = env['res.partner'].sudo().search([
+            ('phone', '!=', False),
+            ('active', '=', True)
+        ], limit=100)
+        
+        for p in all_partners:
+            if p.phone:
+                p_digits = ''.join(filter(str.isdigit, p.phone))
+                # Verificar si los dígitos coinciden (últimos 7-10 dígitos)
+                if p_digits.endswith(phone_digits) or phone_digits.endswith(p_digits[-8:]):
+                    _logger.info("✅ Partner encontrado por comparación manual: %s (ID: %s) - Tel BD: %s - Dígitos BD: %s", 
+                                 p.name, p.id, p.phone, p_digits)
+                    return p
+        
+        _logger.warning("❌ No se encontró partner para teléfono: %s", phone)
+        return None
 
     @staticmethod
     def update_create_contact(env, data):
         """
         Busca o crea un contacto basado en VAT o Teléfono.
-        Actualiza los datos: nombre, cédula, teléfono, email, fecha de nacimiento y consentimiento.
+        Actualiza SOLO los campos que tienen valor (no sobreescribe vacíos con vacíos).
         """
-        phone = data.get('solicitar_phone', '').strip()
+        phone_raw = data.get('solicitar_phone', '').strip()
+        phone = ChatBotUtils.normalizar_telefono_internacional(phone_raw) if phone_raw else ''
+        
         name = data.get('solicitar_name', '').strip()
         vat = data.get('solicitar_vat', '').strip()
         birthdate = data.get('solicitar_birthdate', '').strip()
@@ -121,36 +223,41 @@ class ChatBotUtils:
             if partner:
                 _logger.info("Contacto encontrado por Teléfono: %s", phone)
 
-        # Preparar datos del partner
-        partner_data = {
-            'name': name,
-            'vat': vat,
-            'phone': phone,
-            'type': 'contact',
-            'company_type': 'person',
-        }
+        # Preparar datos del partner (SOLO campos que tienen valor)
+        partner_data = {}
+        
+        if name:
+            partner_data['name'] = name
+        if vat:
+            partner_data['vat'] = vat
+        if phone:
+            partner_data['phone'] = phone
         if email:
             partner_data['email'] = email
-        # ✅ Guardar consentimiento (el campo existe por herencia)
+        
+        partner_data['type'] = 'contact'
+        partner_data['company_type'] = 'person'
         partner_data['consentimiento_whatsapp'] = consentimiento
 
         # Fecha de nacimiento
-        fecha_convertida = ChatBotUtils.convert_fecha_nacimiento(birthdate)
-        if fecha_convertida and 'birthdate' in env['res.partner']._fields:
-            partner_data['birthdate'] = fecha_convertida
+        if birthdate:
+            fecha_convertida = ChatBotUtils.convert_fecha_nacimiento(birthdate)
+            if fecha_convertida and 'birthdate' in env['res.partner']._fields:
+                partner_data['birthdate'] = fecha_convertida
 
         if partner:
-            # Actualizar contacto existente
-            if not partner_data.get('name'):
-                partner_data.pop('name')
-            partner.sudo().write(partner_data)
-            _logger.info("Contacto actualizado: ID %s - Email: %s - Consentimiento: %s", partner.id, email, consentimiento)
+            # Actualizar contacto existente (solo campos que tienen valor)
+            if partner_data:
+                partner.sudo().write(partner_data)
+                _logger.info("Contacto ACTUALIZADO: ID %s - Campos actualizados: %s", partner.id, list(partner_data.keys()))
+            else:
+                _logger.info("No hay datos nuevos para actualizar el contacto ID %s", partner.id)
         else:
             # Crear nuevo contacto
             if not partner_data.get('name'):
                 partner_data['name'] = f"Contacto {phone or vat or 'Nuevo'}"
             partner = env['res.partner'].sudo().create(partner_data)
-            _logger.info("Contacto creado: ID %s - Email: %s - Consentimiento: %s", partner.id, email, consentimiento)
+            _logger.info("Contacto CREADO: ID %s - Datos: %s", partner.id, list(partner_data.keys()))
 
         return partner
 
@@ -178,9 +285,9 @@ class ChatBotUtils:
 
     @staticmethod
     def get_team_unisa(env):
-        """Obtener o crear equipos de UNISA (Grupo Citas y Grupo Ventas)"""
+        """Obtener o crear equipos de UNISA (Grupo Citas, Grupo Ventas, Grupo Laboratorio, Grupo Imagenología)"""
         teams = {}
-        team_names = ['Grupo Citas', 'Grupo Ventas']
+        team_names = ['Grupo Citas', 'Grupo Ventas', 'Grupo Laboratorio', 'Grupo Imagenología']
         for team_name in team_names:
             team = env['crm.team'].search([('name', '=', team_name)], limit=1)
             if not team:
@@ -194,6 +301,10 @@ class ChatBotUtils:
                         team_data['alias_name'] = 'citas-unisa'
                     elif team_name == 'Grupo Ventas':
                         team_data['alias_name'] = 'ventas-unisa'
+                    elif team_name == 'Grupo Laboratorio':
+                        team_data['alias_name'] = 'laboratorio-unisa'
+                    elif team_name == 'Grupo Imagenología':
+                        team_data['alias_name'] = 'imagenologia-unisa'
                     team = env['crm.team'].create(team_data)
                     _logger.info(f"✅ Equipo UNISA creado: {team.name} (ID: {team.id})")
                 except Exception as e:
@@ -253,12 +364,19 @@ class ChatBotUtils:
         """Crear lead en CRM con email y consentimiento en la descripción"""
         description = ChatBotUtils.generate_description(data)
         lead_name = f"{data.get('solicitar_servicio', 'Consulta')} - {data.get('solicitar_name', 'Sin nombre')}"
+        
+        # Normalizar teléfono para lead
+        phone_raw = data.get('solicitar_phone', '')
+        phone_normalizado = ChatBotUtils.normalizar_telefono_internacional(phone_raw)
+        # Para el lead, mostrar sin +58 (para WhatsApp local)
+        phone_lead = phone_normalizado.replace('+58', '') if phone_normalizado.startswith('+58') else phone_normalizado
+        
         lead_data = {
             'name': lead_name,
             'partner_id': partner.id,
             'contact_name': data.get('solicitar_name', 'Sin nombre'),
             'email_from': data.get('solicitar_email', partner.email or ''),
-            'phone': (data.get('solicitar_phone') or '').replace('+58', '0'),
+            'phone': phone_lead,
             'description': description,
             'medium_id': medium.id,
             'source_id': source.id,
@@ -272,6 +390,46 @@ class ChatBotUtils:
         fecha_creacion = lead.create_date.strftime('%d/%m/%Y') if lead.create_date else datetime.now().strftime('%d/%m/%Y')
         lead.write({'name': f"{lead.name} - ID {lead.id} ({fecha_creacion})"})
         _logger.info(f"Lead creado: ID {lead.id} - {lead.name}")
+        return lead
+
+    @staticmethod
+    def create_resultados_lead(env, data, team, medium, source, campaign, tag):
+        """
+        Crear lead específico para resultados de laboratorio o imágenes
+        """
+        identificacion = data.get('solicitar_identificacion', 'Sin identificación')
+        estudio = data.get('solicitar_estudio', 'No especificado')
+        equipo_asignado = data.get('equipo_asignado', 'RESULTADOS_LAB')
+        
+        tipo_estudio = "LABORATORIO" if equipo_asignado == 'RESULTADOS_LAB' else "IMAGENOLOGÍA"
+        
+        lead_name = f"Resultados {tipo_estudio} - {estudio[:50]}"
+        
+        description = f"""**SOLICITUD DE RESULTADOS - {tipo_estudio}**
+
+• Identificación del paciente: {identificacion}
+• Estudio solicitado: {estudio}
+• Plataforma: {data.get('plataforma', 'WhatsApp')}
+• Fecha de solicitud: {datetime.now().strftime('%d/%m/%Y %H:%M')}
+"""
+        
+        lead_data = {
+            'name': lead_name,
+            'contact_name': identificacion,
+            'description': description,
+            'medium_id': medium.id,
+            'source_id': source.id,
+            'campaign_id': campaign.id,
+            'team_id': team.id if team else False,
+            'tag_ids': [(4, tag.id)],
+            'type': 'opportunity',
+            'stage_id': ChatBotUtils.get_default_stage(env),
+        }
+        
+        lead = env['crm.lead'].create(lead_data)
+        fecha_creacion = lead.create_date.strftime('%d/%m/%Y') if lead.create_date else datetime.now().strftime('%d/%m/%Y')
+        lead.write({'name': f"{lead.name} - ID {lead.id} ({fecha_creacion})"})
+        _logger.info(f"Lead de resultados creado: ID {lead.id} - {lead.name}")
         return lead
 
     @staticmethod
@@ -295,6 +453,8 @@ class ChatBotUtils:
             ('solicitar_email', 'Correo electrónico'),
             ('consentimiento', 'Consentimiento WhatsApp'),
             ('solicitar_servicio', 'Servicio'),
+            ('solicitar_consulta_deseada', 'Consulta deseada'),
+            ('solicitar_nombre_seguro', 'Nombre del seguro'),
             ('solicitar_fecha_preferida', 'Fecha preferida'),
             ('hora_preferida', 'Horario'),
             ('solicitar_medio_pago', 'Medio de pago'),

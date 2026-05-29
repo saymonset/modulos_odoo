@@ -57,6 +57,11 @@ class SessionState(models.Model):
         help='Lista ordenada de pasos del flujo pendientes de procesar'
     )
     
+    equipo_asignado = fields.Char(
+        string='Equipo Asignado',
+        help='Equipo al que se asignará el lead (Agendamiento_Directo, Ventas_UNISA, etc.)'
+    )
+    
     timestamp_estado = fields.Datetime(
         string='Timestamp del Estado',
         compute='_compute_campos_derivados',
@@ -98,7 +103,6 @@ class SessionState(models.Model):
             resultado = service.GenerarPreguntaIntegraia(prompt, max_tokens=max_tokens)
             if resultado.get('status') == 'success':
                 pregunta = resultado['generated_question']
-                # Limpieza por si la IA devuelve algo con comillas o formato extraño
                 pregunta = pregunta.strip().strip('"')
         except Exception as e:
             _logger.error(f"Error generando pregunta amigable con IA para '{nombre_mostrar}': {e}")
@@ -116,7 +120,6 @@ class SessionState(models.Model):
             if nombre_mostrar in fallbacks:
                 pregunta = fallbacks[nombre_mostrar]
             else:
-                # Fallback genérico profesional
                 if tipo == 'boolean':
                     pregunta = f"Por favor, responda 'sí' o 'no' para: {nombre_mostrar}."
                 else:
@@ -162,66 +165,94 @@ class SessionState(models.Model):
     #  MÉTODOS PRINCIPALES DEL FLUJO
     # ==================================================================
     @api.model
-    def iniciar_flujo(self, session_id, flow_name, steps, equipo_asignado):
+    def iniciar_flujo(self, session_id, flow_name, steps, equipo_asignado, datos_precargados=None):
         """
         Inicia un flujo para una sesión, guardando los pasos pendientes y estableciendo el primer paso.
         steps: lista de diccionarios con la definición de cada paso.
+        datos_precargados: dict con datos del cliente ya existentes (opcional).
         """
-        if steps:
-            primer_paso = steps[0].copy()
-            nombre_original = primer_paso.get('nombre_mostrar', '')
-            pregunta_amigable = self._generar_pregunta_amigable(nombre_original, tipo=primer_paso.get('tipo_dato'))
-            primer_paso['mensaje_prompt'] = pregunta_amigable
-            primer_paso['nombre_mostrar'] = pregunta_amigable
-            steps[0] = primer_paso
-
-        registro = self.search([('session_id', '=', session_id)], limit=1)
-        if not registro:
-            estado_inicial = {
-                'modo': 'FLUJO',
-                'paso': steps[0]['nombre_interno'] if steps else 'SIN_PASOS',
-                'nombre_mostrar': steps[0]['nombre_mostrar'] if steps else 'SIN_PASOS',
-                'tipo_dato': steps[0]['tipo_dato'] if steps else 'SIN_PASOS',
-                'mensaje_prompt': steps[0]['mensaje_prompt'] if steps else 'SIN_PASOS',
-                'mensaje_error': steps[0]['mensaje_error'] if steps else 'SIN_PASOS',
-                'es_requerido': steps[0]['es_requerido'] if steps else 'SIN_PASOS',
-                'datos_paciente': {'equipo_asignado': equipo_asignado},
-                'timestamp': fields.Datetime.now().isoformat()
+        _logger.info("Iniciando flujo para session_id: %s, flow_name: %s", session_id, flow_name)
+        _logger.info("Datos precargados: %s", datos_precargados)
+        
+        # Inicializar datos del paciente con los precargados si existen
+        datos_paciente = datos_precargados.copy() if datos_precargados else {}
+        datos_paciente['equipo_asignado'] = equipo_asignado
+        
+        # Filtrar pasos que ya tienen datos precargados
+        steps_filtrados = []
+        for step in steps:
+            campo_destino = step.get('campo_destino')
+            if datos_precargados and campo_destino and datos_precargados.get(campo_destino):
+                _logger.info("Paso %s ya tiene dato precargado: %s", campo_destino, datos_precargados.get(campo_destino))
+                continue  # Saltar este paso porque ya tiene valor
+            steps_filtrados.append(step)
+        
+        _logger.info("Pasos después de filtrar precargados: %d de %d", len(steps_filtrados), len(steps))
+        
+        # Si no quedan pasos, el flujo está completo
+        if not steps_filtrados:
+            _logger.info("No hay pasos pendientes, flujo completado automáticamente")
+            # Crear lead automáticamente con los datos precargados
+            lead_resultado = self.capturar_lead(datos_paciente)
+            return {
+                'success': True,
+                'flow_completed': True,
+                'lead_resultado': lead_resultado,
+                'datos_paciente': datos_paciente
             }
+        
+        # Generar pregunta amigable para el primer paso
+        primer_paso = steps_filtrados[0].copy()
+        nombre_original = primer_paso.get('nombre_mostrar', '')
+        pregunta_amigable = self._generar_pregunta_amigable(nombre_original, tipo=primer_paso.get('tipo_dato'))
+        primer_paso['mensaje_prompt'] = pregunta_amigable
+        primer_paso['nombre_mostrar'] = pregunta_amigable
+        steps_filtrados[0] = primer_paso
+        
+        # Buscar o crear registro de sesión
+        registro = self.search([('session_id', '=', session_id)], limit=1)
+        
+        estado_inicial = {
+            'modo': 'FLUJO',
+            'flow_name': flow_name,
+            'paso': primer_paso.get('nombre_interno'),
+            'nombre_mostrar': pregunta_amigable,
+            'tipo_dato': primer_paso.get('tipo_dato'),
+            'mensaje_prompt': pregunta_amigable,
+            'mensaje_error': primer_paso.get('mensaje_error', ''),
+            'es_requerido': primer_paso.get('es_requerido', True),
+            'datos_paciente': datos_paciente,
+            'timestamp': fields.Datetime.now().isoformat()
+        }
+        
+        if not registro:
             vals = {
                 'session_id': session_id,
                 'estado': estado_inicial,
-                'pasos_pendientes': steps
+                'pasos_pendientes': steps_filtrados,
+                'equipo_asignado': equipo_asignado
             }
             registro = self.create(vals)
             action = 'create'
+            _logger.info("Sesión creada: %s", session_id)
         else:
-            nuevo_estado = registro.estado.copy() if registro.estado else {}
-            nuevo_estado.update({
-                'modo': 'FLUJO',
-                'paso': steps[0]['nombre_interno'] if steps else 'SIN_PASOS',
-                'nombre_mostrar': steps[0]['nombre_mostrar'] if steps else 'SIN_PASOS',
-                'tipo_dato': steps[0]['tipo_dato'] if steps else 'SIN_PASOS',
-                'mensaje_prompt': steps[0]['mensaje_prompt'] if steps else 'SIN_PASOS',
-                'mensaje_error': steps[0]['mensaje_error'] if steps else 'SIN_PASOS',
-                'es_requerido': steps[0]['es_requerido'] if steps else 'SIN_PASOS',
-                'datos_paciente': {},
-                'timestamp': fields.Datetime.now().isoformat()
-            })
             registro.write({
-                'estado': nuevo_estado,
-                'pasos_pendientes': steps,
+                'estado': estado_inicial,
+                'pasos_pendientes': steps_filtrados,
+                'equipo_asignado': equipo_asignado,
                 'last_activity': fields.Datetime.now()
             })
             action = 'update'
-
+            _logger.info("Sesión actualizada: %s", session_id)
+        
         return {
             'success': True,
             'action': action,
             'session_id': session_id,
             'record_id': registro.id,
             'paso_actual': registro.estado['paso'] if registro.estado else None,
-            'pasos_pendientes': registro.pasos_pendientes
+            'pasos_pendientes': registro.pasos_pendientes,
+            'primer_paso': primer_paso
         }
 
     def procesar_paso(self, session_id, valor, paso, conversation_id, account_id, platform):  
@@ -453,23 +484,26 @@ class SessionState(models.Model):
             partner = utils.find_partner_by_phone(self.env, valor)
             if partner:
                 _logger.info("Partner encontrado: %s (ID: %s)", partner.name, partner.id)
+                # CORREGIDO: Los nombres de los campos deben coincidir con campo_destino de los pasos
                 auto_map = {}
                 if partner.name:
-                    auto_map['solicitar_name'] = partner.name
+                    auto_map['name'] = partner.name  # CORREGIDO: antes era 'solicitar_name'
                 if partner.vat:
-                    auto_map['solicitar_vat'] = partner.vat
+                    auto_map['vat'] = partner.vat  # CORREGIDO: antes era 'solicitar_vat'
                 if partner.birthdate:
                     try:
-                        auto_map['solicitar_birthdate'] = partner.birthdate.isoformat()
+                        auto_map['birthdate'] = partner.birthdate.isoformat()  # CORREGIDO: antes era 'solicitar_birthdate'
                     except Exception as e:
                         _logger.warning("Error al formatear fecha de nacimiento: %s", e)
                 if partner.email:
-                    auto_map['solicitar_email'] = partner.email
+                    auto_map['email'] = partner.email  # CORREGIDO: antes era 'solicitar_email'
                 if partner.consentimiento_whatsapp:
-                    auto_map['consentimiento'] = True 
+                    auto_map['consentimiento_whatsapp'] = True  # CORREGIDO: antes era 'consentimiento'
                 auto_map['solicitar_es_paciente_nuevo'] = 'no'
+                
                 for campo_auto, valor_auto in auto_map.items():
                     estado_actual['datos_paciente'][campo_auto] = valor_auto
+                
                 viejos_pasos_count = len(nuevos_pasos)
                 nuevos_pasos = [p for p in nuevos_pasos if p.get('campo_destino') not in auto_map]
                 _logger.info("Auto-relleno completado. Pasos eliminados: %d", viejos_pasos_count - len(nuevos_pasos))
@@ -533,7 +567,7 @@ class SessionState(models.Model):
             }
 
     # ==================================================================
-    #  MÉTODOS AUXILIARES (sin cambios sustanciales)
+    #  MÉTODOS AUXILIARES
     # ==================================================================
     @api.depends('estado')
     def _compute_campos_derivados(self):
@@ -750,20 +784,25 @@ class SessionState(models.Model):
     def capturar_lead(self, datos):
         """
         Crea un lead/cita con los datos recolectados durante el flujo.
+        IMPORTANTE: Usa las claves CORRECTAS ('name', 'vat', 'birthdate', 'email', 'consentimiento_whatsapp')
+        que vienen del auto-rellenado, NO las claves 'solicitar_*'.
         """
         try:
             _logger.info("Iniciando capturar_lead para sesión %s", datos.get('session_id'))
             env = self.env
+            
+            # IMPORTANTE: Usar las claves cortas que vienen del auto-rellenado
+            # El auto-rellenado guarda en 'name', 'vat', 'birthdate', 'email', 'consentimiento_whatsapp'
             partner_data = {
-                'solicitar_vat': datos.get('solicitar_vat', ''),
-                'solicitar_phone': datos.get('solicitar_phone', ''),
-                'solicitar_name': datos.get('solicitar_name', ''),
-                'solicitar_birthdate': datos.get('solicitar_birthdate', '')
+                'solicitar_vat': datos.get('vat') or datos.get('solicitar_vat', ''),
+                'solicitar_phone': datos.get('phone') or datos.get('solicitar_phone', ''),
+                'solicitar_name': datos.get('name') or datos.get('solicitar_name', ''),
+                'solicitar_birthdate': datos.get('birthdate') or datos.get('solicitar_birthdate', ''),
+                'solicitar_email': datos.get('email') or datos.get('solicitar_email', ''),
+                'consentimiento': datos.get('consentimiento_whatsapp') or datos.get('consentimiento', False)
             }
-            if 'solicitar_email' in datos:
-                partner_data['solicitar_email'] = datos['solicitar_email']
-            if 'consentimiento' in datos:
-                partner_data['consentimiento'] = datos['consentimiento']
+            
+            _logger.info("Datos para actualizar/crear contacto: %s", partner_data)
             
             partner = ChatBotUtils.update_create_contact(env, partner_data)
             plataforma = datos.get('plataforma', 'whatsapp')
@@ -777,7 +816,11 @@ class SessionState(models.Model):
                 'Agendamiento_Otra_Consulta': 'Grupo Citas',
                 'Agendamiento_Precios': 'Grupo Citas',
                 'Agendamiento_Tarjeta': 'Grupo Ventas',
-                'Agendamiento_Servicios': 'Grupo Ventas'
+                'Agendamiento_Servicios': 'Grupo Ventas',
+                'CITAS_MP': 'Grupo Citas',
+                'CITAS_SEGUROS': 'Grupo Citas',
+                'RESULTADOS_LAB': 'Grupo Laboratorio',
+                'RESULTADOS_IMAGENES': 'Grupo Imagenología'
             }
             nombre_grupo = mapeo_grupos.get(equipo_asignado, 'Grupo Citas')
             team = None
@@ -787,7 +830,13 @@ class SessionState(models.Model):
                 team = env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
                 if not team:
                     team = env['crm.team'].search([], limit=1)
-            lead = ChatBotUtils.create_lead(env, datos, partner, team, medium, source, campaign, tag)
+            
+            # Crear lead según el tipo de flujo
+            if equipo_asignado in ['RESULTADOS_LAB', 'RESULTADOS_IMAGENES']:
+                lead = ChatBotUtils.create_resultados_lead(env, datos, team, medium, source, campaign, tag)
+            else:
+                lead = ChatBotUtils.create_lead(env, datos, partner, team, medium, source, campaign, tag)
+            
             if team and team.member_ids:
                 ChatBotUtils.assign_lead_round_robin(env, lead, team)
             if 'solicitar_foto_vat' in datos or 'solicitar_imagenes_adicionales' in datos:
@@ -796,7 +845,8 @@ class SessionState(models.Model):
                 ChatBotUtils.handle_images(env, datos, lead, partner)
             return {'success': True, 'lead_info': {'lead_id': lead.id, 'cliente_id': partner.id}}
         except Exception as e:
-            return {'success': False, 'error': str(e)}
+            _logger.error("Error en capturar_lead: %s", str(e), exc_info=True)
+            return {'success': False, 'error': str(e)}   
     
     def _generar_mensaje_sin_sesion(self, texto_usuario):
         service = self._get_gpt_service()

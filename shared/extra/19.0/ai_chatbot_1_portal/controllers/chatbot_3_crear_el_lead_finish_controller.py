@@ -58,7 +58,9 @@ class ChatBotController(http.Controller):
                     headers=[('Access-Control-Allow-Origin', '*')]
                 )
             
-            _logger.info("Buscando cliente con teléfono: %s", telefono)
+            # 🔧 NORMALIZAR TELÉFONO ANTES DE BUSCAR
+            telefono_normalizado = ChatBotUtils.normalizar_telefono_internacional(telefono)
+            _logger.info("Buscando cliente con teléfono original: %s - Normalizado: %s", telefono, telefono_normalizado)
             
             try:
                 admin_uid = request.env.ref('base.user_admin').id or 2
@@ -66,7 +68,7 @@ class ChatBotController(http.Controller):
                 admin_uid = 2
                 
             env = request.env(user=admin_uid)
-            search_data = {'telefono': telefono}
+            search_data = {'telefono': telefono_normalizado}  # Usamos el teléfono normalizado
             partner = ChatBotUtils.search_contact(env, search_data)
             
             if partner and partner.id and partner.name and partner.name != 'Sin nombre':
@@ -108,7 +110,7 @@ class ChatBotController(http.Controller):
                     headers=[('Access-Control-Allow-Origin', '*')]
                 )
             
-            _logger.info("Cliente NO encontrado para teléfono: %s", telefono)
+            _logger.info("Cliente NO encontrado para teléfono: %s (normalizado: %s)", telefono, telefono_normalizado)
             mensaje = "❌ **NO ENCONTRAMOS TU REGISTRO**\n\nNo encontramos información con ese número de teléfono.\n\n📋 **Por favor, ingresa tu cédula (solo números):**\n\nEjemplo: 12345678"
             return Response(
                 json.dumps({'existe': False, 'mensaje': mensaje, 'telefono_buscado': telefono, 'sugerencia': 'Puede ser un nuevo cliente o el teléfono no está registrado'}),
