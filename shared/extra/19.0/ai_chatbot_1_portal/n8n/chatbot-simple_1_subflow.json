@@ -10,10 +10,10 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
       "position": [
-        -1312,
-        544
+        -3360,
+        752
       ],
-      "id": "6ffa7c0a-1e72-411c-950d-596ee7d5a23d",
+      "id": "0a4ced3e-a798-4ec0-9f99-df54cfc5facb",
       "name": "Audio_a_Texto_whatsapp",
       "credentials": {
         "openAiApi": {
@@ -129,10 +129,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        320,
-        576
+        -1728,
+        784
       ],
-      "id": "ecf07bb2-d384-4960-97e5-5a8f682ab73f",
+      "id": "61e3296d-7bc5-4874-8cc9-d9003544ca1c",
       "name": "Preparar_Input_AI"
     },
     {
@@ -221,10 +221,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -1712,
-        528
+        -3760,
+        736
       ],
-      "id": "f8ddf232-d40e-4dd5-9858-8599b0345d9e",
+      "id": "ec559521-62be-4e37-afbb-babadea4e30e",
       "name": "Texto_o_Audio?"
     },
     {
@@ -274,10 +274,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1312,
-        704
+        -3360,
+        912
       ],
-      "id": "dc8abce4-381f-43a9-842a-7791ad36c1df",
+      "id": "b83f9dd4-d216-4124-9e10-8d230b4c2401",
       "name": "Procesar_Imagen_whatsapp"
     },
     {
@@ -321,10 +321,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1152,
-        544
+        -3200,
+        752
       ],
-      "id": "83367447-c0d9-4ce4-bc62-6c8f15b5a998",
+      "id": "9de2f15d-03b0-4067-9fcf-5abe95c3ac16",
       "name": "Extraer_Texto_Audio"
     },
     {
@@ -337,10 +337,10 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -336,
-        208
+        -2384,
+        416
       ],
-      "id": "45394d88-395c-48c2-a2ea-13a3b1c525a3",
+      "id": "e69e06b9-e51e-4a5e-9506-f041ac3e8593",
       "name": "Get_buffer_data",
       "credentials": {
         "redis": {
@@ -359,10 +359,10 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -816,
-        208
+        -2864,
+        416
       ],
-      "id": "0a7c52fe-9736-405a-ab1b-c6db0122dbcd",
+      "id": "70db89b0-55f5-4ac8-90e9-8a168ba183bd",
       "name": "Buffer",
       "credentials": {
         "redis": {
@@ -378,10 +378,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -560,
-        208
+        -2608,
+        416
       ],
-      "id": "dc8482db-c28e-4310-8bde-64ebe6062cc6",
+      "id": "49d27f38-72e0-4931-b978-aaeb14f671a0",
       "name": "Wait",
       "webhookId": "d7bd6fc5-bbb3-451a-bbb4-b01a45635946"
     },
@@ -412,10 +412,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -112,
-        208
+        -2160,
+        416
       ],
-      "id": "d8d74c89-c275-401f-bda7-0bcaf646bdc4",
+      "id": "30cb2906-7922-448c-a985-772a848f05ee",
       "name": "If"
     },
     {
@@ -423,10 +423,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        16,
-        336
+        -2032,
+        544
       ],
-      "id": "fa736a20-0820-4993-b0e4-74afd7030ef9",
+      "id": "83711922-1c9f-4b0f-a229-43e6b05a8700",
       "name": "No Operation, do nothing"
     },
     {
@@ -434,10 +434,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -1040,
-        208
+        -3088,
+        416
       ],
-      "id": "5491aed3-8b0f-4d0e-9096-aa3401b4c417",
+      "id": "18532f56-d745-4533-9bfa-d33bdccdc323",
       "name": "Merge"
     },
     {
@@ -448,10 +448,10 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        224,
-        0
+        -1824,
+        208
       ],
-      "id": "3b97ee20-ace0-4b23-b895-7f4cc20fde51",
+      "id": "25f7517c-5cef-4626-aa40-a44bc0881a94",
       "name": "Borrar_mensajes_buffer",
       "credentials": {
         "redis": {
@@ -519,10 +519,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        0,
-        0
+        -2048,
+        208
       ],
-      "id": "62bfb64f-314c-4db2-b444-e8fcf4abd432",
+      "id": "5aec21d2-8e16-47fb-827c-bbedbc695279",
       "name": "Agrupar_texto_acumulado_resto_variables_enviar"
     },
     {
@@ -559,10 +559,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        528,
-        576
+        -1520,
+        784
       ],
-      "id": "7547910d-0816-43d3-8ac0-3a7ae53d44fb",
+      "id": "d69efd79-9a0e-430a-8af1-b51668b74f60",
       "name": "Consultar_estado_Odoo",
       "alwaysOutputData": true,
       "onError": "continueErrorOutput"
@@ -572,10 +572,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        560,
-        304
+        -1488,
+        512
       ],
-      "id": "1688ceea-66d3-4b35-9a38-e419f4905ac0",
+      "id": "480ec6b6-57d4-4b54-91f3-5e22aabc6887",
       "name": "Combinar_entrada_session_odoo",
       "disabled": true
     },
@@ -584,10 +584,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        288,
-        816
+        -1760,
+        1024
       ],
-      "id": "368bc373-074c-4fb9-80c4-6e12763ae651",
+      "id": "a2161625-9dad-460b-80ac-8e933d9603b3",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -667,10 +667,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1600,
-        192
+        -3648,
+        400
       ],
-      "id": "709cb626-1c60-4607-b2c9-e495ab224613",
+      "id": "b5f30503-9e62-4566-aa85-4c1e16f6f8e5",
       "name": "Obtener_Info"
     },
     {
@@ -681,10 +681,10 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -1888,
-        544
+        -3936,
+        752
       ],
-      "id": "a858efb5-c8b7-4da2-9ae3-f1a38a0a4508",
+      "id": "66625aee-13e8-43ff-874f-4b77699252c4",
       "name": "answer_chatbot_sdimple_0"
     },
     {
@@ -694,10 +694,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        752,
-        304
+        -1296,
+        512
       ],
-      "id": "c1e41b85-c044-49f1-aaad-5a635d5f5698",
+      "id": "68f0c4c4-cff9-46ec-9fbe-b18b9cb8c31b",
       "name": "Recuperar_paso",
       "disabled": true
     },
@@ -717,10 +717,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -1488,
-        544
+        -3536,
+        752
       ],
-      "id": "f5389b44-85ce-4bbd-b38c-b4c9a0d601cb",
+      "id": "a0fc0550-28ef-4e71-8ddd-4622f032b209",
       "name": "Obtenemos_imagen",
       "alwaysOutputData": true,
       "credentials": {
@@ -969,7 +969,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "86a16e4d-9ed9-460a-ae6b-108dfd14ee90",
+  "versionId": "ed784dce-be94-4a0c-907d-ef388fd2967b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "27f2fbd44aea77cdc4ee5b60d7a4eb1783a710ad686d97e24edf8a6f5832f241"
