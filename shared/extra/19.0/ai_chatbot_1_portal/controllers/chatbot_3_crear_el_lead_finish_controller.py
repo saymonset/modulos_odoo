@@ -209,23 +209,30 @@ class ChatBotController(http.Controller):
             
             equipo_asignado = data.get('equipo_asignado', 'Agendamiento_Directo')
             mapeo_grupos = {
+                # Flujos sin agente (informativos)
                 'Agendamiento_Directo': 'Grupo Citas',
-                'Agendamiento_Otra_Consulta': 'Grupo Citas',
                 'Agendamiento_Precios': 'Grupo Citas',
+                'Agendamiento_Servicios':  'Grupo Ventas',
+                # Flujos con agente
+                'Agendamiento_Otra_Consulta': 'Grupo Citas',
                 'Agendamiento_Tarjeta': 'Grupo Ventas',
-                'Agendamiento_Servicios': 'Grupo Ventas'
+                'CITAS_MP': 'Grupo Citas',
+                'CITAS_SEGUROS': 'Grupo Citas',
+                'RESULTADOS_LAB': 'Grupo Laboratorio',
+                'RESULTADOS_IMAGENES': 'Grupo Imagenología',
             }
-            nombre_grupo = mapeo_grupos.get(equipo_asignado, 'Grupo Citas')
+            nombre_grupo = mapeo_grupos.get(equipo_asignado)
             team = None
-            if teams and nombre_grupo in teams:
-                team = teams.get(nombre_grupo)
-            else:
-                team = env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
-                if not team:
-                    team = env['crm.team'].search([], limit=1)
-                    _logger.warning(f"No se encontró el equipo {nombre_grupo}, usando {team.name if team else 'ninguno'}")
+            if nombre_grupo:
+                if teams and nombre_grupo in teams:
+                    team = teams.get(nombre_grupo)
+                else:
+                    team = env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
+                    if not team:
+                        team = env['crm.team'].search([], limit=1)
+                        _logger.warning(f"No se encontró el equipo {nombre_grupo}, usando {team.name if team else 'ninguno'}")
             
-            _logger.info(f"Equipo asignado: {equipo_asignado} -> Grupo: {nombre_grupo} -> ID: {team.id if team else 'N/A'}")
+            _logger.info(f"Equipo asignado: {equipo_asignado} -> Grupo: {nombre_grupo or 'Sin grupo'} -> ID: {team.id if team else 'N/A'}")
             
             # Crear lead (ya modificado para incluir email y consentimiento en descripción)
             lead = ChatBotUtils.create_lead(env, data, partner, team, medium, source, campaign, tag)
@@ -235,12 +242,12 @@ class ChatBotController(http.Controller):
                 ChatBotUtils.assign_lead_round_robin(env, lead, team)
             
             # Manejar imágenes
-            if 'solicitar_foto_vat' in data or 'solicitar_imagenes_adicionales' in data:
+            if data.get('solicitar_foto_vat') or data.get('foto_vat') or data.get('solicitar_imagenes_adicionales') or data.get('imagenes_adicionales'):
                 validated_images = ChatBotUtils.validate_image_urls(data)
                 data.update(validated_images)
                 ChatBotUtils.handle_images(env, data, lead, partner)
             
-            respuesta_bot = ChatBotUtils.generate_response(data) + f"\n\n📝 **Número de referencia:** {lead.id}"
+            respuesta_bot = ChatBotUtils.generate_response(data, lead_id=lead.id, equipo_asignado=equipo_asignado, env=env)
             
             # Eliminación de sesión (opcional, comentado por seguridad)
             session_id = data.get('session_id')

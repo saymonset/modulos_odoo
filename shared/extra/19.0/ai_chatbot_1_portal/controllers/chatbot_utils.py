@@ -363,19 +363,22 @@ class ChatBotUtils:
     def create_lead(env, data, partner, team, medium, source, campaign, tag):
         """Crear lead en CRM con email y consentimiento en la descripción"""
         description = ChatBotUtils.generate_description(data)
-        lead_name = f"{data.get('solicitar_servicio', 'Consulta')} - {data.get('solicitar_name', 'Sin nombre')}"
+        servicio = data.get('servicio_solicitado') or data.get('solicitar_servicio', 'Consulta')
+        nombre = data.get('name') or data.get('solicitar_name', 'Sin nombre')
+        lead_name = f"{servicio} - {nombre}"
         
         # Normalizar teléfono para lead
-        phone_raw = data.get('solicitar_phone', '')
+        phone_raw = data.get('phone') or data.get('solicitar_phone', '')
         phone_normalizado = ChatBotUtils.normalizar_telefono_internacional(phone_raw)
         # Para el lead, mostrar sin +58 (para WhatsApp local)
         phone_lead = phone_normalizado.replace('+58', '') if phone_normalizado.startswith('+58') else phone_normalizado
+        email = data.get('email') or data.get('solicitar_email', partner.email or '')
         
         lead_data = {
             'name': lead_name,
             'partner_id': partner.id,
-            'contact_name': data.get('solicitar_name', 'Sin nombre'),
-            'email_from': data.get('solicitar_email', partner.email or ''),
+            'contact_name': nombre,
+            'email_from': email,
             'phone': phone_lead,
             'description': description,
             'medium_id': medium.id,
@@ -397,8 +400,8 @@ class ChatBotUtils:
         """
         Crear lead específico para resultados de laboratorio o imágenes
         """
-        identificacion = data.get('solicitar_identificacion', 'Sin identificación')
-        estudio = data.get('solicitar_estudio', 'No especificado')
+        identificacion = data.get('identificacion_paciente') or data.get('solicitar_identificacion', 'Sin identificación')
+        estudio = data.get('estudio_solicitado') or data.get('solicitar_estudio', 'No especificado')
         equipo_asignado = data.get('equipo_asignado', 'RESULTADOS_LAB')
         
         tipo_estudio = "LABORATORIO" if equipo_asignado == 'RESULTADOS_LAB' else "IMAGENOLOGÍA"
@@ -446,24 +449,25 @@ class ChatBotUtils:
         }
 
         fields_order = [
-            ('solicitar_name', 'Paciente'),
-            ('solicitar_vat', 'Cédula'),
-            ('solicitar_birthdate', 'Fecha de nacimiento'),
-            ('solicitar_phone', 'Teléfono'),
-            ('solicitar_email', 'Correo electrónico'),
-            ('consentimiento', 'Consentimiento WhatsApp'),
-            ('solicitar_servicio', 'Servicio'),
-            ('solicitar_consulta_deseada', 'Consulta deseada'),
-            ('solicitar_nombre_seguro', 'Nombre del seguro'),
-            ('solicitar_fecha_preferida', 'Fecha preferida'),
-            ('hora_preferida', 'Horario'),
-            ('solicitar_medio_pago', 'Medio de pago'),
-            ('solicitar_es_paciente_nuevo', 'Paciente nuevo'),
-            ('solicitar_membresia_interes', 'Interés Tarjeta Salud'),
+            (('solicitar_name', 'name'), 'Paciente'),
+            (('solicitar_vat', 'vat'), 'Cédula'),
+            (('solicitar_birthdate', 'birthdate'), 'Fecha de nacimiento'),
+            (('solicitar_phone', 'phone'), 'Teléfono'),
+            (('solicitar_email', 'email'), 'Correo electrónico'),
+            (('consentimiento', 'consentimiento_whatsapp'), 'Consentimiento WhatsApp'),
+            (('solicitar_servicio', 'servicio_solicitado', 'solicitar_servicio'), 'Servicio'),
+            (('solicitar_consulta_deseada', 'consulta_deseada'), 'Consulta deseada'),
+            (('solicitar_nombre_seguro', 'nombre_seguro'), 'Nombre del seguro'),
+            (('solicitar_fecha_preferida', 'fecha_preferida'), 'Fecha preferida'),
+            (('hora_preferida', ), 'Horario'),
+            (('solicitar_medio_pago', 'medio_pago'), 'Medio de pago'),
+            (('solicitar_es_paciente_nuevo', 'es_paciente_nuevo'), 'Paciente nuevo'),
+            (('solicitar_membresia_interes', 'membresia_interes'), 'Interés Tarjeta Salud'),
         ]
 
-        for field, label in fields_order:
-            if field in data:
+        for keys, label in fields_order:
+            field = next((k for k in keys if k in data), None)
+            if field:
                 raw_value = data[field]
                 if raw_value is None or raw_value == '':
                     if field in defaults:
@@ -565,15 +569,20 @@ class ChatBotUtils:
     def validate_image_urls(data):
         """Validar que las URLs de imágenes sean accesibles"""
         validated_data = {
-            'foto_vat_url': data.get('solicitar_foto_vat', ''),
+            'foto_vat_url': data.get('foto_vat') or data.get('solicitar_foto_vat', ''),
             'imagenes_adicionales': []
         }
-        foto_url = data.get('solicitar_foto_vat', '')
+        foto_url = data.get('foto_vat') or data.get('solicitar_foto_vat', '')
         if foto_url and re.match(r'^https?://', foto_url):
             validated_data['foto_vat_url'] = foto_url
-        imagenes_str = data.get('solicitar_imagenes_adicionales', '[]')
         try:
-            imagenes = json.loads(imagenes_str) if isinstance(imagenes_str, str) else imagenes_str
+            imagenes_raw = data.get('imagenes_adicionales') or data.get('solicitar_imagenes_adicionales', [])
+            if isinstance(imagenes_raw, str):
+                imagenes = json.loads(imagenes_raw)
+            elif isinstance(imagenes_raw, list):
+                imagenes = imagenes_raw
+            else:
+                imagenes = []
             for img_url in imagenes:
                 if img_url and re.match(r'^https?://', img_url):
                     validated_data['imagenes_adicionales'].append(img_url)
@@ -582,23 +591,85 @@ class ChatBotUtils:
         return validated_data
 
     @staticmethod
-    def generate_response(data):
-        """Generar respuesta para el bot, omitiendo campos que no están presentes."""
-        lines = ["¡Tu solicitud ha sido registrada exitosamente!\n"]
-        if data.get('solicitar_name'):
-            lines.append(f"• Paciente: {data['solicitar_name']}")
+    def _pie_mensaje(lead_id, equipo_asignado):
+        """Genera el pie del mensaje con datos de referencia."""
+        descripcion_grupos = {
+            'Agendamiento_Directo': 'información general y ubicación',
+            'Agendamiento_Precios': 'información de precios y promociones',
+            'Agendamiento_Servicios': 'información sobre nuestros servicios',
+            'Agendamiento_Otra_Consulta': 'consultas generales',
+            'Agendamiento_Tarjeta': 'ventas y afiliación a nuestra tarjeta',
+            'CITAS_MP': 'citas por medios propios',
+            'CITAS_SEGUROS': 'citas con seguro médico',
+            'RESULTADOS_LAB': 'resultados de laboratorio',
+            'RESULTADOS_IMAGENES': 'resultados de imagenología',
+        }
+        grupo_texto = descripcion_grupos.get(equipo_asignado, 'atención al cliente')
+        pie = []
+        if lead_id:
+            pie.append(f"📋 **Número de referencia:** {lead_id}")
+        if equipo_asignado and grupo_texto:
+            pie.append(f"👥 **Área responsable:** {grupo_texto.capitalize()}")
+        pie.append("🔒 **Tus datos están protegidos bajo nuestra política de privacidad.**")
+        pie.append("📞 **En breve uno de nuestros ejecutivos se comunicará contigo.**")
+        pie.append("🙏 **¡Gracias por confiar en UNISA Salud!**")
+        return "\n".join(pie)
+
+    @staticmethod
+    def generate_response(data, lead_id=None, equipo_asignado=None, env=None):
+        """Generar respuesta personalizada según el flujo, usando IA si está disponible."""
+        pie = ChatBotUtils._pie_mensaje(lead_id, equipo_asignado)
+
+        # Intentar con IA si está disponible
+        descripcion_grupos = {
+            'Agendamiento_Directo': 'información general y ubicación',
+            'Agendamiento_Precios': 'información de precios y promociones',
+            'Agendamiento_Servicios': 'información sobre nuestros servicios',
+            'Agendamiento_Otra_Consulta': 'consultas generales',
+            'Agendamiento_Tarjeta': 'ventas y afiliación a nuestra tarjeta',
+            'CITAS_MP': 'citas por medios propios',
+            'CITAS_SEGUROS': 'citas con seguro médico',
+            'RESULTADOS_LAB': 'resultados de laboratorio',
+            'RESULTADOS_IMAGENES': 'resultados de imagenología',
+        }
+        grupo_texto = descripcion_grupos.get(equipo_asignado, 'atención al cliente')
+        if env and lead_id:
+            try:
+                service = env.get('gpt.service')
+                if service:
+                    contexto = {
+                        'nombre': data.get('solicitar_name', ''),
+                        'lead_id': lead_id,
+                        'grupo': grupo_texto,
+                        'servicio': data.get('solicitar_servicio', ''),
+                        'equipo_asignado': equipo_asignado,
+                    }
+                    resultado = service.sudo().generar_mensaje_finalizacion(contexto)
+                    if resultado and resultado.get('mensaje_final'):
+                        return resultado['mensaje_final'] + "\n\n" + pie
+            except Exception:
+                _logger.info("IA no disponible para generar respuesta, usando fallback manual")
+
+        # Fallback manual con formato enriquecido
+        name = data.get('solicitar_name', '').strip()
+        lines = [f"✅ **¡TU SOLICITUD HA SIDO REGISTRADA EXITOSAMENTE!**\n"]
+        if name:
+            lines.append(f"👤 **Paciente:** {name}")
         if data.get('solicitar_servicio'):
-            lines.append(f"• Servicio: {data['solicitar_servicio']}")
+            lines.append(f"🩺 **Servicio solicitado:** {data['solicitar_servicio']}")
+
         fecha = data.get('solicitar_fecha_preferida')
         hora = data.get('solicitar_hora_preferida')
         if fecha or hora:
-            pref = f"• Preferencia: {fecha if fecha else 'lo antes posible'}"
+            pref = f"📅 **Preferencia:** {fecha if fecha else 'lo antes posible'}"
             if hora:
                 pref += f" por la {hora}"
             else:
                 pref += " a cualquier hora"
             lines.append(pref)
-        lines.append("\nEn breve un ejecutivo te contactará.\n¡Gracias por confiar en nosotros!")
+
+        lines.append("")
+        lines.append(pie)
         return "\n".join(lines)
 
     @staticmethod   

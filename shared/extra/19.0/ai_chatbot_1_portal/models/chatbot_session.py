@@ -377,17 +377,17 @@ class SessionState(models.Model):
             mensaje_error = ""
         else:
             # Lógica de salto para imágenes
-            if tipo in ['image', 'file'] and es_palabra_salto and campo_destino != 'solicitar_imagenes_adicionales':
+            if tipo in ['image', 'file'] and es_palabra_salto and campo_destino not in ('imagenes_adicionales', 'solicitar_imagenes_adicionales'):
                 _logger.info("El usuario decidió saltar el paso de imagen/archivo: %s", campo_destino)
                 valido = True
                 resultado = "No proporcionada"
                 mensaje_error = ""
-            elif campo_destino == 'solicitar_imagenes_adicionales':
+            elif campo_destino in ('imagenes_adicionales', 'solicitar_imagenes_adicionales'):
                 valido_img, resultado_img, _ = self._validar_con_ia(valor, 'image', paso, nombre_mostrar)
                 if valido_img:
                     estado_actual = registro.estado or {}
                     datos_p = estado_actual.get('datos_paciente', {})
-                    imgs_adicionales = datos_p.get('solicitar_imagenes_adicionales', [])
+                    imgs_adicionales = datos_p.get('imagenes_adicionales') or datos_p.get('solicitar_imagenes_adicionales', [])
                     if isinstance(imgs_adicionales, str):
                         try:
                             imgs_adicionales = json.loads(imgs_adicionales)
@@ -395,7 +395,7 @@ class SessionState(models.Model):
                             imgs_adicionales = [imgs_adicionales] if imgs_adicionales else []
                     if resultado_img not in imgs_adicionales:
                         imgs_adicionales.append(resultado_img)
-                    datos_p['solicitar_imagenes_adicionales'] = imgs_adicionales
+                    datos_p['imagenes_adicionales'] = imgs_adicionales
                     estado_actual['datos_paciente'] = datos_p
                     estado_actual['timestamp'] = fields.Datetime.now().isoformat()
                     registro.write({'estado': estado_actual})
@@ -556,7 +556,8 @@ class SessionState(models.Model):
             lead_resultado = self.capturar_lead(estado_actual['datos_paciente'])
             _logger.info("Resultado de capturar_lead: %s", lead_resultado.get('success'))
             registro.sudo().write({'modo': 'COMPLETADO'})
-            mensaje_final = self._generar_mensaje_finalizacion(estado_actual['datos_paciente'])
+            equipo_asignado = estado_actual['datos_paciente'].get('equipo_asignado')
+            mensaje_final = self._generar_mensaje_finalizacion(estado_actual['datos_paciente'], lead_resultado=lead_resultado, equipo_asignado=equipo_asignado)
             _logger.info("Mensaje final generado.")
             return {
                 'success': True,
@@ -817,24 +818,25 @@ class SessionState(models.Model):
 
             equipo_asignado = datos.get('equipo_asignado', 'Agendamiento_Directo')
             mapeo_grupos = {
-                'Agendamiento_Directo': 'Grupo Citas',
+                'Agendamiento_Directo': None,
+                'Agendamiento_Precios': None,
+                'Agendamiento_Servicios': None,
                 'Agendamiento_Otra_Consulta': 'Grupo Citas',
-                'Agendamiento_Precios': 'Grupo Citas',
                 'Agendamiento_Tarjeta': 'Grupo Ventas',
-                'Agendamiento_Servicios': 'Grupo Ventas',
                 'CITAS_MP': 'Grupo Citas',
                 'CITAS_SEGUROS': 'Grupo Citas',
                 'RESULTADOS_LAB': 'Grupo Laboratorio',
-                'RESULTADOS_IMAGENES': 'Grupo Imagenología'
+                'RESULTADOS_IMAGENES': 'Grupo Imagenología',
             }
-            nombre_grupo = mapeo_grupos.get(equipo_asignado, 'Grupo Citas')
+            nombre_grupo = mapeo_grupos.get(equipo_asignado)
             team = None
-            if teams and nombre_grupo in teams:
-                team = teams[nombre_grupo]
-            else:
-                team = env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
-                if not team:
-                    team = env['crm.team'].search([], limit=1)
+            if nombre_grupo:
+                if teams and nombre_grupo in teams:
+                    team = teams[nombre_grupo]
+                else:
+                    team = env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
+                    if not team:
+                        team = env['crm.team'].search([], limit=1)
             
             # Crear lead según el tipo de flujo
             if equipo_asignado in ['RESULTADOS_LAB', 'RESULTADOS_IMAGENES']:
@@ -844,7 +846,7 @@ class SessionState(models.Model):
             
             if team and team.member_ids:
                 ChatBotUtils.assign_lead_round_robin(env, lead, team)
-            if 'solicitar_foto_vat' in datos or 'solicitar_imagenes_adicionales' in datos:
+            if datos.get('solicitar_foto_vat') or datos.get('foto_vat') or datos.get('solicitar_imagenes_adicionales') or datos.get('imagenes_adicionales'):
                 validated_images = ChatBotUtils.validate_image_urls(datos)
                 datos.update(validated_images)
                 ChatBotUtils.handle_images(env, datos, lead, partner)
@@ -877,14 +879,22 @@ class SessionState(models.Model):
             mensaje = "Entendido. Si deseas continuar más tarde, aquí estaremos. ¡Hasta pronto!" if es_salida else ""
             return es_salida, mensaje
 
-    def _generar_mensaje_finalizacion(self, datos_paciente):
+    def _generar_mensaje_finalizacion(self, datos_paciente, lead_resultado=None, equipo_asignado=None):
         service = self._get_gpt_service()
         try:
             resultado = service.generar_mensaje_finalizacion(datos_paciente)
-            return resultado.get('mensaje_final', '¡Gracias por completar el formulario! Nos pondremos en contacto contigo pronto.')
+            msg = resultado.get('mensaje_final', '') or ''
         except Exception as e:
             _logger.error(f"Error generando mensaje de finalización: {e}")
-            return "¡Gracias por completar el formulario! Nos pondremos en contacto contigo a la brevedad. ¡Que tengas un excelente día!"
+            msg = ""
+        if not msg:
+            msg = "¡Gracias por completar el formulario! Nos pondremos en contacto contigo a la brevedad."
+        lead_id = None
+        if lead_resultado and lead_resultado.get('success'):
+            lead_info = lead_resultado.get('lead_info', {})
+            lead_id = lead_info.get('lead_id')
+        pie = ChatBotUtils._pie_mensaje(lead_id, equipo_asignado)
+        return msg + "\n\n" + pie
     
     def _generar_mensaje_expirado(self, texto_usuario):
         res = self._get_gpt_service().generar_mensaje_personalizado('expirado', texto_usuario)
