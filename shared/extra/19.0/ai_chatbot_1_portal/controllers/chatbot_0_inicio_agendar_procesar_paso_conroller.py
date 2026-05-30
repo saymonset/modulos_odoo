@@ -195,26 +195,24 @@ class InicioAgendarController(http.Controller):
             
             # Inicializar el flujo en la sesión (pasar datos precargados si existen)
             session_state = env['chatbot.session'].sudo()
-            session_state.iniciar_flujo(
+            resultado_flujo = session_state.iniciar_flujo(
                 session_id=session_id,
                 flow_name=name_flow,
                 steps=steps,
                 equipo_asignado=equipo_asignado,
-                datos_precargados=datos_precargados  # Nuevo parámetro
+                datos_precargados=datos_precargados
             )
             
-            # Determinar el primer paso a mostrar
-            primer_paso = None
-            if datos_precargados:
-                # Si hay datos precargados, saltar pasos que ya tienen valor
-                for step in steps:
-                    campo_destino = step.get('campo_destino')
-                    if campo_destino and datos_precargados.get(campo_destino):
-                        continue  # Este paso ya tiene valor, saltar
-                    primer_paso = step
-                    break
+            # Usar los pasos y primer paso del modelo (ya viene con pregunta amigable generada)
+            if resultado_flujo and resultado_flujo.get('success') and not resultado_flujo.get('flow_completed'):
+                pasos_pendientes = resultado_flujo.get('pasos_pendientes')
+                if pasos_pendientes:
+                    steps = pasos_pendientes
+                    primer_paso = resultado_flujo.get('primer_paso', pasos_pendientes[0])
+                else:
+                    primer_paso = None
             else:
-                primer_paso = steps[0] if steps else None
+                primer_paso = None
             
             # Construir respuesta
             respuesta = {

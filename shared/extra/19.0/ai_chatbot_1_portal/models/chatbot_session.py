@@ -446,6 +446,11 @@ class SessionState(models.Model):
                     valido = True
                     resultado = resultado_trad
                     mensaje_error = ""
+                elif es_paso_telefono:
+                    valido = False
+                    resultado = None
+                    mensaje_error = resultado_trad
+                    _logger.info("Validación de teléfono falló, no se delega en IA: %s", resultado_trad)
                 else:
                     _logger.info("Validación tradicional falló para '%s', intentando con IA...", paso)
                     valido, resultado, mensaje_error = self._validar_con_ia(valor, tipo, paso, nombre_mostrar)

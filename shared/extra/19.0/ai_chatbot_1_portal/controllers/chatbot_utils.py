@@ -96,7 +96,7 @@ class ChatBotUtils:
         if digits.startswith('58') and len(digits) >= 11:
             return f"+{digits}"
         
-        # Si comienza con 0 (ej: 04141234567)
+        # Si comienza con 0 (ej: +584141234567)
         if digits.startswith('0') and len(digits) >= 11:
             return f"+58{digits[1:]}"
         
@@ -612,7 +612,26 @@ class ChatBotUtils:
             if not digits:
                 return False, "El teléfono debe contener al menos un dígito"
             if len(digits) < 7:
-                return False, "El teléfono debe tener al menos 7 dígitos (incluyendo código de área)"
+                return False, "El teléfono debe tener al menos 7 dígitos (ej: +584141234567)"
+            if len(digits) > 15:
+                return False, "El número de teléfono es muy largo. Ingresa un número válido (ej: +584141234567)"
+            # Validar que no sea un número inválido (todo ceros, todo el mismo dígito)
+            if len(set(digits)) == 1:
+                return False, "El número de teléfono no es válido. Ingresa un número real (ej: +584141234567)"
+            # Validar que no sean patrones secuenciales obvios
+            if digits in ['0123456789', '1234567890', '9876543210']:
+                return False, "El número de teléfono no es válido. Ingresa un número real (ej: +584141234567)"
+            # Validar prefijo venezolano si parece número local
+            if digits.startswith('0') and len(digits) >= 11:
+                prefix = digits[1:4]
+                prefijos_validos_ve = ['412', '414', '416', '424', '426', '212', '241', '251', '261', '271', '281', '291']
+                if prefix not in prefijos_validos_ve:
+                    return False, f"El prefijo 0{prefix} no es válido. Ingresa un número venezolano válido (ej: +584141234567)"
+            if digits.startswith('58') and len(digits) >= 12:
+                prefix = digits[2:5]
+                prefijos_validos_ve = ['412', '414', '416', '424', '426', '212', '241', '251', '261', '271', '281', '291']
+                if prefix not in prefijos_validos_ve:
+                    return False, f"El prefijo {prefix} no es válido. Ingresa un número venezolano válido (ej: +584141234567)"
             return True, valor_str
 
         if tipo_dato == 'text':
