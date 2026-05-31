@@ -1,6 +1,5 @@
 from odoo import http
 from odoo.http import request
-from odoo.exceptions import UserError
 import logging
 import re
 
@@ -41,16 +40,6 @@ class PaymentCustomOverride(http.Controller):
                 _logger.warning(f"El sale_order_id de la sesión no coincide")
         else:
             _logger.warning("*** PAYMENT: No hay datos de pago en la sesión")
-
-        # Validar campos obligatorios
-        try:
-            sale_order.validate_payment_required_fields()
-            _logger.info("*** PAYMENT: Validación exitosa")
-        except UserError as e:
-            error_msg = str(e).strip()
-            error_msg_url = error_msg.replace(' ', '+')
-            _logger.warning(f"*** PAYMENT: Validación falló: {error_msg}")
-            return request.redirect(f'/shop/payment?error={error_msg_url}')
 
         # ================================================================
         # 1. VERIFICAR Y LIMPIAR TRANSACCIONES EXISTENTES

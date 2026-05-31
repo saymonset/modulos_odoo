@@ -1,5 +1,5 @@
 /** @odoo-module **/
-import { Component, useState, onWillStart, useEffect } from "@odoo/owl";
+import { Component, useState, onWillStart, onWillDestroy } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { rpc } from "@web/core/network/rpc";
 import { useService } from "@web/core/utils/hooks";
@@ -41,6 +41,8 @@ export class PaymentProofComponent extends Component {
             bank_details: { bank_name: '', account_number: '', loading: false, error: null },
         });
 
+        this._syncPaymentButtonState();
+
         onWillStart(async () => {
             try {
                 const banks = await rpc("/payment_proof/get_bank_list");
@@ -55,78 +57,39 @@ export class PaymentProofComponent extends Component {
                     this.state.exchange_rate = this._normalizeNumber(rateSpan.innerText);
                     this.state.rate_date = rateDateSpan ? rateDateSpan.innerText : '';
                     this.state.amount_vef = this.state.original_amount_vef;
-                    // Calcular USD inicial
                     this.state.amount_usd = this._round(this.state.amount_vef / this.state.exchange_rate);
                     this._validateAmounts();
                 }
             } catch (err) {
                 console.error(err);
                 this.notification.add("Error al cargar datos de pago", { type: "danger" });
+            } finally {
+                this._syncPaymentButtonState();
             }
         });
 
-        useEffect(() => {
-            const isValid = this.state.bank_origin && 
-                            this.state.bank_destination && 
-                            this.state.reference && 
-                            this.state.uploadSuccess && 
-                            this.state.is_valid_amount;
+        onWillDestroy(() => {
+            delete document.body.dataset.bcvPaymentProofValid;
+        });
+    }
 
-            // Seleccionamos todos los botones posibles (web y móvil)
-            const buttons = document.querySelectorAll('button[name="o_payment_submit_button"], #payment_submit_btn');
-            
-            const enforceState = () => {
-                buttons.forEach(btn => {
-                    if (isValid) {
-                        btn.disabled = false;
-                        btn.classList.remove('disabled', 'pe-none', 'opacity-50');
-                    } else {
-                        btn.disabled = true;
-                        btn.classList.add('disabled', 'pe-none', 'opacity-50');
-                    }
-                });
-            };
+    _isValid() {
+        return this.state.bank_origin
+            && this.state.bank_destination
+            && this.state.reference
+            && this.state.uploadSuccess
+            && this.state.is_valid_amount;
+    }
 
-            enforceState();
-
-            // Usamos MutationObserver para evitar que Odoo (u otro script) cambie el estado en móvil o web
-            const observer = new MutationObserver(() => {
-                buttons.forEach(btn => {
-                    if (!isValid && (!btn.disabled || !btn.classList.contains('disabled'))) {
-                        enforceState();
-                    } else if (isValid && (btn.disabled || btn.classList.contains('disabled'))) {
-                        enforceState();
-                    }
-                });
-            });
-
-            buttons.forEach(btn => {
-                observer.observe(btn, { attributes: true, attributeFilter: ['disabled', 'class'] });
-            });
-
-            // Prevenir envío del formulario como capa extra de seguridad
-            const forms = document.querySelectorAll('form[name="o_payment_checkout_form"], #o_payment_form, form.o_payment_form');
-            const preventSubmit = (e) => {
-                if (!isValid) {
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    this.notification.add("Por favor complete todos los campos requeridos y adjunte el comprobante.", { type: "danger" });
-                }
-            };
-
-            forms.forEach(form => form.addEventListener('submit', preventSubmit, { capture: true }));
-
-            return () => {
-                observer.disconnect();
-                forms.forEach(form => form.removeEventListener('submit', preventSubmit, { capture: true }));
-            };
-        }, () => [
-            this.state.bank_origin,
-            this.state.bank_destination,
-            this.state.reference,
-            this.state.uploadSuccess,
-            this.state.is_valid_amount
-        ]);
+    _syncPaymentButtonState() {
+        const disabled = !this._isValid();
+        document.body.dataset.bcvPaymentProofValid = disabled ? '0' : '1';
+        document.querySelectorAll('button[name="o_payment_submit_button"], #payment_submit_btn').forEach(btn => {
+            btn.disabled = disabled;
+            btn.classList.toggle('disabled', disabled);
+            btn.classList.toggle('pe-none', disabled);
+            btn.classList.toggle('opacity-50', disabled);
+        });
     }
 
     _normalizeNumber(v) {
@@ -155,6 +118,7 @@ export class PaymentProofComponent extends Component {
     _updateField(e) {
         this.state[e.currentTarget.dataset.field] = e.target.value;
         if (e.currentTarget.dataset.field === 'bank_destination') this._loadBankDetails(e.target.value);
+        this._syncPaymentButtonState();
     }
 
     _onAmountVefInput(e) {
@@ -167,6 +131,7 @@ export class PaymentProofComponent extends Component {
             this.state.amount_usd = 0;
         }
         this._validateAmounts();
+        this._syncPaymentButtonState();
     }
 
     _onAmountUsdInput(e) {
@@ -179,10 +144,12 @@ export class PaymentProofComponent extends Component {
             this.state.amount_vef = 0;
         }
         this._validateAmounts();
+        this._syncPaymentButtonState();
     }
 
     _validateAmounts() {
         this.state.is_valid_amount = this.state.amount_vef >= (this.state.original_amount_vef - 0.01);
+        this._syncPaymentButtonState();
     }
 
     async uploadFile(file) {
@@ -208,11 +175,13 @@ export class PaymentProofComponent extends Component {
             this.notification.add("Comprobante subido correctamente", { type: "success" });
             this.state.uploadSuccess = true;
             this.state.proof_valid = true;
+            this._syncPaymentButtonState();
         } catch (err) {
             this.state.uploadError = "Error al subir";
             this.notification.add("Error al subir el comprobante", { type: "danger" });
         } finally {
             this.state.fileUploading = false;
+            this._syncPaymentButtonState();
         }
     }
 
@@ -225,6 +194,7 @@ export class PaymentProofComponent extends Component {
         } else {
             this.state.selectedFileName = null;
             this.state.proof_valid = false;
+            this._syncPaymentButtonState();
         }
     }
 }

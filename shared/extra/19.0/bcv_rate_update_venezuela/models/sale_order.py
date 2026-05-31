@@ -97,7 +97,6 @@ class SaleOrder(models.Model):
                     payment_data = request.session.pop('payment_data')
                     if payment_data.get('sale_order_id') == order.id:
                         order.action_save_payment_data(payment_data)
-                order.validate_payment_required_fields()
                 res = super(SaleOrder, order).action_confirm()
                 self._process_order_post_confirm(order)
                 return res
@@ -108,7 +107,6 @@ class SaleOrder(models.Model):
                 if request and hasattr(request, 'session') and 'payment_data' in request.session:
                     payment_data = request.session.pop('payment_data')
                     order.action_save_payment_data(payment_data)
-                order.validate_payment_required_fields()
             res = super().action_confirm()
             for order in self:
                 self._process_order_post_confirm(order)
@@ -170,5 +168,4 @@ class PaymentProvider(models.Model):
                     payment_data = request.session.get('payment_data')
                     if payment_data and payment_data.get('sale_order_id') == sale_order_id:
                         sale_order.action_save_payment_data(payment_data)
-                sale_order.validate_payment_required_fields()
         return super()._get_processing_values(values)
