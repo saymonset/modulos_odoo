@@ -819,14 +819,24 @@ class SessionState(models.Model):
             equipo_asignado = datos.get('equipo_asignado', 'Agendamiento_Directo')
             mapeo_grupos = {
                 'Agendamiento_Directo': None,
+                'flujo_agendamiento_directo': None,
                 'Agendamiento_Precios': None,
+                'flujo_agendamiento_precios': None,
                 'Agendamiento_Servicios': None,
+                'flujo_agendamiento_servicios': None,
                 'Agendamiento_Otra_Consulta': 'Grupo Citas',
+                'flujo_agendamiento_otra_consulta': 'Grupo Citas',
                 'Agendamiento_Tarjeta': 'Grupo Ventas',
+                'flujo_ventas_unisa': 'Grupo Ventas',
                 'CITAS_MP': 'Grupo Citas',
+                'flujo_citas_medios_propios': 'Grupo Citas',
                 'CITAS_SEGUROS': 'Grupo Citas',
+                'flujo_citas_seguro': 'Grupo Citas',
                 'RESULTADOS_LAB': 'Grupo Laboratorio',
+                'flujo_resultados_laboratorio': 'Grupo Laboratorio',
                 'RESULTADOS_IMAGENES': 'Grupo Imagenología',
+                'flujo_resultados_imagenes': 'Grupo Imagenología',
+                'flujo_agendamiento_default': None,
             }
             nombre_grupo = mapeo_grupos.get(equipo_asignado)
             team = None
@@ -839,7 +849,7 @@ class SessionState(models.Model):
                         team = env['crm.team'].search([], limit=1)
             
             # Crear lead según el tipo de flujo
-            if equipo_asignado in ['RESULTADOS_LAB', 'RESULTADOS_IMAGENES']:
+            if equipo_asignado in ['RESULTADOS_LAB', 'RESULTADOS_IMAGENES', 'flujo_resultados_laboratorio', 'flujo_resultados_imagenes']:
                 lead = ChatBotUtils.create_resultados_lead(env, datos, team, medium, source, campaign, tag)
             else:
                 lead = ChatBotUtils.create_lead(env, datos, partner, team, medium, source, campaign, tag)
@@ -882,13 +892,26 @@ class SessionState(models.Model):
     def _generar_mensaje_finalizacion(self, datos_paciente, lead_resultado=None, equipo_asignado=None):
         service = self._get_gpt_service()
         try:
-            resultado = service.generar_mensaje_finalizacion(datos_paciente)
+            resumen = ChatBotUtils.format_patient_summary(datos_paciente)
+            contexto = dict(datos_paciente)
+            contexto['resumen_paciente'] = resumen
+            resultado = service.generar_mensaje_finalizacion(contexto)
             msg = resultado.get('mensaje_final', '') or ''
         except Exception as e:
             _logger.error(f"Error generando mensaje de finalización: {e}")
             msg = ""
         if not msg:
-            msg = "¡Gracias por completar el formulario! Nos pondremos en contacto contigo a la brevedad."
+            resumen = ChatBotUtils.format_patient_summary(datos_paciente)
+            name = datos_paciente.get('solicitar_name') or datos_paciente.get('name', '')
+            lines = [f"✅ **¡GRACIAS POR TU SOLICITUD!**"]
+            lines.append("")
+            lines.append(f"Hemos recibido toda tu información correctamente. {name + ', ' if name else ''}a continuación te compartimos un resumen de lo registrado:\n")
+            if resumen:
+                lines.append(resumen)
+                lines.append("")
+            lines.append("📋 **¿Qué sigue?**")
+            lines.append("Uno de nuestros asesores revisará tu solicitud y se comunicará contigo en las próximas horas para brindarte la atención que necesitas.")
+            msg = "\n".join(lines)
         lead_id = None
         if lead_resultado and lead_resultado.get('success'):
             lead_info = lead_resultado.get('lead_info', {})

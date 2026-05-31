@@ -210,16 +210,26 @@ class ChatBotController(http.Controller):
             equipo_asignado = data.get('equipo_asignado', 'Agendamiento_Directo')
             mapeo_grupos = {
                 # Flujos sin agente (informativos)
-                'Agendamiento_Directo': 'Grupo Citas',
-                'Agendamiento_Precios': 'Grupo Citas',
-                'Agendamiento_Servicios':  'Grupo Ventas',
+                'Agendamiento_Directo': None,
+                'flujo_agendamiento_directo': None,
+                'Agendamiento_Precios': None,
+                'flujo_agendamiento_precios': None,
+                'Agendamiento_Servicios': None,
+                'flujo_agendamiento_servicios': None,
                 # Flujos con agente
                 'Agendamiento_Otra_Consulta': 'Grupo Citas',
+                'flujo_agendamiento_otra_consulta': 'Grupo Citas',
                 'Agendamiento_Tarjeta': 'Grupo Ventas',
+                'flujo_ventas_unisa': 'Grupo Ventas',
                 'CITAS_MP': 'Grupo Citas',
+                'flujo_citas_medios_propios': 'Grupo Citas',
                 'CITAS_SEGUROS': 'Grupo Citas',
+                'flujo_citas_seguro': 'Grupo Citas',
                 'RESULTADOS_LAB': 'Grupo Laboratorio',
+                'flujo_resultados_laboratorio': 'Grupo Laboratorio',
                 'RESULTADOS_IMAGENES': 'Grupo Imagenología',
+                'flujo_resultados_imagenes': 'Grupo Imagenología',
+                'flujo_agendamiento_default': None,
             }
             nombre_grupo = mapeo_grupos.get(equipo_asignado)
             team = None
@@ -234,8 +244,11 @@ class ChatBotController(http.Controller):
             
             _logger.info(f"Equipo asignado: {equipo_asignado} -> Grupo: {nombre_grupo or 'Sin grupo'} -> ID: {team.id if team else 'N/A'}")
             
-            # Crear lead (ya modificado para incluir email y consentimiento en descripción)
-            lead = ChatBotUtils.create_lead(env, data, partner, team, medium, source, campaign, tag)
+            # Crear lead según el tipo de flujo
+            if equipo_asignado in ['RESULTADOS_LAB', 'RESULTADOS_IMAGENES', 'flujo_resultados_laboratorio', 'flujo_resultados_imagenes']:
+                lead = ChatBotUtils.create_resultados_lead(env, data, team, medium, source, campaign, tag)
+            else:
+                lead = ChatBotUtils.create_lead(env, data, partner, team, medium, source, campaign, tag)
             
             # Asignación round robin
             if team and team.member_ids:

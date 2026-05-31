@@ -367,6 +367,34 @@ class ChatBotUtils:
         nombre = data.get('name') or data.get('solicitar_name', 'Sin nombre')
         lead_name = f"{servicio} - {nombre}"
         
+        # Agregar equipo responsable a la descripción
+        equipo_asignado = data.get('equipo_asignado', '')
+        descripcion_grupos = {
+            'Agendamiento_Directo': 'información general y ubicación',
+            'flujo_agendamiento_directo': 'información general y ubicación',
+            'Agendamiento_Precios': 'información de precios y promociones',
+            'flujo_agendamiento_precios': 'información de precios y promociones',
+            'Agendamiento_Servicios': 'información sobre nuestros servicios',
+            'flujo_agendamiento_servicios': 'información sobre nuestros servicios',
+            'Agendamiento_Otra_Consulta': 'consultas generales',
+            'flujo_agendamiento_otra_consulta': 'consultas generales',
+            'Agendamiento_Tarjeta': 'ventas y afiliación a nuestra tarjeta',
+            'flujo_ventas_unisa': 'ventas y afiliación a nuestra tarjeta',
+            'CITAS_MP': 'citas por medios propios',
+            'flujo_citas_medios_propios': 'citas por medios propios',
+            'CITAS_SEGUROS': 'citas con seguro médico',
+            'flujo_citas_seguro': 'citas con seguro médico',
+            'RESULTADOS_LAB': 'resultados de laboratorio',
+            'flujo_resultados_laboratorio': 'resultados de laboratorio',
+            'RESULTADOS_IMAGENES': 'resultados de imagenología',
+            'flujo_resultados_imagenes': 'resultados de imagenología',
+        }
+        area_texto = descripcion_grupos.get(equipo_asignado, '')
+        if area_texto:
+            description += f"\n\n**👥 ÁREA RESPONSABLE:** {area_texto.capitalize()}"
+        if team:
+            description += f"\n**🏥 EQUIPO ASIGNADO:** {team.name}"
+        
         # Normalizar teléfono para lead
         phone_raw = data.get('phone') or data.get('solicitar_phone', '')
         phone_normalizado = ChatBotUtils.normalizar_telefono_internacional(phone_raw)
@@ -399,15 +427,27 @@ class ChatBotUtils:
     def create_resultados_lead(env, data, team, medium, source, campaign, tag):
         """
         Crear lead específico para resultados de laboratorio o imágenes
+        Incluye toda la información recogida del paciente durante la conversación.
         """
-        identificacion = data.get('identificacion_paciente') or data.get('solicitar_identificacion', 'Sin identificación')
-        estudio = data.get('estudio_solicitado') or data.get('solicitar_estudio', 'No especificado')
+        identificacion = (
+            data.get('identificacion_paciente') or 
+            data.get('solicitar_identificacion') or 
+            data.get('solicitar_name') or 
+            data.get('name') or 
+            'Sin identificación'
+        )
+        estudio = (
+            data.get('estudio_solicitado') or 
+            data.get('solicitar_estudio') or 
+            'No especificado'
+        )
         equipo_asignado = data.get('equipo_asignado', 'RESULTADOS_LAB')
         
-        tipo_estudio = "LABORATORIO" if equipo_asignado == 'RESULTADOS_LAB' else "IMAGENOLOGÍA"
+        tipo_estudio = "LABORATORIO" if equipo_asignado in ['RESULTADOS_LAB', 'flujo_resultados_laboratorio'] else "IMAGENOLOGÍA"
         
         lead_name = f"Resultados {tipo_estudio} - {estudio[:50]}"
         
+        # === SECCIÓN 1: Encabezado del tipo de solicitud ===
         description = f"""**SOLICITUD DE RESULTADOS - {tipo_estudio}**
 
 • Identificación del paciente: {identificacion}
@@ -415,6 +455,75 @@ class ChatBotUtils:
 • Plataforma: {data.get('plataforma', 'WhatsApp')}
 • Fecha de solicitud: {datetime.now().strftime('%d/%m/%Y %H:%M')}
 """
+        
+        # === SECCIÓN 2: Todos los datos del paciente recogidos durante el flujo ===
+        info_adicional = []
+        
+        name = data.get('solicitar_name') or data.get('name', '')
+        if name:
+            info_adicional.append(f"• Nombre completo: {name}")
+        
+        vat = data.get('solicitar_vat') or data.get('vat', '')
+        if vat:
+            info_adicional.append(f"• Cédula: {vat}")
+        
+        phone = data.get('solicitar_phone') or data.get('phone', '')
+        if phone:
+            info_adicional.append(f"• Teléfono: {phone}")
+        
+        email = data.get('solicitar_email') or data.get('email', '')
+        if email:
+            info_adicional.append(f"• Correo electrónico: {email}")
+        
+        birthdate = data.get('solicitar_birthdate') or data.get('birthdate', '')
+        if birthdate:
+            info_adicional.append(f"• Fecha de nacimiento: {birthdate}")
+        
+        consentimiento = data.get('consentimiento') or data.get('consentimiento_whatsapp', False)
+        if consentimiento:
+            consent_value = 'Sí' if str(consentimiento).lower() in ['true', '1', 'sí', 'si', 'yes'] else str(consentimiento)
+            info_adicional.append(f"• Consentimiento WhatsApp: {consent_value}")
+        
+        servicio = data.get('solicitar_servicio') or data.get('servicio_solicitado', '')
+        if servicio:
+            info_adicional.append(f"• Servicio solicitado: {servicio}")
+        
+        consulta = data.get('solicitar_consulta_deseada') or data.get('consulta_deseada', '')
+        if consulta:
+            info_adicional.append(f"• Consulta deseada: {consulta}")
+        
+        seguro = data.get('solicitar_nombre_seguro') or data.get('nombre_seguro', '')
+        if seguro:
+            info_adicional.append(f"• Seguro: {seguro}")
+        
+        fecha_pref = data.get('solicitar_fecha_preferida') or data.get('fecha_preferida', '')
+        if fecha_pref:
+            info_adicional.append(f"• Fecha preferida: {fecha_pref}")
+        
+        hora = data.get('solicitar_hora_preferida') or data.get('hora_preferida', '')
+        if hora:
+            info_adicional.append(f"• Horario: {hora}")
+        
+        medio_pago = data.get('solicitar_medio_pago') or data.get('medio_pago', '')
+        if medio_pago:
+            info_adicional.append(f"• Medio de pago: {medio_pago}")
+        
+        es_nuevo = data.get('solicitar_es_paciente_nuevo') or data.get('es_paciente_nuevo', '')
+        if es_nuevo:
+            es_nuevo_value = 'Sí' if str(es_nuevo).lower() in ['true', '1', 'sí', 'si', 'yes'] else 'No'
+            info_adicional.append(f"• Paciente nuevo: {es_nuevo_value}")
+        
+        membresia = data.get('solicitar_membresia_interes') or data.get('membresia_interes', '')
+        if membresia:
+            membresia_value = 'Sí' if str(membresia).lower() in ['true', '1', 'sí', 'si', 'yes'] else 'No'
+            info_adicional.append(f"• Interés Tarjeta Salud: {membresia_value}")
+        
+        if info_adicional:
+            description += "\n**📋 DATOS COMPLETOS DEL PACIENTE**\n\n"
+            description += "\n".join(info_adicional)
+        
+        if team:
+            description += f"\n\n**🏥 EQUIPO ASIGNADO:** {team.name}"
         
         lead_data = {
             'name': lead_name,
@@ -595,14 +704,23 @@ class ChatBotUtils:
         """Genera el pie del mensaje con datos de referencia."""
         descripcion_grupos = {
             'Agendamiento_Directo': 'información general y ubicación',
+            'flujo_agendamiento_directo': 'información general y ubicación',
             'Agendamiento_Precios': 'información de precios y promociones',
+            'flujo_agendamiento_precios': 'información de precios y promociones',
             'Agendamiento_Servicios': 'información sobre nuestros servicios',
+            'flujo_agendamiento_servicios': 'información sobre nuestros servicios',
             'Agendamiento_Otra_Consulta': 'consultas generales',
+            'flujo_agendamiento_otra_consulta': 'consultas generales',
             'Agendamiento_Tarjeta': 'ventas y afiliación a nuestra tarjeta',
+            'flujo_ventas_unisa': 'ventas y afiliación a nuestra tarjeta',
             'CITAS_MP': 'citas por medios propios',
+            'flujo_citas_medios_propios': 'citas por medios propios',
             'CITAS_SEGUROS': 'citas con seguro médico',
+            'flujo_citas_seguro': 'citas con seguro médico',
             'RESULTADOS_LAB': 'resultados de laboratorio',
+            'flujo_resultados_laboratorio': 'resultados de laboratorio',
             'RESULTADOS_IMAGENES': 'resultados de imagenología',
+            'flujo_resultados_imagenes': 'resultados de imagenología',
         }
         grupo_texto = descripcion_grupos.get(equipo_asignado, 'atención al cliente')
         pie = []
@@ -623,14 +741,23 @@ class ChatBotUtils:
         # Intentar con IA si está disponible
         descripcion_grupos = {
             'Agendamiento_Directo': 'información general y ubicación',
+            'flujo_agendamiento_directo': 'información general y ubicación',
             'Agendamiento_Precios': 'información de precios y promociones',
+            'flujo_agendamiento_precios': 'información de precios y promociones',
             'Agendamiento_Servicios': 'información sobre nuestros servicios',
+            'flujo_agendamiento_servicios': 'información sobre nuestros servicios',
             'Agendamiento_Otra_Consulta': 'consultas generales',
+            'flujo_agendamiento_otra_consulta': 'consultas generales',
             'Agendamiento_Tarjeta': 'ventas y afiliación a nuestra tarjeta',
+            'flujo_ventas_unisa': 'ventas y afiliación a nuestra tarjeta',
             'CITAS_MP': 'citas por medios propios',
+            'flujo_citas_medios_propios': 'citas por medios propios',
             'CITAS_SEGUROS': 'citas con seguro médico',
+            'flujo_citas_seguro': 'citas con seguro médico',
             'RESULTADOS_LAB': 'resultados de laboratorio',
+            'flujo_resultados_laboratorio': 'resultados de laboratorio',
             'RESULTADOS_IMAGENES': 'resultados de imagenología',
+            'flujo_resultados_imagenes': 'resultados de imagenología',
         }
         grupo_texto = descripcion_grupos.get(equipo_asignado, 'atención al cliente')
         if env and lead_id:
@@ -643,6 +770,8 @@ class ChatBotUtils:
                         'grupo': grupo_texto,
                         'servicio': data.get('solicitar_servicio', ''),
                         'equipo_asignado': equipo_asignado,
+                        'datos_paciente': ChatBotUtils.format_patient_summary(data),
+                        'resumen_completo': data,
                     }
                     resultado = service.sudo().generar_mensaje_finalizacion(contexto)
                     if resultado and resultado.get('mensaje_final'):
@@ -652,24 +781,92 @@ class ChatBotUtils:
 
         # Fallback manual con formato enriquecido
         name = data.get('solicitar_name', '').strip()
-        lines = [f"✅ **¡TU SOLICITUD HA SIDO REGISTRADA EXITOSAMENTE!**\n"]
-        if name:
-            lines.append(f"👤 **Paciente:** {name}")
-        if data.get('solicitar_servicio'):
-            lines.append(f"🩺 **Servicio solicitado:** {data['solicitar_servicio']}")
+        resumen = ChatBotUtils.format_patient_summary(data)
+        lines = [f"✅ **¡GRACIAS POR TU SOLICITUD!**"]
+        lines.append("")
+        lines.append(f"Hemos recibido toda tu información correctamente. {name + ', ' if name else ''}a continuación te compartimos un resumen de lo registrado:\n")
+        if resumen:
+            lines.append(resumen)
+            lines.append("")
+        lines.append("📋 **¿Qué sigue?**")
+        lines.append("Uno de nuestros asesores revisará tu solicitud y se comunicará contigo en las próximas horas para brindarte la atención que necesitas.")
+        lines.append("")
+        lines.append(pie)
+        return "\n".join(lines)
 
-        fecha = data.get('solicitar_fecha_preferida')
-        hora = data.get('solicitar_hora_preferida')
+    @staticmethod
+    def format_patient_summary(data):
+        """Devuelve un resumen amigable de todos los datos del paciente para mostrar al usuario."""
+        lines = []
+        
+        # Nombre
+        name = data.get('solicitar_name') or data.get('name', '')
+        if name:
+            lines.append(f"👤 **Nombre:** {name}")
+        
+        # Cédula
+        vat = data.get('solicitar_vat') or data.get('vat', '')
+        if vat:
+            lines.append(f"🆔 **Cédula:** {vat}")
+        
+        # Teléfono
+        phone = data.get('solicitar_phone') or data.get('phone', '')
+        if phone:
+            lines.append(f"📞 **Teléfono:** {phone}")
+        
+        # Email
+        email = data.get('solicitar_email') or data.get('email', '')
+        if email:
+            lines.append(f"📧 **Correo:** {email}")
+        
+        # Fecha de nacimiento
+        birthdate = data.get('solicitar_birthdate') or data.get('birthdate', '')
+        if birthdate:
+            lines.append(f"🎂 **Fecha de nacimiento:** {birthdate}")
+        
+        # Servicio solicitado
+        servicio = data.get('solicitar_servicio') or data.get('servicio_solicitado', '')
+        if servicio:
+            lines.append(f"🩺 **Servicio solicitado:** {servicio}")
+        
+        # Consulta deseada
+        consulta = data.get('solicitar_consulta_deseada') or data.get('consulta_deseada', '')
+        if consulta:
+            lines.append(f"💬 **Consulta deseada:** {consulta}")
+        
+        # Seguro
+        seguro = data.get('solicitar_nombre_seguro') or data.get('nombre_seguro', '')
+        if seguro:
+            lines.append(f"🏥 **Seguro:** {seguro}")
+        
+        # Fecha y hora preferida
+        fecha = data.get('solicitar_fecha_preferida') or data.get('fecha_preferida', '')
+        hora = data.get('solicitar_hora_preferida') or data.get('hora_preferida', '')
         if fecha or hora:
-            pref = f"📅 **Preferencia:** {fecha if fecha else 'lo antes posible'}"
+            pref = "📅 **Preferencia de cita:** "
+            if fecha:
+                pref += f"{fecha}"
+            else:
+                pref += "Lo antes posible"
             if hora:
                 pref += f" por la {hora}"
             else:
                 pref += " a cualquier hora"
             lines.append(pref)
-
-        lines.append("")
-        lines.append(pie)
+        
+        # Medio de pago
+        medio_pago = data.get('solicitar_medio_pago') or data.get('medio_pago', '')
+        if medio_pago:
+            lines.append(f"💳 **Medio de pago:** {medio_pago}")
+        
+        # Estudio (para resultados)
+        estudio = data.get('estudio_solicitado') or data.get('solicitar_estudio', '')
+        if estudio:
+            lines.append(f"🔬 **Estudio solicitado:** {estudio}")
+        
+        if not lines:
+            return ""
+        
         return "\n".join(lines)
 
     @staticmethod   
