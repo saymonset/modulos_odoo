@@ -39,6 +39,9 @@ class SaleOrder(models.Model):
         for order in self:
             order.currency_aux = usd
 
+    # ------------------------------------------------------------
+    # GUARDAR DATOS DEL COMPROBANTE (desde frontend)
+    # ------------------------------------------------------------
     def action_save_payment_data(self, payment_data):
         _logger.info(f"*** SALVANDO: Datos de pago para orden {self.name}")
         self.sudo().write({
@@ -53,6 +56,9 @@ class SaleOrder(models.Model):
         })
         return True
 
+    # ------------------------------------------------------------
+    # VALIDACIÓN DE CAMPOS OBLIGATORIOS
+    # ------------------------------------------------------------
     def validate_payment_required_fields(self):
         _logger.info(f"*** VALIDANDO: {len(self)} orden(es)")
         for order in self:
@@ -74,6 +80,9 @@ class SaleOrder(models.Model):
                     raise UserError(_('💰 El monto pagado (%.2f Bs.) es menor al total de la orden (%.2f Bs.). Por favor, verifique el monto.'))
                 _logger.info(f"*** VALIDACIÓN EXITOSA para orden {order.name}")
 
+    # ------------------------------------------------------------
+    # CONFIRMACIÓN DE LA ORDEN (con procesamiento posterior)
+    # ------------------------------------------------------------
     def action_confirm(self):
         _logger.info(f"*** CONFIRMANDO: action_confirm llamado con órdenes {self.ids}")
         if not self:
@@ -89,7 +98,9 @@ class SaleOrder(models.Model):
                     if payment_data.get('sale_order_id') == order.id:
                         order.action_save_payment_data(payment_data)
                 order.validate_payment_required_fields()
-                return super(SaleOrder, order).action_confirm()
+                res = super(SaleOrder, order).action_confirm()
+                self._process_order_post_confirm(order)
+                return res
             else:
                 return self.env['sale.order']
         else:
@@ -98,9 +109,54 @@ class SaleOrder(models.Model):
                     payment_data = request.session.pop('payment_data')
                     order.action_save_payment_data(payment_data)
                 order.validate_payment_required_fields()
-            return super().action_confirm()
+            res = super().action_confirm()
+            for order in self:
+                self._process_order_post_confirm(order)
+            return res
+
+    # ------------------------------------------------------------
+    # PROCESAMIENTO POST-CONFIRMACIÓN (WhatsApp y otros)
+    # ------------------------------------------------------------
+    @staticmethod
+    def _process_order_post_confirm(order):
+        """Procesa una orden ya confirmada: guarda datos de pago (si no se hicieron antes) y envía WhatsApp."""
+        _logger.info(f"*** POST-CONFIRMACIÓN: Procesando orden {order.name}")
+
+        # Si aún no se guardaron los datos de pago (por ejemplo, porque no vinieron en la sesión),
+        # intentamos recuperarlos nuevamente (esto es un respaldo).
+        if not order.payment_date and request and hasattr(request, 'session') and 'payment_data' in request.session:
+            payment_data = request.session.pop('payment_data')
+            if payment_data.get('sale_order_id') == order.id:
+                order.action_save_payment_data(payment_data)
+                _logger.info(f"*** POST-CONFIRMACIÓN: Datos de pago guardados desde sesión para {order.name}")
+
+        # Enviar WhatsApp solo si no se ha enviado antes y la orden está confirmada y el cliente tiene teléfono
+        if not order.whatsapp_sent and order.state == 'sale' and order.partner_id.phone:
+            _logger.info(f"*** POST-CONFIRMACIÓN: Intentando enviar WhatsApp para orden {order.name}")
+            # Buscar el comprobante adjunto (para enviarlo como imagen si existe)
+            attachment = order.env['ir.attachment'].sudo().search([
+                ('res_model', '=', 'sale.order'),
+                ('res_id', '=', order.id),
+                ('description', '=', 'Comprobante de pago - Transferencia / Pago Móvil'),
+            ], limit=1)
+            if attachment:
+                # Si existe el servicio de WhatsApp (debe estar definido en otro archivo)
+                service = order.env['whatsapp.service']
+                result = service.sendWhatsappConfirmation(order)
+                if not result.get('success'):
+                    _logger.error(f"*** POST-CONFIRMACIÓN: Fallo en WhatsApp para {order.name}: {result.get('message')}")
+                else:
+                    order.write({'whatsapp_sent': True})
+                    _logger.info(f"*** POST-CONFIRMACIÓN: WhatsApp enviado correctamente para {order.name}")
+            else:
+                _logger.warning(f"*** POST-CONFIRMACIÓN: No se encontró comprobante para orden {order.name}. WhatsApp NO enviado.")
+        else:
+            _logger.info(f"*** POST-CONFIRMACIÓN: No se cumplen condiciones para enviar WhatsApp a {order.name} (whatsapp_sent={order.whatsapp_sent}, state={order.state}, phone={order.partner_id.phone})")
 
 
+# ------------------------------------------------------------
+# HERENCIA DEL PROVEEDOR DE PAGO (validación extra)
+# ------------------------------------------------------------
 class PaymentProvider(models.Model):
     _inherit = 'payment.provider'
 

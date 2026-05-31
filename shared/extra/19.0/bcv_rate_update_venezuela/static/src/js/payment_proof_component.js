@@ -1,5 +1,5 @@
 /** @odoo-module **/
-import { Component, useState, onWillStart } from "@odoo/owl";
+import { Component, useState, onWillStart, useEffect } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { rpc } from "@web/core/network/rpc";
 import { useService } from "@web/core/utils/hooks";
@@ -64,6 +64,69 @@ export class PaymentProofComponent extends Component {
                 this.notification.add("Error al cargar datos de pago", { type: "danger" });
             }
         });
+
+        useEffect(() => {
+            const isValid = this.state.bank_origin && 
+                            this.state.bank_destination && 
+                            this.state.reference && 
+                            this.state.uploadSuccess && 
+                            this.state.is_valid_amount;
+
+            // Seleccionamos todos los botones posibles (web y móvil)
+            const buttons = document.querySelectorAll('button[name="o_payment_submit_button"], #payment_submit_btn');
+            
+            const enforceState = () => {
+                buttons.forEach(btn => {
+                    if (isValid) {
+                        btn.disabled = false;
+                        btn.classList.remove('disabled', 'pe-none', 'opacity-50');
+                    } else {
+                        btn.disabled = true;
+                        btn.classList.add('disabled', 'pe-none', 'opacity-50');
+                    }
+                });
+            };
+
+            enforceState();
+
+            // Usamos MutationObserver para evitar que Odoo (u otro script) cambie el estado en móvil o web
+            const observer = new MutationObserver(() => {
+                buttons.forEach(btn => {
+                    if (!isValid && (!btn.disabled || !btn.classList.contains('disabled'))) {
+                        enforceState();
+                    } else if (isValid && (btn.disabled || btn.classList.contains('disabled'))) {
+                        enforceState();
+                    }
+                });
+            });
+
+            buttons.forEach(btn => {
+                observer.observe(btn, { attributes: true, attributeFilter: ['disabled', 'class'] });
+            });
+
+            // Prevenir envío del formulario como capa extra de seguridad
+            const forms = document.querySelectorAll('form[name="o_payment_checkout_form"], #o_payment_form, form.o_payment_form');
+            const preventSubmit = (e) => {
+                if (!isValid) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    this.notification.add("Por favor complete todos los campos requeridos y adjunte el comprobante.", { type: "danger" });
+                }
+            };
+
+            forms.forEach(form => form.addEventListener('submit', preventSubmit, { capture: true }));
+
+            return () => {
+                observer.disconnect();
+                forms.forEach(form => form.removeEventListener('submit', preventSubmit, { capture: true }));
+            };
+        }, () => [
+            this.state.bank_origin,
+            this.state.bank_destination,
+            this.state.reference,
+            this.state.uploadSuccess,
+            this.state.is_valid_amount
+        ]);
     }
 
     _normalizeNumber(v) {
