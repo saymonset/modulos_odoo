@@ -828,6 +828,7 @@ class SessionState(models.Model):
                 'flujo_agendamiento_otra_consulta': 'Grupo Citas',
                 'Agendamiento_Tarjeta': 'Grupo Ventas',
                 'flujo_ventas_unisa': 'Grupo Ventas',
+                'Ventas_UNISA': 'Grupo Ventas',
                 'CITAS_MP': 'Grupo Citas',
                 'flujo_citas_medios_propios': 'Grupo Citas',
                 'CITAS_SEGUROS': 'Grupo Citas',
