@@ -102,7 +102,11 @@ class PaymentCustomOverride(http.Controller):
         try:
             tx = request.env['payment.transaction'].sudo().create(tx_values)
             _logger.info(f"*** PAYMENT: Transacción creada con ID {tx.id}")
+            sale_order.action_confirm()
+            _logger.info(f"*** PAYMENT: Orden confirmada correctamente: {sale_order.name} (state={sale_order.state})")
+            tx.sudo().write({'state': 'done'})
+            _logger.info(f"*** PAYMENT: Transacción {tx.id} marcada como done")
             return request.redirect('/payment/status')
         except Exception as e:
-            _logger.exception("*** PAYMENT: Error al crear la transacción")
+            _logger.exception("*** PAYMENT: Error al procesar el pago")
             return request.redirect(f'/shop/payment?error=Error+al+procesar+el+pago:+{str(e)}')
