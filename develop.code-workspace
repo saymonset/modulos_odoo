@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../odoo-from-13-to-18"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {}
+}

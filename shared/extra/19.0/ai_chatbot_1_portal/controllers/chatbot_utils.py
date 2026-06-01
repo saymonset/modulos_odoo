@@ -287,7 +287,7 @@ class ChatBotUtils:
     def get_team_unisa(env):
         """Obtener o crear equipos de UNISA (Grupo Citas, Grupo Ventas, Grupo Laboratorio, Grupo Imagenología)"""
         teams = {}
-        team_names = ['Grupo Citas', 'Grupo Ventas', 'Grupo Laboratorio', 'Grupo Imagenología']
+        team_names = ['Grupo Citas', 'Grupo Ventas', 'Grupo Laboratorio', 'Grupo Imagenología', 'Grupo Informativo']
         for team_name in team_names:
             team = env['crm.team'].search([('name', '=', team_name)], limit=1)
             if not team:
@@ -305,14 +305,22 @@ class ChatBotUtils:
                         team_data['alias_name'] = 'laboratorio-unisa'
                     elif team_name == 'Grupo Imagenología':
                         team_data['alias_name'] = 'imagenologia-unisa'
+                    elif team_name == 'Grupo Informativo':
+                        team_data['alias_name'] = 'informativo-unisa'
                     team = env['crm.team'].create(team_data)
                     _logger.info(f"✅ Equipo UNISA creado: {team.name} (ID: {team.id})")
                 except Exception as e:
                     _logger.error(f"❌ Error creando equipo {team_name}: {str(e)}")
-                    team = env['crm.team'].search([('active', '=', True)], limit=1)
+                    # Posible condición de carrera: reintentar buscar si otro proceso creó el equipo
+                    team = env['crm.team'].search([('name', '=', team_name)], limit=1)
                     if not team:
-                        team = env['crm.team'].create({'name': team_name + ' (Fallback)', 'active': True})
-                        _logger.warning(f"⚠️ Se creó equipo genérico: {team.name}")
+                        # Como último recurso, crear un equipo con sufijo para evitar bloqueos por duplicado
+                        try:
+                            team = env['crm.team'].create({'name': team_name + ' (Fallback)', 'active': True})
+                            _logger.warning(f"⚠️ Se creó equipo genérico: {team.name}")
+                        except Exception as e2:
+                            _logger.error(f"❌ No se pudo crear equipo fallback para {team_name}: {e2}")
+                            team = env['crm.team'].search([], limit=1)
             else:
                 _logger.info(f"✅ Equipo UNISA encontrado: {team.name} (ID: {team.id})")
             teams[team_name] = team
@@ -369,27 +377,7 @@ class ChatBotUtils:
         
         # Agregar equipo responsable a la descripción
         equipo_asignado = data.get('equipo_asignado', '')
-        descripcion_grupos = {
-            'Agendamiento_Directo': 'información general y ubicación',
-            'flujo_agendamiento_directo': 'información general y ubicación',
-            'Agendamiento_Precios': 'información de precios y promociones',
-            'flujo_agendamiento_precios': 'información de precios y promociones',
-            'Agendamiento_Servicios': 'información sobre nuestros servicios',
-            'flujo_agendamiento_servicios': 'información sobre nuestros servicios',
-            'Agendamiento_Otra_Consulta': 'consultas generales',
-            'flujo_agendamiento_otra_consulta': 'consultas generales',
-            'Agendamiento_Tarjeta': 'ventas y afiliación a nuestra tarjeta',
-            'flujo_ventas_unisa': 'ventas y afiliación a nuestra tarjeta',
-            'Ventas_UNISA': 'ventas y afiliación a nuestra tarjeta',
-            'CITAS_MP': 'citas por medios propios',
-            'flujo_citas_medios_propios': 'citas por medios propios',
-            'CITAS_SEGUROS': 'citas con seguro médico',
-            'flujo_citas_seguro': 'citas con seguro médico',
-            'RESULTADOS_LAB': 'resultados de laboratorio',
-            'flujo_resultados_laboratorio': 'resultados de laboratorio',
-            'RESULTADOS_IMAGENES': 'resultados de imagenología',
-            'flujo_resultados_imagenes': 'resultados de imagenología',
-        }
+        descripcion_grupos = env['chatbot.flujo']._get_mapeo_equipo_descripcion()
         area_texto = descripcion_grupos.get(equipo_asignado, '')
         if area_texto:
             description += f"\n\n**👥 ÁREA RESPONSABLE:** {area_texto.capitalize()}"
@@ -701,29 +689,9 @@ class ChatBotUtils:
         return validated_data
 
     @staticmethod
-    def _pie_mensaje(lead_id, equipo_asignado):
+    def _pie_mensaje(lead_id, equipo_asignado, env=None):
         """Genera el pie del mensaje con datos de referencia."""
-        descripcion_grupos = {
-            'Agendamiento_Directo': 'información general y ubicación',
-            'flujo_agendamiento_directo': 'información general y ubicación',
-            'Agendamiento_Precios': 'información de precios y promociones',
-            'flujo_agendamiento_precios': 'información de precios y promociones',
-            'Agendamiento_Servicios': 'información sobre nuestros servicios',
-            'flujo_agendamiento_servicios': 'información sobre nuestros servicios',
-            'Agendamiento_Otra_Consulta': 'consultas generales',
-            'flujo_agendamiento_otra_consulta': 'consultas generales',
-            'Agendamiento_Tarjeta': 'ventas y afiliación a nuestra tarjeta',
-            'flujo_ventas_unisa': 'ventas y afiliación a nuestra tarjeta',
-            'Ventas_UNISA': 'ventas y afiliación a nuestra tarjeta',
-            'CITAS_MP': 'citas por medios propios',
-            'flujo_citas_medios_propios': 'citas por medios propios',
-            'CITAS_SEGUROS': 'citas con seguro médico',
-            'flujo_citas_seguro': 'citas con seguro médico',
-            'RESULTADOS_LAB': 'resultados de laboratorio',
-            'flujo_resultados_laboratorio': 'resultados de laboratorio',
-            'RESULTADOS_IMAGENES': 'resultados de imagenología',
-            'flujo_resultados_imagenes': 'resultados de imagenología',
-        }
+        descripcion_grupos = env['chatbot.flujo']._get_mapeo_equipo_descripcion() if env else {}
         grupo_texto = descripcion_grupos.get(equipo_asignado, 'atención al cliente')
         pie = []
         if lead_id:
@@ -732,36 +700,15 @@ class ChatBotUtils:
             pie.append(f"👥 **Área responsable:** {grupo_texto.capitalize()}")
         pie.append("🔒 **Tus datos están protegidos bajo nuestra política de privacidad.**")
         pie.append("📞 **En breve uno de nuestros ejecutivos se comunicará contigo.**")
-        pie.append("🙏 **¡Gracias por confiar en UNISA Salud!**")
+        pie.append("🙏 **¡Gracias por confiar en UNISA!**")
         return "\n".join(pie)
 
     @staticmethod
     def generate_response(data, lead_id=None, equipo_asignado=None, env=None):
         """Generar respuesta personalizada según el flujo, usando IA si está disponible."""
-        pie = ChatBotUtils._pie_mensaje(lead_id, equipo_asignado)
+        pie = ChatBotUtils._pie_mensaje(lead_id, equipo_asignado, env=env)
 
-        # Intentar con IA si está disponible
-        descripcion_grupos = {
-            'Agendamiento_Directo': 'información general y ubicación',
-            'flujo_agendamiento_directo': 'información general y ubicación',
-            'Agendamiento_Precios': 'información de precios y promociones',
-            'flujo_agendamiento_precios': 'información de precios y promociones',
-            'Agendamiento_Servicios': 'información sobre nuestros servicios',
-            'flujo_agendamiento_servicios': 'información sobre nuestros servicios',
-            'Agendamiento_Otra_Consulta': 'consultas generales',
-            'flujo_agendamiento_otra_consulta': 'consultas generales',
-            'Agendamiento_Tarjeta': 'ventas y afiliación a nuestra tarjeta',
-            'flujo_ventas_unisa': 'ventas y afiliación a nuestra tarjeta',
-            'Ventas_UNISA': 'ventas y afiliación a nuestra tarjeta',
-            'CITAS_MP': 'citas por medios propios',
-            'flujo_citas_medios_propios': 'citas por medios propios',
-            'CITAS_SEGUROS': 'citas con seguro médico',
-            'flujo_citas_seguro': 'citas con seguro médico',
-            'RESULTADOS_LAB': 'resultados de laboratorio',
-            'flujo_resultados_laboratorio': 'resultados de laboratorio',
-            'RESULTADOS_IMAGENES': 'resultados de imagenología',
-            'flujo_resultados_imagenes': 'resultados de imagenología',
-        }
+        descripcion_grupos = env['chatbot.flujo']._get_mapeo_equipo_descripcion() if env else {}
         grupo_texto = descripcion_grupos.get(equipo_asignado, 'atención al cliente')
         if env and lead_id:
             try:
@@ -792,7 +739,7 @@ class ChatBotUtils:
             lines.append(resumen)
             lines.append("")
         lines.append("📋 **¿Qué sigue?**")
-        lines.append("Uno de nuestros asesores revisará tu solicitud y se comunicará contigo en las próximas horas para brindarte la atención que necesitas.")
+        lines.append("Una de nuestras ejecutivas revisará tu solicitud y se comunicará contigo en las próximas horas para brindarte la atención que necesitas.")
         lines.append("")
         lines.append(pie)
         return "\n".join(lines)

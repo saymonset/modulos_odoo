@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Equipo informativo: creado por defecto para flujos informativos -->
+        <record id="team_grupo_informativo" model="crm.team">
+            <field name="name">Grupo Informativo</field>
+            <field name="active">True</field>
+            <field name="use_leads">True</field>
+            <field name="use_opportunities">True</field>
+            <field name="alias_name">informativo-unisa</field>
+        </record>
+    </data>
+</odoo>

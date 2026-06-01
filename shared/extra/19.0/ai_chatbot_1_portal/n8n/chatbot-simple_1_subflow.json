@@ -742,7 +742,7 @@
           "account_id": "1",
           "conversation_id": "1",
           "message_type": "{{$json.message_type}}",
-          "user_name": "UNISA Salud",
+          "user_name": "UNISA",
           "user_number": "+584142711347",
           "channel": null,
           "content": null,

@@ -817,28 +817,7 @@ class SessionState(models.Model):
             teams = ChatBotUtils.get_team_unisa(env)
 
             equipo_asignado = datos.get('equipo_asignado', 'Agendamiento_Directo')
-            mapeo_grupos = {
-                'Agendamiento_Directo': None,
-                'flujo_agendamiento_directo': None,
-                'Agendamiento_Precios': None,
-                'flujo_agendamiento_precios': None,
-                'Agendamiento_Servicios': None,
-                'flujo_agendamiento_servicios': None,
-                'Agendamiento_Otra_Consulta': 'Grupo Citas',
-                'flujo_agendamiento_otra_consulta': 'Grupo Citas',
-                'Agendamiento_Tarjeta': 'Grupo Ventas',
-                'flujo_ventas_unisa': 'Grupo Ventas',
-                'Ventas_UNISA': 'Grupo Ventas',
-                'CITAS_MP': 'Grupo Citas',
-                'flujo_citas_medios_propios': 'Grupo Citas',
-                'CITAS_SEGUROS': 'Grupo Citas',
-                'flujo_citas_seguro': 'Grupo Citas',
-                'RESULTADOS_LAB': 'Grupo Laboratorio',
-                'flujo_resultados_laboratorio': 'Grupo Laboratorio',
-                'RESULTADOS_IMAGENES': 'Grupo Imagenología',
-                'flujo_resultados_imagenes': 'Grupo Imagenología',
-                'flujo_agendamiento_default': None,
-            }
+            mapeo_grupos = self.env['chatbot.flujo']._get_mapeo_equipo_grupo()
             nombre_grupo = mapeo_grupos.get(equipo_asignado)
             team = None
             if nombre_grupo:
@@ -911,13 +890,13 @@ class SessionState(models.Model):
                 lines.append(resumen)
                 lines.append("")
             lines.append("📋 **¿Qué sigue?**")
-            lines.append("Uno de nuestros asesores revisará tu solicitud y se comunicará contigo en las próximas horas para brindarte la atención que necesitas.")
+            lines.append("Una de nuestras ejecutivas revisará tu solicitud y se comunicará contigo en las próximas horas para brindarte la atención que necesitas.")
             msg = "\n".join(lines)
         lead_id = None
         if lead_resultado and lead_resultado.get('success'):
             lead_info = lead_resultado.get('lead_info', {})
             lead_id = lead_info.get('lead_id')
-        pie = ChatBotUtils._pie_mensaje(lead_id, equipo_asignado)
+        pie = ChatBotUtils._pie_mensaje(lead_id, equipo_asignado, env=self.env)
         return msg + "\n\n" + pie
     
     def _generar_mensaje_expirado(self, texto_usuario):

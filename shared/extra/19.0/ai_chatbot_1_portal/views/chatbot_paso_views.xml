@@ -8,6 +8,7 @@
             <field name="arch" type="xml">
                 <list string="Pasos de Chatbot" editable="top">
                     <field name="flujo_id"/>
+                    <field name="flujo_team_id"/>
                     <field name="secuencia"/>
                     <field name="nombre_interno"/>
                     <field name="nombre_mostrar"/>

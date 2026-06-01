@@ -208,40 +208,27 @@ class ChatBotController(http.Controller):
             teams = ChatBotUtils.get_team_unisa(env)
             
             equipo_asignado = data.get('equipo_asignado', 'Agendamiento_Directo')
-            mapeo_grupos = {
-                # Flujos sin agente (informativos)
-                'Agendamiento_Directo': None,
-                'flujo_agendamiento_directo': None,
-                'Agendamiento_Precios': None,
-                'flujo_agendamiento_precios': None,
-                'Agendamiento_Servicios': None,
-                'flujo_agendamiento_servicios': None,
-                # Flujos con agente
-                'Agendamiento_Otra_Consulta': 'Grupo Citas',
-                'flujo_agendamiento_otra_consulta': 'Grupo Citas',
-                'Agendamiento_Tarjeta': 'Grupo Ventas',
-                'flujo_ventas_unisa': 'Grupo Ventas',
-                'Ventas_UNISA': 'Grupo Ventas',
-                'CITAS_MP': 'Grupo Citas',
-                'flujo_citas_medios_propios': 'Grupo Citas',
-                'CITAS_SEGUROS': 'Grupo Citas',
-                'flujo_citas_seguro': 'Grupo Citas',
-                'RESULTADOS_LAB': 'Grupo Laboratorio',
-                'flujo_resultados_laboratorio': 'Grupo Laboratorio',
-                'RESULTADOS_IMAGENES': 'Grupo Imagenología',
-                'flujo_resultados_imagenes': 'Grupo Imagenología',
-                'flujo_agendamiento_default': None,
-            }
-            nombre_grupo = mapeo_grupos.get(equipo_asignado)
+            # Intentar obtener el flujo por name_flow y usar su team_id si está configurado
+            nombre_grupo = None
             team = None
-            if nombre_grupo:
-                if teams and nombre_grupo in teams:
-                    team = teams.get(nombre_grupo)
-                else:
-                    team = env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
-                    if not team:
-                        team = env['crm.team'].search([], limit=1)
-                        _logger.warning(f"No se encontró el equipo {nombre_grupo}, usando {team.name if team else 'ninguno'}")
+            name_flow = data.get('name_flow') or data.get('flow_name') or None
+            if name_flow:
+                flujo = env['chatbot.flujo'].search([('name', '=', name_flow)], limit=1)
+                if flujo and flujo.team_id:
+                    team = flujo.team_id
+                    nombre_grupo = team.name
+            # Si no encontramos equipo por el flujo, usar el mapeo central
+            if not team:
+                mapeo_grupos = env['chatbot.flujo']._get_mapeo_equipo_grupo()
+                nombre_grupo = mapeo_grupos.get(equipo_asignado)
+                if nombre_grupo:
+                    if teams and nombre_grupo in teams:
+                        team = teams.get(nombre_grupo)
+                    else:
+                        team = env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
+                        if not team:
+                            team = env['crm.team'].search([], limit=1)
+                            _logger.warning(f"No se encontró el equipo {nombre_grupo}, usando {team.name if team else 'ninguno'}")
             
             _logger.info(f"Equipo asignado: {equipo_asignado} -> Grupo: {nombre_grupo or 'Sin grupo'} -> ID: {team.id if team else 'N/A'}")
             

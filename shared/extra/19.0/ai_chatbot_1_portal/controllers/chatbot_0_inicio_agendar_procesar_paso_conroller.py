@@ -25,7 +25,28 @@ class InicioAgendarController(http.Controller):
         ], limit=1)
         if not flow:
             return None
-
+        # Special-case: flujo_agendamiento_precios is informational and should
+        # present pricing info first instead of immediately requesting phone.
+        if flow.name == 'flujo_agendamiento_precios':
+            return {
+                'flow_id': flow.id,
+                'flow_name': flow.name,
+                'company_id': flow.company_id.id if flow.company_id else None,
+                'steps': [
+                    {
+                        'id': None,
+                        'secuencia': 1,
+                        'nombre_interno': 'informar_precios',
+                        'nombre_mostrar': 'Información de precios',
+                        'tipo_dato': 'text',
+                        'mensaje_prompt': 'Conoce nuestros precios básicos 2026. ¿Deseas que te ayudemos a agendar una cita? Responde "Sí" para continuar.',
+                        'mensaje_error': '',
+                        'es_requerido': False,
+                        'campo_destino': 'informacion_precios',
+                        'es_paso_telefono': False,
+                    }
+                ],
+            }
         steps = []
         for paso in flow.paso_ids.sorted('secuencia'):
             if paso.es_requerido:

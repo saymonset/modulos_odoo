@@ -49,6 +49,14 @@ class ChatbotPaso(models.Model):
         default=False,
         help='Marca este paso como el obligatorio de teléfono (solo uno por flujo)'
     )
+
+    flujo_team_id = fields.Many2one(
+        'crm.team',
+        related='flujo_id.team_id',
+        string='Equipo CRM',
+        readonly=True,
+        help='Equipo/Grupo CRM del flujo al que pertenece este paso',
+    )
   
     @api.model_create_multi
     def create(self, vals_list):

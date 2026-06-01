@@ -1,0 +1,97 @@
+Hola Daniel,
+
+Prueba el menú y los flujos siguiendo estas instrucciones. Para cada ítem anota si funciona y qué falta configurar.
+
+RESUMEN RÁPIDO
+- Objetivo: verificar que cada opción del menú activa el flujo correcto y que el flujo contiene los pasos requeridos
+- Nota: "Horario" y "Promociones" son respuestas estáticas; si deben disparar un flujo, indícalo.
+
+PASOS GENERALES
+1) Abre WhatsApp (o herramienta de pruebas) y reproduce la conversación paso a paso.
+2) Para cada opción del menú registra:
+   - Mensaje enviado (ej. "Servicios")
+   - Respuesta del bot (texto/JSON)
+   - Salida del nodo Separar_variables_en_json en n8n: tipoPregunta / equipo_asignado / flow_name
+   - POST a Odoo /inicioagendar: body JSON (session_id, name_flow, equipo_asignado)
+   - En Odoo: revisar sesión en chatbot.session y flujo iniciado (chatbot.flujo)
+
+FLUJOS A PROBAR Y QUÉ ESPERAR
+1) Precios
+   - Enviar: "Precios"
+   - Esperado: tipoPregunta=PRECIOS, pregunta Sí/No
+   - Mapear a: Agendamiento_Precios -> flujo_agendamiento_precios
+   - Pasos esperados: solicitar_phone, solicitar_name, solicitar_consentimiento (+ opcionales)
+
+2) Servicios
+   - Enviar: "Servicios" o "🩺 Servicios médicos"
+   - Esperado: tipoPregunta=SERVICIOS; pregunta "¿Te gustaría agendar...?"
+   - Mapear a: Agendamiento_Servicios -> flujo_agendamiento_servicios
+   - Al confirmar "Sí": debe pedir solicitar_servicio, luego teléfono, nombre, consentimiento, fecha/hora
+   - Si la confirmación llega sin contexto, anota "falta preservación de flow en n8n"
+
+3) Agendar cita (CITA DIRECTA)
+   - Enviar: "Agendar cita" o "cita"
+   - Esperado: tipoPregunta=CITA_DIRECTA
+   - Debe preguntar Medios propios / Seguro y mapear a CITAS_MP o CITAS_SEGUROS
+   - Pasos: solicitar_phone, solicitar_name, solicitar_vat (si aplica), fecha/hora
+
+4) Tarjeta (Ventas)
+   - Enviar: "Tarjeta"
+   - Esperado: tipoPregunta=TARJETA
+   - Mapear a: Ventas_UNISA -> flujo_ventas_unisa
+   - Pasos: solicitar_phone, solicitar_name
+
+5) Otra consulta
+   - Enviar: "Otra"
+   - Mapear a: Agendamiento_Otra_Consulta
+
+6) Resultados
+   - Enviar: "Resultados"
+   - Esperado: tipoPregunta=RESULTADOS; luego usuario responde "Laboratorio" o "Imágenes"
+   - Mapear a RESULTADOS_LAB o RESULTADOS_IMAGENES
+   - Pasos: solicitar_identificacion, solicitar_estudio
+
+7) Horario y Promociones (ESTATICO)
+   - Enviar: "Horario" / "Promociones"
+   - Expectativa: respuestas estáticas (tipoPregunta=ESTATICO). Si quieres que disparen flujos, márcalo.
+
+QUÉ COMPROBAR EN n8n (Separar_variables_en_json)
+- datosParseados.tipoPregunta viene correcto?
+- datosParseados.equipo_asignado viene relleno y coincide con la intención?
+- resultado.flow_name = mapeoFlow[equipo] o flowPorDefecto
+- Si tipoPregunta=SERVICIOS pero equipo_asignado está vacío, anota "n8n no preserva contexto"
+
+QUÉ COMPROBAR EN ODOO (backend)
+- Logs: en cada POST a /inicioagendar debe llegar name_flow correcto (ej. flujo_agendamiento_servicios)
+- En Odoo > Chatbot → Flujos: abre el flujo y revisa paso_ids
+  Pasos obligatorios que deben existir:
+    - solicitar_phone (phone)
+    - solicitar_name (name)
+    - solicitar_vat / solicitar_identificacion (vat / identificacion_paciente)
+    - solicitar_birthdate (birthdate)
+    - solicitar_consentimiento (consentimiento_whatsapp)
+    - solicitar_servicio (servicio_solicitado) para servicios
+    - solicitar_fecha_preferida / solicitar_hora_preferida cuando corresponda
+
+PLANTILLA RÁPIDA PARA REPORTAR (copiar y rellenar)
+- Opción de menú:
+- Mensaje enviado (usuario):
+- Respuesta bot (primer mensaje):
+- En n8n: tipoPregunta / equipo_asignado / flow_name:
+- POST a Odoo (name_flow / equipo_asignado / session_id): OK/incorrecto (detalle):
+- En Odoo: flujo iniciado (sí/no) - nombre del flujo:
+- Pasos faltantes (marcar): solicitar_phone / solicitar_name / solicitar_vat / solicitar_birthdate / solicitar_servicio / solicitar_consentimiento / solicitar_foto_vat / otros:
+- Observaciones:
+
+CASOS CONCRETOS A REPRODUCIR (prioridad)
+1) Servicios -> confirmar Sí -> debe abrir flujo_agendamiento_servicios y pedir solicitar_servicio
+2) Precios -> confirmar Sí -> flujo_agendamiento_precios, pedir teléfono/nombre
+3) Resultados -> responder Laboratorio -> flujo_resultados_laboratorio, pedir identificación y estudio
+4) Horario -> verificar si debe ser estático o asignar flujo
+
+CAMBIO APLICADO (por mi)
+- Añadí una regla en Separar_variables_en_json para autocompletar equipo_asignado cuando tipoPregunta == SERVICIOS/PRECIOS/TARJETA/CITA_DIRECTA. Eso evita que "Sí" posterior pierda contexto.
+
+Si quieres, puedo generar un CSV con la plantilla para que la completes o puedo simular las entradas y mostrar las salidas del nodo de código.
+
+Gracias, y dime si quieres que genere el CSV o haga la simulación.

@@ -15,6 +15,26 @@ class ChatbotFlujo(models.Model):
     )
     active = fields.Boolean(default=True)
 
+    grupo_asignado = fields.Selection(
+        selection=[
+            ("Grupo Citas", "Grupo Citas"),
+            ("Grupo Ventas", "Grupo Ventas"),
+            ("Grupo Laboratorio", "Grupo Laboratorio"),
+            ("Grupo Imagenología", "Grupo Imagenología"),
+            ("Grupo Informativo", "Grupo Informativo"),
+        ],
+        string="Grupo CRM",
+        help="Grupo de ventas/CRM que gestiona los leads de este flujo. "
+             "Se autocompleta según el nombre del flujo.",
+    )
+
+    team_id = fields.Many2one(
+        'crm.team',
+        string='Equipo CRM',
+        ondelete='set null',
+        help='Enlace directo al equipo/grupo CRM responsable de este flujo',
+    )
+
     # ============================================================
     # MÉTODOS BASE PARA OBTENER LOS PASOS OBLIGATORIOS
     # ============================================================
@@ -347,6 +367,23 @@ class ChatbotFlujo(models.Model):
             pasos_data = self._get_pasos_para_resultados_lab()
         elif self.name == "flujo_resultados_imagenes":
             pasos_data = self._get_pasos_para_resultados_imagenes()
+        elif self.name == "flujo_agendamiento_precios":
+            # Flujo informativo: mostrar información de precios primero.
+            # No solicitamos teléfono como primer paso; el usuario puede
+            # confirmar que desea agendar y entonces iniciar el flujo de agendamiento.
+            pasos_data = [
+                {
+                    "secuencia": 1,
+                    "nombre_interno": "informar_precios",
+                    "nombre_mostrar": "Información de precios",
+                    "tipo_dato": "text",
+                    "campo_destino": "informacion_precios",
+                    "es_requerido": False,
+                    "es_paso_telefono": False,
+                    "mensaje_prompt": "Conoce nuestros precios básicos 2026. ¿Deseas que te ayudemos a agendar una cita? Responde 'Sí' para continuar.",
+                    "mensaje_error": "",
+                }
+            ]
         else:
             # Flujos genéricos: flujo_agendamiento_directo, flujo_agendamiento_precios, 
             # flujo_agendamiento_servicios, flujo_agendamiento_otra_consulta, 
@@ -364,6 +401,86 @@ class ChatbotFlujo(models.Model):
         return True
     
     # ============================================================
+    # MAPEO CENTRALIZADO: equipo_asignado → Grupo CRM
+    # ============================================================
+
+    @api.model
+    def _get_mapeo_equipo_grupo(self):
+        """
+        Fuente de verdad única.
+        Retorna un dict {clave: nombre_grupo} donde 'clave' puede ser
+        tanto el valor corto de equipo_asignado (ej: CITAS_MP) como
+        el name_flow (ej: flujo_citas_medios_propios).
+        None = flujo sin agente (informativo).
+        """
+        return {
+            "Agendamiento_Directo": "Grupo Informativo",
+            "flujo_agendamiento_directo": "Grupo Informativo",
+            "Agendamiento_Precios": "Grupo Informativo",
+            "flujo_agendamiento_precios": "Grupo Informativo",
+            # Cambiado: flujo_agendamiento_servicios ahora apunta a Grupo Ventas
+            "Agendamiento_Servicios": "Grupo Ventas",
+            "flujo_agendamiento_servicios": "Grupo Ventas",
+            "Agendamiento_Otra_Consulta": "Grupo Citas",
+            "flujo_agendamiento_otra_consulta": "Grupo Citas",
+            "Agendamiento_Tarjeta": "Grupo Ventas",
+            "flujo_ventas_unisa": "Grupo Ventas",
+            "Ventas_UNISA": "Grupo Ventas",
+            "CITAS_MP": "Grupo Citas",
+            "flujo_citas_medios_propios": "Grupo Citas",
+            "CITAS_SEGUROS": "Grupo Citas",
+            "flujo_citas_seguro": "Grupo Citas",
+            "RESULTADOS_LAB": "Grupo Laboratorio",
+            "flujo_resultados_laboratorio": "Grupo Laboratorio",
+            "RESULTADOS_IMAGENES": "Grupo Imagenología",
+            "flujo_resultados_imagenes": "Grupo Imagenología",
+            "flujo_agendamiento_default": "Grupo Informativo",
+        }
+
+    @api.model
+    def _get_mapeo_nombre_grupo(self):
+        """
+        Subconjunto de _get_mapeo_equipo_grupo() con solo las claves
+        name_flow (prefijo 'flujo_'). Útil para autocompletar
+        grupo_asignado desde el nombre del flujo.
+        """
+        mapeo = self._get_mapeo_equipo_grupo()
+        return {k: v for k, v in mapeo.items() if k.startswith("flujo_")}
+
+    # ============================================================
+    # MAPEO CENTRALIZADO: equipo_asignado → texto descriptivo
+    # ============================================================
+
+    @api.model
+    def _get_mapeo_equipo_descripcion(self):
+        """
+        Fuente de verdad única.
+        Retorna un dict {clave: texto} que describe en español
+        el área responsable para cada equipo_asignado.
+        """
+        return {
+            "Agendamiento_Directo": "información general y ubicación",
+            "flujo_agendamiento_directo": "información general y ubicación",
+            "Agendamiento_Precios": "información de precios y promociones",
+            "flujo_agendamiento_precios": "información de precios y promociones",
+            "Agendamiento_Servicios": "información sobre nuestros servicios",
+            "flujo_agendamiento_servicios": "información sobre nuestros servicios",
+            "Agendamiento_Otra_Consulta": "consultas generales",
+            "flujo_agendamiento_otra_consulta": "consultas generales",
+            "Agendamiento_Tarjeta": "ventas y afiliación a nuestra tarjeta",
+            "flujo_ventas_unisa": "ventas y afiliación a nuestra tarjeta",
+            "Ventas_UNISA": "ventas y afiliación a nuestra tarjeta",
+            "CITAS_MP": "citas por medios propios",
+            "flujo_citas_medios_propios": "citas por medios propios",
+            "CITAS_SEGUROS": "citas con seguro médico",
+            "flujo_citas_seguro": "citas con seguro médico",
+            "RESULTADOS_LAB": "resultados de laboratorio",
+            "flujo_resultados_laboratorio": "resultados de laboratorio",
+            "RESULTADOS_IMAGENES": "resultados de imagenología",
+            "flujo_resultados_imagenes": "resultados de imagenología",
+        }
+
+    # ============================================================
     # MÉTODOS PRINCIPALES: CREATE, COPY
     # ============================================================
     
@@ -372,6 +489,41 @@ class ChatbotFlujo(models.Model):
         """
         Crea flujos con sus pasos personalizados según el nombre.
         """
+        # Autocompletar grupo/equipo según el nombre del flujo
+        mapeo = self._get_mapeo_equipo_grupo()
+        for vals in vals_list:
+            name = vals.get("name", "")
+            nombre_grupo = None
+            if name in mapeo:
+                nombre_grupo = mapeo[name]
+            # Si hay un nombre de grupo, intentar mapearlo al crm.team
+            if nombre_grupo and not vals.get('team_id'):
+                # buscar equipo existente
+                team = self.env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
+                if not team:
+                    # crear equipos UNISA si es necesario
+                    try:
+                        teams = self.env['ai_chatbot_1_portal.chatbot_flujo'] if False else None
+                    except Exception:
+                        teams = None
+                    # usar utilitario para crear/obtener equipos (si está disponible)
+                    try:
+                        teams_dict = self.env['chatbot.flujo']._get_mapeo_equipo_grupo()
+                    except Exception:
+                        teams_dict = {}
+                    # fallback: buscar/crear por nombre
+                    team = self.env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
+                    if not team:
+                        try:
+                            team = self.env['crm.team'].create({'name': nombre_grupo, 'active': True})
+                        except Exception:
+                            team = False
+                if team:
+                    vals['team_id'] = team.id
+            # Mantener compatibilidad: asignar equipo textual antiguo si no se pasa
+            if not vals.get('grupo_asignado') and name in mapeo:
+                vals["grupo_asignado"] = mapeo[name]
+        
         flujos = super().create(vals_list)
         
         for flujo in flujos:
@@ -379,6 +531,29 @@ class ChatbotFlujo(models.Model):
                 flujo._crear_pasos_para_flujo(incluir_opcionales=True)
         
         return flujos
+    
+    @api.onchange("name")
+    def _onchange_name_grupo_asignado(self):
+        """
+        Autocompleta grupo_asignado al cambiar el nombre del flujo
+        en el formulario, permitiendo override manual.
+        """
+        if self.name:
+            mapeo = self._get_mapeo_equipo_grupo()
+            if self.name in mapeo:
+                nombre_grupo = mapeo[self.name]
+                if nombre_grupo:
+                    # intentar asignar team_id
+                    team = self.env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
+                    if not team:
+                        try:
+                            team = self.env['crm.team'].create({'name': nombre_grupo, 'active': True})
+                        except Exception:
+                            team = False
+                    if team:
+                        self.team_id = team
+                # mantener también el campo textual para compatibilidad
+                self.grupo_asignado = mapeo.get(self.name)
     
     def copy(self, default=None):
         """
