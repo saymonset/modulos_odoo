@@ -380,7 +380,7 @@ class ChatBotUtils:
         descripcion_grupos = env['chatbot.flujo']._get_mapeo_equipo_descripcion()
         area_texto = descripcion_grupos.get(equipo_asignado, '')
         if area_texto:
-            description += f"\n\n**👥 ÁREA RESPONSABLE:** {area_texto.capitalize()}"
+            description += f"\n\n**👥 CENTRAL DE CITAS:** {area_texto.capitalize()}"
         if team:
             description += f"\n**🏥 EQUIPO ASIGNADO:** {team.name}"
         

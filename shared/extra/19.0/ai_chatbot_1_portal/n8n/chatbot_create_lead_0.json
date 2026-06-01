@@ -1001,7 +1001,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfunction detectarSiNo(texto) {\n  if (!texto || typeof texto !== 'string') return false;\n  const patrones = [\n    /\\b(sí|si)\\s*\\/\\s*no\\b/i,\n    /\\b(aceptas|confirmas|estás de acuerdo|quieres|deseas|te gustaría)\\b.*\\?/i,\n    /^.*\\?.*(sí|si).*(no).*$/i,\n    /¿(deseas|quieres|te gustaría|estás seguro|aceptas)/i,\n    /\\b(yes|no)\\b/i,\n    /\\b(responder (sí|si|no))\\\\b/i\n  ];\n  return patrones.some(p => p.test(texto));\n}\n\nconst mapeoFlow = {\n  'Agendamiento_Directo': 'flujo_agendamiento_directo',\n  'Agendamiento_Precios': 'flujo_agendamiento_precios',\n  'Agendamiento_Servicios': 'flujo_agendamiento_servicios',\n  'Agendamiento_Otra_Consulta': 'flujo_agendamiento_otra_consulta',\n  'Ventas_UNISA': 'flujo_ventas_unisa',\n  'CITAS_MP': 'flujo_citas_medios_propios',\n  'CITAS_SEGUROS': 'flujo_citas_seguro',\n  'RESULTADOS_LAB': 'flujo_resultados_laboratorio',\n  'RESULTADOS_IMAGENES': 'flujo_resultados_imagenes'\n};\nconst flowPorDefecto = 'flujo_agendamiento_default';\n\nfor (const item of items) {\n  try {\n    let str = item.json.output;\n\n    str = str.replace(/\\\\u\\{([^}]+)\\}/g, (match, inner) => {\n      const parts = inner.split(/\\\\u/);\n      let result = '';\n      for (let part of parts) {\n        if (part === '') continue;\n        result += String.fromCodePoint(parseInt(part, 16));\n      }\n      return result;\n    });\n\n    const datosParseados = JSON.parse(str);\n\n    // 🔧 FORZAR tipoPregunta si es null y el mensaje corresponde a CITA_DIRECTA\n    if (!datosParseados.tipoPregunta && datosParseados.output && typeof datosParseados.output === 'string') {\n      if (datosParseados.output.includes('Vamos a agendar tu cita') || \n          datosParseados.output.includes('Indíqueme si la atención será por medios propios')) {\n        datosParseados.tipoPregunta = 'CITA_DIRECTA';\n      }\n    }\n    \n     // 🔧 FORZAR tipoPregunta y mensaje para RESULTADOS\n    if (datosParseados.output && typeof datosParseados.output === 'string') {\n      if (datosParseados.output.includes('Para enviarte tus resultados') || \n          datosParseados.output.includes('Foto de cédula') ||\n          datosParseados.output.includes('El estudio que necesitas')) {\n        \n        datosParseados.tipoPregunta = 'RESULTADOS';\n        \n        // Reemplazar el output antiguo por el nuevo mensaje\n        datosParseados.output = \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\";\n        \n        // También actualizar los campos text y content si es necesario\n        datosParseados.text = datosParseados.output;\n        datosParseados.content = datosParseados.output;\n      }\n    }\n\n    \n\n    if (datosParseados.output && typeof datosParseados.output === 'string') {\n      const match = datosParseados.output.match(/^\\s*equipo_asignado:\\s*\"([^\"]*)\"\\s*$/);\n      if (match) {\n        datosParseados.equipo_asignado = match[1];\n      }\n    }\n\n    const resultado = {\n      ...item.json,\n      ...datosParseados,\n      output: datosParseados.output,\n      tipoPregunta: datosParseados.tipoPregunta || null\n    };\n\n    let isMenuValue = false;\n    if (datosParseados.isMenu === true) {\n      isMenuValue = true;\n    } else if (datosParseados.output && typeof datosParseados.output === 'string') {\n      const texto = datosParseados.output;\n      if (texto.includes('¡Hola! 😊 Bienvenido/a') || \n          texto.includes('Para ayudarte mejor, por favor selecciona') ||\n          texto.includes('¿Qué necesitas hoy?')) {\n        isMenuValue = true;\n      }\n    }\n    resultado.isMenu = isMenuValue;\n\n    let esPreguntaSiNo = false;\n    if (datosParseados.esPreguntaSiNo === true) {\n      esPreguntaSiNo = true;\n    } else if (datosParseados.output && typeof datosParseados.output === 'string') {\n      esPreguntaSiNo = detectarSiNo(datosParseados.output);\n    }\n    resultado.esPreguntaSiNo = esPreguntaSiNo;\n\n    // Detectar respuestas textuales de botones (ej 'Medios propios', 'Seguro médico')\n    try {\n      const outLower = (datosParseados.output || '').toString().toLowerCase();\n      if ((!datosParseados.equipo_asignado || datosParseados.equipo_asignado === '') ) {\n        if (outLower.includes('medios propios') || outLower.includes('medios')) {\n          datosParseados.equipo_asignado = 'CITAS_MP';\n        } else if (outLower.includes('seguro') || outLower.includes('asegur')) {\n          datosParseados.equipo_asignado = 'CITAS_SEGUROS';\n        }\n      }\n    } catch(e) {}\n\n\n    const equipo = resultado.equipo_asignado;\n    resultado.flow_name = mapeoFlow[equipo] || flowPorDefecto;\n\n    nuevosItems.push({ json: resultado });\n\n  } catch (e) {\n    const errorItem = {\n      json: {\n        error: e.message,\n        original: item.json.output,\n        ...item.json\n      }\n    };\n    errorItem.json.flow_name = flowPorDefecto;\n    nuevosItems.push(errorItem);\n  }\n}\n\nreturn nuevosItems;"
+        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfunction detectarSiNo(texto) {\n  if (!texto || typeof texto !== 'string') return false;\n  const patrones = [\n    /\\b(sí|si)\\s*\\/\\s*no\\b/i,\n    /\\b(aceptas|confirmas|estás de acuerdo|quieres|deseas|te gustaría)\\b.*\\?/i,\n    /^.*\\?.*(sí|si).*(no).*$/i,\n    /¿(deseas|quieres|te gustaría|estás seguro|aceptas)/i,\n    /\\b(yes|no)\\b/i,\n    /\\b(responder (sí|si|no))\\\\b/i\n  ];\n  return patrones.some(p => p.test(texto));\n}\n\nconst mapeoFlow = {\n  'Agendamiento_Directo': 'flujo_agendamiento_directo',\n  'Agendamiento_Precios': 'flujo_agendamiento_precios',\n  'Agendamiento_Servicios': 'flujo_agendamiento_servicios',\n  'Agendamiento_Otra_Consulta': 'flujo_agendamiento_otra_consulta',\n  'Ventas_UNISA': 'flujo_ventas_unisa',\n  'CITAS_MP': 'flujo_citas_medios_propios',\n  'CITAS_SEGUROS': 'flujo_citas_seguro',\n  'RESULTADOS_LAB': 'flujo_resultados_laboratorio',\n  'RESULTADOS_IMAGENES': 'flujo_resultados_imagenes'\n};\nconst flowPorDefecto = 'flujo_agendamiento_default';\n\nfor (const item of items) {\n  try {\n    let str = item.json.output;\n\n    str = str.replace(/\\\\u\\{([^}]+)\\}/g, (match, inner) => {\n      const parts = inner.split(/\\\\u/);\n      let result = '';\n      for (let part of parts) {\n        if (part === '') continue;\n        result += String.fromCodePoint(parseInt(part, 16));\n      }\n      return result;\n    });\n\n    const datosParseados = JSON.parse(str);\n\n    // 🔧 FORZAR tipoPregunta si es null y el mensaje corresponde a CITA_DIRECTA\n    if (!datosParseados.tipoPregunta && datosParseados.output && typeof datosParseados.output === 'string') {\n      if (datosParseados.output.includes('Vamos a agendar tu cita') || \n          datosParseados.output.includes('Indíqueme si la atención será por medios propios')) {\n        datosParseados.tipoPregunta = 'CITA_DIRECTA';\n      }\n    }\n    \n     // 🔧 FORZAR tipoPregunta y mensaje para RESULTADOS\n    if (datosParseados.output && typeof datosParseados.output === 'string') {\n      if (datosParseados.output.includes('Para enviarte tus resultados') || \n          datosParseados.output.includes('Foto de cédula') ||\n          datosParseados.output.includes('El estudio que necesitas')) {\n        \n        datosParseados.tipoPregunta = 'RESULTADOS';\n        \n        // Reemplazar el output antiguo por el nuevo mensaje\n        datosParseados.output = \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\";\n        \n        // También actualizar los campos text y content si es necesario\n        datosParseados.text = datosParseados.output;\n        datosParseados.content = datosParseados.output;\n      }\n    }\n\n    \n\n    if (datosParseados.output && typeof datosParseados.output === 'string') {\n      const match = datosParseados.output.match(/^\\s*equipo_asignado:\\s*\"([^\"]*)\"\\s*$/);\n      if (match) {\n        datosParseados.equipo_asignado = match[1];\n      }\n    }\n\n    const resultado = {\n      ...item.json,\n      ...datosParseados,\n      output: datosParseados.output,\n      tipoPregunta: datosParseados.tipoPregunta || null\n    };\n\n    let isMenuValue = false;\n    if (datosParseados.isMenu === true) {\n      isMenuValue = true;\n    } else if (datosParseados.output && typeof datosParseados.output === 'string') {\n      const texto = datosParseados.output;\n      if (texto.includes('¡Hola! 😊 Bienvenido/a') || \n          texto.includes('Para ayudarte mejor, por favor selecciona') ||\n          texto.includes('¿Qué necesitas hoy?')) {\n        isMenuValue = true;\n      }\n    }\n    resultado.isMenu = isMenuValue;\n\n    let esPreguntaSiNo = false;\n    if (datosParseados.esPreguntaSiNo === true) {\n      esPreguntaSiNo = true;\n    } else if (datosParseados.output && typeof datosParseados.output === 'string') {\n      esPreguntaSiNo = detectarSiNo(datosParseados.output);\n    }\n    resultado.esPreguntaSiNo = esPreguntaSiNo;\n    // Detectar SALIR por id o texto y marcar salida\n    try {\n      const outIdUpper2 = (datosParseados.equipo_asignado || '').toString().trim().toUpperCase();\n      if (outIdUpper2 === 'SALIR') {\n        datosParseados.tipoPregunta = 'SALIR';\n        datosParseados.salida = true;\n      }\n      const outTxtLower2 = (datosParseados.output || '').toString().trim().toLowerCase();\n      if (!datosParseados.salida && (outTxtLower2 === 'salir' || outTxtLower2.includes('salir') || outTxtLower2.includes('🔚'))) {\n        datosParseados.tipoPregunta = 'SALIR';\n        datosParseados.salida = true;\n      }\n    } catch(e) {}\n\n\n\n    // Detectar respuestas textuales de botones (ej 'Medios propios', 'Seguro médico')\n    try {\n      const outLower = (datosParseados.output || '').toString().toLowerCase();\n      if ((!datosParseados.equipo_asignado || datosParseados.equipo_asignado === '') ) {\n        if (outLower.includes('medios propios') || outLower.includes('medios')) {\n          datosParseados.equipo_asignado = 'CITAS_MP';\n        } else if (outLower.includes('seguro') || outLower.includes('asegur')) {\n          datosParseados.equipo_asignado = 'CITAS_SEGUROS';\n        }\n      }\n    } catch(e) {}\n\n\n    const equipo = resultado.equipo_asignado;\n    resultado.flow_name = mapeoFlow[equipo] || flowPorDefecto;\n\n    nuevosItems.push({ json: resultado });\n\n  } catch (e) {\n    const errorItem = {\n      json: {\n        error: e.message,\n        original: item.json.output,\n        ...item.json\n      }\n    };\n    errorItem.json.flow_name = flowPorDefecto;\n    nuevosItems.push(errorItem);\n  }\n}\n\nreturn nuevosItems;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1352,7 +1352,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfor (const item of items) {\n  const tipo = item.json.tipoPregunta;\n  const outputText = item.json.output;\n  let phone = item.json.user_number || item.json.phone_number || item.json.session_id;\n  \n  if (phone && !phone.startsWith('+')) {\n    phone = '+' + phone;\n  }\n  \n  let botones = [];\n  \n  // PRECIOS - botones Sí/No\n  if (tipo === 'PRECIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_PRECIOS\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // SERVICIOS - botones Sí/No\n  else if (tipo === 'SERVICIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_SERVICIOS\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // TARJETA - botones Sí/No\n  else if (tipo === 'TARJETA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_TARJETA\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // CITA_DIRECTA - botones para elegir Medio de pago o Seguro\n  else if (tipo === 'CITA_DIRECTA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MEDIOS_PROPIOS\", title: \"💰 Medios propios\" } },\n      { type: \"reply\", reply: { id: \"SEGURO_MEDICO\", title: \"🩺 Seguro médico\" } }\n    ];\n  } \n  else if (tipo === 'RESULTADOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"LABORATORIO\", title: \"🔬 Laboratorio\" } },\n      { type: \"reply\", reply: { id: \"IMAGENES\", title: \"📷 Imágenes\" } }\n    ];\n  }\n  // ESTATICO - horario, promociones, resultados (solo botón volver al menú)\n  else if (tipo === 'ESTATICO') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MENU_PRINCIPAL\", title: \"🔙 Menú\" } }\n    ];\n  } \n  // Si no hay tipoPregunta, no enviamos botones (se envía como texto normal)\n  else {\n    nuevosItems.push(item);\n    continue;\n  }\n  \n  // Construir el payload de WhatsApp\n  const whatsappPayload = {\n    messaging_product: \"whatsapp\",\n    recipient_type: \"individual\",\n    to: phone,\n    type: \"interactive\",\n    interactive: {\n      type: \"button\",\n      body: { text: outputText },\n      action: { buttons: botones }\n    }\n  };\n  \n  nuevosItems.push({ \n    json: {\n      ...item.json,\n      whatsappPayload: whatsappPayload,\n      phone_number_formatted: phone\n    }\n  });\n}\n\nreturn nuevosItems;"
+        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfor (const item of items) {\n  const tipo = item.json.tipoPregunta;\n  const outputText = item.json.output;\n  let phone = item.json.user_number || item.json.phone_number || item.json.session_id;\n  \n  if (phone && !phone.startsWith('+')) {\n    phone = '+' + phone;\n  }\n  \n  let botones = [];\n  \n  // PRECIOS - botones Sí/No\n  if (tipo === 'PRECIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_PRECIOS\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // SERVICIOS - botones Sí/No\n  else if (tipo === 'SERVICIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_SERVICIOS\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // TARJETA - botones Sí/No\n  else if (tipo === 'TARJETA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_TARJETA\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // CITA_DIRECTA - botones para elegir Medio de pago o Seguro\n  else if (tipo === 'CITA_DIRECTA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MEDIOS_PROPIOS\", title: \"💰 Medios propios\" } },\n      { type: \"reply\", reply: { id: \"SEGURO_MEDICO\", title: \"🩺 Seguro médico\" } }\n    ];\n  } \n  else if (tipo === 'RESULTADOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"LABORATORIO\", title: \"🔬 Laboratorio\" } },\n      { type: \"reply\", reply: { id: \"IMAGENES\", title: \"📷 Imágenes\" } }\n    ];\n  }\n  // ESTATICO - horario, promociones, resultados (solo botón volver al menú)\n  else if (tipo === 'ESTATICO') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MENU_PRINCIPAL\", title: \"🔙 Menú\" } }\n    ];\n  } \n  // Si no hay tipoPregunta, no enviamos botones (se envía como texto normal)\n  else {\n    nuevosItems.push(item);\n    continue;\n  }\n  \n  // Construir el payload de WhatsApp\n  \n  // Añadir botón SALIR universal\n  try {\n    botones.push({ type: \"reply\", reply: { id: \"SALIR\", title: \"🔚 Salir\" } });\n  } catch(e) {}\nconst whatsappPayload = {\n    messaging_product: \"whatsapp\",\n    recipient_type: \"individual\",\n    to: phone,\n    type: \"interactive\",\n    interactive: {\n      type: \"button\",\n      body: { text: outputText },\n      action: { buttons: botones }\n    }\n  };\n  \n  nuevosItems.push({ \n    json: {\n      ...item.json,\n      whatsappPayload: whatsappPayload,\n      phone_number_formatted: phone\n    }\n  });\n}\n\nreturn nuevosItems;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1470,6 +1470,100 @@
       "typeVersion": 1,
       "id": "25508620-21b8-4a31-8ac7-19efc491c415",
       "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cond_salir",
+                    "leftValue": "={{ ($json.salida === true) || (($json.tipoPregunta||'').toString().toUpperCase() === 'SALIR') || (($json.output||'').toString().toLowerCase().includes('salir')) }}",
+                    "operator": {
+                      "operation": "equals",
+                      "type": "boolean"
+                    },
+                    "rightValue": true
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "salir"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        1100,
+        5680
+      ],
+      "id": "detectar_salir_node",
+      "name": "Detectar_SALIR"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://chatwoot.unisasalud.com/api/v1/accounts/{{$json.account_id}}/conversations/{{ $json.conversation_id }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "api_access_token",
+              "value": "bKYDrpmQjhS8yn8pFKEsMkCw"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "=Gracias por contactarnos. ¡Que tengas un excelente día!"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1400,
+        5680
+      ],
+      "id": "enviar_despedida_chatwoot",
+      "name": "Enviar_despedida_chatwoot"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://integraiadev.unisasalud.com/ai_chatbot_1_portal/procesar_paso",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"session_id\": \"{{ $json.session_id }}\",\n  \"conversation_id\":\"{{ $json.conversation_id }}\",\n  \"account_id\":\"{{ $json.account_id }}\",\n  \"platform\":\"{{ $json.platform }}\",\n  \"valor\": \"salir\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1700,
+        5680
+      ],
+      "id": "enviar_despedida_odoo",
+      "name": "Enviar_despedida_odoo"
     }
   ],
   "pinData": {
@@ -1747,7 +1841,7 @@
         ],
         [
           {
-            "node": "Cita_con_Equipo_asignado",
+            "node": "Detectar_SALIR",
             "type": "main",
             "index": 0
           }
@@ -1821,6 +1915,46 @@
         [
           {
             "node": "Fin menú WhatsApp1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detectar_SALIR": {
+      "main": [
+        [
+          {
+            "node": "enviar_despedida_chatwoot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cita_con_Equipo_asignado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_despedida_chatwoot": {
+      "main": [
+        [
+          {
+            "node": "enviar_despedida_odoo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_despedida_odoo": {
+      "main": [
+        [
+          {
+            "node": "Unificar_salida",
             "type": "main",
             "index": 0
           }
