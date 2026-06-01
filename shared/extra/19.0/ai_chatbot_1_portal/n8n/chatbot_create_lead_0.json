@@ -1241,7 +1241,14 @@
           "conditions": [
             {
               "id": "menu_whatsapp_condition",
-              "leftValue": "={{\n  $json.platform === 'whatsapp' && \n  ($json.isMenu === true ||\n   (typeof $json.output === 'string' && $json.output.length > 0 &&\n    ($json.output.match(/[1-5]\\.\\s*(Precios|Servicios|Agendar|Tarjeta|Otra)/i) !== null ||\n     $json.output.includes('Bienvenido/a') ||\n     $json.output.includes('selecciona una opción'))))\n}}",
+              "leftValue": "={{
+  $json.platform === 'whatsapp' && 
+  ($json.isMenu === true || $json.tipoPregunta === 'ESTATICO' ||
+   (typeof $json.output === 'string' && $json.output.length > 0 &&
+    ($json.output.match(/[1-5]\.\s*(Precios|Servicios|Agendar|Tarjeta|Otra)/i) !== null ||
+     $json.output.includes('Bienvenido/a') ||
+     $json.output.includes('selecciona una opción'))))
+}}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
