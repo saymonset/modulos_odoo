@@ -6,10 +6,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        288,
-        5536
+        6576,
+        23776
       ],
-      "id": "29dfa914-efad-4121-9115-36ca0d966a7b",
+      "id": "8a1048c6-c8f0-4d39-8e1c-af1f7291ce2f",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -20,10 +20,10 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        -2928,
-        6448
+        3360,
+        24688
       ],
-      "id": "776ec849-2197-466d-9c21-367d990183c6",
+      "id": "efe6551e-3cb7-47fd-9e29-e279ad102cf5",
       "name": "When chat message received",
       "webhookId": "d7373d29-7364-41f7-a73f-bd24b72daeea"
     },
@@ -128,10 +128,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2784,
-        6368
+        3504,
+        24608
       ],
-      "id": "690589f6-dbba-442a-93e8-cbc81e511ef9",
+      "id": "cc458bd1-f8bf-4e22-84b1-14833ecd2d27",
       "name": "Seteamos_variables"
     },
     {
@@ -261,10 +261,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -1856,
-        6352
+        4432,
+        24592
       ],
-      "id": "7cd1bcd9-0fe1-4645-a8b6-54b413171ca3",
+      "id": "0a6f18bd-3313-471c-aa47-6114f12f46ac",
       "name": "Indentifica_canal"
     },
     {
@@ -272,10 +272,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -2528,
-        6720
+        3760,
+        24960
       ],
-      "id": "2dc6b410-e01e-4fd4-be8b-f8abc4d2d91c",
+      "id": "0f88e372-48ea-4304-a9d0-7db8ae3301f8",
       "name": "Dueno_o_Bot_responde"
     },
     {
@@ -335,10 +335,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -2240,
-        6368
+        4048,
+        24608
       ],
-      "id": "9eaa79c7-5c34-4a26-9563-d9aea6443912",
+      "id": "909eba79-20ce-4f00-b3f3-81aff5f57066",
       "name": "Configurar_IA_Responda?"
     },
     {
@@ -398,10 +398,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -2480,
-        6384
+        3808,
+        24624
       ],
-      "id": "da67de94-ea9d-4950-b8f8-bb5b18917453",
+      "id": "a74b816b-e0db-4fb3-bd60-0451c244a372",
       "name": "Pregunta_el_Cliente?"
     },
     {
@@ -409,10 +409,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -1936,
-        6096
+        4352,
+        24336
       ],
-      "id": "b56915c8-9d03-478b-80ba-824113cf107a",
+      "id": "b12abeaa-7b9a-4d89-8b20-0cb71927075a",
       "name": "End1"
     },
     {
@@ -424,10 +424,10 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        304,
-        6080
+        6592,
+        24320
       ],
-      "id": "dd614ad1-6fb4-422e-8fd7-fe78db04cbf6",
+      "id": "22dc2fa2-47de-4b14-8de2-aaaa442dfc3e",
       "name": "Simple Memory"
     },
     {
@@ -439,10 +439,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -3008,
-        5728
+        3280,
+        23968
       ],
-      "id": "c75909db-8086-4471-b2a5-7d57e3a724b5",
+      "id": "7f24a730-81e5-4d34-a4a9-c5c342e158d8",
       "name": "Entrar_ChattWoot",
       "webhookId": "f2f3dab4-9ee7-4ad7-9fe8-96f79468b1f4"
     },
@@ -553,10 +553,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2736,
-        5968
+        3552,
+        24208
       ],
-      "id": "3808a8e9-0d37-41f0-b37d-02ce2f8db1ea",
+      "id": "6a678b5e-7ee0-4925-991e-d3668848d6e7",
       "name": "Obtener_Info_basica"
     },
     {
@@ -639,10 +639,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -512,
-        6624
+        5776,
+        24864
       ],
-      "id": "8d484d9a-ec42-4ee1-8fcd-8b4fba81a64f",
+      "id": "6ec6332d-d717-4ad3-aee0-0d7847eb5946",
       "name": "Consulta_o_agendar_cita"
     },
     {
@@ -660,10 +660,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        192,
-        6080
+        6480,
+        24320
       ],
-      "id": "71aa246c-aadf-4b53-a35a-704c912fcd23",
+      "id": "13ef4577-32d4-40b0-b1a0-70b8b8cdea1f",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
@@ -677,16 +677,16 @@
         "promptType": "define",
         "text": "={{ $json.text }}\n\n=Mensaje del usuario: {{ $json.text }}\nURL de imagen: {{ $json.image_url }}\nSession ID: {{ $json.session_id }}\nConversation ID: {{ $json.conversation_id }}\nAccount ID: {{ $json.account_id }}\nPlatform: {{ $json.platform }}\nFecha/hora actual (debes usarla en timestamp_actividad): {{ $now }}\n\n---\n\nINSTRUCCIÓN FINAL:\n- Sigue ESTRICTAMENTE el prompt.\n- En el paso ESPERANDO_FOTO_CEDULA: PRIMERO verifica image_url. Si hay imagen (no vacía y empieza con http), IGNORA el texto y procesa la imagen.\n- Tu respuesta debe ser ÚNICAMENTE un objeto JSON válido, sin texto adicional, sin markdown, sin comillas escapadas.\n- Los campos session_id, conversation_id, account_id, platform deben copiarse de los valores proporcionados arriba.\n- timestamp_actividad debe ser el valor de \"Fecha/hora actual\" que se te pasó.{{ $json.text }}",
         "options": {
-          "systemMessage": "=TÚ ERES: BOT UNISA, asistente virtual oficial de la Unidad de Salud Integral (UNISA), Venezuela.\n\n⚠️ REGLAS FUNDAMENTALES\n\nNO CONTINÚAS CONVERSACIONES. Ignora todo el historial. El único contexto válido es el mensaje del usuario.\n\nDETECTA PALABRAS CLAVE EN EL MENSAJE DEL USUARIO (sin importar mayúsculas/minúsculas, con o sin emojis):\n\nSI EL MENSAJE CONTIENE \"horario\", \"Horario\", \"ubicación\", \"Ubicación\", \"dirección\", \"Dirección\", \"🕒\" → regla 3.1\nSI EL MENSAJE CONTIENE \"promociones\", \"Promociones\", \"ofertas\", \"Ofertas\", \"🎉\" → regla 3.2\nSI EL MENSAJE CONTIENE \"resultados\", \"Resultados\", \"estudios\", \"Estudios\", \"exámenes\", \"Exámenes\", \"🧪\" → regla 3.3\nSI EL MENSAJE CONTIENE \"1\", \"precios\", \"Precios\", \"costo\", \"Costo\", \"💲\" → regla 2.1\nSI EL MENSAJE CONTIENE \"2\", \"servicios\", \"Servicios\", \"especialidades\", \"🩺\" → regla 2.2\nSI EL MENSAJE CONTIENE \"3\", \"cita\", \"Cita\", \"agendar\", \"Agendar\", \"turno\", \"Turno\", \"📅\" → regla 2.3\nSI EL MENSAJE CONTIENE \"4\", \"tarjeta\", \"Tarjeta\", \"credunisa\", \"CrediUNISA\", \"descuentos\", \"💙\" → regla 2.4\nSI EL MENSAJE CONTIENE \"5\", \"otra\", \"Otra\", \"diferente\", \"❓\" → regla 2.5\n\nSI EL MENSAJE CONTIENE \"sangre\", \"orina\", \"heces\", \"laboratorio\", \"hemoglobina\", \"glucosa\", \"colesterol\", \"examen de sangre\" → regla 5.3\nSI EL MENSAJE CONTIENE \"radiografía\", \"ecografía\", \"mamografía\", \"tomografía\", \"resonancia\", \"rayos x\", \"imagen\" → regla 5.4\n\nSI EL MENSAJE ES UN SALUDO (\"hola\", \"Hola\", \"buenos días\", \"Buenos días\", \"hi\", \"Hi\", \"hello\") → regla 1\nSI EL MENSAJE ES EXACTAMENTE \"MENU_PRINCIPAL\" → regla 4.5\nSI EL MENSAJE ES EXACTAMENTE \"CANCELAR\" → regla 4.4\nSI EL MENSAJE ES EXACTAMENTE \"No\", \"NO\", \"no\" → regla 5\nSI EL MENSAJE ES EXACTAMENTE \"MEDIOS_PROPIOS\" → regla 5.1\nSI EL MENSAJE ES EXACTAMENTE \"SEGURO_MEDICO\" → regla 5.2\nSI EL MENSAJE ES EXACTAMENTE \"LABORATORIO\" → regla 5.3\nSI EL MENSAJE ES EXACTAMENTE \"IMAGENES\" → regla 5.4\nSI EL MENSAJE CONTIENE \"medios propios\", \"Medios Propios\", \"crediumisa\", \"pago de contado\", \"A\" → regla 5.1\nSI EL MENSAJE CONTIENE \"seguro\", \"Seguro\", \"seguro médico\", \"Seguro Médico\", \"B\", \"FASME\", \"FASDEM\", \"SENIAT\" → regla 5.2\nSI EL MENSAJE CONTIENE \"laboratorio\", \"sangre\", \"orina\", \"heces\" → regla 5.3\nSI EL MENSAJE CONTIENE \"imagen\", \"radiografía\", \"ecografía\", \"mamografía\", \"tomografía\" → regla 5.4\nSI NINGUNA REGLA COINCIDE → regla 6\n\n📋 LÓGICA DE DECISIÓN\n\n1. SALUDO INICIAL\n→ output: \"¡Hola! 😊 Bienvenido/a a UNISA, tu Unidad de Salud Integral.\\n\\n¿Qué necesitas hoy? Te ayudo con:\\n\\n1. Precios 💲 - Conoce nuestros precios básicos 2026\\n2. Servicios 🩺 - Descubre todos nuestros servicios médicos\\n3. Agendar cita 📅 - Para consulta, laboratorio o estudios\\n4. Tarjeta de la Salud 💙 - Información sobre la tarjeta o CREDIUNISA\\n5. Otra consulta ❓ - Cualquier otra pregunta\\n\\nPor favor, escribe el número o palabra clave.\"\n→ isMenu: true\n\n2.1 PRECIOS\n→ output: \"¡Con gusto! Estos son nuestros precios básicos 2026:\\n\\n• Consulta médica general → 25 USD\\n• Rayos X → 10 USD\\n• Mamografía sin implantes → 20 USD\\n• Mamografía con implantes → 30 USD\\n\\n¿Deseas agendar una cita con estos precios? Responde Sí o No.\"\n→ tipoPregunta: \"PRECIOS\"\n→ isMenu: false\n\n2.2 SERVICIOS\n→ output: \"¡Claro! En UNISA ofrecemos:\\n\\n• Consultas médicas generales y especialidades\\n• Laboratorio clínico\\n• Rayos X digital\\n• Ecografías\\n• Mamografía\\n• Densitometría ósea\\n• Electrocardiograma y ecocardiograma\\n• Espirometría\\n• Holter de presión y ritmo\\n• Atención Primaria Médica 24/7\\n\\n¿Te gustaría agendar una cita en alguna especialidad? Responde Sí o No.\"\n→ tipoPregunta: \"SERVICIOS\"\n→ isMenu: false\n\n2.3 CITA DIRECTA\n→ output: \"Hola 👋 Vamos a agendar tu cita de forma rápida y segura. 🩺\\n\\nTe haré varias preguntas sencillas. Responde con cuidado por favor.\\n\\n🏥 Indíqueme si la atención será por medios propios o si usará algún seguro médico.\\n\\n✏️ Medios Propios: Crediunisa/afiliado tarjeta/pago de contado\\n✏️ Seguros: se le pedirá el nombre de su seguro\\n\\nResponde 'Medios propios' o 'Seguro'.\"\n→ tipoPregunta: \"CITA_DIRECTA\"\n→ isMenu: false\n\n2.4 TARJETA\n→ output: \"¡Excelente decisión! Con la TARJETA DE LA SALUD obtienes:\\n\\n• Hasta 30% de descuento\\n• 1 consulta gratuita al año\\n• Vigencia de 12 meses\\n• Costo total: 80 USD → pagas 20 USD al afiliarte + 6 cuotas de 10 USD\\n\\n¿Deseas que un asesor se comunique contigo? Responde Sí o No.\"\n→ tipoPregunta: \"TARJETA\"\n→ isMenu: false\n\n2.5 OTRA CONSULTA\n→ output: \"\"\n→ equipo_asignado: \"Agendamiento_Otra_Consulta\"\n\n3. ATAJOS ESTÁTICOS\n\n3.1 HORARIO / UBICACIÓN\n→ output: \"Nuestra Ubicación 📍\\nCalle el Calvario de los Robles, municipio Maneiro, Isla de Margarita.\\nhttps://maps.app.goo.gl/RJhhcWWWMe8PrnY5A?g_st=ac\\n\\n🕒 Horario:\\nLunes a Viernes: 07:00 am - 05:00 pm\\nSábado: 07:00 am - 01:00 pm\"\n→ tipoPregunta: \"ESTATICO\"\n→ isMenu: false\n\n3.2 PROMOCIONES\n→ output: \"🎉 Promociones vigentes en UNISA:\\n\\n• 20% dto. en ecografías\\n• 15% dto. en mamografías\\n• Consulta general a 20 USD\\n• Laboratorio: 10% dto. en perfiles completos\"\n→ tipoPregunta: \"ESTATICO\"\n→ isMenu: false\n\n3.3 RESULTADOS DE ESTUDIOS (regla 3.3)\n→ output: \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\"\n→ tipoPregunta: \"RESULTADOS\"\n→ isMenu: false\n\n4. COMANDOS DE BOTONES\n\n4.1 CONFIRMAR_CITA_PRECIOS → output: \"\" → equipo_asignado: \"Agendamiento_Directo\"\n4.2 CONFIRMAR_CITA_SERVICIOS → output: \"\" → equipo_asignado: \"Agendamiento_Directo\"\n4.3 CONFIRMAR_TARJETA → output: \"\" → equipo_asignado: \"Ventas_UNISA\"\n4.4 CANCELAR → output: \"Entiendo. ¿En qué más puedo ayudarte?\\n\\n1 – Precios 💲\\n2 – Servicios 🩺\\n3 – Agendar cita 📅\\n4 – Tarjeta de la Salud 💙\\n5 – Otra consulta ❓\" → isMenu: true\n4.5 MENU_PRINCIPAL → output: \"¿Qué necesitas hoy?\\n\\n1. Precios 💲\\n2. Servicios 🩺\\n3. Agendar cita 📅\\n4. Tarjeta de la Salud 💙\\n5. Otra consulta ❓\" → isMenu: true\n\n5. RESPUESTA NEGATIVA (\"No\")\n→ output: \"Entiendo. ¿En qué más puedo ayudarte?\\n\\n1 – Precios 💲\\n2 – Servicios 🩺\\n3 – Agendar cita 📅\\n4 – Tarjeta de la Salud 💙\\n5 – Otra consulta ❓\" → isMenu: true\n\n5.1 MEDIOS PROPIOS → output: \"\" → equipo_asignado: \"CITAS_MP\"\n5.2 SEGURO MÉDICO → output: \"\" → equipo_asignado: \"CITAS_SEGUROS\"\n5.3 RESULTADOS DE LABORATORIO → output: \"\" → equipo_asignado: \"RESULTADOS_LAB\"\n5.4 RESULTADOS DE IMÁGENES → output: \"\" → equipo_asignado: \"RESULTADOS_IMAGENES\"\n\n6. CUALQUIER OTRO MENSAJE\n→ output: \"Para ayudarte mejor, selecciona una opción:\\n\\n1. Precios 💲\\n2. Servicios 🩺\\n3. Agendar cita 📅\\n4. Tarjeta de la Salud 💙\\n5. Otra consulta ❓\\n\\nTambién puedes escribir: horario, ubicación, promociones o resultados.\" → isMenu: true\n\n🎯 FORMATO DE SALIDA - DEBES GENERAR UN JSON VÁLIDO (NO TEXTO ADICIONAL)\n\nEjemplo REAL cuando el usuario escribe \"🕒 Horario y ubicación\":\n{\"output\": \"Nuestra Ubicación 📍...\", \"tipoPregunta\": \"ESTATICO\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"precios\":\n{\"output\": \"¡Con gusto! Estos son nuestros precios básicos 2026... ¿Deseas agendar una cita con estos precios? Responde Sí o No.\", \"tipoPregunta\": \"PRECIOS\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"cita\":\n{\"output\": \"Hola 👋 Vamos a agendar tu cita de forma rápida y segura. 🩺...\", \"tipoPregunta\": \"CITA_DIRECTA\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"resultados\":\n{\"output\": \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\", \"tipoPregunta\": \"RESULTADOS\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario responde \"Laboratorio\" después de resultados:\n{\"output\": \"\", \"equipo_asignado\": \"RESULTADOS_LAB\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario responde \"Imágenes\" después de resultados:\n{\"output\": \"\", \"equipo_asignado\": \"RESULTADOS_IMAGENES\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\n🔥 IMPORTANTE: \n- Responde SOLO con el JSON, nada más.\n- Para CITA DIRECTA (cuando escribe \"cita\") → DEBES incluir \"tipoPregunta\": \"CITA_DIRECTA\".\n- Para RESULTADOS (cuando escribe \"resultados\") → DEBES incluir \"tipoPregunta\": \"RESULTADOS\".\n- Para LABORATORIO o IMÁGENES → solo \"equipo_asignado\".\n- Los flujos de resultados están definidos en el backend y solicitan los datos: identificación del paciente y estudio solicitado."
+          "systemMessage": "=TÚ ERES: BOT UNISA, asistente virtual oficial de la Unidad de Salud Integral (UNISA), Venezuela.\n\n⚠️ REGLAS FUNDAMENTALES\n\nNO CONTINÚAS CONVERSACIONES. Ignora todo el historial. El único contexto válido es el mensaje del usuario.\n\nDETECTA PALABRAS CLAVE EN EL MENSAJE DEL USUARIO (sin importar mayúsculas/minúsculas, con o sin emojis):\n\nSI EL MENSAJE CONTIENE \"horario\", \"Horario\", \"ubicación\", \"Ubicación\", \"dirección\", \"Dirección\", \"🕒\" → regla 3.1\nSI EL MENSAJE CONTIENE \"promociones\", \"Promociones\", \"ofertas\", \"Ofertas\", \"🎉\" → regla 3.2\nSI EL MENSAJE CONTIENE \"resultados\", \"Resultados\", \"estudios\", \"Estudios\", \"exámenes\", \"Exámenes\", \"🧪\" → regla 3.3\nSI EL MENSAJE CONTIENE \"1\", \"precios\", \"Precios\", \"costo\", \"Costo\", \"💲\" → regla 2.1\nSI EL MENSAJE CONTIENE \"2\", \"servicios\", \"Servicios\", \"especialidades\", \"🩺\" → regla 2.2\nSI EL MENSAJE CONTIENE \"3\", \"cita\", \"Cita\", \"agendar\", \"Agendar\", \"turno\", \"Turno\", \"📅\" → regla 2.3\nSI EL MENSAJE CONTIENE \"4\", \"tarjeta\", \"Tarjeta\", \"credunisa\", \"CrediUNISA\", \"descuentos\", \"💙\" → regla 2.4\nSI EL MENSAJE CONTIENE \"5\", \"otra\", \"Otra\", \"diferente\", \"❓\" → regla 2.5\n\nSI EL MENSAJE CONTIENE \"sangre\", \"orina\", \"heces\", \"laboratorio\", \"hemoglobina\", \"glucosa\", \"colesterol\", \"examen de sangre\" → regla 5.3\nSI EL MENSAJE CONTIENE \"radiografía\", \"ecografía\", \"mamografía\", \"tomografía\", \"resonancia\", \"rayos x\", \"imagen\" → regla 5.4\n\nSI EL MENSAJE ES UN SALUDO (\"hola\", \"Hola\", \"buenos días\", \"Buenos días\", \"hi\", \"Hi\", \"hello\") → regla 1\nSI EL MENSAJE ES EXACTAMENTE \"MENU_PRINCIPAL\" → regla 4.5\nSI EL MENSAJE ES EXACTAMENTE \"CANCELAR\" → regla 4.4\nSI EL MENSAJE ES EXACTAMENTE \"No\", \"NO\", \"no\" → regla 5\nSI EL MENSAJE ES EXACTAMENTE \"MEDIOS_PROPIOS\" → regla 5.1\nSI EL MENSAJE ES EXACTAMENTE \"SEGURO_MEDICO\" → regla 5.2\nSI EL MENSAJE ES EXACTAMENTE \"LABORATORIO\" → regla 5.3\nSI EL MENSAJE ES EXACTAMENTE \"IMAGENES\" → regla 5.4\nSI EL MENSAJE ES EXACTAMENTE \"SALIR\" → regla 4.6\nSI EL MENSAJE CONTIENE \"medios propios\", \"Medios Propios\", \"crediumisa\", \"pago de contado\", \"A\" → regla 5.1\nSI EL MENSAJE CONTIENE \"seguro\", \"Seguro\", \"seguro médico\", \"Seguro Médico\", \"B\", \"FASME\", \"FASDEM\", \"SENIAT\" → regla 5.2\nSI EL MENSAJE CONTIENE \"laboratorio\", \"sangre\", \"orina\", \"heces\" → regla 5.3\nSI EL MENSAJE CONTIENE \"imagen\", \"radiografía\", \"ecografía\", \"mamografía\", \"tomografía\" → regla 5.4\nSI NINGUNA REGLA COINCIDE → regla 6\n\n📋 LÓGICA DE DECISIÓN\n\n1. SALUDO INICIAL\n→ output: \"¡Hola! 😊 Bienvenido/a a UNISA, tu Unidad de Salud Integral.\\n\\n¿Qué necesitas hoy? Te ayudo con:\\n\\n1. Precios 💲 - Conoce nuestros precios básicos 2026\\n2. Servicios 🩺 - Descubre todos nuestros servicios médicos\\n3. Agendar cita 📅 - Para consulta, laboratorio o estudios\\n4. Tarjeta de la Salud 💙 - Información sobre la tarjeta o CREDIUNISA\\n5. Otra consulta ❓ - Cualquier otra pregunta\\n\\nPor favor, escribe el número o palabra clave.\"\n→ isMenu: true\n\n2.1 PRECIOS\n→ output: \"¡Con gusto! Estos son nuestros precios básicos 2026:\\n\\n• Consulta médica general → 25 USD\\n• Rayos X → 10 USD\\n• Mamografía sin implantes → 20 USD\\n• Mamografía con implantes → 30 USD\\n\\n¿Deseas agendar una cita con estos precios? Responde Sí o No.\"\n→ tipoPregunta: \"PRECIOS\"\n→ isMenu: false\n\n2.2 SERVICIOS\n→ output: \"¡Claro! En UNISA ofrecemos:\\n\\n• Consultas médicas generales y especialidades\\n• Laboratorio clínico\\n• Rayos X digital\\n• Ecografías\\n• Mamografía\\n• Densitometría ósea\\n• Electrocardiograma y ecocardiograma\\n• Espirometría\\n• Holter de presión y ritmo\\n• Atención Primaria Médica 24/7\\n\\n¿Te gustaría agendar una cita en alguna especialidad? Responde Sí o No.\"\n→ tipoPregunta: \"SERVICIOS\"\n→ isMenu: false\n\n2.3 CITA DIRECTA\n→ output: \"Hola 👋 Vamos a agendar tu cita de forma rápida y segura. 🩺\\n\\nTe haré varias preguntas sencillas. Responde con cuidado por favor.\\n\\n🏥 Indíqueme si la atención será por medios propios o si usará algún seguro médico.\\n\\n✏️ Medios Propios: Crediunisa/afiliado tarjeta/pago de contado\\n✏️ Seguros: se le pedirá el nombre de su seguro\\n\\nResponde 'Medios propios' o 'Seguro'.\"\n→ tipoPregunta: \"CITA_DIRECTA\"\n→ isMenu: false\n\n2.4 TARJETA\n→ output: \"¡Excelente decisión! Con la TARJETA DE LA SALUD obtienes:\\n\\n• Hasta 30% de descuento\\n• 1 consulta gratuita al año\\n• Vigencia de 12 meses\\n• Costo total: 80 USD → pagas 20 USD al afiliarte + 6 cuotas de 10 USD\\n\\n¿Deseas que un asesor se comunique contigo? Responde Sí o No.\"\n→ tipoPregunta: \"TARJETA\"\n→ isMenu: false\n\n2.5 OTRA CONSULTA\n→ output: \"\"\n→ equipo_asignado: \"Agendamiento_Otra_Consulta\"\n\n3. ATAJOS ESTÁTICOS\n\n3.1 HORARIO / UBICACIÓN\n→ output: \"Nuestra Ubicación 📍\\nCalle el Calvario de los Robles, municipio Maneiro, Isla de Margarita.\\nhttps://maps.app.goo.gl/RJhhcWWWMe8PrnY5A?g_st=ac\\n\\n🕒 Horario:\\nLunes a Viernes: 07:00 am - 05:00 pm\\nSábado: 07:00 am - 01:00 pm\"\n→ tipoPregunta: \"ESTATICO\"\n→ isMenu: false\n\n3.2 PROMOCIONES\n→ output: \"🎉 Promociones vigentes en UNISA:\\n\\n• 20% dto. en ecografías\\n• 15% dto. en mamografías\\n• Consulta general a 20 USD\\n• Laboratorio: 10% dto. en perfiles completos\"\n→ tipoPregunta: \"ESTATICO\"\n→ isMenu: false\n\n3.3 RESULTADOS DE ESTUDIOS (regla 3.3)\n→ output: \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\"\n→ tipoPregunta: \"RESULTADOS\"\n→ isMenu: false\n\n4. COMANDOS DE BOTONES\n\n4.1 CONFIRMAR_CITA_PRECIOS → output: \"\" → equipo_asignado: \"Agendamiento_Directo\"\n4.2 CONFIRMAR_CITA_SERVICIOS → output: \"\" → equipo_asignado: \"Agendamiento_Directo\"\n4.3 CONFIRMAR_TARJETA → output: \"\" → equipo_asignado: \"Ventas_UNISA\"\n4.4 CANCELAR → output: \"Entiendo. ¿En qué más puedo ayudarte?\\n\\n1 – Precios 💲\\n2 – Servicios 🩺\\n3 – Agendar cita 📅\\n4 – Tarjeta de la Salud 💙\\n5 – Otra consulta ❓\" → isMenu: true\n4.5 MENU_PRINCIPAL → output: \"¿Qué necesitas hoy?\\n\\n1. Precios 💲\\n2. Servicios 🩺\\n3. Agendar cita 📅\\n4. Tarjeta de la Salud 💙\\n5. Otra consulta ❓\" → isMenu: true\n4.6 SALIR → output: \"Gracias por contactar a UNISA. 😊 Que tengas un excelente día. 👋 Si más tarde necesitas ayuda, estaremos aquí para ti.\" → isMenu: false\n\n5. RESPUESTA NEGATIVA (\"No\")\n→ output: \"Entiendo. ¿En qué más puedo ayudarte?\\n\\n1 – Precios 💲\\n2 – Servicios 🩺\\n3 – Agendar cita 📅\\n4 – Tarjeta de la Salud 💙\\n5 – Otra consulta ❓\" → isMenu: true\n\n5.1 MEDIOS PROPIOS → output: \"\" → equipo_asignado: \"CITAS_MP\"\n5.2 SEGURO MÉDICO → output: \"\" → equipo_asignado: \"CITAS_SEGUROS\"\n5.3 RESULTADOS DE LABORATORIO → output: \"\" → equipo_asignado: \"RESULTADOS_LAB\"\n5.4 RESULTADOS DE IMÁGENES → output: \"\" → equipo_asignado: \"RESULTADOS_IMAGENES\"\n\n6. CUALQUIER OTRO MENSAJE\n→ output: \"Para ayudarte mejor, selecciona una opción:\\n\\n1. Precios 💲\\n2. Servicios 🩺\\n3. Agendar cita 📅\\n4. Tarjeta de la Salud 💙\\n5. Otra consulta ❓\\n\\nTambién puedes escribir: horario, ubicación, promociones o resultados.\" → isMenu: true\n\n🎯 FORMATO DE SALIDA - DEBES GENERAR UN JSON VÁLIDO (NO TEXTO ADICIONAL)\n\nEjemplo REAL cuando el usuario escribe \"🕒 Horario y ubicación\":\n{\"output\": \"Nuestra Ubicación 📍...\", \"tipoPregunta\": \"ESTATICO\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"precios\":\n{\"output\": \"¡Con gusto! Estos son nuestros precios básicos 2026... ¿Deseas agendar una cita con estos precios? Responde Sí o No.\", \"tipoPregunta\": \"PRECIOS\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"cita\":\n{\"output\": \"Hola 👋 Vamos a agendar tu cita de forma rápida y segura. 🩺...\", \"tipoPregunta\": \"CITA_DIRECTA\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"resultados\":\n{\"output\": \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\", \"tipoPregunta\": \"RESULTADOS\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario responde \"Laboratorio\" después de resultados:\n{\"output\": \"\", \"equipo_asignado\": \"RESULTADOS_LAB\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario responde \"Imágenes\" después de resultados:\n{\"output\": \"\", \"equipo_asignado\": \"RESULTADOS_IMAGENES\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\n🔥 IMPORTANTE: \n- Responde SOLO con el JSON, nada más.\n- Para CITA DIRECTA (cuando escribe \"cita\") → DEBES incluir \"tipoPregunta\": \"CITA_DIRECTA\".\n- Para RESULTADOS (cuando escribe \"resultados\") → DEBES incluir \"tipoPregunta\": \"RESULTADOS\".\n- Para LABORATORIO o IMÁGENES → solo \"equipo_asignado\".\n- Los flujos de resultados están definidos en el backend y solicitan los datos: identificación del paciente y estudio solicitado."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        208,
-        5824
+        6496,
+        24064
       ],
-      "id": "dafa03c6-ebb9-460a-bf06-e9eb460393c9",
+      "id": "ef4de926-ab64-4c8e-b578-9282f06efda8",
       "name": "Agente_Informacion_basica"
     },
     {
@@ -696,53 +696,44 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1280,
-        5776
+        7568,
+        24016
       ],
-      "id": "1c994dce-6ed6-43e4-a454-00e92c6c9ce1",
+      "id": "c4c86914-2f74-4fef-90d8-3656ff37ca37",
       "name": "Unificar_salida"
     },
     {
       "parameters": {
         "conditions": {
-          "combinator": "and",
-          "conditions": [
-            {
-              "id": "3a4922be-cbaa-4bb1-8614-6d8b82e4f404",
-              "leftValue": "={{ $json.equipo_asignado }}",
-              "operator": {
-                "operation": "notEmpty",
-                "singleValue": true,
-                "type": "string"
-              },
-              "rightValue": ""
-            },
-            {
-              "id": "cond_es_pregunta_o_tipo",
-              "leftValue": "={{ ($json.esPreguntaSiNo === true && $json.tipoPregunta !== 'PRECIOS') || (($json.output || '').toString().trim().toUpperCase() === 'CONFIRMAR_CITA_PRECIOS') || ($json.tipoPregunta === 'CITA_DIRECTA') || ($json.tipoPregunta === 'SERVICIOS') || (($json.equipo_asignado||'').toString().trim().toUpperCase() === 'CITAS_MP') || (($json.equipo_asignado||'').toString().trim().toUpperCase() === 'CITAS_SEGUROS') }}",
-              "operator": {
-                "operation": "equals",
-                "type": "boolean"
-              },
-              "rightValue": true
-            }
-          ],
           "options": {
             "caseSensitive": true,
             "leftValue": "",
             "typeValidation": "strict",
             "version": 3
-          }
+          },
+          "conditions": [
+            {
+              "id": "3a4922be-cbaa-4bb1-8614-6d8b82e4f404",
+              "leftValue": "={{ $json.equipo_asignado }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        976,
-        5664
+        7264,
+        23904
       ],
-      "id": "285705bd-0b25-4c88-943e-7d9e9024d07c",
+      "id": "d096e5e8-3351-4613-a166-9adedc34cdd1",
       "name": "Cita_con_Equipo_asignado"
     },
     {
@@ -753,11 +744,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        32,
-        5680
+        6320,
+        23920
       ],
       "typeVersion": 1,
-      "id": "6c4bc0bc-971d-4184-99c1-7ca807e20d73",
+      "id": "a0bda7ef-4e97-4457-92ba-0cbd93109ced",
       "name": "Sticky Note"
     },
     {
@@ -768,11 +759,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -1520,
-        6496
+        4768,
+        24736
       ],
       "typeVersion": 1,
-      "id": "1dc63bec-ef69-447c-949c-506e9431a571",
+      "id": "b2bbf4d8-446e-49bc-ab6b-69d114894cb9",
       "name": "Sticky Note2"
     },
     {
@@ -781,11 +772,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -560,
-        6496
+        5728,
+        24736
       ],
       "typeVersion": 1,
-      "id": "63b7c4a0-032b-42a7-b2a4-4945867f9f2c",
+      "id": "b5ef223c-b051-4171-9f33-9adcea49bfc8",
       "name": "Sticky Note3"
     },
     {
@@ -974,10 +965,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -1328,
-        6640
+        4960,
+        24880
       ],
-      "id": "8fce3fa6-93b5-4f13-a6bd-d1fead314ccd",
+      "id": "23f81430-7d88-4d50-89cf-85c8af3a7a74",
       "name": "Call 'chatbot-simple_1_subflow'"
     },
     {
@@ -992,24 +983,24 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1360,
-        5328
+        7648,
+        23568
       ],
-      "id": "5675e764-0d2e-42f3-8c33-1cfe63a79cce",
+      "id": "c19d4ae6-bbcc-4056-bfde-ac342b1f93c3",
       "name": "paso_0_inicio_agendar",
       "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfunction detectarSiNo(texto) {\n  if (!texto || typeof texto !== 'string') return false;\n  const patrones = [\n    /\\b(sí|si)\\s*\\/\\s*no\\b/i,\n    /\\b(aceptas|confirmas|estás de acuerdo|quieres|deseas|te gustaría)\\b.*\\?/i,\n    /^.*\\?.*(sí|si).*(no).*$/i,\n    /¿(deseas|quieres|te gustaría|estás seguro|aceptas)/i,\n    /\\b(yes|no)\\b/i,\n    /\\b(responder (sí|si|no))\\\\b/i\n  ];\n  return patrones.some(p => p.test(texto));\n}\n\nconst mapeoFlow = {\n  'Agendamiento_Directo': 'flujo_agendamiento_directo',\n  'Agendamiento_Precios': 'flujo_agendamiento_precios',\n  'Agendamiento_Servicios': 'flujo_agendamiento_servicios',\n  'Agendamiento_Otra_Consulta': 'flujo_agendamiento_otra_consulta',\n  'Ventas_UNISA': 'flujo_ventas_unisa',\n  'CITAS_MP': 'flujo_citas_medios_propios',\n  'CITAS_SEGUROS': 'flujo_citas_seguro',\n  'RESULTADOS_LAB': 'flujo_resultados_laboratorio',\n  'RESULTADOS_IMAGENES': 'flujo_resultados_imagenes'\n};\nconst flowPorDefecto = 'flujo_agendamiento_default';\n\nfor (const item of items) {\n  try {\n    let str = item.json.output;\n\n    str = str.replace(/\\\\u\\{([^}]+)\\}/g, (match, inner) => {\n      const parts = inner.split(/\\\\u/);\n      let result = '';\n      for (let part of parts) {\n        if (part === '') continue;\n        result += String.fromCodePoint(parseInt(part, 16));\n      }\n      return result;\n    });\n\n    const datosParseados = JSON.parse(str);\n\n    // 🔧 FORZAR tipoPregunta si es null y el mensaje corresponde a CITA_DIRECTA\n    if (!datosParseados.tipoPregunta && datosParseados.output && typeof datosParseados.output === 'string') {\n      if (datosParseados.output.includes('Vamos a agendar tu cita') || \n          datosParseados.output.includes('Indíqueme si la atención será por medios propios')) {\n        datosParseados.tipoPregunta = 'CITA_DIRECTA';\n      }\n    }\n    \n     // 🔧 FORZAR tipoPregunta y mensaje para RESULTADOS\n    if (datosParseados.output && typeof datosParseados.output === 'string') {\n      if (datosParseados.output.includes('Para enviarte tus resultados') || \n          datosParseados.output.includes('Foto de cédula') ||\n          datosParseados.output.includes('El estudio que necesitas')) {\n        \n        datosParseados.tipoPregunta = 'RESULTADOS';\n        \n        // Reemplazar el output antiguo por el nuevo mensaje\n        datosParseados.output = \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\";\n        \n        // También actualizar los campos text y content si es necesario\n        datosParseados.text = datosParseados.output;\n        datosParseados.content = datosParseados.output;\n      }\n    }\n\n    \n\n    if (datosParseados.output && typeof datosParseados.output === 'string') {\n      const match = datosParseados.output.match(/^\\s*equipo_asignado:\\s*\"([^\"]*)\"\\s*$/);\n      if (match) {\n        datosParseados.equipo_asignado = match[1];\n      }\n    }\n\n    const resultado = {\n      ...item.json,\n      ...datosParseados,\n      output: datosParseados.output,\n      tipoPregunta: datosParseados.tipoPregunta || null\n    };\n\n    let isMenuValue = false;\n    if (datosParseados.isMenu === true) {\n      isMenuValue = true;\n    } else if (datosParseados.output && typeof datosParseados.output === 'string') {\n      const texto = datosParseados.output;\n      if (texto.includes('¡Hola! 😊 Bienvenido/a') || \n          texto.includes('Para ayudarte mejor, por favor selecciona') ||\n          texto.includes('¿Qué necesitas hoy?')) {\n        isMenuValue = true;\n      }\n    }\n    resultado.isMenu = isMenuValue;\n\n    let esPreguntaSiNo = false;\n    if (datosParseados.esPreguntaSiNo === true) {\n      esPreguntaSiNo = true;\n    } else if (datosParseados.output && typeof datosParseados.output === 'string') {\n      esPreguntaSiNo = detectarSiNo(datosParseados.output);\n    }\n    resultado.esPreguntaSiNo = esPreguntaSiNo;\n    // Detectar SALIR por id o texto y marcar salida\n    try {\n      const outIdUpper2 = (datosParseados.equipo_asignado || '').toString().trim().toUpperCase();\n      if (outIdUpper2 === 'SALIR') {\n        datosParseados.tipoPregunta = 'SALIR';\n        datosParseados.salida = true;\n      }\n      const outTxtLower2 = (datosParseados.output || '').toString().trim().toLowerCase();\n      if (!datosParseados.salida && (outTxtLower2 === 'salir' || outTxtLower2.includes('salir') || outTxtLower2.includes('🔚'))) {\n        datosParseados.tipoPregunta = 'SALIR';\n        datosParseados.salida = true;\n      }\n    } catch(e) {}\n\n\n\n    // Detectar respuestas textuales de botones (ej 'Medios propios', 'Seguro médico')\n    try {\n      const outLower = (datosParseados.output || '').toString().toLowerCase();\n      if ((!datosParseados.equipo_asignado || datosParseados.equipo_asignado === '') ) {\n        if (outLower.includes('medios propios') || outLower.includes('medios')) {\n          datosParseados.equipo_asignado = 'CITAS_MP';\n        } else if (outLower.includes('seguro') || outLower.includes('asegur')) {\n          datosParseados.equipo_asignado = 'CITAS_SEGUROS';\n        }\n      }\n    } catch(e) {}\n\n\n    // Asegurar que cualquier equipo o tipo de pregunta detectado posteriormente se refleje en el resultado\n    resultado.equipo_asignado = datosParseados.equipo_asignado || resultado.equipo_asignado;\n    resultado.tipoPregunta = (datosParseados.tipoPregunta !== undefined) ? datosParseados.tipoPregunta : resultado.tipoPregunta;\n    const equipo = resultado.equipo_asignado;\n    resultado.flow_name = mapeoFlow[equipo] || flowPorDefecto;\n\n    nuevosItems.push({ json: resultado });\n\n  } catch (e) {\n    const errorItem = {\n      json: {\n        error: e.message,\n        original: item.json.output,\n        ...item.json\n      }\n    };\n    errorItem.json.flow_name = flowPorDefecto;\n    nuevosItems.push(errorItem);\n  }\n}\n\nreturn nuevosItems;\n"
+        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfunction detectarSiNo(texto) {\n  if (!texto || typeof texto !== 'string') return false;\n  const patrones = [\n    /\\b(sí|si)\\s*\\/\\s*no\\b/i,\n    /\\b(aceptas|confirmas|estás de acuerdo|quieres|deseas|te gustaría)\\b.*\\?/i,\n    /^.*\\?.*(sí|si).*(no).*$/i,\n    /¿(deseas|quieres|te gustaría|estás seguro|aceptas)/i,\n    /\\b(yes|no)\\b/i,\n    /\\b(responder (sí|si|no))\\\\b/i\n  ];\n  return patrones.some(p => p.test(texto));\n}\n\nconst mapeoFlow = {\n  'Agendamiento_Directo': 'flujo_agendamiento_directo',\n  'Agendamiento_Precios': 'flujo_agendamiento_precios',\n  'Agendamiento_Servicios': 'flujo_agendamiento_servicios',\n  'Agendamiento_Otra_Consulta': 'flujo_agendamiento_otra_consulta',\n  'Ventas_UNISA': 'flujo_ventas_unisa',\n  'CITAS_MP': 'flujo_citas_medios_propios',\n  'CITAS_SEGUROS': 'flujo_citas_seguro',\n  'RESULTADOS_LAB': 'flujo_resultados_laboratorio',\n  'RESULTADOS_IMAGENES': 'flujo_resultados_imagenes'\n};\nconst flowPorDefecto = 'flujo_agendamiento_default';\n\nfor (const item of items) {\n  try {\n    let str = item.json.output;\n\n    str = str.replace(/\\\\u\\{([^}]+)\\}/g, (match, inner) => {\n      const parts = inner.split(/\\\\u/);\n      let result = '';\n      for (let part of parts) {\n        if (part === '') continue;\n        result += String.fromCodePoint(parseInt(part, 16));\n      }\n      return result;\n    });\n\n    const datosParseados = JSON.parse(str);\n\n    // 🔧 FORZAR tipoPregunta si es null y el mensaje corresponde a CITA_DIRECTA\n    if (!datosParseados.tipoPregunta && datosParseados.output && typeof datosParseados.output === 'string') {\n      if (datosParseados.output.includes('Vamos a agendar tu cita') || \n          datosParseados.output.includes('Indíqueme si la atención será por medios propios')) {\n        datosParseados.tipoPregunta = 'CITA_DIRECTA';\n      }\n    }\n    \n     // 🔧 FORZAR tipoPregunta y mensaje para RESULTADOS\n    if (datosParseados.output && typeof datosParseados.output === 'string') {\n      if (datosParseados.output.includes('Para enviarte tus resultados') || \n          datosParseados.output.includes('Foto de cédula') ||\n          datosParseados.output.includes('El estudio que necesitas')) {\n        \n        datosParseados.tipoPregunta = 'RESULTADOS';\n        \n        // Reemplazar el output antiguo por el nuevo mensaje\n        datosParseados.output = \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\";\n        \n        // También actualizar los campos text y content si es necesario\n        datosParseados.text = datosParseados.output;\n        datosParseados.content = datosParseados.output;\n      }\n    }\n\n    \n\n    if (datosParseados.output && typeof datosParseados.output === 'string') {\n      const match = datosParseados.output.match(/^\\s*equipo_asignado:\\s*\"([^\"]*)\"\\s*$/);\n      if (match) {\n        datosParseados.equipo_asignado = match[1];\n      }\n    }\n\n    const resultado = {\n      ...item.json,\n      ...datosParseados,\n      output: datosParseados.output,\n      tipoPregunta: datosParseados.tipoPregunta || null\n    };\n\n    let isMenuValue = false;\n    if (datosParseados.isMenu === true) {\n      isMenuValue = true;\n    } else if (datosParseados.output && typeof datosParseados.output === 'string') {\n      const texto = datosParseados.output;\n      if (texto.includes('¡Hola! 😊 Bienvenido/a') || \n          texto.includes('Para ayudarte mejor, por favor selecciona') ||\n          texto.includes('¿Qué necesitas hoy?')) {\n        isMenuValue = true;\n      }\n    }\n    resultado.isMenu = isMenuValue;\n\n    let esPreguntaSiNo = false;\n    if (datosParseados.esPreguntaSiNo === true) {\n      esPreguntaSiNo = true;\n    } else if (datosParseados.output && typeof datosParseados.output === 'string') {\n      esPreguntaSiNo = detectarSiNo(datosParseados.output);\n    }\n    resultado.esPreguntaSiNo = esPreguntaSiNo;\n\n    const equipo = resultado.equipo_asignado;\n    resultado.flow_name = mapeoFlow[equipo] || flowPorDefecto;\n\n    nuevosItems.push({ json: resultado });\n\n  } catch (e) {\n    const errorItem = {\n      json: {\n        error: e.message,\n        original: item.json.output,\n        ...item.json\n      }\n    };\n    errorItem.json.flow_name = flowPorDefecto;\n    nuevosItems.push(errorItem);\n  }\n}\n\nreturn nuevosItems;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        544,
-        5824
+        6832,
+        24064
       ],
-      "id": "d2e972af-d6a6-4791-8ced-ac2100213ce1",
+      "id": "3b11067f-e97c-4e20-b4fd-30398618f9fd",
       "name": "Separar_variables_en_json"
     },
     {
@@ -1065,10 +1056,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1552,
-        5328
+        7840,
+        23568
       ],
-      "id": "754aa2f5-0235-47c1-9bd6-b0051161e660",
+      "id": "598d67a2-20fb-4227-a649-09fc7ad63a18",
       "name": "Agendar_cita"
     },
     {
@@ -1102,10 +1093,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1808,
-        6016
+        8096,
+        24256
       ],
-      "id": "9cd4c5c4-a3ac-4280-b253-0c2f61bfa604",
+      "id": "56e5950d-bc9b-4f2e-aff8-6f3b9b689d6f",
       "name": "Enviar_mensaje_de_IA1"
     },
     {
@@ -1139,10 +1130,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1840,
-        5328
+        8128,
+        23568
       ],
-      "id": "20749c75-1427-4233-8842-da40f0bf402e",
+      "id": "2203eb3f-a8f3-4d02-a4da-8ec0a1515715",
       "name": "Enviar_mensaje_de_IA2"
     },
     {
@@ -1186,10 +1177,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -64,
-        6720
+        6224,
+        24960
       ],
-      "id": "36c2c98b-28b7-4cc2-85d6-972217ff4db7",
+      "id": "f869ef25-b7b8-412d-a900-3f8414c5a575",
       "name": "tomar_parametros"
     },
     {
@@ -1223,10 +1214,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        240,
-        6592
+        6528,
+        24832
       ],
-      "id": "7d4a2a82-07f8-4e65-9e12-acac6798f9d2",
+      "id": "69e5909a-d8d5-4793-8023-e073634a4dce",
       "name": "Enviar_mensaje_de_IA3"
     },
     {
@@ -1241,14 +1232,7 @@
           "conditions": [
             {
               "id": "menu_whatsapp_condition",
-              "leftValue": "={{
-  $json.platform === 'whatsapp' && 
-  ($json.isMenu === true || $json.tipoPregunta === 'ESTATICO' ||
-   (typeof $json.output === 'string' && $json.output.length > 0 &&
-    ($json.output.match(/[1-5]\.\s*(Precios|Servicios|Agendar|Tarjeta|Otra)/i) !== null ||
-     $json.output.includes('Bienvenido/a') ||
-     $json.output.includes('selecciona una opción'))))
-}}",
+              "leftValue": "={{\n  $json.platform === 'whatsapp' && \n  ($json.isMenu === true ||\n   (typeof $json.output === 'string' && $json.output.length > 0 &&\n    ($json.output.match(/[1-5]\\.\\s*(Precios|Servicios|Agendar|Tarjeta|Otra)/i) !== null ||\n     $json.output.includes('Bienvenido/a') ||\n     $json.output.includes('selecciona una opción'))))\n}}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -1263,10 +1247,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        720,
-        5840
+        7008,
+        24080
       ],
-      "id": "bdcce259-1d19-4fca-9d37-f84f91045ff8",
+      "id": "bf37d9d1-bae7-42ba-b285-db648955991c",
       "name": "¿Enviar menú interactivo?"
     },
     {
@@ -1276,10 +1260,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1040,
-        5984
+        7328,
+        24224
       ],
-      "id": "69f19294-e85d-4c76-ac49-b85020f0072c",
+      "id": "01e832d3-ccce-404e-a553-b11a00dce68e",
       "name": "Formatear número de teléfono"
     },
     {
@@ -1307,10 +1291,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1360,
-        6544
+        7648,
+        24784
       ],
-      "id": "72130757-217b-4e2f-b740-78c32b81661d",
+      "id": "26a7d3df-cac6-4d4c-ad6c-d300e2446ebe",
       "name": "Enviar menú interactivo a WhatsApp"
     },
     {
@@ -1318,10 +1302,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        1744,
-        6560
+        8032,
+        24800
       ],
-      "id": "76d5e3f5-3d9d-46ca-953b-2f475e080172",
+      "id": "1ea88b0f-ef3b-484c-b898-f225ce36967f",
       "name": "Fin menú WhatsApp"
     },
     {
@@ -1351,23 +1335,23 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1488,
-        5792
+        7776,
+        24032
       ],
-      "id": "889ec583-5752-41c0-820a-643db87cad9b",
+      "id": "3ee025d0-e204-452a-b6dd-52075d9d5bcf",
       "name": "¿Enviar menú interactivo?1"
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfor (const item of items) {\n  const tipo = item.json.tipoPregunta;\n  const outputText = item.json.output;\n  let phone = item.json.user_number || item.json.phone_number || item.json.session_id;\n  \n  if (phone && !phone.startsWith('+')) {\n    phone = '+' + phone;\n  }\n  \n  let botones = [];\n  \n  // PRECIOS - botones Sí/No\n  if (tipo === 'PRECIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_PRECIOS\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // SERVICIOS - botones Sí/No\n  else if (tipo === 'SERVICIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_SERVICIOS\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // TARJETA - botones Sí/No\n  else if (tipo === 'TARJETA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_TARJETA\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // CITA_DIRECTA - botones para elegir Medio de pago o Seguro\n  else if (tipo === 'CITA_DIRECTA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MEDIOS_PROPIOS\", title: \"💰 Medios propios\" } },\n      { type: \"reply\", reply: { id: \"SEGURO_MEDICO\", title: \"🩺 Seguro médico\" } }\n    ];\n  } \n  else if (tipo === 'RESULTADOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"LABORATORIO\", title: \"🔬 Laboratorio\" } },\n      { type: \"reply\", reply: { id: \"IMAGENES\", title: \"📷 Imágenes\" } }\n    ];\n  }\n  // ESTATICO - horario, promociones, resultados (solo botón volver al menú)\n  else if (tipo === 'ESTATICO') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MENU_PRINCIPAL\", title: \"🔙 Menú\" } }\n    ];\n  } \n  // Si no hay tipoPregunta, no enviamos botones (se envía como texto normal)\n  else {\n    nuevosItems.push(item);\n    continue;\n  }\n  \n  // Construir el payload de WhatsApp\n  \n  // Añadir botón SALIR universal\n  try {\n    botones.push({ type: \"reply\", reply: { id: \"SALIR\", title: \"🔚 Salir\" } });\n  } catch(e) {}\nconst whatsappPayload = {\n    messaging_product: \"whatsapp\",\n    recipient_type: \"individual\",\n    to: phone,\n    type: \"interactive\",\n    interactive: {\n      type: \"button\",\n      body: { text: outputText },\n      action: { buttons: botones }\n    }\n  };\n  \n  nuevosItems.push({ \n    json: {\n      ...item.json,\n      whatsappPayload: whatsappPayload,\n      phone_number_formatted: phone\n    }\n  });\n}\n\nreturn nuevosItems;"
+        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfor (const item of items) {\n  const tipo = item.json.tipoPregunta;\n  const outputText = item.json.output;\n  let phone = item.json.user_number || item.json.phone_number || item.json.session_id;\n  \n  if (phone && !phone.startsWith('+')) {\n    phone = '+' + phone;\n  }\n  \n  let botones = [];\n  \n  // PRECIOS - botones Sí/No\n  if (tipo === 'PRECIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_PRECIOS\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // SERVICIOS - botones Sí/No\n  else if (tipo === 'SERVICIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_SERVICIOS\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // TARJETA - botones Sí/No\n  else if (tipo === 'TARJETA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_TARJETA\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // CITA_DIRECTA - botones para elegir Medio de pago o Seguro\n  else if (tipo === 'CITA_DIRECTA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MEDIOS_PROPIOS\", title: \"💰 Medios propios\" } },\n      { type: \"reply\", reply: { id: \"SEGURO_MEDICO\", title: \"🩺 Seguro médico\" } }\n    ];\n  } \n  else if (tipo === 'RESULTADOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"LABORATORIO\", title: \"🔬 Laboratorio\" } },\n      { type: \"reply\", reply: { id: \"IMAGENES\", title: \"📷 Imágenes\" } }\n    ];\n  }\n  // ESTATICO - horario, promociones, resultados (botones: Menú y Salir)\n  else if (tipo === 'ESTATICO') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MENU_PRINCIPAL\", title: \"🔙 Menú\" } },\n      { type: \"reply\", reply: { id: \"SALIR\", title: \"👋 Salir\" } }\n    ];\n  } \n  // Si no hay tipoPregunta, no enviamos botones (se envía como texto normal)\n  else {\n    nuevosItems.push(item);\n    continue;\n  }\n  \n  // Construir el payload de WhatsApp\n  const whatsappPayload = {\n    messaging_product: \"whatsapp\",\n    recipient_type: \"individual\",\n    to: phone,\n    type: \"interactive\",\n    interactive: {\n      type: \"button\",\n      body: { text: outputText },\n      action: { buttons: botones }\n    }\n  };\n  \n  nuevosItems.push({ \n    json: {\n      ...item.json,\n      whatsappPayload: whatsappPayload,\n      phone_number_formatted: phone\n    }\n  });\n}\n\nreturn nuevosItems;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1616,
-        5600
+        7904,
+        23840
       ],
-      "id": "e7cb4032-dd63-4662-932c-57bff22eb0b8",
+      "id": "6c16e9a0-5a20-401d-83e6-388fbef77b1c",
       "name": "Construir_botones_WhatsApp"
     },
     {
@@ -1395,10 +1379,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1840,
-        5600
+        8128,
+        23840
       ],
-      "id": "18d3d4f6-0e76-45c3-82e3-8ecf1b608511",
+      "id": "e477e0b7-67ef-456c-91c3-fa5231c6abc0",
       "name": "Enviar menú interactivo a WhatsApp1"
     },
     {
@@ -1406,171 +1390,77 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        2304,
-        5616
+        8592,
+        23856
       ],
-      "id": "89e6452b-bfd3-45ec-b555-510242a0b6a5",
+      "id": "d5a3b448-8eec-4585-bc88-f257312b04d4",
       "name": "Fin menú WhatsApp1"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -544,
-        6224
+        5744,
+        24464
       ],
       "typeVersion": 1,
-      "id": "3f4bfe91-26bb-483e-9c58-044f2f9af781",
+      "id": "ef8f9565-f7f0-48c5-85d1-654ed1245f4d",
       "name": "Sticky Note1"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -544,
-        6224
+        5744,
+        24464
       ],
       "typeVersion": 1,
-      "id": "bf7b376e-0440-430c-ae96-546ab8d1d665",
+      "id": "6dbe47eb-4ff2-4f8b-86a7-58c1b8c6ed17",
       "name": "Sticky Note4"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -544,
-        6224
+        5744,
+        24464
       ],
       "typeVersion": 1,
-      "id": "87d3f5b6-4693-4862-acfc-77fd7068c8b0",
+      "id": "0208ecb6-5881-428a-bdae-adcc4aceebd7",
       "name": "Sticky Note5"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -464,
-        6304
+        5824,
+        24544
       ],
       "typeVersion": 1,
-      "id": "9f697e13-a47f-4727-93da-e16bfb0b4c71",
+      "id": "f885dc38-e5a8-4474-84d2-cec0c787a2e6",
       "name": "Sticky Note6"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -464,
-        6304
+        5824,
+        24544
       ],
       "typeVersion": 1,
-      "id": "b26ce1d7-a551-4f74-947b-4a9a57a79bbf",
+      "id": "1ece7303-dde8-494f-8907-7b53fa3055e2",
       "name": "Sticky Note7"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -464,
-        6304
+        5824,
+        24544
       ],
       "typeVersion": 1,
-      "id": "25508620-21b8-4a31-8ac7-19efc491c415",
+      "id": "e8855eec-4bb3-4157-a2b3-d039e5b295e2",
       "name": "Sticky Note8"
-    },
-    {
-      "parameters": {
-        "rules": {
-          "values": [
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "cond_salir",
-                    "leftValue": "={{ ($json.salida === true) || (($json.tipoPregunta||'').toString().toUpperCase() === 'SALIR') || (($json.output||'').toString().toLowerCase().includes('salir')) }}",
-                    "operator": {
-                      "operation": "equals",
-                      "type": "boolean"
-                    },
-                    "rightValue": true
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "salir"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.3,
-      "position": [
-        1100,
-        5680
-      ],
-      "id": "detectar_salir_node",
-      "name": "Detectar_SALIR"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://chatwoot.unisasalud.com/api/v1/accounts/{{$json.account_id}}/conversations/{{ $json.conversation_id }}/messages",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "api_access_token",
-              "value": "bKYDrpmQjhS8yn8pFKEsMkCw"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "content",
-              "value": "=Gracias por contactarnos. ¡Que tengas un excelente día!"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        1400,
-        5680
-      ],
-      "id": "enviar_despedida_chatwoot",
-      "name": "Enviar_despedida_chatwoot"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://integraiadev.unisasalud.com/ai_chatbot_1_portal/procesar_paso",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"session_id\": \"{{ $json.session_id }}\",\n  \"conversation_id\":\"{{ $json.conversation_id }}\",\n  \"account_id\":\"{{ $json.account_id }}\",\n  \"platform\":\"{{ $json.platform }}\",\n  \"valor\": \"salir\"\n}\n",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        1700,
-        5680
-      ],
-      "id": "enviar_despedida_odoo",
-      "name": "Enviar_despedida_odoo"
     }
   ],
   "pinData": {
@@ -1848,7 +1738,7 @@
         ],
         [
           {
-            "node": "Detectar_SALIR",
+            "node": "Cita_con_Equipo_asignado",
             "type": "main",
             "index": 0
           }
@@ -1927,46 +1817,6 @@
           }
         ]
       ]
-    },
-    "Detectar_SALIR": {
-      "main": [
-        [
-          {
-            "node": "enviar_despedida_chatwoot",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Cita_con_Equipo_asignado",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "enviar_despedida_chatwoot": {
-      "main": [
-        [
-          {
-            "node": "enviar_despedida_odoo",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "enviar_despedida_odoo": {
-      "main": [
-        [
-          {
-            "node": "Unificar_salida",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "active": true,
@@ -1974,7 +1824,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "e6df6932-f75c-4d73-926f-78cebc13a5f9",
+  "versionId": "9f51a654-e1ad-49b9-9595-7c95188c26f0",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "27f2fbd44aea77cdc4ee5b60d7a4eb1783a710ad686d97e24edf8a6f5832f241"
