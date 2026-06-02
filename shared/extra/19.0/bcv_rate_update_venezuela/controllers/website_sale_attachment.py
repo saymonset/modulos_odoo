@@ -140,6 +140,9 @@ class WebsiteSaleAttachment(WebsiteSale):
         request.session['payment_data'] = payment_data
 
         if order:
+            if payment_data['amount_vef'] < (order.amount_total - 0.01):
+                _logger.warning(f"❌ Monto insuficiente: {payment_data['amount_vef']} < {order.amount_total}")
+                return request.make_response('MONTO_INSUFICIENTE', status=400)
             try:
                 attachment = request.env['ir.attachment'].sudo().create({
                     'name': filename,

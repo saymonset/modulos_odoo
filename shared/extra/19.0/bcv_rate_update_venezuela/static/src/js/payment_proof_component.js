@@ -93,7 +93,17 @@ export class PaymentProofComponent extends Component {
     }
 
     _normalizeNumber(v) {
-        let n = parseFloat(String(v).replace(/[^\d.,-]/g, '').replace(',', '.'));
+        let s = String(v).replace(/[^\d.,-]/g, '').trim();
+        let lastDot = s.lastIndexOf('.');
+        let lastComma = s.lastIndexOf(',');
+        if (lastComma > lastDot) {
+            s = s.replace(/\./g, '').replace(',', '.');
+        } else if (lastDot > lastComma) {
+            s = s.replace(/,/g, '');
+        } else {
+            s = s.replace(',', '.');
+        }
+        let n = parseFloat(s);
         return isNaN(n) ? 0 : n;
     }
 
@@ -171,14 +181,20 @@ export class PaymentProofComponent extends Component {
                 body: formData,
                 credentials: "same-origin",
             });
-            if (!response.ok) throw new Error();
+            if (!response.ok) {
+                const text = await response.text();
+                if (text === 'MONTO_INSUFICIENTE') {
+                    throw new Error('El monto pagado es menor al total de la orden');
+                }
+                throw new Error('Error del servidor');
+            }
             this.notification.add("Comprobante subido correctamente", { type: "success" });
             this.state.uploadSuccess = true;
             this.state.proof_valid = true;
             this._syncPaymentButtonState();
         } catch (err) {
-            this.state.uploadError = "Error al subir";
-            this.notification.add("Error al subir el comprobante", { type: "danger" });
+            this.state.uploadError = err.message || "Error al subir";
+            this.notification.add(this.state.uploadError, { type: "danger" });
         } finally {
             this.state.fileUploading = false;
             this._syncPaymentButtonState();

@@ -101,9 +101,9 @@
             <!-- Spans ocultos para compatibilidad con JavaScript -->
             <tr style="display:none;">
                 <td colspan="3">
-                    <span id="original_amount_vef" t-esc="'{:,.2f}'.format(website_sale_order.amount_total)"/>
-                    <span id="original_amount_usd" t-esc="'{:,.2f}'.format(website_sale_order.amount_total_usd)"/>
-                    <span id="bcv_exchange_rate" t-esc="'{:,.2f}'.format(bcv_info.get('rate', 0))"/>
+                    <span id="original_amount_vef" t-esc="'{:.2f}'.format(website_sale_order.amount_total)"/>
+                    <span id="original_amount_usd" t-esc="'{:.2f}'.format(website_sale_order.amount_total_usd)"/>
+                    <span id="bcv_exchange_rate" t-esc="'{:.2f}'.format(bcv_info.get('rate', 0))"/>
                     <span id="bcv_rate_date" t-out="bcv_info.get('date_formatted', '')"/>
                 </td>
             </tr>
