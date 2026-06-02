@@ -7,6 +7,9 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
+            <field name="list_price" position="attributes">
+                <attribute name="digits">[16, 2]</attribute>
+            </field>
             <xpath expr="//div[@name='list_price_uom']/field[@name='list_price']" position="after">
                 <field name="currency_usd_id" invisible="1"/>
                 <span class="mx-2" style="font-weight: bold;">o</span>
@@ -24,6 +27,9 @@
         <field name="model">product.product</field>
         <field name="inherit_id" ref="product.product_normal_form_view"/>
         <field name="arch" type="xml">
+            <field name="lst_price" position="attributes">
+                <attribute name="digits">[16, 2]</attribute>
+            </field>
             <field name="lst_price" position="after">
                 <field name="currency_usd_id" invisible="1"/>
                 <span class="mx-2" style="font-weight: bold;" invisible="product_variant_count &gt; 1">o</span>
@@ -45,6 +51,9 @@
         <field name="model">product.product</field>
         <field name="inherit_id" ref="product.product_variant_easy_edit_view"/>
         <field name="arch" type="xml">
+            <field name="lst_price" position="attributes">
+                <attribute name="digits">[16, 2]</attribute>
+            </field>
             <field name="lst_price" position="after">
                 <field name="currency_usd_id" invisible="1"/>
                 <span class="mx-2" style="font-weight: bold;" invisible="product_variant_count &gt; 1">o</span>
@@ -66,6 +75,9 @@
         <field name="model">product.template.attribute.value</field>
         <field name="inherit_id" ref="product.product_template_attribute_value_view_tree"/>
         <field name="arch" type="xml">
+            <field name="price_extra" position="attributes">
+                <attribute name="digits">[16, 2]</attribute>
+            </field>
             <field name="price_extra" position="after">
                 <field name="currency_usd_id" column_invisible="True"/>
                 <field name="price_extra_usd"
@@ -81,6 +93,9 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_tree_view"/>
         <field name="arch" type="xml">
+            <field name="list_price" position="attributes">
+                <attribute name="digits">[16, 2]</attribute>
+            </field>
             <field name="list_price" position="after">
                 <field name="currency_usd_id" column_invisible="True"/>
                 <field name="list_price_usd"
@@ -97,6 +112,9 @@
         <field name="model">product.product</field>
         <field name="inherit_id" ref="product.product_product_tree_view"/>
         <field name="arch" type="xml">
+            <field name="lst_price" position="attributes">
+                <attribute name="digits">[16, 2]</attribute>
+            </field>
             <field name="lst_price" position="after">
                 <field name="currency_usd_id" column_invisible="True"/>
                 <field name="lst_price_usd"
@@ -113,6 +131,9 @@
         <field name="model">product.template.attribute.value</field>
         <field name="inherit_id" ref="product.product_template_attribute_value_view_form"/>
         <field name="arch" type="xml">
+            <field name="price_extra" position="attributes">
+                <attribute name="digits">[16, 2]</attribute>
+            </field>
             <field name="price_extra" position="after">
                 <field name="currency_usd_id" invisible="1"/>
                 <field name="price_extra_usd"

@@ -5,13 +5,13 @@ class AccountMoveLine(models.Model):
 
     price_usd_bcv = fields.Float(
         string='Precio USD (BCV)',
-        digits=(12, 4),
+        digits=(12, 2),
         readonly=True
     )
 
     bcv_rate_value = fields.Float(
         string='Tasa BCV',
-        digits=(12, 4),
+        digits=(12, 2),
         readonly=True
     )
 

@@ -1,11 +1,12 @@
 from odoo import models, fields, api
+from odoo.tools.float_utils import float_round
 
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
     price_usd_bcv = fields.Float(
         string='Precio USD (BCV)',
-        digits=(12, 4),
+        digits=(12, 2),
         compute='_compute_usd_bcv',
         store=True
     )
@@ -19,7 +20,7 @@ class SaleOrderLine(models.Model):
 
     rate_value = fields.Float(
         string='Tasa de Cambio (BCV)',
-        digits=(12, 4),
+        digits=(12, 2),
         compute='_compute_usd_bcv',
         store=True
     )
@@ -54,5 +55,5 @@ class SaleOrderLine(models.Model):
 
             # rate_val is "1 USD = X Local"
             line.rate_value = rate_val
-            line.price_usd_bcv = line.price_unit / rate_val
-            line.price_subtotal_usd_bcv = line.price_usd_bcv * line.product_uom_qty
+            line.price_usd_bcv = float_round(line.price_unit / rate_val, precision_digits=2)
+            line.price_subtotal_usd_bcv = float_round(line.price_usd_bcv * line.product_uom_qty, precision_digits=2)

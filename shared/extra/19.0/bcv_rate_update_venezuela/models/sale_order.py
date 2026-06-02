@@ -20,9 +20,9 @@ class SaleOrder(models.Model):
     bank_origin = fields.Char('Banco origen')
     bank_destination = fields.Char('Banco destino', default='N/A')
     reference = fields.Char('Referencia')
-    amount_vef = fields.Float('Monto en bolívares')
-    exchange_rate = fields.Float('Tasa de cambio')
-    amount_usd = fields.Float('Monto USD')
+    amount_vef = fields.Float('Monto en bolívares', digits=(12, 2))
+    exchange_rate = fields.Float('Tasa de cambio', digits=(12, 2))
+    amount_usd = fields.Float('Monto USD', digits=(12, 2))
 
     currency_aux = fields.Many2one('res.currency', string='Moneda Auxiliar USD', compute='_compute_currency_aux', store=True)
     amount_total_usd = fields.Monetary(string='Total USD (BCV)', currency_field='currency_aux', compute='_compute_amount_total_usd', store=True)

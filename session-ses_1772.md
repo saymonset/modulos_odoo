@@ -10575,7 +10575,7 @@ Listo. Ya agregué el aviso en las vistas de variante:
 
 Mensaje:
 `Para precios distintos por variante, usa Precio Extra USD en Atributos y Variantes.`
-
+si
 Si quieres, también lo pongo en la lista de atributos.
 
 ---

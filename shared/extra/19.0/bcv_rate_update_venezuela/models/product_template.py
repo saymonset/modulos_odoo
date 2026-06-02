@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.tools.float_utils import float_round
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -15,7 +16,7 @@ class ProductTemplate(models.Model):
 
     list_price_usd = fields.Float(
         string='Precio de Venta USD',
-        digits=(12, 4)
+        digits=(12, 2)
     )
 
     def _compute_currency_usd_id(self):
@@ -28,7 +29,7 @@ class ProductTemplate(models.Model):
         for template in self:
             rate = self._get_bcv_rate(template.company_id)
             if rate:
-                template.list_price_usd = template.list_price / rate
+                template.list_price_usd = float_round(template.list_price / rate, precision_digits=2)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -51,14 +52,14 @@ class ProductTemplate(models.Model):
                 rate = self._get_bcv_rate(template.company_id)
                 if rate:
                     template.with_context(_skip_bcv_sync=True).write({
-                        'list_price': template.list_price_usd * rate,
+                        'list_price': float_round(template.list_price_usd * rate, precision_digits=2),
                     })
         elif 'list_price' in vals and 'list_price_usd' not in vals:
             for template in self:
                 rate = self._get_bcv_rate(template.company_id)
                 if rate:
                     template.with_context(_skip_bcv_sync=True).write({
-                        'list_price_usd': template.list_price / rate,
+                        'list_price_usd': float_round(template.list_price / rate, precision_digits=2),
                     })
 
     @api.model
@@ -94,7 +95,7 @@ class ProductTemplate(models.Model):
             ])
             for t in templates:
                 t.with_context(_skip_bcv_sync=True).write({
-                    'list_price': t.list_price_usd * rate,
+                    'list_price': float_round(t.list_price_usd * rate, precision_digits=2),
                 })
             attr_values = self.env['product.template.attribute.value'].search([
                 ('price_extra_usd', '!=', 0),
@@ -118,7 +119,7 @@ class ProductProduct(models.Model):
 
     lst_price_usd = fields.Float(
         string='Precio de Venta USD',
-        digits=(12, 4)
+        digits=(12, 2)
     )
 
     def _compute_currency_usd_id(self):
@@ -131,7 +132,7 @@ class ProductProduct(models.Model):
         for rec in self:
             rate = self.env['product.template']._get_bcv_rate(rec.company_id)
             if rate:
-                rec.lst_price_usd = rec.lst_price / rate
+                rec.lst_price_usd = float_round(rec.lst_price / rate, precision_digits=2)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -154,14 +155,14 @@ class ProductProduct(models.Model):
                 rate = self.env['product.template']._get_bcv_rate(rec.company_id)
                 if rate:
                     rec.with_context(_skip_bcv_sync=True).write({
-                        'lst_price': rec.lst_price_usd * rate,
+                        'lst_price': float_round(rec.lst_price_usd * rate, precision_digits=2),
                     })
         elif ('lst_price' in vals or 'list_price' in vals or 'price_extra' in vals) and 'lst_price_usd' not in vals:
             for rec in self:
                 rate = self.env['product.template']._get_bcv_rate(rec.company_id)
                 if rate:
                     rec.with_context(_skip_bcv_sync=True).write({
-                        'lst_price_usd': rec.lst_price / rate,
+                        'lst_price_usd': float_round(rec.lst_price / rate, precision_digits=2),
                     })
 
 
@@ -176,7 +177,7 @@ class ProductTemplateAttributeValue(models.Model):
 
     price_extra_usd = fields.Float(
         string='Precio Extra USD',
-        digits=(12, 4)
+        digits=(12, 2)
     )
 
     def _compute_currency_usd_id(self):
@@ -189,7 +190,7 @@ class ProductTemplateAttributeValue(models.Model):
         for rec in self:
             rate = self.env['product.template']._get_bcv_rate(rec.product_tmpl_id.company_id)
             if rate:
-                rec.price_extra_usd = rec.price_extra / rate
+                rec.price_extra_usd = float_round(rec.price_extra / rate, precision_digits=2)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -212,12 +213,12 @@ class ProductTemplateAttributeValue(models.Model):
                 rate = self.env['product.template']._get_bcv_rate(rec.product_tmpl_id.company_id)
                 if rate:
                     rec.with_context(_skip_bcv_sync=True).write({
-                        'price_extra': rec.price_extra_usd * rate,
+                        'price_extra': float_round(rec.price_extra_usd * rate, precision_digits=2),
                     })
         elif 'price_extra' in vals and 'price_extra_usd' not in vals:
             for rec in self:
                 rate = self.env['product.template']._get_bcv_rate(rec.product_tmpl_id.company_id)
                 if rate:
                     rec.with_context(_skip_bcv_sync=True).write({
-                        'price_extra_usd': rec.price_extra / rate,
+                        'price_extra_usd': float_round(rec.price_extra / rate, precision_digits=2),
                     })

@@ -175,7 +175,7 @@ class WebsiteSaleAttachment(WebsiteSale):
                     <li>💳 Método: {payment_data.get('payment_method', 'No especificado')}</li>
                     <li>🔢 Referencia: {payment_data.get('reference', 'No especificada')}</li>
                     <li>₿ Monto Bs: {payment_data.get('amount_vef', 0):,.2f}</li>
-                    <li>💱 Tasa BCV: {payment_data.get('exchange_rate', 0):,.4f}</li>
+                    <li>💱 Tasa BCV: {payment_data.get('exchange_rate', 0):,.2f}</li>
                     <li>💵 Monto USD: {payment_data.get('amount_usd', 0):,.2f}</li>
                 </ul>
                 {img_tag}

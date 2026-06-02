@@ -16,7 +16,7 @@ class ResCurrencyRate(models.Model):
 
     bcv_rate_value = fields.Float(
         'Tasa BCV (1 USD = X VES)',
-        digits=(12, 4),
+        digits=(12, 2),
         help="Valor original publicado por BCV (1 USD = este valor en VES)"
     )
 

@@ -18,9 +18,9 @@
                         <field name="bank_origin"/>
                         <field name="bank_destination"/>
                         <field name="reference"/>
-                        <field name="amount_vef"/>
-                        <field name="exchange_rate"/>
-                        <field name="amount_usd"/>
+                        <field name="amount_vef" digits="[12, 2]"/>
+                        <field name="exchange_rate" digits="[12, 2]"/>
+                        <field name="amount_usd" digits="[12, 2]"/>
                     </group>
                 </page>
             </xpath>
@@ -39,7 +39,7 @@
           <xpath expr="//group[@name='sale_total']" position="inside">
                 <div style="display:flex; align-items:center; gap:5px;">
                     <label for="amount_total_usd" string="Total USD (BCV)" style="font-weight:bold; color:green;"/>
-                    <field name="amount_total_usd" readonly="1" style="font-weight:bold; color:green;"/>
+                    <field name="amount_total_usd" readonly="1" style="font-weight:bold; color:green;" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
                 </div>
             </xpath>
         </field>

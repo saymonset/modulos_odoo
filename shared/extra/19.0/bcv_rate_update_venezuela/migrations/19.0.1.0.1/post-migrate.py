@@ -1,4 +1,5 @@
 from odoo import api, SUPERUSER_ID
+from odoo.tools.float_utils import float_round
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ def migrate(cr, version):
     ])
     count = 0
     for t in templates:
-        t.with_context(_skip_bcv_sync=True).write({'list_price_usd': t.list_price / rate})
+        t.with_context(_skip_bcv_sync=True).write({'list_price_usd': float_round(t.list_price / rate, precision_digits=2)})
         count += 1
     _logger.info("Precios USD poblados para %s plantillas.", count)
 
@@ -34,7 +35,7 @@ def migrate(cr, version):
     ])
     count_var = 0
     for v in variants:
-        v.with_context(_skip_bcv_sync=True).write({'lst_price_usd': v.lst_price / rate})
+        v.with_context(_skip_bcv_sync=True).write({'lst_price_usd': float_round(v.lst_price / rate, precision_digits=2)})
         count_var += 1
     _logger.info("Precios USD poblados para %s variantes.", count_var)
 
@@ -44,7 +45,7 @@ def migrate(cr, version):
     ])
     count_attr = 0
     for a in attr_values:
-        a.with_context(_skip_bcv_sync=True).write({'price_extra_usd': a.price_extra / rate})
+        a.with_context(_skip_bcv_sync=True).write({'price_extra_usd': float_round(a.price_extra / rate, precision_digits=2)})
         count_attr += 1
     _logger.info("Precios extra USD poblados para %s atributos.", count_attr)
 
