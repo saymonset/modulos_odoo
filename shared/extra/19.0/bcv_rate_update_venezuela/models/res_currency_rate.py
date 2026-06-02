@@ -29,3 +29,22 @@ class ResCurrencyRate(models.Model):
     def _compute_is_bcv_editable(self):
         for rec in self:
             rec.is_bcv_editable = (rec.currency_id.name == 'VES')
+
+    @api.model
+    def create(self, vals):
+        rate = super().create(vals)
+        if rate.currency_id.name == 'VES':
+            _logger.info("Nueva tasa VES creada. Recalculando precios desde USD...")
+            self.env['product.template']._recalculate_ves_prices_from_usd()
+        return rate
+
+    def write(self, vals):
+        before_rates = {r.id: r.rate for r in self}
+        res = super().write(vals)
+        for rate in self:
+            if rate.currency_id.name == 'VES' and before_rates.get(rate.id) != rate.rate:
+                if 'rate' in vals or 'original_value' in vals:
+                    _logger.info("Tasa VES modificada. Recalculando precios desde USD...")
+                    self.env['product.template']._recalculate_ves_prices_from_usd()
+                    break
+        return res

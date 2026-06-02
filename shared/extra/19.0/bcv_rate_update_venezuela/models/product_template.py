@@ -1,4 +1,8 @@
 from odoo import models, fields, api
+import logging
+
+_logger = logging.getLogger(__name__)
+
 
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
@@ -11,7 +15,7 @@ class ProductTemplate(models.Model):
 
     list_price_usd = fields.Float(
         string='Precio de Venta USD',
-        compute='_compute_list_price_usd',
+        store=True,
         inverse='_inverse_list_price_usd',
         digits=(12, 4)
     )
@@ -20,15 +24,6 @@ class ProductTemplate(models.Model):
         usd = self.env.ref('base.USD', raise_if_not_found=False)
         for template in self:
             template.currency_usd_id = usd
-
-    @api.depends('list_price')
-    def _compute_list_price_usd(self):
-        for template in self:
-            rate = self._get_bcv_rate(template.company_id)
-            if rate:
-                template.list_price_usd = template.list_price / rate
-            else:
-                template.list_price_usd = 0.0
 
     def _inverse_list_price_usd(self):
         for template in self:
@@ -56,6 +51,27 @@ class ProductTemplate(models.Model):
                 rate_val = rate.original_value or (1.0 / rate.rate if rate.rate else 0)
         return rate_val or 1.0
 
+    @api.model
+    def _recalculate_ves_prices_from_usd(self):
+        companies = self.env['res.company'].search([])
+        for company in companies:
+            rate = self._get_bcv_rate(company)
+            if not rate or rate == 1.0:
+                continue
+            templates = self.env['product.template'].search([
+                ('list_price_usd', '>', 0),
+                ('company_id', '=', company.id),
+            ])
+            for t in templates:
+                t.list_price = t.list_price_usd * rate
+            attr_values = self.env['product.template.attribute.value'].search([
+                ('price_extra_usd', '!=', 0),
+                ('product_tmpl_id.company_id', '=', company.id),
+            ])
+            for a in attr_values:
+                a.price_extra = a.price_extra_usd * rate
+        _logger.info("Precios VES recalculados desde USD para todas las compañías.")
+
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'
@@ -68,7 +84,7 @@ class ProductProduct(models.Model):
 
     lst_price_usd = fields.Float(
         string='Precio de Venta USD',
-        compute='_compute_lst_price_usd',
+        store=True,
         inverse='_inverse_lst_price_usd',
         digits=(12, 4)
     )
@@ -77,15 +93,6 @@ class ProductProduct(models.Model):
         usd = self.env.ref('base.USD', raise_if_not_found=False)
         for rec in self:
             rec.currency_usd_id = usd
-
-    @api.depends('lst_price')
-    def _compute_lst_price_usd(self):
-        for rec in self:
-            rate = self.env['product.template']._get_bcv_rate(rec.company_id)
-            if rate:
-                rec.lst_price_usd = rec.lst_price / rate
-            else:
-                rec.lst_price_usd = 0.0
 
     def _inverse_lst_price_usd(self):
         for rec in self:
@@ -105,7 +112,7 @@ class ProductTemplateAttributeValue(models.Model):
 
     price_extra_usd = fields.Float(
         string='Precio Extra USD',
-        compute='_compute_price_extra_usd',
+        store=True,
         inverse='_inverse_price_extra_usd',
         digits=(12, 4)
     )
@@ -114,15 +121,6 @@ class ProductTemplateAttributeValue(models.Model):
         usd = self.env.ref('base.USD', raise_if_not_found=False)
         for rec in self:
             rec.currency_usd_id = usd
-
-    @api.depends('price_extra')
-    def _compute_price_extra_usd(self):
-        for rec in self:
-            rate = self.env['product.template']._get_bcv_rate(rec.product_tmpl_id.company_id)
-            if rate:
-                rec.price_extra_usd = rec.price_extra / rate
-            else:
-                rec.price_extra_usd = 0.0
 
     def _inverse_price_extra_usd(self):
         for rec in self:

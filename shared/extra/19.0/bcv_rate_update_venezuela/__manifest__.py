@@ -5,7 +5,7 @@
         Obtiene diariamente la tasa de cambio oficial del BCV y actualiza
         la moneda VES en Odoo.
     """,
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.0.1',
     'category': 'Sales/Point of Sale',
     'author': 'Simon Alberto Rodriguez Pacheco',
     'website': 'https://github.com/simonrodriguezpacheco',
@@ -45,6 +45,7 @@
         # 'views/invoice_report_templates.xml',
         'views/payment_templates_inherit.xml',
         'views/product_views.xml',
+        'data/ir_cron_data.xml',
     ],
     
     'assets': {
@@ -69,7 +70,7 @@
     'application': False,
     'installable': True,
     'auto_install': False,
-    'post_init_hook': '_clean_orphan_views',
+    'post_init_hook': '_post_init_hook',
     'uninstall_hook': '_uninstall_cleanup',
     'images': [
         'bcv_rate_update_venezuela/static/description/icon.png'
