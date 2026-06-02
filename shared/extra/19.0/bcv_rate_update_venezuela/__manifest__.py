@@ -44,6 +44,7 @@
         # 'views/website_sale_templates.xml',
         # 'views/invoice_report_templates.xml',
         'views/payment_templates_inherit.xml',
+        'views/product_views.xml',
     ],
     
     'assets': {
