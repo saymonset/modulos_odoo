@@ -819,6 +819,28 @@ class ChatBotUtils:
         
         return "\n".join(lines)
 
+    @staticmethod
+    def _is_image_url(url, timeout=2):
+        """Comprueba de forma ligera si la URL parece una imagen.
+        Retorna (True, url) si pasa; (False, motivo) si no."""
+        if not url or not isinstance(url, str):
+            return False, "URL inválida"
+        url = url.strip()
+        if not re.match(r'^https?://', url, re.IGNORECASE):
+            return False, "La URL debe comenzar con http(s)://"
+        lower = url.lower()
+        image_exts = ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.svg', '.tiff')
+        if any(lower.endswith(ext) for ext in image_exts):
+            return True, url
+        try:
+            resp = requests.head(url, allow_redirects=True, timeout=timeout)
+            ctype = resp.headers.get('Content-Type', '').lower()
+            if ctype.startswith('image/'):
+                return True, url
+            return False, f"Content-Type no indica imagen: {ctype or 'desconocido'}"
+        except requests.exceptions.RequestException as e:
+            return False, f"No se pudo verificar la URL (HEAD): {str(e)}"
+
     @staticmethod   
     def validar_valor(valor, tipo_dato, paso=None):
         """Valida un valor según el tipo de dato del paso."""
@@ -891,7 +913,10 @@ class ChatBotUtils:
                     return True, False
             return False, "Debe ser un booleano (sí/no)"
         elif tipo_dato == 'image':
-            return True, valor
+            ok, info = ChatBotUtils._is_image_url(valor)
+            if ok:
+                return True, valor
+            return False, f"No se detectó imagen válida: {info}. Reenvía la foto o escribe 'saltar' para omitir."
         elif tipo_dato == 'selection':
             return True, valor
         else:

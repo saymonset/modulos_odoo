@@ -147,6 +147,11 @@ class SessionState(models.Model):
                 nombre_mostrar=nombre_mostrar,
                 max_tokens=120
             )
+            if resultado.get('success') and tipo_dato == 'image':
+                valor_ia = resultado.get('valor_transformado') or valor
+                ok, info = ChatBotUtils._is_image_url(valor_ia)
+                if not ok:
+                    return False, None, f"No se detectó imagen válida: {info}. Reenvía la foto o escribe 'saltar'."
             return (
                 resultado.get('success', False),
                 resultado.get('valor_transformado'),
@@ -313,7 +318,7 @@ class SessionState(models.Model):
         campo_destino = paso_actual.get('campo_destino', '')
 
         # Detección de salida
-        es_url_imagen = re.match(r'^https?://', valor) and (tipo == 'image' or any(ext in valor.lower() for ext in ['.jpg', '.jpeg', '.png', '.webp']))
+        es_url_imagen = re.match(r'^https?://', valor) and (tipo == 'image' or any(ext in valor.lower() for ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.svg', '.tiff']))
         es_telefono_claro = re.match(r'^\+?[0-9]{7,15}$', valor.strip())
         es_palabra_flujo = valor.strip().lower() in ['listo', 'no', 'continuar', 'omitir', 'siguiente']
         
