@@ -26,11 +26,15 @@
         <field name="arch" type="xml">
             <field name="lst_price" position="after">
                 <field name="currency_usd_id" invisible="1"/>
-                <span class="mx-2" style="font-weight: bold;">o</span>
+                <span class="mx-2" style="font-weight: bold;" invisible="product_variant_count &gt; 1">o</span>
                 <field name="lst_price_usd"
                        class="oe_inline"
                        widget="monetary"
-                       options="{'currency_field': 'currency_usd_id'}"/>
+                       options="{'currency_field': 'currency_usd_id'}"
+                       readonly="product_variant_count &gt; 1"/>
+                <div class="text-warning small mt-1" invisible="product_variant_count &lt;= 1">
+                    Para precios distintos por variante, usa <strong>Precio Extra USD</strong> en <strong>Atributos y Variantes</strong>.
+                </div>
             </field>
         </field>
     </record>
@@ -43,11 +47,15 @@
         <field name="arch" type="xml">
             <field name="lst_price" position="after">
                 <field name="currency_usd_id" invisible="1"/>
-                <span class="mx-2" style="font-weight: bold;">o</span>
+                <span class="mx-2" style="font-weight: bold;" invisible="product_variant_count &gt; 1">o</span>
                 <field name="lst_price_usd"
                        class="oe_inline"
                        widget="monetary"
-                       options="{'currency_field': 'currency_usd_id'}"/>
+                       options="{'currency_field': 'currency_usd_id'}"
+                       readonly="product_variant_count &gt; 1"/>
+                <div class="text-warning small mt-1" invisible="product_variant_count &lt;= 1">
+                    Para precios distintos por variante, usa <strong>Precio Extra USD</strong> en <strong>Atributos y Variantes</strong>.
+                </div>
             </field>
         </field>
     </record>
@@ -110,6 +118,9 @@
                 <field name="price_extra_usd"
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"/>
+                <div class="text-warning small mt-1">
+                    Para precios distintos por variante, edita <strong>Precio Extra USD</strong> aquí.
+                </div>
             </field>
         </field>
     </record>
