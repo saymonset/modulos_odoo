@@ -50,20 +50,24 @@
     
     'assets': {
         'point_of_sale.assets': [
-            'bcv_rate_update_venezuela/static/src/**/*',
+            'bcv_rate_update_venezuela/static/src/css/payment_proof_component.css',
+            'bcv_rate_update_venezuela/static/src/js/payment_proof_component.js',
+            'bcv_rate_update_venezuela/static/src/xml/payment_proof_component.xml',
+            'bcv_rate_update_venezuela/static/src/css/address_autofill.css',
+            'bcv_rate_update_venezuela/static/src/js/address_autofill.js',
+            'bcv_rate_update_venezuela/static/src/xml/address_autofill.xml',
         ],
         'web.assets_backend': [
-            'bcv_rate_update_venezuela/static/src/**/*',
+            'bcv_rate_update_venezuela/static/src/css/payment_proof_component.css',
+            'bcv_rate_update_venezuela/static/src/js/address_autofill.js',
         ],
          "web.assets_frontend": [
             'bcv_rate_update_venezuela/static/src/css/payment_proof_component.css',
-            'bcv_rate_update_venezuela/static/src/js/payment_proof_component.js',  
-            'bcv_rate_update_venezuela/static/src/js/payment_button_patch.js',
+            'bcv_rate_update_venezuela/static/src/js/payment_proof_component.js',
             'bcv_rate_update_venezuela/static/src/xml/payment_proof_component.xml',
-            'bcv_rate_update_venezuela/static/src/css/address_autofill.css',  # ← nuevo
+            'bcv_rate_update_venezuela/static/src/css/address_autofill.css',
             'bcv_rate_update_venezuela/static/src/js/address_autofill.js',
             'bcv_rate_update_venezuela/static/src/xml/address_autofill.xml',
-            
         ],
     },
     
