@@ -26,12 +26,11 @@
         <field name="arch" type="xml">
             <field name="lst_price" position="after">
                 <field name="currency_usd_id" invisible="1"/>
-                <span class="mx-2" style="font-weight: bold;" invisible="product_variant_count &gt; 1">o</span>
+                <span class="mx-2" style="font-weight: bold;">o</span>
                 <field name="lst_price_usd"
                        class="oe_inline"
                        widget="monetary"
-                       options="{'currency_field': 'currency_usd_id'}"
-                       readonly="product_variant_count &gt; 1"/>
+                       options="{'currency_field': 'currency_usd_id'}"/>
             </field>
         </field>
     </record>
@@ -44,12 +43,11 @@
         <field name="arch" type="xml">
             <field name="lst_price" position="after">
                 <field name="currency_usd_id" invisible="1"/>
-                <span class="mx-2" style="font-weight: bold;" invisible="product_variant_count &gt; 1">o</span>
+                <span class="mx-2" style="font-weight: bold;">o</span>
                 <field name="lst_price_usd"
                        class="oe_inline"
                        widget="monetary"
-                       options="{'currency_field': 'currency_usd_id'}"
-                       readonly="product_variant_count &gt; 1"/>
+                       options="{'currency_field': 'currency_usd_id'}"/>
             </field>
         </field>
     </record>
@@ -69,7 +67,39 @@
         </field>
     </record>
 
-    <!-- 5. Formulario de Valor de Atributo de Variantes (Attribute Value Form) -->
+    <!-- 6. Vista de lista de Plantillas de Producto (Product Template Tree) -->
+    <record id="product_template_tree_view_usd" model="ir.ui.view">
+        <field name="name">product.template.tree.usd.inherit</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="list_price" position="after">
+                <field name="currency_usd_id" column_invisible="True"/>
+                <field name="list_price_usd"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_usd_id'}"
+                       optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- 7. Vista de lista de Variantes de Producto (Product Product Tree) -->
+    <record id="product_product_tree_view_usd" model="ir.ui.view">
+        <field name="name">product.product.tree.usd.inherit</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_product_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="lst_price" position="after">
+                <field name="currency_usd_id" column_invisible="True"/>
+                <field name="lst_price_usd"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_usd_id'}"
+                       optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- 8. Formulario de Valor de Atributo de Variantes (Attribute Value Form) -->
     <record id="product_template_attribute_value_view_form_inherit" model="ir.ui.view">
         <field name="name">product.template.attribute.value.view.form.inherit</field>
         <field name="model">product.template.attribute.value</field>

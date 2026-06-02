@@ -15,8 +15,6 @@ class ProductTemplate(models.Model):
 
     list_price_usd = fields.Float(
         string='Precio de Venta USD',
-        store=True,
-        inverse='_inverse_list_price_usd',
         digits=(12, 4)
     )
 
@@ -25,11 +23,43 @@ class ProductTemplate(models.Model):
         for template in self:
             template.currency_usd_id = usd
 
-    def _inverse_list_price_usd(self):
+    @api.onchange('list_price')
+    def _onchange_list_price(self):
         for template in self:
             rate = self._get_bcv_rate(template.company_id)
             if rate:
-                template.list_price = template.list_price_usd * rate
+                template.list_price_usd = template.list_price / rate
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        if self.env.context.get('_skip_bcv_sync'):
+            return records
+        for record, vals in zip(records, vals_list):
+            record._sync_usd_ves_values(vals)
+        return records
+
+    def write(self, vals):
+        res = super().write(vals)
+        if not self.env.context.get('_skip_bcv_sync'):
+            self._sync_usd_ves_values(vals)
+        return res
+
+    def _sync_usd_ves_values(self, vals):
+        if 'list_price_usd' in vals and 'list_price' not in vals:
+            for template in self:
+                rate = self._get_bcv_rate(template.company_id)
+                if rate:
+                    template.with_context(_skip_bcv_sync=True).write({
+                        'list_price': template.list_price_usd * rate,
+                    })
+        elif 'list_price' in vals and 'list_price_usd' not in vals:
+            for template in self:
+                rate = self._get_bcv_rate(template.company_id)
+                if rate:
+                    template.with_context(_skip_bcv_sync=True).write({
+                        'list_price_usd': template.list_price / rate,
+                    })
 
     @api.model
     def _get_bcv_rate(self, company):
@@ -63,13 +93,17 @@ class ProductTemplate(models.Model):
                 ('company_id', '=', company.id),
             ])
             for t in templates:
-                t.list_price = t.list_price_usd * rate
+                t.with_context(_skip_bcv_sync=True).write({
+                    'list_price': t.list_price_usd * rate,
+                })
             attr_values = self.env['product.template.attribute.value'].search([
                 ('price_extra_usd', '!=', 0),
                 ('product_tmpl_id.company_id', '=', company.id),
             ])
             for a in attr_values:
-                a.price_extra = a.price_extra_usd * rate
+                a.with_context(_skip_bcv_sync=True).write({
+                    'price_extra': a.price_extra_usd * rate,
+                })
         _logger.info("Precios VES recalculados desde USD para todas las compañías.")
 
 
@@ -84,8 +118,6 @@ class ProductProduct(models.Model):
 
     lst_price_usd = fields.Float(
         string='Precio de Venta USD',
-        store=True,
-        inverse='_inverse_lst_price_usd',
         digits=(12, 4)
     )
 
@@ -94,11 +126,43 @@ class ProductProduct(models.Model):
         for rec in self:
             rec.currency_usd_id = usd
 
-    def _inverse_lst_price_usd(self):
+    @api.onchange('lst_price')
+    def _onchange_lst_price(self):
         for rec in self:
             rate = self.env['product.template']._get_bcv_rate(rec.company_id)
             if rate:
-                rec.lst_price = rec.lst_price_usd * rate
+                rec.lst_price_usd = rec.lst_price / rate
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        if self.env.context.get('_skip_bcv_sync'):
+            return records
+        for record, vals in zip(records, vals_list):
+            record._sync_usd_ves_values(vals)
+        return records
+
+    def write(self, vals):
+        res = super().write(vals)
+        if not self.env.context.get('_skip_bcv_sync'):
+            self._sync_usd_ves_values(vals)
+        return res
+
+    def _sync_usd_ves_values(self, vals):
+        if 'lst_price_usd' in vals and 'lst_price' not in vals and 'list_price' not in vals:
+            for rec in self:
+                rate = self.env['product.template']._get_bcv_rate(rec.company_id)
+                if rate:
+                    rec.with_context(_skip_bcv_sync=True).write({
+                        'lst_price': rec.lst_price_usd * rate,
+                    })
+        elif ('lst_price' in vals or 'list_price' in vals or 'price_extra' in vals) and 'lst_price_usd' not in vals:
+            for rec in self:
+                rate = self.env['product.template']._get_bcv_rate(rec.company_id)
+                if rate:
+                    rec.with_context(_skip_bcv_sync=True).write({
+                        'lst_price_usd': rec.lst_price / rate,
+                    })
 
 
 class ProductTemplateAttributeValue(models.Model):
@@ -112,8 +176,6 @@ class ProductTemplateAttributeValue(models.Model):
 
     price_extra_usd = fields.Float(
         string='Precio Extra USD',
-        store=True,
-        inverse='_inverse_price_extra_usd',
         digits=(12, 4)
     )
 
@@ -122,8 +184,40 @@ class ProductTemplateAttributeValue(models.Model):
         for rec in self:
             rec.currency_usd_id = usd
 
-    def _inverse_price_extra_usd(self):
+    @api.onchange('price_extra')
+    def _onchange_price_extra(self):
         for rec in self:
             rate = self.env['product.template']._get_bcv_rate(rec.product_tmpl_id.company_id)
             if rate:
-                rec.price_extra = rec.price_extra_usd * rate
+                rec.price_extra_usd = rec.price_extra / rate
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        if self.env.context.get('_skip_bcv_sync'):
+            return records
+        for record, vals in zip(records, vals_list):
+            record._sync_usd_ves_values(vals)
+        return records
+
+    def write(self, vals):
+        res = super().write(vals)
+        if not self.env.context.get('_skip_bcv_sync'):
+            self._sync_usd_ves_values(vals)
+        return res
+
+    def _sync_usd_ves_values(self, vals):
+        if 'price_extra_usd' in vals and 'price_extra' not in vals:
+            for rec in self:
+                rate = self.env['product.template']._get_bcv_rate(rec.product_tmpl_id.company_id)
+                if rate:
+                    rec.with_context(_skip_bcv_sync=True).write({
+                        'price_extra': rec.price_extra_usd * rate,
+                    })
+        elif 'price_extra' in vals and 'price_extra_usd' not in vals:
+            for rec in self:
+                rate = self.env['product.template']._get_bcv_rate(rec.product_tmpl_id.company_id)
+                if rate:
+                    rec.with_context(_skip_bcv_sync=True).write({
+                        'price_extra_usd': rec.price_extra / rate,
+                    })

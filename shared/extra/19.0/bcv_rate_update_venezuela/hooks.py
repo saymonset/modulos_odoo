@@ -45,18 +45,27 @@ def _populate_initial_usd_prices(cr, registry):
     ])
     count = 0
     for t in templates:
-        t.list_price_usd = t.list_price / rate
+        t.with_context(_skip_bcv_sync=True).write({'list_price_usd': t.list_price / rate})
         count += 1
-    _logger.info("Precios USD iniciales poblados para %s productos.", count)
+    _logger.info("Precios USD poblados para %s plantillas.", count)
+    variants = env['product.product'].search([
+        ('lst_price', '>', 0),
+        ('lst_price_usd', '=', 0),
+    ])
+    count_var = 0
+    for v in variants:
+        v.with_context(_skip_bcv_sync=True).write({'lst_price_usd': v.lst_price / rate})
+        count_var += 1
+    _logger.info("Precios USD poblados para %s variantes.", count_var)
     attr_values = env['product.template.attribute.value'].search([
         ('price_extra', '!=', 0),
         ('price_extra_usd', '=', 0),
     ])
     count_attr = 0
     for a in attr_values:
-        a.price_extra_usd = a.price_extra / rate
+        a.with_context(_skip_bcv_sync=True).write({'price_extra_usd': a.price_extra / rate})
         count_attr += 1
-    _logger.info("Precios extra USD iniciales poblados para %s atributos.", count_attr)
+    _logger.info("Precios extra USD poblados para %s atributos.", count_attr)
 
 def _post_init_hook(cr, registry):
     _clean_orphan_views(cr, registry)
