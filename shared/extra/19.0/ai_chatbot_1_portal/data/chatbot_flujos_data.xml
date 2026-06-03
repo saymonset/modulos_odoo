@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- ============================================ -->
+        <!-- FLUJOS - Los nombres coinciden con n8n        -->
+        <!-- ============================================ -->
+        
+        <!-- Flujo 1: Agendamiento Directo -->
+        <record id="flujo_agendamiento_directo" model="chatbot.flujo">
+            <field name="name">flujo_agendamiento_directo</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="active">True</field>
+        </record>
+        
+        <!-- Flujo 2: Agendamiento Precios -->
+        <record id="flujo_agendamiento_precios" model="chatbot.flujo">
+            <field name="name">flujo_agendamiento_precios</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="active">True</field>
+        </record>
+        
+        <!-- Flujo 3: Agendamiento Servicios -->
+        <record id="flujo_agendamiento_servicios" model="chatbot.flujo">
+            <field name="name">flujo_agendamiento_servicios</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="active">True</field>
+        </record>
+        
+        <!-- Flujo 4: Ventas UNISA (Tarjeta) -->
+        <record id="flujo_ventas_unisa" model="chatbot.flujo">
+            <field name="name">flujo_ventas_unisa</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="active">True</field>
+        </record>
+        
+        <!-- Flujo 5: Otra Consulta -->
+        <record id="flujo_agendamiento_otra_consulta" model="chatbot.flujo">
+            <field name="name">flujo_agendamiento_otra_consulta</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="active">True</field>
+        </record>
+        
+        <!-- Flujo 6: Flujo por defecto -->
+        <record id="flujo_agendamiento_default" model="chatbot.flujo">
+            <field name="name">flujo_agendamiento_default</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="active">True</field>
+        </record>
+        
+        <!-- Flujo 7: Citas con Medios Propios -->
+        <record id="flujo_citas_medios_propios" model="chatbot.flujo">
+            <field name="name">flujo_citas_medios_propios</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="active">True</field>
+        </record>
+        
+        <!-- Flujo 8: Citas con Seguro Médico -->
+        <record id="flujo_citas_seguro" model="chatbot.flujo">
+            <field name="name">flujo_citas_seguro</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="active">True</field>
+        </record>
+        
+        <!-- Flujo 9: Resultados de Laboratorio -->
+        <record id="flujo_resultados_laboratorio" model="chatbot.flujo">
+            <field name="name">flujo_resultados_laboratorio</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="active">True</field>
+        </record>
+        
+        <!-- Flujo 10: Resultados de Imágenes -->
+        <record id="flujo_resultados_imagenes" model="chatbot.flujo">
+            <field name="name">flujo_resultados_imagenes</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="active">True</field>
+        </record>
+        
+    </data>
+</odoo>

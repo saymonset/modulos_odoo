@@ -8,6 +8,8 @@
             <field name="arch" type="xml">
                 <list string="Flujos de Chatbot">
                     <field name="name"/>
+                    <!-- Mostrar el equipo (Many2one) en vez del selection antiguo -->
+                    <field name="team_id"/>
                     <field name="company_id"/>
                     <field name="active"/>
                 </list>
@@ -23,6 +25,7 @@
                     <sheet>
                         <group>
                             <field name="name"/>
+                            <field name="grupo_asignado"/>
                             <field name="company_id"/>
                             <field name="active"/>
                         </group>

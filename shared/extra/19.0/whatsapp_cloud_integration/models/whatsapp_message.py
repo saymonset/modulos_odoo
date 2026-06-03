@@ -25,7 +25,12 @@ class WhatsappMessageWizard(models.TransientModel):
         if not recipient:
             raise UserError(_('El cliente no tiene número de teléfono.'))
 
-        recipient = recipient.strip().replace(' ', '').replace('+', '')
+        recipient = recipient.strip().replace(' ', '').replace('+', '').replace('-', '')
+        # Formatear números de Venezuela si vienen sin código de país (ej: 0412... -> 58412...)
+        if recipient.startswith('04') and len(recipient) == 11:
+            recipient = '58' + recipient[1:]
+        elif recipient.startswith('4') and len(recipient) == 10:
+            recipient = '58' + recipient
 
         url = f"https://graph.facebook.com/v25.0/{self.waba_account_id.phone_number_id}/messages"
         headers = {

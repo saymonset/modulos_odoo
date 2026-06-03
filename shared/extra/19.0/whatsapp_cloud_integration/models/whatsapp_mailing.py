@@ -150,7 +150,12 @@ class WhatsAppMailing(models.Model):
 
     def _send_free_text_message(self, partner, message_body, media_url, waba):
         # (el mismo código que ya tenías, sin cambios)
-        to_number = partner.phone.strip().replace(' ', '').replace('+', '')
+        to_number = partner.phone.strip().replace(' ', '').replace('+', '').replace('-', '')
+        # Formatear números de Venezuela si vienen sin código de país (ej: 0412... -> 58412...)
+        if to_number.startswith('04') and len(to_number) == 11:
+            to_number = '58' + to_number[1:]
+        elif to_number.startswith('4') and len(to_number) == 10:
+            to_number = '58' + to_number
         url = f"https://graph.facebook.com/v25.0/{waba.phone_number_id}/messages"
         headers = {
             'Authorization': f'Bearer {waba.access_token}',

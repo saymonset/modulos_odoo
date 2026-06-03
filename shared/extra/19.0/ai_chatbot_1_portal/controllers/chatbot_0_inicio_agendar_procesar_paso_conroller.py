@@ -5,6 +5,9 @@ import logging
 import datetime
 import traceback
 import uuid
+import re
+
+from .chatbot_utils import ChatBotUtils
 
 _logger = logging.getLogger(__name__)
 
@@ -16,17 +19,36 @@ class InicioAgendarController(http.Controller):
         Retorna un dict con la info del flujo y una lista de pasos,
         o None si no se encuentra.
         """
-        # Usamos sudo para evitar problemas de permisos (endpoint público)
         flow = request.env['chatbot.flujo'].sudo().search([
             ('name', '=', flow_name),
             ('active', '=', True)
         ], limit=1)
         if not flow:
             return None
-
+        # Special-case: flujo_agendamiento_precios is informational and should
+        # present pricing info first instead of immediately requesting phone.
+        if flow.name == 'flujo_agendamiento_precios':
+            return {
+                'flow_id': flow.id,
+                'flow_name': flow.name,
+                'company_id': flow.company_id.id if flow.company_id else None,
+                'steps': [
+                    {
+                        'id': None,
+                        'secuencia': 1,
+                        'nombre_interno': 'informar_precios',
+                        'nombre_mostrar': 'Información de precios',
+                        'tipo_dato': 'text',
+                        'mensaje_prompt': 'Conoce nuestros precios básicos 2026. ¿Deseas que te ayudemos a agendar una cita? Responde "Sí" para continuar.',
+                        'mensaje_error': '',
+                        'es_requerido': False,
+                        'campo_destino': 'informacion_precios',
+                        'es_paso_telefono': False,
+                    }
+                ],
+            }
         steps = []
         for paso in flow.paso_ids.sorted('secuencia'):
-            #Solo los pasos requeridos se envían al iniciar el flujo, los opcionales se manejan dinámicamente según las respuestas del usuario
             if paso.es_requerido:
                 steps.append({
                     'id': paso.id,
@@ -38,7 +60,7 @@ class InicioAgendarController(http.Controller):
                     'mensaje_error': paso.mensaje_error,
                     'es_requerido': paso.es_requerido,
                     'campo_destino': paso.campo_destino,
-                    'es_paso_telefono': paso.es_paso_telefono,  
+                    'es_paso_telefono': paso.es_paso_telefono,
                 })
 
         return {
@@ -47,6 +69,39 @@ class InicioAgendarController(http.Controller):
             'company_id': flow.company_id.id if flow.company_id else None,
             'steps': steps,
         }
+
+    def _precargar_datos_cliente(self, env, telefono):
+        """
+        Busca un cliente por teléfono y precarga sus datos.
+        Retorna un diccionario con los datos encontrados o None.
+        """
+        if not telefono:
+            return None
+        
+        try:
+            # Buscar contacto por teléfono
+            partner = ChatBotUtils.find_partner_by_phone(env, telefono)
+            
+            if partner and partner.id:
+                _logger.info("Cliente encontrado: %s (ID: %s)", partner.name, partner.id)
+                
+                datos_precargados = {
+                    'solicitar_name': partner.name or '',
+                    'solicitar_vat': partner.vat or '',
+                    'solicitar_phone': partner.phone or '',
+                    'solicitar_birthdate': partner.birthdate.strftime('%d/%m/%Y') if partner.birthdate else '',
+                    'solicitar_email': partner.email or '',
+                    'consentimiento': partner.consentimiento_whatsapp or False,
+                    'cliente_existente': True,
+                    'cliente_id': partner.id
+                }
+                _logger.info("Datos precargados: %s", datos_precargados)
+                return datos_precargados
+            
+        except Exception as e:
+            _logger.error("Error buscando cliente por teléfono %s: %s", telefono, str(e))
+        
+        return None
 
     @http.route('/ai_chatbot_1_portal/inicioagendar',
                 auth='public',
@@ -57,16 +112,13 @@ class InicioAgendarController(http.Controller):
     def inicio_agendar(self, **kw):
         """
         Endpoint para iniciar proceso de agendar.
-        Recibe: {"session_id": "...", "conversation_id": "...", "account_id": "...", "name_flow": "...",  "equipo_asignado": "..."}
-        Devuelve: {
-            "success": true,
+        Recibe: {
             "session_id": "...",
             "conversation_id": "...",
             "account_id": "...",
             "name_flow": "...",
-            "flow_info": { ... },   # info del flujo y sus pasos
-            "timestamp": "...",
-            "request_id": "..."
+            "equipo_asignado": "...",
+            "telefono": "..."  # Opcional: para precargar datos
         }
         """
         try:
@@ -105,33 +157,25 @@ class InicioAgendarController(http.Controller):
             account_id = data.get('account_id')
             name_flow = data.get('name_flow')
             equipo_asignado = data.get('equipo_asignado')
+            telefono_busqueda = data.get('telefono', data.get('solicitar_phone', ''))
 
             if not session_id:
                 return Response(
-                    json.dumps({
-                        'success': False,
-                        'error': 'session_id es requerido'
-                    }),
+                    json.dumps({'success': False, 'error': 'session_id es requerido'}),
                     status=400,
                     content_type='application/json; charset=utf-8',
                     headers=[('Access-Control-Allow-Origin', '*')]
                 )
             if not conversation_id:
                 return Response(
-                    json.dumps({
-                        'success': False,
-                        'error': 'conversation_id es requerido'
-                    }),
+                    json.dumps({'success': False, 'error': 'conversation_id es requerido'}),
                     status=400,
                     content_type='application/json; charset=utf-8',
                     headers=[('Access-Control-Allow-Origin', '*')]
                 )
             if not account_id:
                 return Response(
-                    json.dumps({
-                        'success': False,
-                        'error': 'account_id es requerido'
-                    }),
+                    json.dumps({'success': False, 'error': 'account_id es requerido'}),
                     status=400,
                     content_type='application/json; charset=utf-8',
                     headers=[('Access-Control-Allow-Origin', '*')]
@@ -139,10 +183,7 @@ class InicioAgendarController(http.Controller):
 
             if not name_flow:
                 return Response(
-                    json.dumps({
-                        'success': False,
-                        'error': 'name_flow es requerido'
-                    }),
+                    json.dumps({'success': False, 'error': 'name_flow es requerido'}),
                     status=400,
                     content_type='application/json; charset=utf-8',
                     headers=[('Access-Control-Allow-Origin', '*')]
@@ -161,13 +202,38 @@ class InicioAgendarController(http.Controller):
                     headers=[('Access-Control-Allow-Origin', '*')]
                 )
                 
-            steps = flow_info['steps']  
+            steps = flow_info['steps']
             
-            # Inicializar el flujo en la sesión
-            env = request.env(user=2)  # admin
+            # Buscar cliente si se proporcionó teléfono
+            env = request.env(user=2)
+            datos_precargados = None
+            if telefono_busqueda:
+                datos_precargados = self._precargar_datos_cliente(env, telefono_busqueda)
+                if datos_precargados:
+                    _logger.info("Cliente encontrado, se precargarán los datos")
+                else:
+                    _logger.info("No se encontró cliente con teléfono: %s", telefono_busqueda)
+            
+            # Inicializar el flujo en la sesión (pasar datos precargados si existen)
             session_state = env['chatbot.session'].sudo()
-            session_state.iniciar_flujo(session_id, name_flow, steps, equipo_asignado)  
-
+            resultado_flujo = session_state.iniciar_flujo(
+                session_id=session_id,
+                flow_name=name_flow,
+                steps=steps,
+                equipo_asignado=equipo_asignado,
+                datos_precargados=datos_precargados
+            )
+            
+            # Usar los pasos y primer paso del modelo (ya viene con pregunta amigable generada)
+            if resultado_flujo and resultado_flujo.get('success') and not resultado_flujo.get('flow_completed'):
+                pasos_pendientes = resultado_flujo.get('pasos_pendientes')
+                if pasos_pendientes:
+                    steps = pasos_pendientes
+                    primer_paso = resultado_flujo.get('primer_paso', pasos_pendientes[0])
+                else:
+                    primer_paso = None
+            else:
+                primer_paso = None
             
             # Construir respuesta
             respuesta = {
@@ -177,6 +243,9 @@ class InicioAgendarController(http.Controller):
                 'account_id': account_id,
                 'name_flow': name_flow,
                 'steps': steps,
+                'datos_precargados': datos_precargados,
+                'cliente_existente': datos_precargados is not None,
+                'primer_paso': primer_paso,
                 'timestamp': datetime.datetime.now().isoformat(),
                 'request_id': str(uuid.uuid4())
             }
@@ -201,7 +270,6 @@ class InicioAgendarController(http.Controller):
                 content_type='application/json; charset=utf-8',
                 headers=[('Access-Control-Allow-Origin', '*')]
             )
-            
             
     @http.route('/ai_chatbot_1_portal/procesar_paso',
             auth='public',

@@ -58,7 +58,9 @@ class ChatBotController(http.Controller):
                     headers=[('Access-Control-Allow-Origin', '*')]
                 )
             
-            _logger.info("Buscando cliente con teléfono: %s", telefono)
+            # 🔧 NORMALIZAR TELÉFONO ANTES DE BUSCAR
+            telefono_normalizado = ChatBotUtils.normalizar_telefono_internacional(telefono)
+            _logger.info("Buscando cliente con teléfono original: %s - Normalizado: %s", telefono, telefono_normalizado)
             
             try:
                 admin_uid = request.env.ref('base.user_admin').id or 2
@@ -66,7 +68,7 @@ class ChatBotController(http.Controller):
                 admin_uid = 2
                 
             env = request.env(user=admin_uid)
-            search_data = {'telefono': telefono}
+            search_data = {'telefono': telefono_normalizado}  # Usamos el teléfono normalizado
             partner = ChatBotUtils.search_contact(env, search_data)
             
             if partner and partner.id and partner.name and partner.name != 'Sin nombre':
@@ -108,7 +110,7 @@ class ChatBotController(http.Controller):
                     headers=[('Access-Control-Allow-Origin', '*')]
                 )
             
-            _logger.info("Cliente NO encontrado para teléfono: %s", telefono)
+            _logger.info("Cliente NO encontrado para teléfono: %s (normalizado: %s)", telefono, telefono_normalizado)
             mensaje = "❌ **NO ENCONTRAMOS TU REGISTRO**\n\nNo encontramos información con ese número de teléfono.\n\n📋 **Por favor, ingresa tu cédula (solo números):**\n\nEjemplo: 12345678"
             return Response(
                 json.dumps({'existe': False, 'mensaje': mensaje, 'telefono_buscado': telefono, 'sugerencia': 'Puede ser un nuevo cliente o el teléfono no está registrado'}),
@@ -206,39 +208,47 @@ class ChatBotController(http.Controller):
             teams = ChatBotUtils.get_team_unisa(env)
             
             equipo_asignado = data.get('equipo_asignado', 'Agendamiento_Directo')
-            mapeo_grupos = {
-                'Agendamiento_Directo': 'Grupo Citas',
-                'Agendamiento_Otra_Consulta': 'Grupo Citas',
-                'Agendamiento_Precios': 'Grupo Citas',
-                'Agendamiento_Tarjeta': 'Grupo Ventas',
-                'Agendamiento_Servicios': 'Grupo Ventas'
-            }
-            nombre_grupo = mapeo_grupos.get(equipo_asignado, 'Grupo Citas')
+            # Intentar obtener el flujo por name_flow y usar su team_id si está configurado
+            nombre_grupo = None
             team = None
-            if teams and nombre_grupo in teams:
-                team = teams.get(nombre_grupo)
+            name_flow = data.get('name_flow') or data.get('flow_name') or None
+            if name_flow:
+                flujo = env['chatbot.flujo'].search([('name', '=', name_flow)], limit=1)
+                if flujo and flujo.team_id:
+                    team = flujo.team_id
+                    nombre_grupo = team.name
+            # Si no encontramos equipo por el flujo, usar el mapeo central
+            if not team:
+                mapeo_grupos = env['chatbot.flujo']._get_mapeo_equipo_grupo()
+                nombre_grupo = mapeo_grupos.get(equipo_asignado)
+                if nombre_grupo:
+                    if teams and nombre_grupo in teams:
+                        team = teams.get(nombre_grupo)
+                    else:
+                        team = env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
+                        if not team:
+                            team = env['crm.team'].search([], limit=1)
+                            _logger.warning(f"No se encontró el equipo {nombre_grupo}, usando {team.name if team else 'ninguno'}")
+            
+            _logger.info(f"Equipo asignado: {equipo_asignado} -> Grupo: {nombre_grupo or 'Sin grupo'} -> ID: {team.id if team else 'N/A'}")
+            
+            # Crear lead según el tipo de flujo
+            if equipo_asignado in ['RESULTADOS_LAB', 'RESULTADOS_IMAGENES', 'flujo_resultados_laboratorio', 'flujo_resultados_imagenes']:
+                lead = ChatBotUtils.create_resultados_lead(env, data, team, medium, source, campaign, tag)
             else:
-                team = env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
-                if not team:
-                    team = env['crm.team'].search([], limit=1)
-                    _logger.warning(f"No se encontró el equipo {nombre_grupo}, usando {team.name if team else 'ninguno'}")
-            
-            _logger.info(f"Equipo asignado: {equipo_asignado} -> Grupo: {nombre_grupo} -> ID: {team.id if team else 'N/A'}")
-            
-            # Crear lead (ya modificado para incluir email y consentimiento en descripción)
-            lead = ChatBotUtils.create_lead(env, data, partner, team, medium, source, campaign, tag)
+                lead = ChatBotUtils.create_lead(env, data, partner, team, medium, source, campaign, tag)
             
             # Asignación round robin
             if team and team.member_ids:
                 ChatBotUtils.assign_lead_round_robin(env, lead, team)
             
             # Manejar imágenes
-            if 'solicitar_foto_vat' in data or 'solicitar_imagenes_adicionales' in data:
+            if data.get('solicitar_foto_vat') or data.get('foto_vat') or data.get('solicitar_imagenes_adicionales') or data.get('imagenes_adicionales'):
                 validated_images = ChatBotUtils.validate_image_urls(data)
                 data.update(validated_images)
                 ChatBotUtils.handle_images(env, data, lead, partner)
             
-            respuesta_bot = ChatBotUtils.generate_response(data) + f"\n\n📝 **Número de referencia:** {lead.id}"
+            respuesta_bot = ChatBotUtils.generate_response(data, lead_id=lead.id, equipo_asignado=equipo_asignado, env=env)
             
             # Eliminación de sesión (opcional, comentado por seguridad)
             session_id = data.get('session_id')
