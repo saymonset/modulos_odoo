@@ -187,6 +187,10 @@ class SessionState(models.Model):
         steps_filtrados = []
         for step in steps:
             campo_destino = step.get('campo_destino')
+            # vat y birthdate siempre se piden aunque estén precargados
+            if campo_destino in ('vat', 'birthdate'):
+                steps_filtrados.append(step)
+                continue
             if datos_precargados and campo_destino and datos_precargados.get(campo_destino):
                 _logger.info("Paso %s ya tiene dato precargado: %s", campo_destino, datos_precargados.get(campo_destino))
                 continue  # Saltar este paso porque ya tiene valor
@@ -513,6 +517,10 @@ class SessionState(models.Model):
                 
                 for campo_auto, valor_auto in auto_map.items():
                     estado_actual['datos_paciente'][campo_auto] = valor_auto
+                
+                # No auto-rellenar vat ni birthdate, siempre pedirlos
+                for campo in ('vat', 'birthdate'):
+                    auto_map.pop(campo, None)
                 
                 viejos_pasos_count = len(nuevos_pasos)
                 nuevos_pasos = [p for p in nuevos_pasos if p.get('campo_destino') not in auto_map]
