@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Access controls for Odoo Chatwoot Connector -->
+  <record id="access_chatwoot_mapping" model="ir.model.access">
+    <field name="name">access_chatwoot_mapping</field>
+    <field name="model_id" ref="model_chatwoot_mapping"/>
+    <field name="group_id" ref="base.group_erp_manager"/>
+    <field name="perm_read" eval="1"/>
+    <field name="perm_write" eval="1"/>
+    <field name="perm_create" eval="1"/>
+    <field name="perm_unlink" eval="1"/>
+  </record>
+
+  <record id="access_chatwoot_client" model="ir.model.access">
+    <field name="name">access_chatwoot_client</field>
+    <field name="model_id" ref="model_chatwoot_client"/>
+    <field name="group_id" ref="base.group_erp_manager"/>
+    <field name="perm_read" eval="1"/>
+    <field name="perm_write" eval="1"/>
+    <field name="perm_create" eval="1"/>
+    <field name="perm_unlink" eval="1"/>
+  </record>
+
+</odoo>

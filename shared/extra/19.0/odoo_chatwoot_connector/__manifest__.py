@@ -8,7 +8,7 @@
     "website": "https://unisa.example",
     "depends": ["base", "mail", "ai_chatbot_1_portal"],
     "data": [
-        "security/ir.model.access.csv",
+        "security/ir.model.access.xml",
         "views/chatwoot_settings_views.xml",
         "views/chatwoot_mapping_views.xml",
     ],
