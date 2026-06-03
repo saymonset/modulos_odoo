@@ -43,7 +43,7 @@
   <record id="action_chatwoot_mapping" model="ir.actions.act_window">
     <field name="name">Chatwoot Mappings</field>
     <field name="res_model">chatwoot.mapping</field>
-    <field name="view_mode">tree,form</field>
+    <field name="view_mode">list,form</field>
   </record>
 
   <menuitem id="menu_chatwoot_root" name="Chatwoot" sequence="90"/>
