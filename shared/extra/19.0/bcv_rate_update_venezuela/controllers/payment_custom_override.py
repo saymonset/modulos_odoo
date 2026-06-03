@@ -86,6 +86,41 @@ class PaymentCustomOverride(http.Controller):
         _logger.info(f"*** PAYMENT: Método de pago: ID={payment_method.id}, name={payment_method.name}")
 
         # ================================================================
+        # 2b. GARANTIZAR payment_method_line_id PARA EVITAR ERROR DE POST-PROCESO
+        # ================================================================
+        if not provider.journal_id:
+            journal = request.env['account.journal'].sudo().search([
+                ('company_id', '=', provider.company_id.id),
+                ('type', '=', 'bank'),
+            ], limit=1)
+            if journal:
+                provider.sudo().write({'journal_id': journal.id})
+            else:
+                _logger.error("*** PAYMENT: No se encontró diario bancario para el proveedor")
+                return request.redirect('/shop/payment?error=Error+en+la+configuración+del+diario+de+pago')
+
+        journal = provider.journal_id
+        payment_method_line = journal.inbound_payment_method_line_ids\
+            .filtered(lambda l: l.payment_provider_id == provider.id)
+        if not payment_method_line:
+            payment_method_line = journal.inbound_payment_method_line_ids\
+                .filtered(lambda l: not l.payment_provider_id)[:1]
+        if not payment_method_line:
+            manual_method = request.env['account.payment.method'].sudo().search([
+                ('payment_type', '=', 'inbound'),
+                ('code', '=', 'manual'),
+            ], limit=1)
+            if manual_method:
+                payment_method_line = request.env['account.payment.method.line'].sudo().create({
+                    'payment_method_id': manual_method.id,
+                    'journal_id': journal.id,
+                    'payment_provider_id': provider.id,
+                })
+        if not payment_method_line:
+            _logger.error("*** PAYMENT: No se pudo crear payment_method_line para el proveedor")
+            return request.redirect('/shop/payment?error=Error+en+la+configuración+de+línea+de+pago')
+
+        # ================================================================
         # 3. CREAR NUEVA TRANSACCIÓN
         # ================================================================
         tx_values = {

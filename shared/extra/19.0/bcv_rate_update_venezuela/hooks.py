@@ -1,41 +1,34 @@
 # -*- coding: utf-8 -*-
-from odoo import api, SUPERUSER_ID
 from odoo.tools.float_utils import float_round
 import logging
 
 _logger = logging.getLogger(__name__)
 
-def _clean_orphan_views(cr, registry):
-    """
-    Se ejecuta después de instalar el módulo.
-    Elimina vistas huérfanas que puedan estar duplicando funcionalidad.
-    """
-    cr.execute("""
-        DELETE FROM ir_ui_view
-        WHERE module_id IS NULL
-          AND name IN ('sale.order.form.usd.total', 'sale.order.form.payment.proof')
-    """)
+def _clean_orphan_views(env):
+    views = env['ir.ui.view'].sudo().search([
+        ('name', 'in', ['sale.order.form.usd.total', 'sale.order.form.payment.proof']),
+    ])
+    orphan_ids = []
+    for view in views:
+        ext_id = view.get_external_id()
+        if not ext_id.get(view.id):
+            orphan_ids.append(view.id)
+    if orphan_ids:
+        env['ir.ui.view'].sudo().browse(orphan_ids).unlink()
     _logger.info("Vistas huérfanas eliminadas correctamente (post-install).")
 
-def _uninstall_cleanup(cr, registry):
-    """
-    Se ejecuta al desinstalar el módulo.
-    Elimina las vistas que este módulo haya creado, evitando que queden huérfanas.
-    """
-    cr.execute("""
-        DELETE FROM ir_ui_view
-        WHERE module_id = (SELECT id FROM ir_module_module WHERE name = 'bcv_rate_update_venezuela')
-          AND name IN ('sale.order.form.usd.total', 'sale.order.form.payment.proof')
-    """)
+def _uninstall_cleanup(env):
+    data = env['ir.model.data'].sudo().search([
+        ('model', '=', 'ir.ui.view'),
+        ('module', '=', 'bcv_rate_update_venezuela'),
+        ('name', 'in', ['sale.order.form.usd.total', 'sale.order.form.payment.proof']),
+    ])
+    view_ids = data.mapped('res_id')
+    if view_ids:
+        env['ir.ui.view'].sudo().browse(view_ids).unlink()
     _logger.info("Vistas del módulo eliminadas durante la desinstalación.")
 
-def _populate_initial_usd_prices(cr, registry):
-    """
-    Población inicial de precios USD para productos existentes.
-    Convierte list_price (VES) a list_price_usd usando la tasa BCV activa.
-    Se ejecuta en la instalación inicial (post_init_hook).
-    """
-    env = api.Environment(cr, SUPERUSER_ID, {})
+def _populate_initial_usd_prices(env):
     rate = env['product.template']._get_bcv_rate(env.company)
     if not rate or rate == 1.0:
         _logger.warning("No se pudo obtener tasa BCV para poblar precios USD iniciales.")
@@ -68,6 +61,6 @@ def _populate_initial_usd_prices(cr, registry):
         count_attr += 1
     _logger.info("Precios extra USD poblados para %s atributos.", count_attr)
 
-def _post_init_hook(cr, registry):
-    _clean_orphan_views(cr, registry)
-    _populate_initial_usd_prices(cr, registry)
+def _post_init_hook(env):
+    _clean_orphan_views(env)
+    _populate_initial_usd_prices(env)

@@ -6,7 +6,7 @@
     'summary': 'Integrate Odoo with Meta WhatsApp Cloud API',
     'author': 'Simon Alberto Rodriguez Pacheco',
     'website': 'https://integraia.lat',
-    'depends': ['base', 'mail', 'mass_mailing'],
+    'depends': ['base', 'mail', 'mass_mailing', 'ai_chatbot_1_portal'],
     'data': [
         'security/ir.model.access.csv',
         'views/waba_account_views.xml',
