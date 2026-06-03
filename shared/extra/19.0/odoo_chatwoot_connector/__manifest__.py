@@ -8,10 +8,10 @@
     "website": "https://unisa.example",
     "depends": ["base", "mail", "ai_chatbot_1_portal"],
     "data": [
-        "security/ir.model.access.xml",
         "views/chatwoot_settings_views.xml",
         "views/chatwoot_mapping_views.xml",
     ],
+    "post_init_hook": "post_init_setup_acl",
     "installable": True,
     "application": False,
 }
