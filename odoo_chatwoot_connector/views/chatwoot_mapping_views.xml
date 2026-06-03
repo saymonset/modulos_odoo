@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_chatwoot_mapping_tree" model="ir.ui.view">
+    <field name="name">chatwoot.mapping.tree</field>
+    <field name="model">chatwoot.mapping</field>
+    <field name="arch" type="xml">
+      <tree>
+        <field name="name"/>
+        <field name="equipo_asignado"/>
+        <field name="chatwoot_inbox_id"/>
+        <field name="chatwoot_agent_id"/>
+        <field name="chatwoot_tags"/>
+      </tree>
+    </field>
+  </record>
+
+  <record id="view_chatwoot_mapping_form" model="ir.ui.view">
+    <field name="name">chatwoot.mapping.form</field>
+    <field name="model">chatwoot.mapping</field>
+    <field name="arch" type="xml">
+      <form string="Chatwoot Mapping">
+        <sheet>
+          <group>
+            <field name="name"/>
+            <field name="flow_id"/>
+            <field name="equipo_asignado"/>
+            <field name="chatwoot_inbox_id"/>
+            <field name="chatwoot_agent_id"/>
+            <field name="chatwoot_tags"/>
+            <field name="active"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_chatwoot_mapping" model="ir.actions.act_window">
+    <field name="name">Chatwoot Mappings</field>
+    <field name="res_model">chatwoot.mapping</field>
+    <field name="view_mode">tree,form</field>
+  </record>
+
+  <menuitem id="menu_chatwoot_root" name="Chatwoot" sequence="90"/>
+  <menuitem id="menu_chatwoot_config" name="Integración Chatwoot" parent="menu_chatwoot_root" sequence="10"/>
+  <menuitem id="menu_chatwoot_mappings" name="Mappings" parent="menu_chatwoot_config" action="action_chatwoot_mapping" sequence="20"/>
+
+</odoo>

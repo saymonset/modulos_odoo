@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_chatwoot_settings_form" model="ir.ui.view">
+    <field name="name">chatwoot.settings.form</field>
+    <field name="model">res.config.settings</field>
+    <field name="arch" type="xml">
+      <form string="Chatwoot Settings">
+        <group>
+          <field name="chatwoot_base_url"/>
+          <field name="chatwoot_api_token"/>
+          <field name="chatwoot_timeout"/>
+        </group>
+      </form>
+    </field>
+  </record>
+  <record id="action_chatwoot_settings" model="ir.actions.act_window">
+    <field name="name">Chatwoot Settings</field>
+    <field name="res_model">res.config.settings</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+</odoo>
