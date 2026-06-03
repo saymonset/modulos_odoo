@@ -3,8 +3,8 @@
   <record id="view_chatwoot_mapping_tree" model="ir.ui.view">
     <field name="name">chatwoot.mapping.tree</field>
     <field name="model">chatwoot.mapping</field>
-    <field name="arch" type="xml">
-      <tree>
+      <field name="arch" type="xml">
+      <list>
         <field name="name"/>
         <field name="team_id"/>
         <field name="equipo_asignado"/>
@@ -13,7 +13,7 @@
         <field name="chatwoot_agent_email"/>
         <field name="prefer_assign_to_agent"/>
         <field name="chatwoot_tags"/>
-      </tree>
+      </list>
     </field>
   </record>
 
