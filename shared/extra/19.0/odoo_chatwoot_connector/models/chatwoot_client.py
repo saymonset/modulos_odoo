@@ -15,7 +15,8 @@ class ChatwootClient(models.AbstractModel):
 
     @api.model
     def assign_conversation(self, account_id, conversation_id, mapping):
-        """mapping: dict with optional keys: agent_id, inbox_id, tags (list), notify_message"""
+        """mapping: dict with optional keys: agent_id, agent_email, inbox_id, tags (list), notify_message
+        Behavior: try assign to agent_id (or resolve agent_email); if fails, fallback to inbox_id."""
         base_url = self.env['ir.config_parameter'].sudo().get_param('chatwoot.base_url') or ''
         api_token = self.env['ir.config_parameter'].sudo().get_param('chatwoot.api_access_token') or ''
         timeout = int(self.env['ir.config_parameter'].sudo().get_param('chatwoot.timeout', 3))
@@ -23,48 +24,88 @@ class ChatwootClient(models.AbstractModel):
 
         if not base_url or not api_token or not account_id or not conversation_id:
             _logger.warning('Chatwoot assign skipped: falta configuración o ids.')
-            return False
+            return {'ok': False, 'errors': ['missing_configuration_or_ids']}
 
-        # 1) Try assign to agent
-        try:
-            if mapping.get('agent_id'):
-                url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}"
-                payload = {"assignee_id": mapping['agent_id'], "assignee_type": "User"}
-                r = requests.put(url, json=payload, headers=headers, timeout=timeout)
-                if r.status_code not in (200, 201):
-                    _logger.warning('Chatwoot assign agent failed: %s - %s', r.status_code, r.text)
-        except Exception as e:
-            _logger.exception('Error assigning agent in Chatwoot: %s', e)
+        errors = []
+        assigned = None
 
-        # 2) fallback: inbox
-        try:
-            if not mapping.get('agent_id') and mapping.get('inbox_id'):
+        def _get_agent_id_by_email(email):
+            try:
+                url = f"{base_url}/api/v1/accounts/{account_id}/agents"
+                r = requests.get(url, headers=headers, timeout=timeout)
+                if r.status_code == 200:
+                    data = r.json()
+                    # data may be list or dict depending on version
+                    agents = data if isinstance(data, list) else data.get('payload') or data.get('data') or []
+                    for a in agents:
+                        if a.get('email') == email or a.get('agent') and a.get('agent').get('email') == email:
+                            return a.get('id') or a.get('agent', {}).get('id')
+            except Exception as e:
+                _logger.warning('Error listing agents by email: %s', e)
+            return None
+
+        def _agent_exists(agent_id):
+            try:
+                url = f"{base_url}/api/v1/accounts/{account_id}/agents/{agent_id}"
+                r = requests.get(url, headers=headers, timeout=timeout)
+                return r.status_code == 200
+            except Exception:
+                return False
+
+        # Resolve agent id: prefer mapping.agent_id, else mapping.agent_email
+        agent_id = mapping.get('agent_id')
+        if not agent_id and mapping.get('agent_email'):
+            agent_id = _get_agent_id_by_email(mapping.get('agent_email'))
+
+        # Try assign to agent if present and valid
+        if agent_id and mapping.get('prefer_assign_to_agent', True):
+            if _agent_exists(agent_id):
+                try:
+                    url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}"
+                    payload = {"assignee_id": agent_id, "assignee_type": "User"}
+                    r = requests.put(url, json=payload, headers=headers, timeout=timeout)
+                    if r.status_code in (200, 201):
+                        assigned = 'agent'
+                    else:
+                        errors.append(f'assign_agent_failed:{r.status_code}:{r.text}')
+                except Exception as e:
+                    errors.append(f'exception_assign_agent:{e}')
+            else:
+                errors.append('agent_not_found_or_inactive')
+
+        # Fallback to inbox
+        if not assigned and mapping.get('inbox_id'):
+            try:
                 url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}"
                 payload = {"inbox_id": mapping['inbox_id']}
                 r = requests.put(url, json=payload, headers=headers, timeout=timeout)
-                if r.status_code not in (200,201):
-                    _logger.warning('Chatwoot set inbox failed: %s - %s', r.status_code, r.text)
-        except Exception as e:
-            _logger.exception('Error setting inbox in Chatwoot: %s', e)
+                if r.status_code in (200, 201):
+                    assigned = 'inbox'
+                else:
+                    errors.append(f'assign_inbox_failed:{r.status_code}:{r.text}')
+            except Exception as e:
+                errors.append(f'exception_assign_inbox:{e}')
 
-        # 3) tags
-        try:
-            if mapping.get('tags'):
+        # Tags
+        if mapping.get('tags'):
+            try:
                 url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}/tags"
                 r = requests.post(url, json={"tags": mapping['tags']}, headers=headers, timeout=timeout)
-                if r.status_code not in (200,201):
-                    _logger.warning('Chatwoot add tags failed: %s - %s', r.status_code, r.text)
-        except Exception as e:
-            _logger.exception('Error adding tags in Chatwoot: %s', e)
+                if r.status_code not in (200, 201):
+                    errors.append(f'add_tags_failed:{r.status_code}:{r.text}')
+            except Exception as e:
+                errors.append(f'exception_add_tags:{e}')
 
-        # 4) notify message
-        try:
-            if mapping.get('notify_message'):
+        # Notify message
+        if mapping.get('notify_message'):
+            try:
                 url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}/messages"
                 r = requests.post(url, json={"content": mapping['notify_message']}, headers=headers, timeout=timeout)
-                if r.status_code not in (200,201):
-                    _logger.warning('Chatwoot notify message failed: %s - %s', r.status_code, r.text)
-        except Exception as e:
-            _logger.exception('Error sending notify message: %s', e)
+                if r.status_code not in (200, 201):
+                    errors.append(f'notify_failed:{r.status_code}:{r.text}')
+            except Exception as e:
+                errors.append(f'exception_notify:{e}')
 
-        return True
+        ok = assigned is not None and len(errors) == 0
+        _logger.info('Chatwoot assign result: assigned=%s, errors=%s', assigned, errors)
+        return {'ok': ok, 'assigned_to': assigned, 'errors': errors}

@@ -6,9 +6,12 @@
     <field name="arch" type="xml">
       <tree>
         <field name="name"/>
+        <field name="team_id"/>
         <field name="equipo_asignado"/>
         <field name="chatwoot_inbox_id"/>
         <field name="chatwoot_agent_id"/>
+        <field name="chatwoot_agent_email"/>
+        <field name="prefer_assign_to_agent"/>
         <field name="chatwoot_tags"/>
       </tree>
     </field>
@@ -23,9 +26,12 @@
           <group>
             <field name="name"/>
             <field name="flow_id"/>
+            <field name="team_id"/>
             <field name="equipo_asignado"/>
             <field name="chatwoot_inbox_id"/>
             <field name="chatwoot_agent_id"/>
+            <field name="chatwoot_agent_email"/>
+            <field name="prefer_assign_to_agent"/>
             <field name="chatwoot_tags"/>
             <field name="active"/>
           </group>
