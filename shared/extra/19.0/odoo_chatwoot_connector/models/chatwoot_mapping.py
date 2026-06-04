@@ -1,4 +1,11 @@
-from odoo import models, fields
+import logging
+
+import requests
+
+from odoo import models, fields, api
+
+
+_logger = logging.getLogger(__name__)
 
 
 EQUIPO_ASIGNADO_SELECTION = [
@@ -68,3 +75,111 @@ class ChatwootMapping(models.Model):
         default=True,
         help='Desactiva este mapping si ya no quieres que se use, sin borrarlo.'
     )
+
+    @api.model
+    def select_round_robin_mapping(self, team=None, equipo_asignado=None, flow_name=None):
+        """Return the next active mapping for the given context.
+
+        Priority:
+        1. exact equipo_asignado
+        2. flow_name
+        3. team_id
+        Then rotate among the candidate mappings in ascending id order.
+        """
+        candidates = self.sudo().search([('active', '=', True)]).sorted('id')
+
+        if equipo_asignado:
+            filtered = candidates.filtered(lambda m: m.equipo_asignado == equipo_asignado)
+            if filtered:
+                candidates = filtered
+
+        if not candidates and flow_name:
+            filtered = self.sudo().search([('active', '=', True)]).filtered(
+                lambda m: m.flow_id and m.flow_id.name == flow_name
+            )
+            if filtered:
+                candidates = filtered.sorted('id')
+
+        if not candidates and team:
+            team_id = team.id if hasattr(team, 'id') else int(team)
+            filtered = self.sudo().search([('active', '=', True), ('team_id', '=', team_id)]).sorted('id')
+            if filtered:
+                candidates = filtered
+
+        if not candidates:
+            return self.browse()
+
+        def _resolve_agent_id_by_email(base_url, headers, email, timeout):
+            if not email:
+                return None
+            try:
+                url = f"{base_url}/api/v1/accounts/1/agents"
+                r = requests.get(url, headers=headers, timeout=timeout)
+                if r.status_code == 200:
+                    data = r.json()
+                    agents = data if isinstance(data, list) else data.get('payload') or data.get('data') or []
+                    for a in agents:
+                        if a.get('email') == email or (a.get('agent') and a.get('agent', {}).get('email') == email):
+                            return a.get('id') or a.get('agent', {}).get('id')
+            except Exception as e:
+                _logger.warning('Error resolviendo agente por email (%s): %s', email, e)
+            return None
+
+        def _mapping_agent_is_eligible(mapping):
+            agent_id = mapping.chatwoot_agent_id or None
+            base_url = self.env['ir.config_parameter'].sudo().get_param('chatwoot.base_url') or ''
+            api_token = self.env['ir.config_parameter'].sudo().get_param('chatwoot.api_access_token') or ''
+            timeout = int(self.env['ir.config_parameter'].sudo().get_param('chatwoot.timeout', 3))
+            if not base_url or not api_token:
+                return True
+
+            headers = {'Content-Type': 'application/json', 'api_access_token': api_token}
+            if not agent_id and mapping.chatwoot_agent_email:
+                agent_id = _resolve_agent_id_by_email(base_url, headers, mapping.chatwoot_agent_email, timeout)
+
+            # If the mapping has no agent, allow it (inbox-only mapping).
+            if not agent_id:
+                return True
+
+            try:
+                url = f"{base_url}/api/v1/accounts/1/agents/{agent_id}"
+                r = requests.get(url, headers=headers, timeout=timeout)
+                if r.status_code != 200:
+                    return False
+                data = r.json() or {}
+                if data.get('confirmed') is False:
+                    return False
+                status = (data.get('availability_status') or '').lower()
+                if status == 'offline':
+                    return False
+                return True
+            except Exception as e:
+                _logger.warning('Error validando agente %s para mapping %s: %s', agent_id, mapping.id, e)
+                return False
+
+        eligible = candidates.filtered(_mapping_agent_is_eligible)
+        if eligible:
+            candidates = eligible.sorted('id')
+
+        rr_key_parts = [
+            str(team.id if hasattr(team, 'id') and team else team or ''),
+            equipo_asignado or '',
+            flow_name or '',
+        ]
+        rr_key = 'odoo_chatwoot_connector_last_mapping_' + '_'.join([p for p in rr_key_parts if p])
+        params = self.env['ir.config_parameter'].sudo()
+        last_id = params.get_param(rr_key)
+
+        next_rec = candidates[0]
+        if last_id:
+            try:
+                last_id = int(last_id)
+                ids = candidates.ids
+                if last_id in ids:
+                    idx = ids.index(last_id)
+                    next_rec = candidates[(idx + 1) % len(candidates)]
+            except Exception:
+                next_rec = candidates[0]
+
+        params.set_param(rr_key, next_rec.id)
+        return next_rec

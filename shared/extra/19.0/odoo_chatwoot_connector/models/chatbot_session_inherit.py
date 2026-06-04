@@ -28,15 +28,15 @@ class ChatbotSessionInherit(models.Model):
                 if lead and lead.exists():
                     team = lead.team_id
 
-            # Prefer mapping by team_id
-            if team:
-                mapping_rec = self.env['chatwoot.mapping'].sudo().search([('team_id', '=', team.id), ('active', '=', True)], limit=1)
+            equipo = datos.get('equipo_asignado') or (self and getattr(self, 'equipo_asignado', None))
+            flow_name = datos.get('flow_name') or datos.get('name_flow')
 
-            # Fallback: mapping by equipo_asignado value in datos
-            if not mapping_rec:
-                equipo = datos.get('equipo_asignado') or (self and getattr(self, 'equipo_asignado', None))
-                if equipo:
-                    mapping_rec = self.env['chatwoot.mapping'].sudo().search([('equipo_asignado', '=', equipo), ('active', '=', True)], limit=1)
+            # Select mapping with round-robin across mappings that share the same flow/team
+            mapping_rec = self.env['chatwoot.mapping'].sudo().select_round_robin_mapping(
+                team=team,
+                equipo_asignado=equipo,
+                flow_name=flow_name,
+            )
 
             if mapping_rec and account_id and conversation_id:
                 mapping = {
