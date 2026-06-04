@@ -6,7 +6,7 @@
       <field name="arch" type="xml">
       <form string="Chatwoot Settings">
         <header>
-          <button name="%(base.action_res_config_settings)d" type="action" string="Abrir Ajustes Globales" class="oe_link"/>
+          <button name="action_open_global_settings" type="object" string="Abrir Ajustes Globales" class="oe_link"/>
         </header>
         <group>
           <field name="chatwoot_base_url"/>
