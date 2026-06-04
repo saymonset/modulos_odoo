@@ -14,6 +14,39 @@ class ChatwootClient(models.AbstractModel):
         return {'Content-Type': 'application/json', 'api_access_token': api_token}
 
     @api.model
+    def get_agent_details(self, account_id, agent_id=None, agent_email=None):
+        """Return agent details dict or None.
+
+        Tries agent_id first, then agent_email list lookup.
+        """
+        base_url = self.env['ir.config_parameter'].sudo().get_param('chatwoot.base_url') or ''
+        api_token = self.env['ir.config_parameter'].sudo().get_param('chatwoot.api_access_token') or ''
+        timeout = int(self.env['ir.config_parameter'].sudo().get_param('chatwoot.timeout', 3))
+        if not base_url or not api_token or not account_id:
+            return None
+
+        headers = self._headers(api_token)
+
+        try:
+            if agent_id:
+                url = f"{base_url}/api/v1/accounts/{account_id}/agents/{agent_id}"
+                r = requests.get(url, headers=headers, timeout=timeout)
+                if r.status_code == 200:
+                    return r.json()
+            if agent_email:
+                url = f"{base_url}/api/v1/accounts/{account_id}/agents"
+                r = requests.get(url, headers=headers, timeout=timeout)
+                if r.status_code == 200:
+                    data = r.json()
+                    agents = data if isinstance(data, list) else data.get('payload') or data.get('data') or []
+                    for a in agents:
+                        if a.get('email') == agent_email or (a.get('agent') and a.get('agent', {}).get('email') == agent_email):
+                            return a
+        except Exception as e:
+            _logger.warning('Error obteniendo detalles del agente: %s', e)
+        return None
+
+    @api.model
     def assign_conversation(self, account_id, conversation_id, mapping):
         """mapping: dict with optional keys: agent_id, agent_email, inbox_id, tags (list), notify_message
         Behavior: try assign to agent_id (or resolve agent_email) using Chatwoot assignments API.

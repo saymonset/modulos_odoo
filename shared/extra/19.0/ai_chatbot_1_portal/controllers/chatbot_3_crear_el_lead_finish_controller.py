@@ -247,7 +247,49 @@ class ChatBotController(http.Controller):
                 validated_images = ChatBotUtils.validate_image_urls(data)
                 data.update(validated_images)
                 ChatBotUtils.handle_images(env, data, lead, partner)
-            
+
+            # Asignación Chatwoot (round-robin + notify)
+            account_id_cw = data.get('account_id')
+            conversation_id_cw = data.get('conversation_id')
+            if account_id_cw and conversation_id_cw:
+                try:
+                    mapping_rec = env['chatwoot.mapping'].sudo().select_round_robin_mapping(
+                        team=team,
+                        equipo_asignado=equipo_asignado,
+                        flow_name=name_flow,
+                    )
+                    if mapping_rec:
+                        agent_details = env['chatwoot.client'].get_agent_details(
+                            account_id_cw,
+                            agent_id=mapping_rec.chatwoot_agent_id or None,
+                            agent_email=mapping_rec.chatwoot_agent_email or None,
+                        )
+                        assigned_agent_name = None
+                        assigned_agent_email = None
+                        if agent_details:
+                            assigned_agent_name = agent_details.get('available_name') or agent_details.get('name') or agent_details.get('email')
+                            assigned_agent_email = agent_details.get('email')
+                        mapping = {
+                            'agent_id': mapping_rec.chatwoot_agent_id or None,
+                            'agent_email': mapping_rec.chatwoot_agent_email or None,
+                            'inbox_id': mapping_rec.chatwoot_inbox_id or None,
+                            'prefer_assign_to_agent': mapping_rec.prefer_assign_to_agent,
+                            'tags': [t.strip() for t in (mapping_rec.chatwoot_tags or '').split(',') if t.strip()],
+                            'notify_message': (
+                                f"Nuevo lead: {lead.id}"
+                                f" - {data.get('solicitar_name') or data.get('name','Sin nombre')}"
+                                f" - {data.get('solicitar_phone') or data.get('phone','')}"
+                                + (f"\n👤 Ejecutivo asignado: {assigned_agent_name} ({assigned_agent_email})" if assigned_agent_name else '')
+                            )
+                        }
+                        result = env['chatwoot.client'].assign_conversation(account_id_cw, conversation_id_cw, mapping)
+                        note = f"Chatwoot assign result: {result}"
+                        if assigned_agent_name:
+                            note += f"\nEjecutivo esperado: {assigned_agent_name} ({assigned_agent_email or 'sin email'})"
+                        lead.sudo().message_post(body=note)
+                except Exception as e:
+                    _logger.error("Error asignando a Chatwoot desde HTTP: %s", e, exc_info=True)
+
             respuesta_bot = ChatBotUtils.generate_response(data, lead_id=lead.id, equipo_asignado=equipo_asignado, env=env)
             
             # Eliminación de sesión (opcional, comentado por seguridad)

@@ -170,11 +170,12 @@ class SessionState(models.Model):
     #  MÉTODOS PRINCIPALES DEL FLUJO
     # ==================================================================
     @api.model
-    def iniciar_flujo(self, session_id, flow_name, steps, equipo_asignado, datos_precargados=None):
+    def iniciar_flujo(self, session_id, flow_name, steps, equipo_asignado, datos_precargados=None, account_id=None, conversation_id=None):
         """
         Inicia un flujo para una sesión, guardando los pasos pendientes y estableciendo el primer paso.
         steps: lista de diccionarios con la definición de cada paso.
         datos_precargados: dict con datos del cliente ya existentes (opcional).
+        account_id/conversation_id: se inyectan en datos_paciente para que el hook Chatwoot funcione.
         """
         _logger.info("Iniciando flujo para session_id: %s, flow_name: %s", session_id, flow_name)
         _logger.info("Datos precargados: %s", datos_precargados)
@@ -182,6 +183,10 @@ class SessionState(models.Model):
         # Inicializar datos del paciente con los precargados si existen
         datos_paciente = datos_precargados.copy() if datos_precargados else {}
         datos_paciente['equipo_asignado'] = equipo_asignado
+        if account_id:
+            datos_paciente['account_id'] = account_id
+        if conversation_id:
+            datos_paciente['conversation_id'] = conversation_id
         
         # Filtrar pasos que ya tienen datos precargados
         steps_filtrados = []
@@ -566,6 +571,8 @@ class SessionState(models.Model):
         else:
             # Flujo completado
             _logger.info("Flujo completado. Iniciando capturar_lead.")
+            estado_actual['datos_paciente']['account_id'] = account_id
+            estado_actual['datos_paciente']['conversation_id'] = conversation_id
             lead_resultado = self.capturar_lead(estado_actual['datos_paciente'])
             _logger.info("Resultado de capturar_lead: %s", lead_resultado.get('success'))
             registro.sudo().write({'modo': 'COMPLETADO'})
@@ -903,7 +910,7 @@ class SessionState(models.Model):
                 lines.append(resumen)
                 lines.append("")
             lines.append("📋 **¿Qué sigue?**")
-            lines.append("Una de nuestras ejecutivas revisará tu solicitud y se comunicará contigo en las próximas horas para brindarte la atención que necesitas.")
+            lines.append("Uno de nuestros ejecutivos revisará tu solicitud y se comunicará contigo en las próximas horas para brindarte la atención que necesitas.")
             msg = "\n".join(lines)
         lead_id = None
         if lead_resultado and lead_resultado.get('success'):
