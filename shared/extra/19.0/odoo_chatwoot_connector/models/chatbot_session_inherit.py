@@ -13,6 +13,7 @@ class ChatbotSessionInherit(models.Model):
             account_id = datos.get('account_id') or datos.get('account_id')
             conversation_id = datos.get('conversation_id') or datos.get('conversation_id')
             mapping_rec = None
+            lead = None
 
             # Try to find lead id from the result and get its team
             lead_id = None

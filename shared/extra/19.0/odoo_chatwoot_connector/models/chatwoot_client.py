@@ -16,7 +16,8 @@ class ChatwootClient(models.AbstractModel):
     @api.model
     def assign_conversation(self, account_id, conversation_id, mapping):
         """mapping: dict with optional keys: agent_id, agent_email, inbox_id, tags (list), notify_message
-        Behavior: try assign to agent_id (or resolve agent_email); if fails, fallback to inbox_id."""
+        Behavior: try assign to agent_id (or resolve agent_email) using Chatwoot assignments API.
+        If assignment to agent fails, keep conversation in its inbox as fallback and continue."""
         base_url = self.env['ir.config_parameter'].sudo().get_param('chatwoot.base_url') or ''
         api_token = self.env['ir.config_parameter'].sudo().get_param('chatwoot.api_access_token') or ''
         timeout = int(self.env['ir.config_parameter'].sudo().get_param('chatwoot.timeout', 3))
@@ -27,6 +28,7 @@ class ChatwootClient(models.AbstractModel):
             return {'ok': False, 'errors': ['missing_configuration_or_ids']}
 
         errors = []
+        warnings = []
         assigned = None
 
         def _get_agent_id_by_email(email):
@@ -61,9 +63,9 @@ class ChatwootClient(models.AbstractModel):
         if agent_id and mapping.get('prefer_assign_to_agent', True):
             if _agent_exists(agent_id):
                 try:
-                    url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}"
-                    payload = {"assignee_id": agent_id, "assignee_type": "User"}
-                    r = requests.put(url, json=payload, headers=headers, timeout=timeout)
+                    url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}/assignments"
+                    payload = {"assignee_id": agent_id}
+                    r = requests.post(url, json=payload, headers=headers, timeout=timeout)
                     if r.status_code in (200, 201):
                         assigned = 'agent'
                     else:
@@ -73,18 +75,14 @@ class ChatwootClient(models.AbstractModel):
             else:
                 errors.append('agent_not_found_or_inactive')
 
-        # Fallback to inbox
+        # Fallback to inbox: the conversation remains in its inbox.
+        # We do not call an API here because Chatwoot assigns conversations to inboxes at creation time.
         if not assigned and mapping.get('inbox_id'):
-            try:
-                url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}"
-                payload = {"inbox_id": mapping['inbox_id']}
-                r = requests.put(url, json=payload, headers=headers, timeout=timeout)
-                if r.status_code in (200, 201):
-                    assigned = 'inbox'
-                else:
-                    errors.append(f'assign_inbox_failed:{r.status_code}:{r.text}')
-            except Exception as e:
-                errors.append(f'exception_assign_inbox:{e}')
+            assigned = 'inbox'
+            if errors:
+                warnings.extend(errors)
+                warnings.append('agent_assignment_failed_fallback_to_inbox')
+                errors = []
 
         # Tags
         if mapping.get('tags'):
@@ -107,5 +105,5 @@ class ChatwootClient(models.AbstractModel):
                 errors.append(f'exception_notify:{e}')
 
         ok = assigned is not None and len(errors) == 0
-        _logger.info('Chatwoot assign result: assigned=%s, errors=%s', assigned, errors)
-        return {'ok': ok, 'assigned_to': assigned, 'errors': errors}
+        _logger.info('Chatwoot assign result: assigned=%s, errors=%s, warnings=%s', assigned, errors, warnings)
+        return {'ok': ok, 'assigned_to': assigned, 'errors': errors, 'warnings': warnings}
