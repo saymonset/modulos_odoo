@@ -23,17 +23,27 @@
     <field name="arch" type="xml">
       <form string="Chatwoot Mapping">
         <sheet>
+          <div class="alert alert-info" role="alert">
+            <strong>Guía rápida:</strong>
+            <span> llena primero <em>Name</em>, luego elige <em>Equipo Asignado</em> de la lista, después el <em>Equipo CRM</em> y por último el <em>Chatwoot inbox id</em>. No escribas valores nuevos para Equipo Asignado.</span>
+          </div>
           <group>
-            <field name="name"/>
-            <field name="flow_id"/>
-            <field name="team_id"/>
-            <field name="equipo_asignado"/>
-            <field name="chatwoot_inbox_id"/>
-            <field name="chatwoot_agent_id"/>
-            <field name="chatwoot_agent_email"/>
-            <field name="prefer_assign_to_agent"/>
-            <field name="chatwoot_tags"/>
-            <field name="active"/>
+            <group string="Identificación">
+              <field name="name" placeholder="Ej: Citas Medios Propios"/>
+              <field name="flow_id" options="{'no_create': True}"/>
+              <field name="team_id" options="{'no_create': True}"/>
+              <field name="equipo_asignado"/>
+            </group>
+            <group string="Asignación en Chatwoot">
+              <field name="chatwoot_inbox_id" placeholder="Ej: 7"/>
+              <field name="chatwoot_agent_id" placeholder="Ej: 9"/>
+              <field name="chatwoot_agent_email" placeholder="ejemplo@correo.com"/>
+              <field name="prefer_assign_to_agent"/>
+              <field name="chatwoot_tags" placeholder="Citas,WhatsApp"/>
+            </group>
+            <group string="Estado">
+              <field name="active"/>
+            </group>
           </group>
         </sheet>
       </form>
