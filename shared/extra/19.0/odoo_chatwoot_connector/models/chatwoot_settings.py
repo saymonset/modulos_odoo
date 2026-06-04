@@ -12,6 +12,8 @@ class ResConfigSettings(models.TransientModel):
         """Return the global Settings action so the button can open it."""
         try:
             action = self.env.ref('base.action_res_config_settings').read()[0]
+            # ensure the action opens in the main window (not a modal)
+            action['target'] = 'current'
             return action
         except Exception:
             return {'type': 'ir.actions.act_window_close'}
