@@ -1,25 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <record id="view_chatwoot_settings_form" model="ir.ui.view">
-    <field name="name">chatwoot.settings.form</field>
+  <!-- Integrate Chatwoot settings into the global Settings form -->
+  <record id="view_chatwoot_settings_inherit" model="ir.ui.view">
+    <field name="name">chatwoot.settings.inherit</field>
     <field name="model">res.config.settings</field>
-      <field name="arch" type="xml">
-      <form string="Chatwoot Settings">
-        <header>
-          <button name="action_open_global_settings" type="object" string="Abrir Ajustes Globales" class="oe_link"/>
-        </header>
-        <group>
+    <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//form" position="inside">
+        <group string="Chatwoot Integration">
           <field name="chatwoot_base_url"/>
           <field name="chatwoot_api_token"/>
           <field name="chatwoot_timeout"/>
         </group>
-      </form>
+      </xpath>
     </field>
-  </record>
-  <record id="action_chatwoot_settings" model="ir.actions.act_window">
-    <field name="name">Chatwoot Settings</field>
-    <field name="res_model">res.config.settings</field>
-    <field name="view_mode">form</field>
-    <field name="target">new</field>
   </record>
 </odoo>
