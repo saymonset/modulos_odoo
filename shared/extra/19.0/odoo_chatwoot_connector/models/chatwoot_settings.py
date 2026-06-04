@@ -11,8 +11,16 @@ class ResConfigSettings(models.TransientModel):
     def action_open_global_settings(self):
         """Return the global Settings action so the button can open it."""
         try:
+            # Prefer opening the main Settings menu if available
+            menu = self.env.ref('base.menu_config', raise_if_not_found=False)
+            if menu:
+                return {
+                    'type': 'ir.actions.act_url',
+                    'url': f'/web#menu_id={menu.id}',
+                    'target': 'self',
+                }
+            # Fallback to the standard settings action
             action = self.env.ref('base.action_res_config_settings').read()[0]
-            # ensure the action opens in the main window (not a modal)
             action['target'] = 'current'
             return action
         except Exception:
