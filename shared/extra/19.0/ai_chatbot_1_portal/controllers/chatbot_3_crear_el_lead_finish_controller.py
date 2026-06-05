@@ -283,10 +283,7 @@ class ChatBotController(http.Controller):
                             )
                         }
                         result = env['chatwoot.client'].assign_conversation(account_id_cw, conversation_id_cw, mapping)
-                        note = f"Chatwoot assign result: {result}"
-                        if assigned_agent_name:
-                            note += f"\nEjecutivo esperado: {assigned_agent_name} ({assigned_agent_email or 'sin email'})"
-                        lead.sudo().message_post(body=note)
+                        lead.sudo().message_post(body="Solicitud recibida. Un ejecutivo te contactará pronto.")
                 except Exception as e:
                     _logger.error("Error asignando a Chatwoot desde HTTP: %s", e, exc_info=True)
 

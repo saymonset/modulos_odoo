@@ -50,28 +50,37 @@ class ChatbotSessionInherit(models.Model):
                     assigned_agent_name = agent_details.get('available_name') or agent_details.get('name') or agent_details.get('email')
                     assigned_agent_email = agent_details.get('email')
 
+                # mapping = {
+                #     'agent_id': mapping_rec.chatwoot_agent_id or None,
+                #     'agent_email': mapping_rec.chatwoot_agent_email or None,
+                #     'inbox_id': mapping_rec.chatwoot_inbox_id or None,
+                #     'prefer_assign_to_agent': mapping_rec.prefer_assign_to_agent,
+                #     'tags': [t.strip() for t in (mapping_rec.chatwoot_tags or '').split(',') if t.strip()],
+                #     'notify_message': (
+                #         f"Nuevo lead: {res.get('lead_info', {}).get('lead_id', '')}"
+                #         f" - {datos.get('solicitar_name') or datos.get('name','Sin nombre')}"
+                #         f" - {datos.get('solicitar_phone') or datos.get('phone','')}"
+                #         + (f"\n👤 Ejecutivo asignado: {assigned_agent_name} ({assigned_agent_email})" if assigned_agent_name else '')
+                #     )
+                # }
+                if assigned_agent_name:
+                    notify_msg = f"👤 Ejecutivo asignado: {assigned_agent_name} ({assigned_agent_email})"
+                else:
+                    notify_msg = ""   # 👈 vacío cuando no hay asignación
+
                 mapping = {
                     'agent_id': mapping_rec.chatwoot_agent_id or None,
                     'agent_email': mapping_rec.chatwoot_agent_email or None,
                     'inbox_id': mapping_rec.chatwoot_inbox_id or None,
                     'prefer_assign_to_agent': mapping_rec.prefer_assign_to_agent,
                     'tags': [t.strip() for t in (mapping_rec.chatwoot_tags or '').split(',') if t.strip()],
-                    'notify_message': (
-                        f"Nuevo lead: {res.get('lead_info', {}).get('lead_id', '')}"
-                        f" - {datos.get('solicitar_name') or datos.get('name','Sin nombre')}"
-                        f" - {datos.get('solicitar_phone') or datos.get('phone','')}"
-                        + (f"\n👤 Ejecutivo asignado: {assigned_agent_name} ({assigned_agent_email})" if assigned_agent_name else '')
-                    )
+                    'notify_message': notify_msg
                 }
                 # call client
                 try:
                     result = self.env['chatwoot.client'].assign_conversation(account_id, conversation_id, mapping)
-                    # log result in lead chatter or a field
                     if lead and lead.exists():
-                        note = f"Chatwoot assign result: {result}"
-                        if assigned_agent_name:
-                            note += f"\nEjecutivo esperado: {assigned_agent_name} ({assigned_agent_email or 'sin email'})"
-                        lead.message_post(body=note)
+                        lead.message_post(body="Solicitud recibida. Un ejecutivo te contactará pronto.")
                 except Exception:
                     _logger.exception('Error al notificar/assign a Chatwoot')
         except Exception:
