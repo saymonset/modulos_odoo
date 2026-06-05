@@ -307,6 +307,19 @@ class ChatwootClient(models.AbstractModel):
         _logger.info('assign_conversation[conv=%s]: resolved agent_id=%s, assigned=%s',
                      conversation_id, agent_id, assigned)
 
+        if agent_id and mapping.get('inbox_id'):
+            try:
+                inbox_result = self._ensure_inbox_member(account_id, mapping.get('inbox_id'), agent_id)
+                if inbox_result.get('warnings'):
+                    warnings.extend(inbox_result.get('warnings', []))
+                if not inbox_result.get('ok'):
+                    _logger.warning(
+                        'assign_conversation[conv=%s]: unable to ensure inbox member for agent %s inbox %s: %s',
+                        conversation_id, agent_id, mapping.get('inbox_id'), inbox_result.get('errors', []),
+                    )
+            except Exception as e:
+                warnings.append(f'exception_ensure_inbox_member:{e}')
+
         # Always try to assign to the selected agent.
         if agent_id and mapping.get('prefer_assign_to_agent', True):
             try:
