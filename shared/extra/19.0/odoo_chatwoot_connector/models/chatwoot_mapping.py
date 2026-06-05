@@ -1,7 +1,5 @@
 import logging
 
-import requests
-
 from odoo import models, fields, api
 
 
@@ -109,62 +107,9 @@ class ChatwootMapping(models.Model):
         if not candidates:
             return self.browse()
 
-        def _resolve_agent_id_by_email(base_url, headers, email, timeout):
-            if not email:
-                return None
-            try:
-                url = f"{base_url}/api/v1/accounts/1/agents"
-                r = requests.get(url, headers=headers, timeout=timeout)
-                if r.status_code == 200:
-                    data = r.json()
-                    agents = data if isinstance(data, list) else data.get('payload') or data.get('data') or []
-                    for a in agents:
-                        if a.get('email') == email or (a.get('agent') and a.get('agent', {}).get('email') == email):
-                            return a.get('id') or a.get('agent', {}).get('id')
-            except Exception as e:
-                _logger.warning('Error resolviendo agente por email (%s): %s', email, e)
-            return None
-
-        def _mapping_agent_is_eligible(mapping):
-            agent_id = mapping.chatwoot_agent_id or None
-            base_url = self.env['ir.config_parameter'].sudo().get_param('chatwoot.base_url') or ''
-            api_token = self.env['ir.config_parameter'].sudo().get_param('chatwoot.api_access_token') or ''
-            timeout = int(self.env['ir.config_parameter'].sudo().get_param('chatwoot.timeout', 3))
-            if not base_url or not api_token:
-                return True
-
-            headers = {'Content-Type': 'application/json', 'api_access_token': api_token}
-            if not agent_id and mapping.chatwoot_agent_email:
-                agent_id = _resolve_agent_id_by_email(base_url, headers, mapping.chatwoot_agent_email, timeout)
-
-            # If the mapping has no agent, allow it (inbox-only mapping).
-            if not agent_id:
-                return True
-
-            try:
-                url = f"{base_url}/api/v1/accounts/1/agents/{agent_id}"
-                r = requests.get(url, headers=headers, timeout=timeout)
-                if r.status_code != 200:
-                    return False
-                data = r.json() or {}
-                if data.get('confirmed') is False:
-                    return False
-                status = (data.get('availability_status') or '').lower()
-                if status == 'offline':
-                    return False
-                return True
-            except Exception as e:
-                _logger.warning('Error validando agente %s para mapping %s: %s', agent_id, mapping.id, e)
-                return False
-
-        eligible = candidates.filtered(_mapping_agent_is_eligible)
-        if eligible:
-            candidates = eligible.sorted('id')
-
         rr_key_parts = [
             str(team.id if hasattr(team, 'id') and team else team or ''),
             equipo_asignado or '',
-            flow_name or '',
         ]
         rr_key = 'odoo_chatwoot_connector_last_mapping_' + '_'.join([p for p in rr_key_parts if p])
         params = self.env['ir.config_parameter'].sudo()
