@@ -80,7 +80,8 @@ class ChatbotSessionInherit(models.Model):
                 try:
                     result = self.env['chatwoot.client'].assign_conversation(account_id, conversation_id, mapping)
                     if lead and lead.exists():
-                        lead.message_post(body="Solicitud recibida. Un ejecutivo te contactará pronto.")
+                        ejecutivo = assigned_agent_name or mapping_rec.chatwoot_agent_email or 'sin datos'
+                        lead.message_post(body=f"Solicitud recibida. Ejecutivo asignado: {ejecutivo}")
                 except Exception:
                     _logger.exception('Error al notificar/assign a Chatwoot')
         except Exception:

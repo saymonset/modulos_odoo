@@ -253,7 +253,10 @@ class ChatwootClient(models.AbstractModel):
                             merged.append(label)
                             seen_labels.add(label.lower())
 
-                    if merged:
+                    current_set = {self._normalize_label(label).lower() for label in current_labels if self._normalize_label(label)}
+                    desired_set = {self._normalize_label(label).lower() for label in merged if self._normalize_label(label)}
+
+                    if desired_set and desired_set != current_set:
                         label_result = self._apply_conversation_labels(account_id, conversation_id, merged)
                         if not label_result['ok']:
                             warnings.extend(label_result.get('warnings', []))
