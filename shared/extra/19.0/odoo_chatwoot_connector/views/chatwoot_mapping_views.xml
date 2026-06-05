@@ -50,10 +50,22 @@
     </field>
   </record>
 
+  <record id="view_chatwoot_mapping_search" model="ir.ui.view">
+    <field name="name">chatwoot.mapping.search</field>
+    <field name="model">chatwoot.mapping</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name"/>
+        <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+      </search>
+    </field>
+  </record>
+
   <record id="action_chatwoot_mapping" model="ir.actions.act_window">
     <field name="name">Chatwoot Mappings</field>
     <field name="res_model">chatwoot.mapping</field>
     <field name="view_mode">list,form</field>
+    <field name="search_view_id" ref="view_chatwoot_mapping_search"/>
   </record>
 
   <menuitem id="menu_chatwoot_root" name="Chatwoot" sequence="90"/>
