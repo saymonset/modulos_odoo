@@ -9,7 +9,7 @@ class ChatwootClient(models.AbstractModel):
     _name = 'chatwoot.client'
     _description = 'Helpers Chatwoot'
 
-    DEFAULT_CONVERSATION_LABELS = ['#agente_desactivado']
+    DEFAULT_ACCOUNT_LABELS = ['#agente_desactivado']
 
     @staticmethod
     def _headers(api_token):
@@ -123,6 +123,9 @@ class ChatwootClient(models.AbstractModel):
                 _logger.warning('Error creando label %s en account %s: %s', label, account_id, e)
         return ensured
 
+    def _ensure_default_account_labels(self, account_id):
+        return self._ensure_account_labels(account_id, self.DEFAULT_ACCOUNT_LABELS)
+
     def _get_conversation_labels(self, account_id, conversation_id):
         base_url = self.env['ir.config_parameter'].sudo().get_param('chatwoot.base_url') or ''
         api_token = self.env['ir.config_parameter'].sudo().get_param('chatwoot.api_access_token') or ''
@@ -169,6 +172,98 @@ class ChatwootClient(models.AbstractModel):
         except Exception as e:
             return {'ok': False, 'errors': [f'exception_apply_labels:{e}'], 'warnings': []}
 
+    def _get_conversation_details(self, account_id, conversation_id):
+        base_url = self.env['ir.config_parameter'].sudo().get_param('chatwoot.base_url') or ''
+        api_token = self.env['ir.config_parameter'].sudo().get_param('chatwoot.api_access_token') or ''
+        timeout = int(self.env['ir.config_parameter'].sudo().get_param('chatwoot.timeout', 3))
+        if not base_url or not api_token or not account_id or not conversation_id:
+            _logger.warning('_get_conversation_details skipped: missing config/ids (base_url=%s, token=%s, account=%s, conv=%s)',
+                            bool(base_url), bool(api_token), account_id, conversation_id)
+            return None
+
+        headers = self._headers(api_token)
+        try:
+            url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}"
+            _logger.info('_get_conversation_details calling GET %s', url)
+            r = requests.get(url, headers=headers, timeout=timeout)
+            _logger.info('_get_conversation_details response status=%s', r.status_code)
+            if r.status_code != 200:
+                _logger.warning('_get_conversation_details non-200: %s %s', r.status_code, r.text[:500])
+                return None
+            data = r.json() or {}
+            meta = data.get('meta', {})
+            assignee = meta.get('assignee')
+            _logger.info('_get_conversation_details success. meta.assignee=%s', assignee)
+            return data
+        except Exception as e:
+            _logger.warning('Error obteniendo conversación %s: %s', conversation_id, e, exc_info=True)
+            return None
+
+    def _set_conversation_status(self, account_id, conversation_id, status):
+        base_url = self.env['ir.config_parameter'].sudo().get_param('chatwoot.base_url') or ''
+        api_token = self.env['ir.config_parameter'].sudo().get_param('chatwoot.api_access_token') or ''
+        timeout = int(self.env['ir.config_parameter'].sudo().get_param('chatwoot.timeout', 3))
+        if not base_url or not api_token or not account_id or not conversation_id:
+            return {'ok': False, 'errors': ['missing_configuration_or_ids'], 'warnings': []}
+
+        headers = self._headers(api_token)
+        try:
+            url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}/toggle_status"
+            r = requests.post(url, json={'status': status}, headers=headers, timeout=timeout)
+            if r.status_code in (200, 201):
+                return {'ok': True, 'errors': [], 'warnings': []}
+            return {'ok': False, 'errors': [f'set_status_failed:{r.status_code}:{r.text}'], 'warnings': []}
+        except Exception as e:
+            return {'ok': False, 'errors': [f'exception_set_status:{e}'], 'warnings': []}
+
+    def _get_inbox_members(self, account_id, inbox_id):
+        base_url = self.env['ir.config_parameter'].sudo().get_param('chatwoot.base_url') or ''
+        api_token = self.env['ir.config_parameter'].sudo().get_param('chatwoot.api_access_token') or ''
+        timeout = int(self.env['ir.config_parameter'].sudo().get_param('chatwoot.timeout', 3))
+        if not base_url or not api_token or not account_id or not inbox_id:
+            return None
+
+        headers = self._headers(api_token)
+        try:
+            url = f"{base_url}/api/v1/accounts/{account_id}/inbox_members/{inbox_id}"
+            r = requests.get(url, headers=headers, timeout=timeout)
+            if r.status_code != 200:
+                return None
+            members = self._extract_payload_list(r.json())
+            ids = []
+            for item in members:
+                if isinstance(item, dict) and item.get('id'):
+                    ids.append(int(item['id']))
+            return ids
+        except Exception as e:
+            _logger.warning('Error obteniendo miembros del inbox %s: %s', inbox_id, e)
+            return None
+
+    def _ensure_inbox_member(self, account_id, inbox_id, agent_id):
+        base_url = self.env['ir.config_parameter'].sudo().get_param('chatwoot.base_url') or ''
+        api_token = self.env['ir.config_parameter'].sudo().get_param('chatwoot.api_access_token') or ''
+        timeout = int(self.env['ir.config_parameter'].sudo().get_param('chatwoot.timeout', 3))
+        if not base_url or not api_token or not account_id or not inbox_id or not agent_id:
+            return {'ok': False, 'warnings': [], 'errors': []}
+
+        current_ids = self._get_inbox_members(account_id, inbox_id)
+        if current_ids is None:
+            return {'ok': False, 'warnings': ['inbox_members_unavailable_skip_sync'], 'errors': []}
+        if int(agent_id) in current_ids:
+            return {'ok': True, 'warnings': [], 'errors': []}
+
+        headers = self._headers(api_token)
+        try:
+            url = f"{base_url}/api/v1/accounts/{account_id}/inbox_members"
+            user_ids = sorted(set(current_ids + [int(agent_id)]))
+            payload = {'inbox_id': int(inbox_id), 'user_ids': user_ids}
+            r = requests.patch(url, json=payload, headers=headers, timeout=timeout)
+            if r.status_code in (200, 201):
+                return {'ok': True, 'warnings': [], 'errors': []}
+            return {'ok': False, 'warnings': [], 'errors': [f'ensure_inbox_member_failed:{r.status_code}:{r.text}']}
+        except Exception as e:
+            return {'ok': False, 'warnings': [], 'errors': [f'exception_ensure_inbox_member:{e}']}
+
     @api.model
     def assign_conversation(self, account_id, conversation_id, mapping):
         """mapping: dict with optional keys: agent_id, agent_email, inbox_id, tags (list), notify_message
@@ -186,6 +281,8 @@ class ChatwootClient(models.AbstractModel):
         errors = []
         warnings = []
         assigned = None
+        # We always reassign according to the selected round-robin mapping.
+        # This prevents a previous assignee from blocking the next lead.
 
         def _get_agent_id_by_email(email):
             try:
@@ -207,18 +304,26 @@ class ChatwootClient(models.AbstractModel):
         if not agent_id and mapping.get('agent_email'):
             agent_id = _get_agent_id_by_email(mapping.get('agent_email'))
 
-        # Try assign to agent if present.
+        _logger.info('assign_conversation[conv=%s]: resolved agent_id=%s, assigned=%s',
+                     conversation_id, agent_id, assigned)
+
+        # Always try to assign to the selected agent.
         if agent_id and mapping.get('prefer_assign_to_agent', True):
             try:
                 url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}/assignments"
                 payload = {"assignee_id": agent_id}
+                _logger.info('assign_conversation[conv=%s]: assigning to agent_id=%s', conversation_id, agent_id)
                 r = requests.post(url, json=payload, headers=headers, timeout=timeout)
                 if r.status_code in (200, 201):
                     assigned = 'agent'
+                    _logger.info('assign_conversation[conv=%s]: assign to agent %s OK', conversation_id, agent_id)
                 else:
                     errors.append(f'assign_agent_failed:{r.status_code}:{r.text}')
+                    _logger.warning('assign_conversation[conv=%s]: assign to agent %s FAILED: %s %s',
+                                    conversation_id, agent_id, r.status_code, r.text[:500])
             except Exception as e:
                 errors.append(f'exception_assign_agent:{e}')
+                _logger.warning('assign_conversation[conv=%s]: assign exception: %s', conversation_id, e, exc_info=True)
 
         # Fallback to inbox: the conversation remains in its inbox.
         # We do not call an API here because Chatwoot assigns conversations to inboxes at creation time.
@@ -229,11 +334,14 @@ class ChatwootClient(models.AbstractModel):
                 warnings.append('agent_assignment_failed_fallback_to_inbox')
                 errors = []
 
-        # Labels: keep current labels and add the configured ones.
+        # Ensure account-level labels exist, but do not force them on the conversation.
+        self._ensure_default_account_labels(account_id)
+
+        # Labels on the conversation: only the ones configured for this mapping.
         configured_labels = [self._normalize_label(label) for label in (mapping.get('tags') or [])]
         labels_to_apply = []
         seen = set()
-        for label in self.DEFAULT_CONVERSATION_LABELS + configured_labels:
+        for label in configured_labels:
             if label and label.lower() not in seen:
                 labels_to_apply.append(label)
                 seen.add(label.lower())
@@ -264,7 +372,7 @@ class ChatwootClient(models.AbstractModel):
             except Exception as e:
                 errors.append(f'exception_apply_labels:{e}')
 
-        # Notify message
+        # Notify message whenever assignment is attempted successfully.
         if mapping.get('notify_message'):
             try:
                 url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}/messages"
@@ -275,5 +383,12 @@ class ChatwootClient(models.AbstractModel):
                 errors.append(f'exception_notify:{e}')
 
         ok = assigned is not None and len(errors) == 0
-        _logger.info('Chatwoot assign result: assigned=%s, errors=%s, warnings=%s', assigned, errors, warnings)
-        return {'ok': ok, 'assigned_to': assigned, 'errors': errors, 'warnings': warnings}
+        _logger.info('Chatwoot assign result [conv=%s]: assigned=%s, errors=%s, warnings=%s',
+                     conversation_id, assigned, errors, warnings)
+        return {
+            'ok': ok,
+            'assigned_to': assigned,
+            'errors': errors,
+            'warnings': warnings,
+            'assignee_id': agent_id if assigned == 'agent' else None,
+        }

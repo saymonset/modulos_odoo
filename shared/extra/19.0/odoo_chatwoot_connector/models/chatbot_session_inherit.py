@@ -1,5 +1,6 @@
+import json
 import logging
-from odoo import models
+from odoo import models, fields
 
 _logger = logging.getLogger(__name__)
 
@@ -81,7 +82,32 @@ class ChatbotSessionInherit(models.Model):
                     result = self.env['chatwoot.client'].assign_conversation(account_id, conversation_id, mapping)
                     if lead and lead.exists():
                         ejecutivo = assigned_agent_name or mapping_rec.chatwoot_agent_email or 'sin datos'
-                        lead.message_post(body=f"Solicitud recibida. Ejecutivo asignado: {ejecutivo}")
+                        if result.get('assigned_to') != 'existing':
+                            lead.message_post(body=f"Solicitud recibida. Ejecutivo asignado: {ejecutivo}")
+                        else:
+                            _logger.info('capturar_lead[conv=%s]: assignee preserved, skipping chatter message',
+                                         conversation_id)
+                            ejecutivo = 'preservado'
+                        # Store chatwoot ids on the lead for backup lookups
+                        try:
+                            lead.sudo().write({
+                                'chatwoot_conversation_id': str(conversation_id),
+                                'chatwoot_account_id': str(account_id),
+                                'chatwoot_processing_status': 'assigned' if result.get('ok', False) else 'error',
+                                'chatwoot_processed_at': fields.Datetime.now(),
+                                'chatwoot_assigned_agent_name': ejecutivo if result.get('ok', False) else False,
+                                'chatwoot_assign_log': json.dumps({
+                                    'assigned_to': result.get('assigned_to'),
+                                    'assignee_id': result.get('assignee_id'),
+                                    'mapping_id': mapping_rec.id,
+                                    'agent_name': ejecutivo,
+                                    'errors': result.get('errors', []),
+                                    'warnings': result.get('warnings', []),
+                                }),
+                                'chatwoot_assign_failed': not result.get('ok', False),
+                            })
+                        except Exception as e_write:
+                            _logger.warning('Error guardando chatwoot ids en lead %s: %s', lead.id, e_write)
                 except Exception:
                     _logger.exception('Error al notificar/assign a Chatwoot')
         except Exception:

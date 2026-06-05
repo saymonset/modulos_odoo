@@ -471,7 +471,7 @@
             {
               "id": "ddcd14fb-bfd1-4f23-a0e0-7d0fa54e8719",
               "name": "conversation_id",
-              "value": "={{ $json.body.conversation.messages[0].conversation_id }}",
+              "value": "={{ $json.body.conversation?.id || $json.body.conversation.messages?.[0]?.conversation_id || $json.body.conversation.messages?.[0]?.conversation?.id || '' }}",
               "type": "string"
             },
             {
