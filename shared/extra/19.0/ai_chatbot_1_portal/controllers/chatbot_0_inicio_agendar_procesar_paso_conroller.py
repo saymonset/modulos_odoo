@@ -221,7 +221,9 @@ class InicioAgendarController(http.Controller):
                 flow_name=name_flow,
                 steps=steps,
                 equipo_asignado=equipo_asignado,
-                datos_precargados=datos_precargados
+                datos_precargados=datos_precargados,
+                account_id=account_id,
+                conversation_id=conversation_id,
             )
             
             # Usar los pasos y primer paso del modelo (ya viene con pregunta amigable generada)

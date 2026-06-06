@@ -6,10 +6,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        6576,
-        23776
+        6416,
+        26592
       ],
-      "id": "8a1048c6-c8f0-4d39-8e1c-af1f7291ce2f",
+      "id": "a4d625e2-5805-4088-86ca-bbb9e0ca5d89",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -20,10 +20,10 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        3360,
-        24688
+        6240,
+        27392
       ],
-      "id": "efe6551e-3cb7-47fd-9e29-e279ad102cf5",
+      "id": "9be14427-b7c8-4aa1-b37c-39fa201b760d",
       "name": "When chat message received",
       "webhookId": "d7373d29-7364-41f7-a73f-bd24b72daeea"
     },
@@ -128,10 +128,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3504,
-        24608
+        6384,
+        27312
       ],
-      "id": "cc458bd1-f8bf-4e22-84b1-14833ecd2d27",
+      "id": "20fc8f8c-bb58-4633-a70a-7bd1566b6996",
       "name": "Seteamos_variables"
     },
     {
@@ -261,10 +261,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        4432,
-        24592
+        7312,
+        27296
       ],
-      "id": "0a6f18bd-3313-471c-aa47-6114f12f46ac",
+      "id": "ff75b34e-8901-4e83-bc68-91c8911bff60",
       "name": "Indentifica_canal"
     },
     {
@@ -272,10 +272,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        3760,
-        24960
+        6640,
+        27664
       ],
-      "id": "0f88e372-48ea-4304-a9d0-7db8ae3301f8",
+      "id": "9ad47d94-d2b7-4549-9dc8-13c3d7984e70",
       "name": "Dueno_o_Bot_responde"
     },
     {
@@ -335,10 +335,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        4048,
-        24608
+        6928,
+        27312
       ],
-      "id": "909eba79-20ce-4f00-b3f3-81aff5f57066",
+      "id": "5e221710-9778-47e2-92e2-bb52e9cadf0f",
       "name": "Configurar_IA_Responda?"
     },
     {
@@ -398,10 +398,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        3808,
-        24624
+        6688,
+        27328
       ],
-      "id": "a74b816b-e0db-4fb3-bd60-0451c244a372",
+      "id": "159aaad7-851c-4664-9211-c68807f6039b",
       "name": "Pregunta_el_Cliente?"
     },
     {
@@ -409,10 +409,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        4352,
-        24336
+        7232,
+        27040
       ],
-      "id": "b12abeaa-7b9a-4d89-8b20-0cb71927075a",
+      "id": "5299c38a-1bda-41b1-93f8-2d7eb46372c6",
       "name": "End1"
     },
     {
@@ -424,10 +424,10 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        6592,
-        24320
+        9472,
+        27024
       ],
-      "id": "22dc2fa2-47de-4b14-8de2-aaaa442dfc3e",
+      "id": "a1083abe-f523-4283-8e58-c4c269090d71",
       "name": "Simple Memory"
     },
     {
@@ -439,10 +439,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        3280,
-        23968
+        6160,
+        26672
       ],
-      "id": "7f24a730-81e5-4d34-a4a9-c5c342e158d8",
+      "id": "798554d1-7f0a-42dc-8711-4ca870bc064d",
       "name": "Entrar_ChattWoot",
       "webhookId": "f2f3dab4-9ee7-4ad7-9fe8-96f79468b1f4"
     },
@@ -471,7 +471,7 @@
             {
               "id": "ddcd14fb-bfd1-4f23-a0e0-7d0fa54e8719",
               "name": "conversation_id",
-              "value": "={{ $json.body.conversation.messages[0].conversation_id }}",
+              "value": "={{ $json.body.conversation?.id || $json.body.conversation.messages?.[0]?.conversation_id || $json.body.conversation.messages?.[0]?.conversation?.id || '' }}",
               "type": "string"
             },
             {
@@ -543,7 +543,7 @@
             {
               "id": "9741fd66-6a23-47b2-a5b1-0acb8401af6b",
               "name": "agente_desactivado",
-              "value": "={{ $json.body.conversation.labels[0]=='agente_desactivado'?'off':'on' }}",
+              "value": "={{ $json.body.conversation.labels.includes('agente_desactivado') ? 'off' : 'on' }}",
               "type": "string"
             }
           ]
@@ -553,10 +553,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3552,
-        24208
+        6432,
+        26912
       ],
-      "id": "6a678b5e-7ee0-4925-991e-d3668848d6e7",
+      "id": "6471e061-98e0-45d1-b8f1-030431061892",
       "name": "Obtener_Info_basica"
     },
     {
@@ -639,10 +639,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        5776,
-        24864
+        8656,
+        27568
       ],
-      "id": "6ec6332d-d717-4ad3-aee0-0d7847eb5946",
+      "id": "e33ba128-c40c-4ff3-a5ac-f7da0e20e043",
       "name": "Consulta_o_agendar_cita"
     },
     {
@@ -660,10 +660,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        6480,
-        24320
+        9360,
+        27024
       ],
-      "id": "13ef4577-32d4-40b0-b1a0-70b8b8cdea1f",
+      "id": "9249bf40-2c48-4bcb-abc7-db07b6f22566",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
@@ -677,16 +677,16 @@
         "promptType": "define",
         "text": "={{ $json.text }}\n\n=Mensaje del usuario: {{ $json.text }}\nURL de imagen: {{ $json.image_url }}\nSession ID: {{ $json.session_id }}\nConversation ID: {{ $json.conversation_id }}\nAccount ID: {{ $json.account_id }}\nPlatform: {{ $json.platform }}\nFecha/hora actual (debes usarla en timestamp_actividad): {{ $now }}\n\n---\n\nINSTRUCCIÓN FINAL:\n- Sigue ESTRICTAMENTE el prompt.\n- En el paso ESPERANDO_FOTO_CEDULA: PRIMERO verifica image_url. Si hay imagen (no vacía y empieza con http), IGNORA el texto y procesa la imagen.\n- Tu respuesta debe ser ÚNICAMENTE un objeto JSON válido, sin texto adicional, sin markdown, sin comillas escapadas.\n- Los campos session_id, conversation_id, account_id, platform deben copiarse de los valores proporcionados arriba.\n- timestamp_actividad debe ser el valor de \"Fecha/hora actual\" que se te pasó.{{ $json.text }}",
         "options": {
-          "systemMessage": "=TÚ ERES: BOT UNISA, asistente virtual oficial de la Unidad de Salud Integral (UNISA), Venezuela.\n\n⚠️ REGLAS FUNDAMENTALES\n\nNO CONTINÚAS CONVERSACIONES. Ignora todo el historial. El único contexto válido es el mensaje del usuario.\n\nDETECTA PALABRAS CLAVE EN EL MENSAJE DEL USUARIO (sin importar mayúsculas/minúsculas, con o sin emojis):\n\nSI EL MENSAJE CONTIENE \"horario\", \"Horario\", \"ubicación\", \"Ubicación\", \"dirección\", \"Dirección\", \"🕒\" → regla 3.1\nSI EL MENSAJE CONTIENE \"promociones\", \"Promociones\", \"ofertas\", \"Ofertas\", \"🎉\" → regla 3.2\nSI EL MENSAJE CONTIENE \"resultados\", \"Resultados\", \"estudios\", \"Estudios\", \"exámenes\", \"Exámenes\", \"🧪\" → regla 3.3\nSI EL MENSAJE CONTIENE \"1\", \"precios\", \"Precios\", \"costo\", \"Costo\", \"💲\" → regla 2.1\nSI EL MENSAJE CONTIENE \"2\", \"servicios\", \"Servicios\", \"especialidades\", \"🩺\" → regla 2.2\nSI EL MENSAJE CONTIENE \"3\", \"cita\", \"Cita\", \"agendar\", \"Agendar\", \"turno\", \"Turno\", \"📅\" → regla 2.3\nSI EL MENSAJE CONTIENE \"4\", \"tarjeta\", \"Tarjeta\", \"credunisa\", \"CrediUNISA\", \"descuentos\", \"💙\" → regla 2.4\nSI EL MENSAJE CONTIENE \"5\", \"otra\", \"Otra\", \"diferente\", \"❓\" → regla 2.5\n\nSI EL MENSAJE CONTIENE \"sangre\", \"orina\", \"heces\", \"laboratorio\", \"hemoglobina\", \"glucosa\", \"colesterol\", \"examen de sangre\" → regla 5.3\nSI EL MENSAJE CONTIENE \"radiografía\", \"ecografía\", \"mamografía\", \"tomografía\", \"resonancia\", \"rayos x\", \"imagen\" → regla 5.4\n\nSI EL MENSAJE ES UN SALUDO (\"hola\", \"Hola\", \"buenos días\", \"Buenos días\", \"hi\", \"Hi\", \"hello\") → regla 1\nSI EL MENSAJE ES EXACTAMENTE \"MENU_PRINCIPAL\" → regla 4.5\nSI EL MENSAJE ES EXACTAMENTE \"CANCELAR\" → regla 4.4\nSI EL MENSAJE ES EXACTAMENTE \"No\", \"NO\", \"no\" → regla 5\nSI EL MENSAJE ES EXACTAMENTE \"MEDIOS_PROPIOS\" → regla 5.1\nSI EL MENSAJE ES EXACTAMENTE \"SEGURO_MEDICO\" → regla 5.2\nSI EL MENSAJE ES EXACTAMENTE \"LABORATORIO\" → regla 5.3\nSI EL MENSAJE ES EXACTAMENTE \"IMAGENES\" → regla 5.4\nSI EL MENSAJE ES EXACTAMENTE \"SALIR\" → regla 4.6\nSI EL MENSAJE CONTIENE \"medios propios\", \"Medios Propios\", \"crediumisa\", \"pago de contado\", \"A\" → regla 5.1\nSI EL MENSAJE CONTIENE \"seguro\", \"Seguro\", \"seguro médico\", \"Seguro Médico\", \"B\", \"FASME\", \"FASDEM\", \"SENIAT\" → regla 5.2\nSI EL MENSAJE CONTIENE \"laboratorio\", \"sangre\", \"orina\", \"heces\" → regla 5.3\nSI EL MENSAJE CONTIENE \"imagen\", \"radiografía\", \"ecografía\", \"mamografía\", \"tomografía\" → regla 5.4\nSI NINGUNA REGLA COINCIDE → regla 6\n\n📋 LÓGICA DE DECISIÓN\n\n1. SALUDO INICIAL\n→ output: \"¡Hola! 😊 Bienvenido/a a UNISA, tu Unidad de Salud Integral.\\n\\n¿Qué necesitas hoy? Te ayudo con:\\n\\n1. Precios 💲 - Conoce nuestros precios básicos 2026\\n2. Servicios 🩺 - Descubre todos nuestros servicios médicos\\n3. Agendar cita 📅 - Para consulta, laboratorio o estudios\\n4. Tarjeta de la Salud 💙 - Información sobre la tarjeta o CREDIUNISA\\n5. Otra consulta ❓ - Cualquier otra pregunta\\n\\nPor favor, escribe el número o palabra clave.\"\n→ isMenu: true\n\n2.1 PRECIOS\n→ output: \"¡Con gusto! Estos son nuestros precios básicos 2026:\\n\\n• Consulta médica general → 25 USD\\n• Rayos X → 10 USD\\n• Mamografía sin implantes → 20 USD\\n• Mamografía con implantes → 30 USD\\n\\n¿Deseas agendar una cita con estos precios? Responde Sí o No.\"\n→ tipoPregunta: \"PRECIOS\"\n→ isMenu: false\n\n2.2 SERVICIOS\n→ output: \"¡Claro! En UNISA ofrecemos:\\n\\n• Consultas médicas generales y especialidades\\n• Laboratorio clínico\\n• Rayos X digital\\n• Ecografías\\n• Mamografía\\n• Densitometría ósea\\n• Electrocardiograma y ecocardiograma\\n• Espirometría\\n• Holter de presión y ritmo\\n• Atención Primaria Médica 24/7\\n\\n¿Te gustaría agendar una cita en alguna especialidad? Responde Sí o No.\"\n→ tipoPregunta: \"SERVICIOS\"\n→ isMenu: false\n\n2.3 CITA DIRECTA\n→ output: \"Hola 👋 Vamos a agendar tu cita de forma rápida y segura. 🩺\\n\\nTe haré varias preguntas sencillas. Responde con cuidado por favor.\\n\\n🏥 Indíqueme si la atención será por medios propios o si usará algún seguro médico.\\n\\n✏️ Medios Propios: Crediunisa/afiliado tarjeta/pago de contado\\n✏️ Seguros: se le pedirá el nombre de su seguro\\n\\nResponde 'Medios propios' o 'Seguro'.\"\n→ tipoPregunta: \"CITA_DIRECTA\"\n→ isMenu: false\n\n2.4 TARJETA\n→ output: \"¡Excelente decisión! Con la TARJETA DE LA SALUD obtienes:\\n\\n• Hasta 30% de descuento\\n• 1 consulta gratuita al año\\n• Vigencia de 12 meses\\n• Costo total: 80 USD → pagas 20 USD al afiliarte + 6 cuotas de 10 USD\\n\\n¿Deseas que un asesor se comunique contigo? Responde Sí o No.\"\n→ tipoPregunta: \"TARJETA\"\n→ isMenu: false\n\n2.5 OTRA CONSULTA\n→ output: \"\"\n→ equipo_asignado: \"Agendamiento_Otra_Consulta\"\n\n3. ATAJOS ESTÁTICOS\n\n3.1 HORARIO / UBICACIÓN\n→ output: \"Nuestra Ubicación 📍\\nCalle el Calvario de los Robles, municipio Maneiro, Isla de Margarita.\\nhttps://maps.app.goo.gl/RJhhcWWWMe8PrnY5A?g_st=ac\\n\\n🕒 Horario:\\nLunes a Viernes: 07:00 am - 05:00 pm\\nSábado: 07:00 am - 01:00 pm\"\n→ tipoPregunta: \"ESTATICO\"\n→ isMenu: false\n\n3.2 PROMOCIONES\n→ output: \"🎉 Promociones vigentes en UNISA:\\n\\n• 20% dto. en ecografías\\n• 15% dto. en mamografías\\n• Consulta general a 20 USD\\n• Laboratorio: 10% dto. en perfiles completos\"\n→ tipoPregunta: \"ESTATICO\"\n→ isMenu: false\n\n3.3 RESULTADOS DE ESTUDIOS (regla 3.3)\n→ output: \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\"\n→ tipoPregunta: \"RESULTADOS\"\n→ isMenu: false\n\n4. COMANDOS DE BOTONES\n\n4.1 CONFIRMAR_CITA_PRECIOS → output: \"\" → equipo_asignado: \"Agendamiento_Directo\"\n4.2 CONFIRMAR_CITA_SERVICIOS → output: \"\" → equipo_asignado: \"Agendamiento_Directo\"\n4.3 CONFIRMAR_TARJETA → output: \"\" → equipo_asignado: \"Ventas_UNISA\"\n4.4 CANCELAR → output: \"Entiendo. ¿En qué más puedo ayudarte?\\n\\n1 – Precios 💲\\n2 – Servicios 🩺\\n3 – Agendar cita 📅\\n4 – Tarjeta de la Salud 💙\\n5 – Otra consulta ❓\" → isMenu: true\n4.5 MENU_PRINCIPAL → output: \"¿Qué necesitas hoy?\\n\\n1. Precios 💲\\n2. Servicios 🩺\\n3. Agendar cita 📅\\n4. Tarjeta de la Salud 💙\\n5. Otra consulta ❓\" → isMenu: true\n4.6 SALIR → output: \"Gracias por contactar a UNISA. 😊 Que tengas un excelente día. 👋 Si más tarde necesitas ayuda, estaremos aquí para ti.\" → isMenu: false\n\n5. RESPUESTA NEGATIVA (\"No\")\n→ output: \"Entiendo. ¿En qué más puedo ayudarte?\\n\\n1 – Precios 💲\\n2 – Servicios 🩺\\n3 – Agendar cita 📅\\n4 – Tarjeta de la Salud 💙\\n5 – Otra consulta ❓\" → isMenu: true\n\n5.1 MEDIOS PROPIOS → output: \"\" → equipo_asignado: \"CITAS_MP\"\n5.2 SEGURO MÉDICO → output: \"\" → equipo_asignado: \"CITAS_SEGUROS\"\n5.3 RESULTADOS DE LABORATORIO → output: \"\" → equipo_asignado: \"RESULTADOS_LAB\"\n5.4 RESULTADOS DE IMÁGENES → output: \"\" → equipo_asignado: \"RESULTADOS_IMAGENES\"\n\n6. CUALQUIER OTRO MENSAJE\n→ output: \"Para ayudarte mejor, selecciona una opción:\\n\\n1. Precios 💲\\n2. Servicios 🩺\\n3. Agendar cita 📅\\n4. Tarjeta de la Salud 💙\\n5. Otra consulta ❓\\n\\nTambién puedes escribir: horario, ubicación, promociones o resultados.\" → isMenu: true\n\n🎯 FORMATO DE SALIDA - DEBES GENERAR UN JSON VÁLIDO (NO TEXTO ADICIONAL)\n\nEjemplo REAL cuando el usuario escribe \"🕒 Horario y ubicación\":\n{\"output\": \"Nuestra Ubicación 📍...\", \"tipoPregunta\": \"ESTATICO\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"precios\":\n{\"output\": \"¡Con gusto! Estos son nuestros precios básicos 2026... ¿Deseas agendar una cita con estos precios? Responde Sí o No.\", \"tipoPregunta\": \"PRECIOS\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"cita\":\n{\"output\": \"Hola 👋 Vamos a agendar tu cita de forma rápida y segura. 🩺...\", \"tipoPregunta\": \"CITA_DIRECTA\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"resultados\":\n{\"output\": \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\", \"tipoPregunta\": \"RESULTADOS\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario responde \"Laboratorio\" después de resultados:\n{\"output\": \"\", \"equipo_asignado\": \"RESULTADOS_LAB\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario responde \"Imágenes\" después de resultados:\n{\"output\": \"\", \"equipo_asignado\": \"RESULTADOS_IMAGENES\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\n🔥 IMPORTANTE: \n- Responde SOLO con el JSON, nada más.\n- Para CITA DIRECTA (cuando escribe \"cita\") → DEBES incluir \"tipoPregunta\": \"CITA_DIRECTA\".\n- Para RESULTADOS (cuando escribe \"resultados\") → DEBES incluir \"tipoPregunta\": \"RESULTADOS\".\n- Para LABORATORIO o IMÁGENES → solo \"equipo_asignado\".\n- Los flujos de resultados están definidos en el backend y solicitan los datos: identificación del paciente y estudio solicitado."
+          "systemMessage": "=TÚ ERES: BOT UNISA, asistente virtual oficial de la Unidad de Salud Integral (UNISA), Venezuela.\n\n⚠️ REGLAS FUNDAMENTALES\n\nNO CONTINÚAS CONVERSACIONES. Ignora todo el historial. El único contexto válido es el mensaje del usuario.\n\nDETECTA PALABRAS CLAVE EN EL MENSAJE DEL USUARIO (sin importar mayúsculas/minúsculas, con o sin emojis):\n\nSI EL MENSAJE CONTIENE \"horario\", \"Horario\", \"ubicación\", \"Ubicación\", \"dirección\", \"Dirección\", \"🕒\" → regla 3.1\nSI EL MENSAJE CONTIENE \"promociones\", \"Promociones\", \"ofertas\", \"Ofertas\", \"🎉\" → regla 3.2\nSI EL MENSAJE CONTIENE \"resultados\", \"Resultados\", \"estudios\", \"Estudios\", \"exámenes\", \"Exámenes\", \"🧪\" → regla 3.3\nSI EL MENSAJE CONTIENE \"1\", \"precios\", \"Precios\", \"costo\", \"Costo\", \"💲\" → regla 2.1\nSI EL MENSAJE CONTIENE \"2\", \"servicios\", \"Servicios\", \"especialidades\", \"🩺\" → regla 2.2\nSI EL MENSAJE CONTIENE \"3\", \"cita\", \"Cita\", \"agendar\", \"Agendar\", \"turno\", \"Turno\", \"📅\" → regla 2.3\nSI EL MENSAJE CONTIENE \"4\", \"tarjeta\", \"Tarjeta\", \"credunisa\", \"CrediUNISA\", \"descuentos\", \"💙\" → regla 2.4\nSI EL MENSAJE CONTIENE \"5\", \"otra\", \"Otra\", \"diferente\", \"❓\" → regla 2.5\n\nSI EL MENSAJE CONTIENE \"sangre\", \"orina\", \"heces\", \"laboratorio\", \"hemoglobina\", \"glucosa\", \"colesterol\", \"examen de sangre\" → regla 5.3\nSI EL MENSAJE CONTIENE \"radiografía\", \"ecografía\", \"mamografía\", \"tomografía\", \"resonancia\", \"rayos x\", \"imagen\" → regla 5.4\n\nSI EL MENSAJE ES UN SALUDO (\"hola\", \"Hola\", \"buenos días\", \"Buenos días\", \"hi\", \"Hi\", \"hello\") → regla 1\nSI EL MENSAJE ES EXACTAMENTE \"MENU_PRINCIPAL\" → regla 4.5\nSI EL MENSAJE ES EXACTAMENTE \"CANCELAR\" → regla 4.4\nSI EL MENSAJE ES EXACTAMENTE \"No\", \"NO\", \"no\" → regla 5\nSI EL MENSAJE ES EXACTAMENTE \"MEDIOS_PROPIOS\" → regla 5.1\nSI EL MENSAJE ES EXACTAMENTE \"SEGURO_MEDICO\" → regla 5.2\nSI EL MENSAJE ES EXACTAMENTE \"LABORATORIO\" → regla 5.3\nSI EL MENSAJE ES EXACTAMENTE \"IMAGENES\" → regla 5.4\nSI EL MENSAJE ES EXACTAMENTE \"SALIR\" → regla 4.6\nSI EL MENSAJE CONTIENE \"medios propios\", \"Medios Propios\", \"crediumisa\", \"pago de contado\", \"A\" → regla 5.1\nSI EL MENSAJE CONTIENE \"seguro\", \"Seguro\", \"seguro médico\", \"Seguro Médico\", \"B\", \"FASME\", \"FASDEM\", \"SENIAT\" → regla 5.2\nSI EL MENSAJE CONTIENE \"laboratorio\", \"sangre\", \"orina\", \"heces\" → regla 5.3\nSI EL MENSAJE CONTIENE \"imagen\", \"radiografía\", \"ecografía\", \"mamografía\", \"tomografía\" → regla 5.4\nSI NINGUNA REGLA COINCIDE → regla 6\n\n📋 LÓGICA DE DECISIÓN\n\n1. SALUDO INICIAL\n→ output: \"¡Hola! 😊 Bienvenido/a a UNISA, tu Unidad de Salud Integral.\\n\\n¿Qué necesitas hoy? Te ayudo con:\\n\\n1. Precios 💲 - Conoce nuestros precios básicos 2026\\n2. Servicios 🩺 - Descubre todos nuestros servicios médicos\\n3. Agendar cita 📅 - Para consulta, laboratorio o estudios\\n4. Tarjeta de la Salud 💙 - Información sobre la tarjeta o CREDIUNISA\\n5. Otra consulta ❓ - Cualquier otra pregunta\\n\\nPor favor, escribe el número o palabra clave.\"\n→ isMenu: true\n\n2.1 PRECIOS\n→ output: \"¡Con gusto! Estos son nuestros precios básicos 2026:\\n\\n• Consulta médica general → 25 USD\\n• Rayos X → 10 USD\\n• Mamografía sin implantes → 20 USD\\n• Mamografía con implantes → 30 USD\\n\\n¿Deseas agendar una cita con estos precios? Responde Sí o No.\"\n→ tipoPregunta: \"PRECIOS\"\n→ isMenu: false\n\n2.2 SERVICIOS\n→ output: \"¡Claro! En UNISA ofrecemos:\\n\\n• Consultas médicas generales y especialidades\\n• Laboratorio clínico\\n• Rayos X digital\\n• Ecografías\\n• Mamografía\\n• Densitometría ósea\\n• Electrocardiograma y ecocardiograma\\n• Espirometría\\n• Holter de presión y ritmo\\n• Atención Primaria Médica 24/7\\n\\n¿Te gustaría agendar una cita en alguna especialidad? Responde Sí o No.\"\n→ tipoPregunta: \"SERVICIOS\"\n→ isMenu: false\n\n2.3 CITA DIRECTA\n→ output: \"Hola 👋 Vamos a agendar tu cita de forma rápida y segura. 🩺\\n\\nTe haré varias preguntas sencillas. Responde con cuidado por favor.\\n\\n🏥 Indíqueme si la atención será por medios propios o si usará algún seguro médico.\\n\\n✏️ Medios Propios: Crediunisa/afiliado tarjeta/pago de contado\\n✏️ Seguros: se le pedirá el nombre de su seguro\\n\\nResponde 'Medios propios' o 'Seguro'.\"\n→ tipoPregunta: \"CITA_DIRECTA\"\n→ isMenu: false\n\n2.4 TARJETA\n→ output: \"¡Excelente decisión! Con la TARJETA DE LA SALUD obtienes:\\n\\n• Hasta 30% de descuento\\n• 1 consulta gratuita al año\\n• Vigencia de 12 meses\\n• Costo total: 80 USD → pagas 20 USD al afiliarte + 6 cuotas de 10 USD\\n\\n¿Deseas que un ejecutivo se comunique contigo? Responde Sí o No.\"\n→ tipoPregunta: \"TARJETA\"\n→ isMenu: false\n\n2.5 OTRA CONSULTA\n→ output: \"\"\n→ equipo_asignado: \"Agendamiento_Otra_Consulta\"\n\n3. ATAJOS ESTÁTICOS\n\n3.1 HORARIO / UBICACIÓN\n→ output: \"Nuestra Ubicación 📍\\nCalle el Calvario de los Robles, municipio Maneiro, Isla de Margarita.\\nhttps://maps.app.goo.gl/RJhhcWWWMe8PrnY5A?g_st=ac\\n\\n🕒 Horario:\\nLunes a Viernes: 07:00 am - 05:00 pm\\nSábado: 07:00 am - 01:00 pm\"\n→ tipoPregunta: \"ESTATICO\"\n→ isMenu: false\n\n3.2 PROMOCIONES\n→ output: \"🎉 Promociones vigentes en UNISA:\\n\\n• 20% dto. en ecografías\\n• 15% dto. en mamografías\\n• Consulta general a 20 USD\\n• Laboratorio: 10% dto. en perfiles completos\"\n→ tipoPregunta: \"ESTATICO\"\n→ isMenu: false\n\n3.3 RESULTADOS DE ESTUDIOS (regla 3.3)\n→ output: \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\"\n→ tipoPregunta: \"RESULTADOS\"\n→ isMenu: false\n\n4. COMANDOS DE BOTONES\n\n4.1 CONFIRMAR_CITA_PRECIOS → output: \"\" → equipo_asignado: \"Agendamiento_Directo\"\n4.2 CONFIRMAR_CITA_SERVICIOS → output: \"\" → equipo_asignado: \"Agendamiento_Directo\"\n4.3 CONFIRMAR_TARJETA → output: \"\" → equipo_asignado: \"Ventas_UNISA\"\n4.4 CANCELAR → output: \"Entiendo. ¿En qué más puedo ayudarte?\\n\\n1 – Precios 💲\\n2 – Servicios 🩺\\n3 – Agendar cita 📅\\n4 – Tarjeta de la Salud 💙\\n5 – Otra consulta ❓\" → isMenu: true\n4.5 MENU_PRINCIPAL → output: \"¿Qué necesitas hoy?\\n\\n1. Precios 💲\\n2. Servicios 🩺\\n3. Agendar cita 📅\\n4. Tarjeta de la Salud 💙\\n5. Otra consulta ❓\" → isMenu: true\n4.6 SALIR → output: \"Gracias por contactar a UNISA. 😊 Que tengas un excelente día. 👋 Si más tarde necesitas ayuda, estaremos aquí para ti.\" → isMenu: false\n\n5. RESPUESTA NEGATIVA (\"No\")\n→ output: \"Entiendo. ¿En qué más puedo ayudarte?\\n\\n1 – Precios 💲\\n2 – Servicios 🩺\\n3 – Agendar cita 📅\\n4 – Tarjeta de la Salud 💙\\n5 – Otra consulta ❓\" → isMenu: true\n\n5.1 MEDIOS PROPIOS → output: \"\" → equipo_asignado: \"CITAS_MP\"\n5.2 SEGURO MÉDICO → output: \"\" → equipo_asignado: \"CITAS_SEGUROS\"\n5.3 RESULTADOS DE LABORATORIO → output: \"\" → equipo_asignado: \"RESULTADOS_LAB\"\n5.4 RESULTADOS DE IMÁGENES → output: \"\" → equipo_asignado: \"RESULTADOS_IMAGENES\"\n\n6. CUALQUIER OTRO MENSAJE\n→ output: \"Para ayudarte mejor, selecciona una opción:\\n\\n1. Precios 💲\\n2. Servicios 🩺\\n3. Agendar cita 📅\\n4. Tarjeta de la Salud 💙\\n5. Otra consulta ❓\\n\\nTambién puedes escribir: horario, ubicación, promociones o resultados.\" → isMenu: true\n\n🎯 FORMATO DE SALIDA - DEBES GENERAR UN JSON VÁLIDO (NO TEXTO ADICIONAL)\n\nEjemplo REAL cuando el usuario escribe \"🕒 Horario y ubicación\":\n{\"output\": \"Nuestra Ubicación 📍...\", \"tipoPregunta\": \"ESTATICO\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"precios\":\n{\"output\": \"¡Con gusto! Estos son nuestros precios básicos 2026... ¿Deseas agendar una cita con estos precios? Responde Sí o No.\", \"tipoPregunta\": \"PRECIOS\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"cita\":\n{\"output\": \"Hola 👋 Vamos a agendar tu cita de forma rápida y segura. 🩺...\", \"tipoPregunta\": \"CITA_DIRECTA\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"resultados\":\n{\"output\": \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\", \"tipoPregunta\": \"RESULTADOS\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario responde \"Laboratorio\" después de resultados:\n{\"output\": \"\", \"equipo_asignado\": \"RESULTADOS_LAB\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario responde \"Imágenes\" después de resultados:\n{\"output\": \"\", \"equipo_asignado\": \"RESULTADOS_IMAGENES\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\n🔥 IMPORTANTE: \n- Responde SOLO con el JSON, nada más.\n- Para CITA DIRECTA (cuando escribe \"cita\") → DEBES incluir \"tipoPregunta\": \"CITA_DIRECTA\".\n- Para RESULTADOS (cuando escribe \"resultados\") → DEBES incluir \"tipoPregunta\": \"RESULTADOS\".\n- Para LABORATORIO o IMÁGENES → solo \"equipo_asignado\".\n- Los flujos de resultados están definidos en el backend y solicitan los datos: identificación del paciente y estudio solicitado."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        6496,
-        24064
+        9376,
+        26768
       ],
-      "id": "ef4de926-ab64-4c8e-b578-9282f06efda8",
+      "id": "44f5ad1d-b9b6-4046-87cd-c5db01b3a47d",
       "name": "Agente_Informacion_basica"
     },
     {
@@ -696,10 +696,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        7568,
-        24016
+        10448,
+        26720
       ],
-      "id": "c4c86914-2f74-4fef-90d8-3656ff37ca37",
+      "id": "0590cb2c-2bd3-4a20-afb7-daa39d6c0201",
       "name": "Unificar_salida"
     },
     {
@@ -730,10 +730,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        7264,
-        23904
+        10144,
+        26608
       ],
-      "id": "d096e5e8-3351-4613-a166-9adedc34cdd1",
+      "id": "ac0d55cf-1a43-40b7-a59f-7ecdcecbf180",
       "name": "Cita_con_Equipo_asignado"
     },
     {
@@ -744,11 +744,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        6320,
-        23920
+        9200,
+        26624
       ],
       "typeVersion": 1,
-      "id": "a0bda7ef-4e97-4457-92ba-0cbd93109ced",
+      "id": "9957d1c9-3a91-4c74-993a-64af8c709f7a",
       "name": "Sticky Note"
     },
     {
@@ -759,11 +759,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        4768,
-        24736
+        7648,
+        27440
       ],
       "typeVersion": 1,
-      "id": "b2bbf4d8-446e-49bc-ab6b-69d114894cb9",
+      "id": "f7e1622c-5c28-43ec-b7ab-9c3c930e6abe",
       "name": "Sticky Note2"
     },
     {
@@ -772,11 +772,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        5728,
-        24736
+        8608,
+        27440
       ],
       "typeVersion": 1,
-      "id": "b5ef223c-b051-4171-9f33-9adcea49bfc8",
+      "id": "ec590455-6743-448c-b4fc-bb5732e10a20",
       "name": "Sticky Note3"
     },
     {
@@ -965,10 +965,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        4960,
-        24880
+        7840,
+        27584
       ],
-      "id": "23f81430-7d88-4d50-89cf-85c8af3a7a74",
+      "id": "46646393-964e-4c7f-a41c-b59e9b33f224",
       "name": "Call 'chatbot-simple_1_subflow'"
     },
     {
@@ -983,24 +983,24 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        7648,
-        23568
+        10528,
+        26272
       ],
-      "id": "c19d4ae6-bbcc-4056-bfde-ac342b1f93c3",
+      "id": "0350cb09-f5d0-4c7b-b5f8-6e56182f300d",
       "name": "paso_0_inicio_agendar",
       "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfunction detectarSiNo(texto) {\n  if (!texto || typeof texto !== 'string') return false;\n  const patrones = [\n    /\\b(sí|si)\\s*\\/\\s*no\\b/i,\n    /\\b(aceptas|confirmas|estás de acuerdo|quieres|deseas|te gustaría)\\b.*\\?/i,\n    /^.*\\?.*(sí|si).*(no).*$/i,\n    /¿(deseas|quieres|te gustaría|estás seguro|aceptas)/i,\n    /\\b(yes|no)\\b/i,\n    /\\b(responder (sí|si|no))\\\\b/i\n  ];\n  return patrones.some(p => p.test(texto));\n}\n\nconst mapeoFlow = {\n  'Agendamiento_Directo': 'flujo_agendamiento_directo',\n  'Agendamiento_Precios': 'flujo_agendamiento_precios',\n  'Agendamiento_Servicios': 'flujo_agendamiento_servicios',\n  'Agendamiento_Otra_Consulta': 'flujo_agendamiento_otra_consulta',\n  'Ventas_UNISA': 'flujo_ventas_unisa',\n  'CITAS_MP': 'flujo_citas_medios_propios',\n  'CITAS_SEGUROS': 'flujo_citas_seguro',\n  'RESULTADOS_LAB': 'flujo_resultados_laboratorio',\n  'RESULTADOS_IMAGENES': 'flujo_resultados_imagenes'\n};\nconst flowPorDefecto = 'flujo_agendamiento_default';\n\nfor (const item of items) {\n  try {\n    let str = item.json.output;\n\n    str = str.replace(/\\\\u\\{([^}]+)\\}/g, (match, inner) => {\n      const parts = inner.split(/\\\\u/);\n      let result = '';\n      for (let part of parts) {\n        if (part === '') continue;\n        result += String.fromCodePoint(parseInt(part, 16));\n      }\n      return result;\n    });\n\n    const datosParseados = JSON.parse(str);\n\n    // 🔧 FORZAR tipoPregunta si es null y el mensaje corresponde a CITA_DIRECTA\n    if (!datosParseados.tipoPregunta && datosParseados.output && typeof datosParseados.output === 'string') {\n      if (datosParseados.output.includes('Vamos a agendar tu cita') || \n          datosParseados.output.includes('Indíqueme si la atención será por medios propios')) {\n        datosParseados.tipoPregunta = 'CITA_DIRECTA';\n      }\n    }\n    \n     // 🔧 FORZAR tipoPregunta y mensaje para RESULTADOS\n    if (datosParseados.output && typeof datosParseados.output === 'string') {\n      if (datosParseados.output.includes('Para enviarte tus resultados') || \n          datosParseados.output.includes('Foto de cédula') ||\n          datosParseados.output.includes('El estudio que necesitas')) {\n        \n        datosParseados.tipoPregunta = 'RESULTADOS';\n        \n        // Reemplazar el output antiguo por el nuevo mensaje\n        datosParseados.output = \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\";\n        \n        // También actualizar los campos text y content si es necesario\n        datosParseados.text = datosParseados.output;\n        datosParseados.content = datosParseados.output;\n      }\n    }\n\n    \n\n    if (datosParseados.output && typeof datosParseados.output === 'string') {\n      const match = datosParseados.output.match(/^\\s*equipo_asignado:\\s*\"([^\"]*)\"\\s*$/);\n      if (match) {\n        datosParseados.equipo_asignado = match[1];\n      }\n    }\n\n    const resultado = {\n      ...item.json,\n      ...datosParseados,\n      output: datosParseados.output,\n      tipoPregunta: datosParseados.tipoPregunta || null\n    };\n\n    let isMenuValue = false;\n    if (datosParseados.isMenu === true) {\n      isMenuValue = true;\n    } else if (datosParseados.output && typeof datosParseados.output === 'string') {\n      const texto = datosParseados.output;\n      if (texto.includes('¡Hola! 😊 Bienvenido/a') || \n          texto.includes('Para ayudarte mejor, por favor selecciona') ||\n          texto.includes('¿Qué necesitas hoy?')) {\n        isMenuValue = true;\n      }\n    }\n    resultado.isMenu = isMenuValue;\n\n    let esPreguntaSiNo = false;\n    if (datosParseados.esPreguntaSiNo === true) {\n      esPreguntaSiNo = true;\n    } else if (datosParseados.output && typeof datosParseados.output === 'string') {\n      esPreguntaSiNo = detectarSiNo(datosParseados.output);\n    }\n    resultado.esPreguntaSiNo = esPreguntaSiNo;\n\n    const equipo = resultado.equipo_asignado;\n    resultado.flow_name = mapeoFlow[equipo] || flowPorDefecto;\n\n    nuevosItems.push({ json: resultado });\n\n  } catch (e) {\n    const errorItem = {\n      json: {\n        error: e.message,\n        original: item.json.output,\n        ...item.json\n      }\n    };\n    errorItem.json.flow_name = flowPorDefecto;\n    nuevosItems.push(errorItem);\n  }\n}\n\nreturn nuevosItems;"
+        "jsCode": "// Separar_variables_en_json - versión con recuperación extra para strings como: {}, \"equipo_asignado\":...\nconst items = $input.all();\nconst nuevosItems = [];\n\nfunction detectarSiNo(texto) {\n  if (!texto || typeof texto !== 'string') return false;\n  const patrones = [\n    /\\b(sí|si)\\s*\\/\\s*no\\b/i,\n    /\\b(aceptas|confirmas|estás de acuerdo|quieres|deseas|te gustaría)\\b.*\\?/i,\n    /^.*\\?.*(sí|si).*(no).*$/i,\n    /¿(deseas|quieres|te gustaría|estás seguro|aceptas)/i,\n    /\\b(yes|no)\\b/i,\n    /\\b(responder (sí|si|no))\\\\b/i\n  ];\n  return patrones.some(p => p.test(texto));\n}\n\nconst mapeoFlow = {\n  'Agendamiento_Directo': 'flujo_agendamiento_directo',\n  'Agendamiento_Precios': 'flujo_agendamiento_precios',\n  'Agendamiento_Servicios': 'flujo_agendamiento_servicios',\n  'Agendamiento_Otra_Consulta': 'flujo_agendamiento_otra_consulta',\n  'Ventas_UNISA': 'flujo_ventas_unisa',\n  'CITAS_MP': 'flujo_citas_medios_propios',\n  'CITAS_SEGUROS': 'flujo_citas_seguro',\n  'RESULTADOS_LAB': 'flujo_resultados_laboratorio',\n  'RESULTADOS_IMAGENES': 'flujo_resultados_imagenes'\n};\nconst flowPorDefecto = 'flujo_agendamiento_default';\n\nfunction tryParseJSON(rawStr) {\n  // Intento directo\n  try {\n    return JSON.parse(rawStr);\n  } catch (e) {\n    // preparación secundaria: limpieza\n    let attempt = rawStr.trim();\n    // eliminar prefijo \"{},\" si existe\n    attempt = attempt.replace(/^\\s*\\{\\}\\s*,\\s*/, '');\n    // eliminar comas solitarias al inicio\n    attempt = attempt.replace(/^\\s*,\\s*/, '');\n    // eliminar comas antes de cierre de objeto o array\n    attempt = attempt.replace(/,\\s*}/g, '}').replace(/,\\s*]/g, ']');\n    // si no empieza con { pero hay un } al final, añadimos '{' delante\n    if (!attempt.startsWith('{') && attempt.indexOf('}') !== -1) {\n      attempt = '{' + attempt;\n    }\n    // si no termina con } y hay una { en el string, cerramos con }\n    if (!attempt.endsWith('}') && attempt.indexOf('{') !== -1) {\n      attempt = attempt + '}';\n    }\n    // último intento de parse\n    try {\n      return JSON.parse(attempt);\n    } catch (e2) {\n      // si sigue fallando devolvemos null para indicar que no se pudo parsear\n      return null;\n    }\n  }\n}\n\nfor (const item of items) {\n  try {\n    let str = item.json.output;\n    let datosParseados = null;\n\n    // Si ya es objeto, usarlo\n    if (typeof str !== 'string' && typeof str === 'object' && str !== null) {\n      datosParseados = str;\n    } else if (typeof str === 'string') {\n      // 1) intento de parse robusto usando helper\n      // primero normalizamos backslash-u{...} como antes\n      let normalized = str.replace(/\\\\u\\{([^}]+)\\}/g, (match, inner) => {\n        const parts = inner.split(/\\\\u/);\n        let result = '';\n        for (let part of parts) {\n          if (part === '') continue;\n          result += String.fromCodePoint(parseInt(part, 16));\n        }\n        return result;\n      });\n\n      // Intento parse directo y fallback con tryParseJSON\n      datosParseados = tryParseJSON(normalized);\n\n      if (!datosParseados) {\n        // no se pudo parsear ni en el intento secundario: devolvemos item de error para debugging\n        const errorItem = {\n          json: {\n            error: 'JSON_PARSE_ERROR',\n            message: 'No se pudo extraer objeto JSON válido',\n            original: item.json.output,\n            _raw_extracted: normalized,\n            ...item.json\n          }\n        };\n        errorItem.json.flow_name = flowPorDefecto;\n        nuevosItems.push(errorItem);\n        continue; // pasar al siguiente item\n      }\n    } else {\n      // tipo inválido\n      const errorItem = {\n        json: {\n          error: 'INVALID_OUTPUT_TYPE',\n          original: item.json.output,\n          ...item.json\n        }\n      };\n      errorItem.json.flow_name = flowPorDefecto;\n      nuevosItems.push(errorItem);\n      continue;\n    }\n\n    // --- lógica original conservada ---\n    if (!datosParseados.tipoPregunta && datosParseados.output && typeof datosParseados.output === 'string') {\n      if (datosParseados.output.includes('Vamos a agendar tu cita') || \n          datosParseados.output.includes('Indíqueme si la atención será por medios propios')) {\n        datosParseados.tipoPregunta = 'CITA_DIRECTA';\n      }\n    }\n\n    if (datosParseados.output && typeof datosParseados.output === 'string') {\n      if (datosParseados.output.includes('Para enviarte tus resultados') || \n          datosParseados.output.includes('Foto de cédula') ||\n          datosParseados.output.includes('El estudio que necesitas')) {\n\n        datosParseados.tipoPregunta = 'RESULTADOS';\n\n        datosParseados.output = \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\";\n\n        datosParseados.text = datosParseados.output;\n        datosParseados.content = datosParseados.output;\n      }\n    }\n\n    if (datosParseados.output && typeof datosParseados.output === 'string') {\n      const match = datosParseados.output.match(/^\\s*equipo_asignado:\\s*\"([^\"]*)\"\\s*$/);\n      if (match) {\n        datosParseados.equipo_asignado = match[1];\n      }\n    }\n\n    const resultado = {\n      ...item.json,\n      ...datosParseados,\n      output: datosParseados.output,\n      tipoPregunta: datosParseados.tipoPregunta || null\n    };\n\n    let isMenuValue = false;\n    if (datosParseados.isMenu === true) {\n      isMenuValue = true;\n    } else if (datosParseados.output && typeof datosParseados.output === 'string') {\n      const texto = datosParseados.output;\n      if (texto.includes('¡Hola! 😊 Bienvenido/a') || \n          texto.includes('Para ayudarte mejor, por favor selecciona') ||\n          texto.includes('¿Qué necesitas hoy?')) {\n        isMenuValue = true;\n      }\n    }\n    resultado.isMenu = isMenuValue;\n\n    let esPreguntaSiNo = false;\n    if (datosParseados.esPreguntaSiNo === true) {\n      esPreguntaSiNo = true;\n    } else if (datosParseados.output && typeof datosParseados.output === 'string') {\n      esPreguntaSiNo = detectarSiNo(datosParseados.output);\n    }\n    resultado.esPreguntaSiNo = esPreguntaSiNo;\n\n    const equipo = resultado.equipo_asignado;\n    resultado.flow_name = mapeoFlow[equipo] || flowPorDefecto;\n\n    nuevosItems.push({ json: resultado });\n\n  } catch (e) {\n    const errorItem = {\n      json: {\n        error: e.message,\n        original: item.json.output,\n        ...item.json\n      }\n    };\n    errorItem.json.flow_name = flowPorDefecto;\n    nuevosItems.push(errorItem);\n  }\n}\n\nreturn nuevosItems;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6832,
-        24064
+        9712,
+        26768
       ],
-      "id": "3b11067f-e97c-4e20-b4fd-30398618f9fd",
+      "id": "ea01b124-0e3e-44d4-9b32-55cbfd3f43fd",
       "name": "Separar_variables_en_json"
     },
     {
@@ -1056,10 +1056,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        7840,
-        23568
+        10720,
+        26272
       ],
-      "id": "598d67a2-20fb-4227-a649-09fc7ad63a18",
+      "id": "b56a8c27-549e-410c-9602-008f4257b770",
       "name": "Agendar_cita"
     },
     {
@@ -1093,10 +1093,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        8096,
-        24256
+        10976,
+        26960
       ],
-      "id": "56e5950d-bc9b-4f2e-aff8-6f3b9b689d6f",
+      "id": "6a8a5ae7-f512-41ef-8b7e-6a2ff5faa611",
       "name": "Enviar_mensaje_de_IA1"
     },
     {
@@ -1130,10 +1130,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        8128,
-        23568
+        11008,
+        26272
       ],
-      "id": "2203eb3f-a8f3-4d02-a4da-8ec0a1515715",
+      "id": "cf368430-3a76-415d-bcf5-f1662bb41cdc",
       "name": "Enviar_mensaje_de_IA2"
     },
     {
@@ -1177,10 +1177,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        6224,
-        24960
+        9104,
+        27664
       ],
-      "id": "f869ef25-b7b8-412d-a900-3f8414c5a575",
+      "id": "b1c1fb48-42ab-4a8f-abbf-17c6ffa00644",
       "name": "tomar_parametros"
     },
     {
@@ -1214,10 +1214,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        6528,
-        24832
+        9408,
+        27536
       ],
-      "id": "69e5909a-d8d5-4793-8023-e073634a4dce",
+      "id": "108ba51e-e52b-4653-a75f-bdba56cc684d",
       "name": "Enviar_mensaje_de_IA3"
     },
     {
@@ -1247,10 +1247,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        7008,
-        24080
+        9888,
+        26784
       ],
-      "id": "bf37d9d1-bae7-42ba-b285-db648955991c",
+      "id": "005d8354-a517-4f7b-b734-e426c4ff5671",
       "name": "¿Enviar menú interactivo?"
     },
     {
@@ -1260,10 +1260,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        7328,
-        24224
+        10208,
+        26928
       ],
-      "id": "01e832d3-ccce-404e-a553-b11a00dce68e",
+      "id": "b5a83f29-a9b6-4862-9801-c9e4a63ec372",
       "name": "Formatear número de teléfono"
     },
     {
@@ -1291,10 +1291,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        7648,
-        24784
+        10528,
+        27488
       ],
-      "id": "26a7d3df-cac6-4d4c-ad6c-d300e2446ebe",
+      "id": "cf863184-c9ed-46a5-829e-9402b1874fca",
       "name": "Enviar menú interactivo a WhatsApp"
     },
     {
@@ -1302,10 +1302,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        8032,
-        24800
+        10912,
+        27504
       ],
-      "id": "1ea88b0f-ef3b-484c-b898-f225ce36967f",
+      "id": "b6363f0c-fd58-4c9d-8ba4-b84fdeaaba02",
       "name": "Fin menú WhatsApp"
     },
     {
@@ -1335,10 +1335,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        7776,
-        24032
+        10656,
+        26736
       ],
-      "id": "3ee025d0-e204-452a-b6dd-52075d9d5bcf",
+      "id": "572d0ec7-dee8-49bc-bea0-9d2b0b7bb02c",
       "name": "¿Enviar menú interactivo?1"
     },
     {
@@ -1348,10 +1348,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        7904,
-        23840
+        10784,
+        26544
       ],
-      "id": "6c16e9a0-5a20-401d-83e6-388fbef77b1c",
+      "id": "bb0b2ad1-7e63-425b-b219-5a0cf8b96144",
       "name": "Construir_botones_WhatsApp"
     },
     {
@@ -1379,10 +1379,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        8128,
-        23840
+        11008,
+        26544
       ],
-      "id": "e477e0b7-67ef-456c-91c3-fa5231c6abc0",
+      "id": "76931f89-c3e2-429a-9385-764454ec5b02",
       "name": "Enviar menú interactivo a WhatsApp1"
     },
     {
@@ -1390,76 +1390,76 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        8592,
-        23856
+        11472,
+        26560
       ],
-      "id": "d5a3b448-8eec-4585-bc88-f257312b04d4",
+      "id": "686885ac-65d0-40c7-a53a-d6eade8e1053",
       "name": "Fin menú WhatsApp1"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        5744,
-        24464
+        8624,
+        27168
       ],
       "typeVersion": 1,
-      "id": "ef8f9565-f7f0-48c5-85d1-654ed1245f4d",
+      "id": "9c482e42-6c00-4c0d-99ab-351a9a8081b6",
       "name": "Sticky Note1"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        5744,
-        24464
+        8624,
+        27168
       ],
       "typeVersion": 1,
-      "id": "6dbe47eb-4ff2-4f8b-86a7-58c1b8c6ed17",
+      "id": "6021f8db-f234-4fd0-a506-e1ea78dcfc15",
       "name": "Sticky Note4"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        5744,
-        24464
+        8624,
+        27168
       ],
       "typeVersion": 1,
-      "id": "0208ecb6-5881-428a-bdae-adcc4aceebd7",
+      "id": "c6359822-d254-4eb9-bd7e-b1da0444ea0c",
       "name": "Sticky Note5"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        5824,
-        24544
+        8704,
+        27248
       ],
       "typeVersion": 1,
-      "id": "f885dc38-e5a8-4474-84d2-cec0c787a2e6",
+      "id": "7708aee7-832b-41d6-81aa-e0ea5cdc254a",
       "name": "Sticky Note6"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        5824,
-        24544
+        8704,
+        27248
       ],
       "typeVersion": 1,
-      "id": "1ece7303-dde8-494f-8907-7b53fa3055e2",
+      "id": "d0b65034-63d3-4fe5-a4ae-2b5fb43926d0",
       "name": "Sticky Note7"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        5824,
-        24544
+        8704,
+        27248
       ],
       "typeVersion": 1,
-      "id": "e8855eec-4bb3-4157-a2b3-d039e5b295e2",
+      "id": "2644896a-4d82-43d8-a25b-2d0100ad093e",
       "name": "Sticky Note8"
     }
   ],
@@ -1467,7 +1467,162 @@
     "When clicking ‘Execute workflow’": [
       {
         "json": {
-          "output": "{\n  \"output\": \"\",\n  \"equipo_asignado\": \"Agendamiento_Directo\",\n  \"session_id\": \"584142711347\",\n  \"conversation_id\": \"1\",\n  \"account_id\": \"1\",\n  \"platform\": \"whatsapp\",\n  \"timestamp_actividad\": \"2026-05-29T13:35:40.258-04:00\"\n}"
+          "headers": {
+            "connection": "upgrade",
+            "host": "n8n.unisasalud.com",
+            "origin": "https://n8n.unisasalud.com",
+            "content-length": "2567",
+            "accept": "application/json",
+            "user-agent": "rest-client/2.1.0 (linux-musl x86_64) ruby/3.4.4p34",
+            "content-type": "application/json",
+            "x-chatwoot-delivery": "dda2d92c-02e8-4164-a69d-7b606ae79490",
+            "x-chatwoot-timestamp": "1780698369",
+            "x-chatwoot-signature": "sha256=269e941560aa46e0837413959d0cc84a7152fee6492e71a13cdfb58cbc70ba93",
+            "accept-encoding": "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "account": {
+              "id": 1,
+              "name": "UNISA Salud"
+            },
+            "additional_attributes": {},
+            "content_attributes": {},
+            "content_type": "text",
+            "content": "kk",
+            "conversation": {
+              "additional_attributes": {},
+              "can_reply": true,
+              "channel": "Channel::Whatsapp",
+              "contact_inbox": {
+                "id": 16,
+                "contact_id": 16,
+                "inbox_id": 7,
+                "source_id": "584142711347",
+                "created_at": "2026-06-05T20:14:48.635Z",
+                "updated_at": "2026-06-05T20:14:48.635Z",
+                "hmac_verified": false,
+                "pubsub_token": "EFWpzY2ncFweuCKFDnNu1K3C"
+              },
+              "id": 16,
+              "inbox_id": 7,
+              "messages": [
+                {
+                  "id": 2284,
+                  "content": "kk",
+                  "account_id": 1,
+                  "inbox_id": 7,
+                  "conversation_id": 16,
+                  "message_type": 0,
+                  "created_at": 1780698369,
+                  "updated_at": "2026-06-05T22:26:09.683Z",
+                  "private": false,
+                  "status": "sent",
+                  "source_id": "wamid.HBgMNTg0MTQyNzExMzQ3FQIAEhgUM0I4NkUwRTM3MURGOUJFNDA3NjUA",
+                  "content_type": "text",
+                  "content_attributes": {},
+                  "sender_type": "Contact",
+                  "sender_id": 16,
+                  "external_source_ids": {},
+                  "additional_attributes": {},
+                  "processed_message_content": "kk",
+                  "sentiment": {},
+                  "conversation": {
+                    "assignee_id": 10,
+                    "unread_count": 1,
+                    "last_activity_at": 1780698369,
+                    "contact_inbox": {
+                      "source_id": "584142711347"
+                    }
+                  },
+                  "sender": {
+                    "additional_attributes": {},
+                    "custom_attributes": {},
+                    "email": null,
+                    "id": 16,
+                    "identifier": null,
+                    "name": "saymon",
+                    "phone_number": "+584142711347",
+                    "thumbnail": "",
+                    "blocked": false,
+                    "type": "contact"
+                  }
+                }
+              ],
+              "labels": [
+                "citas",
+                "agente_desactivado"
+              ],
+              "meta": {
+                "sender": {
+                  "additional_attributes": {},
+                  "custom_attributes": {},
+                  "email": null,
+                  "id": 16,
+                  "identifier": null,
+                  "name": "saymon",
+                  "phone_number": "+584142711347",
+                  "thumbnail": "",
+                  "blocked": false,
+                  "type": "contact"
+                },
+                "assignee": {
+                  "id": 10,
+                  "name": "Simon Alberto Rodriguez Pacheco",
+                  "available_name": "Simon Alberto Rodriguez Pacheco",
+                  "avatar_url": "",
+                  "type": "user",
+                  "availability_status": null,
+                  "thumbnail": ""
+                },
+                "assignee_type": "User",
+                "team": null,
+                "hmac_verified": false
+              },
+              "status": "pending",
+              "custom_attributes": {},
+              "snoozed_until": null,
+              "unread_count": 1,
+              "first_reply_created_at": "2026-06-05T20:15:32.860Z",
+              "priority": null,
+              "waiting_since": 1780698284,
+              "agent_last_seen_at": 1780698321,
+              "contact_last_seen_at": 0,
+              "last_activity_at": 1780698369,
+              "timestamp": 1780698369,
+              "created_at": 1780690488,
+              "updated_at": 1780698369.6992817
+            },
+            "created_at": "2026-06-05T22:26:09.683Z",
+            "id": 2284,
+            "inbox": {
+              "id": 7,
+              "name": "Whatsapp Unisa Salud +58 424 8221683"
+            },
+            "message_type": "incoming",
+            "private": false,
+            "sender": {
+              "account": {
+                "id": 1,
+                "name": "UNISA Salud"
+              },
+              "additional_attributes": {},
+              "avatar": "",
+              "custom_attributes": {},
+              "email": null,
+              "id": 16,
+              "identifier": null,
+              "name": "saymon",
+              "phone_number": "+584142711347",
+              "thumbnail": "",
+              "blocked": false
+            },
+            "source_id": "wamid.HBgMNTg0MTQyNzExMzQ3FQIAEhgUM0I4NkUwRTM3MURGOUJFNDA3NjUA",
+            "event": "message_created"
+          },
+          "webhookUrl": "https://n8n.unisasalud.com/webhook/chatwoot_integraia",
+          "executionMode": "production"
         }
       }
     ]
@@ -1771,7 +1926,7 @@
       "main": [
         [
           {
-            "node": "Separar_variables_en_json",
+            "node": "Obtener_Info_basica",
             "type": "main",
             "index": 0
           }
@@ -1824,7 +1979,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "9f51a654-e1ad-49b9-9595-7c95188c26f0",
+  "versionId": "56fbcac8-9fa6-4c85-912b-8ecc040d9ecd",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "27f2fbd44aea77cdc4ee5b60d7a4eb1783a710ad686d97e24edf8a6f5832f241"

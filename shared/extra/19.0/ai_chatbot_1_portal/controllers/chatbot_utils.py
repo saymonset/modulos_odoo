@@ -697,7 +697,7 @@ class ChatBotUtils:
         if lead_id:
             pie.append(f"📋 **Número de referencia:** {lead_id}")
         if equipo_asignado and grupo_texto:
-            pie.append(f"👥 **Área responsable:** {grupo_texto.capitalize()}")
+            pie.append(f"👥 **Central de citas:** {grupo_texto.capitalize()}")
         pie.append("🔒 **Tus datos están protegidos bajo nuestra política de privacidad.**")
         pie.append("📞 **En breve uno de nuestros ejecutivos se comunicará contigo.**")
         pie.append("🙏 **¡Gracias por confiar en UNISA!**")
@@ -739,7 +739,7 @@ class ChatBotUtils:
             lines.append(resumen)
             lines.append("")
         lines.append("📋 **¿Qué sigue?**")
-        lines.append("Una de nuestras ejecutivas revisará tu solicitud y se comunicará contigo en las próximas horas para brindarte la atención que necesitas.")
+        lines.append("Uno de nuestros ejecutivos revisará tu solicitud y se comunicará contigo en las próximas horas para brindarte la atención que necesitas.")
         lines.append("")
         lines.append(pie)
         return "\n".join(lines)

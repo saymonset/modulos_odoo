@@ -36,7 +36,7 @@ class GenerarMensajeFinalizacionUseCase(models.TransientModel):
             Con los datos proporcionados (pueden estar parcialmente completos), genera un mensaje de agradecimiento y confirmación.
             El mensaje debe ser breve, cálido, y si el nombre está presente, úsalo. 
             No incluyas tecnicismos. Responde ÚNICAMENTE con el texto del mensaje, sin formato JSON.
-            Ejemplo: "¡Gracias, Juan! Hemos recibido tu información. En breve uno de nuestros asesores se contactará contigo. ¡Que tengas un excelente día!"
+            Ejemplo: "¡Gracias, Juan! Hemos recibido tu información. En breve uno de nuestros ejecutivos se contactará contigo. ¡Que tengas un excelente día!"
             """
 
             nombre = datos.get('solicitar_name', '')

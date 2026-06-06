@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_crm_lead_chatwoot_form_inherit" model="ir.ui.view">
+    <field name="name">crm.lead.chatwoot.form.inherit</field>
+    <field name="model">crm.lead</field>
+    <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//sheet/notebook" position="inside">
+        <page string="Chatwoot / Odoo">
+          <group>
+            <group string="Estado Interno">
+              <field name="chatwoot_processing_status" readonly="1"/>
+              <field name="chatwoot_processed_at" readonly="1"/>
+              <field name="chatwoot_assigned_agent_name" readonly="1"/>
+              <field name="chatwoot_assign_failed" readonly="1"/>
+            </group>
+            <group string="Chatwoot">
+              <field name="chatwoot_account_id" readonly="1"/>
+              <field name="chatwoot_conversation_id" readonly="1"/>
+            </group>
+          </group>
+          <group>
+            <field name="chatwoot_assign_log" readonly="1" nolabel="1" placeholder="Log interno de asignación..."/>
+          </group>
+        </page>
+      </xpath>
+    </field>
+  </record>
+
+  <record id="view_crm_lead_chatwoot_list_inherit" model="ir.ui.view">
+    <field name="name">crm.lead.chatwoot.list.inherit</field>
+    <field name="model">crm.lead</field>
+    <field name="inherit_id" ref="crm.crm_case_tree_view_leads"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='team_id']" position="after">
+        <field name="chatwoot_processing_status" optional="show"/>
+        <field name="chatwoot_assigned_agent_name" optional="show"/>
+        <field name="chatwoot_processed_at" optional="hide"/>
+      </xpath>
+    </field>
+  </record>
+
+  <record id="view_crm_lead_chatwoot_search_inherit" model="ir.ui.view">
+    <field name="name">crm.lead.chatwoot.search.inherit</field>
+    <field name="model">crm.lead</field>
+    <field name="inherit_id" ref="crm.view_crm_case_leads_filter"/>
+    <field name="arch" type="xml">
+      <xpath expr="//filter[@name='lost']" position="after">
+        <separator/>
+        <filter string="Chatwoot Nuevo" name="chatwoot_new" domain="[('chatwoot_processing_status', '=', 'new')]"/>
+        <filter string="Chatwoot Asignado" name="chatwoot_assigned" domain="[('chatwoot_processing_status', '=', 'assigned')]"/>
+        <filter string="Chatwoot Error" name="chatwoot_error" domain="[('chatwoot_processing_status', '=', 'error')]"/>
+      </xpath>
+      <xpath expr="//group" position="inside">
+        <filter string="Chatwoot Estado" name="chatwoot_state_group" context="{'group_by':'chatwoot_processing_status'}"/>
+      </xpath>
+    </field>
+  </record>
+</odoo>

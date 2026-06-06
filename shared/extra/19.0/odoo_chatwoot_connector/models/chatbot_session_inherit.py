@@ -1,0 +1,115 @@
+import json
+import logging
+from odoo import models, fields
+
+_logger = logging.getLogger(__name__)
+
+
+class ChatbotSessionInherit(models.Model):
+    _inherit = 'chatbot.session'
+
+    def capturar_lead(self, datos):
+        res = super(ChatbotSessionInherit, self).capturar_lead(datos)
+        try:
+            account_id = datos.get('account_id')
+            conversation_id = datos.get('conversation_id')
+            mapping_rec = None
+            lead = None
+
+            # Try to find lead id from the result and get its team
+            lead_id = None
+            try:
+                lead_id = res.get('lead_info', {}).get('lead_id') or res.get('lead_id')
+            except Exception:
+                lead_id = None
+
+            team = None
+            if lead_id:
+                lead = self.env['crm.lead'].sudo().browse(int(lead_id))
+                if lead and lead.exists():
+                    team = lead.team_id
+
+            equipo = datos.get('equipo_asignado') or (self and getattr(self, 'equipo_asignado', None))
+            flow_name = datos.get('flow_name') or datos.get('name_flow')
+
+            # Select mapping with round-robin across mappings that share the same flow/team
+            mapping_rec = self.env['chatwoot.mapping'].sudo().select_round_robin_mapping(
+                team=team,
+                equipo_asignado=equipo,
+                flow_name=flow_name,
+            )
+
+            if mapping_rec and account_id and conversation_id:
+                agent_details = self.env['chatwoot.client'].get_agent_details(
+                    account_id,
+                    agent_id=mapping_rec.chatwoot_agent_id or None,
+                    agent_email=mapping_rec.chatwoot_agent_email or None,
+                )
+                assigned_agent_name = None
+                assigned_agent_email = None
+                if agent_details:
+                    assigned_agent_name = agent_details.get('available_name') or agent_details.get('name') or agent_details.get('email')
+                    assigned_agent_email = agent_details.get('email')
+
+                # mapping = {
+                #     'agent_id': mapping_rec.chatwoot_agent_id or None,
+                #     'agent_email': mapping_rec.chatwoot_agent_email or None,
+                #     'inbox_id': mapping_rec.chatwoot_inbox_id or None,
+                #     'prefer_assign_to_agent': mapping_rec.prefer_assign_to_agent,
+                #     'tags': [t.strip() for t in (mapping_rec.chatwoot_tags or '').split(',') if t.strip()],
+                #     'notify_message': (
+                #         f"Nuevo lead: {res.get('lead_info', {}).get('lead_id', '')}"
+                #         f" - {datos.get('solicitar_name') or datos.get('name','Sin nombre')}"
+                #         f" - {datos.get('solicitar_phone') or datos.get('phone','')}"
+                #         + (f"\n👤 Ejecutivo asignado: {assigned_agent_name} ({assigned_agent_email})" if assigned_agent_name else '')
+                #     )
+                # }
+                if assigned_agent_name:
+                    notify_msg = f"👤 Ejecutivo asignado: {assigned_agent_name} ({assigned_agent_email})"
+                else:
+                    notify_msg = ""   # 👈 vacío cuando no hay asignación
+
+                mapping = {
+                    'agent_id': mapping_rec.chatwoot_agent_id or None,
+                    'agent_email': mapping_rec.chatwoot_agent_email or None,
+                    'inbox_id': mapping_rec.chatwoot_inbox_id or None,
+                    'prefer_assign_to_agent': mapping_rec.prefer_assign_to_agent,
+                    'tags': [t.strip() for t in (mapping_rec.chatwoot_tags or '').split(',') if t.strip()],
+                    'notify_message': notify_msg
+                }
+                # call client
+                try:
+                    result = self.env['chatwoot.client'].assign_conversation(account_id, conversation_id, mapping)
+                    if lead and lead.exists():
+                        ejecutivo = assigned_agent_name or mapping_rec.chatwoot_agent_email or 'sin datos'
+                        if result.get('assigned_to') != 'existing':
+                            lead.message_post(body=f"Solicitud recibida. Ejecutivo asignado: {ejecutivo}")
+                        else:
+                            _logger.info('capturar_lead[conv=%s]: assignee preserved, skipping chatter message',
+                                         conversation_id)
+                            ejecutivo = 'preservado'
+                        # Store chatwoot ids on the lead for backup lookups
+                        try:
+                            lead.sudo().write({
+                                'chatwoot_conversation_id': str(conversation_id),
+                                'chatwoot_account_id': str(account_id),
+                                'chatwoot_processing_status': 'assigned' if result.get('ok', False) else 'error',
+                                'chatwoot_processed_at': fields.Datetime.now(),
+                                'chatwoot_assigned_agent_name': ejecutivo if result.get('ok', False) else False,
+                                'chatwoot_assign_log': json.dumps({
+                                    'assigned_to': result.get('assigned_to'),
+                                    'assignee_id': result.get('assignee_id'),
+                                    'mapping_id': mapping_rec.id,
+                                    'agent_name': ejecutivo,
+                                    'errors': result.get('errors', []),
+                                    'warnings': result.get('warnings', []),
+                                }),
+                                'chatwoot_assign_failed': not result.get('ok', False),
+                            })
+                        except Exception as e_write:
+                            _logger.warning('Error guardando chatwoot ids en lead %s: %s', lead.id, e_write)
+                except Exception:
+                    _logger.exception('Error al notificar/assign a Chatwoot')
+        except Exception:
+            _logger.exception('Error en hook capturar_lead -> Chatwoot')
+        return res
