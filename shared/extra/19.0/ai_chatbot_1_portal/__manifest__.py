@@ -7,11 +7,12 @@
     'author': 'Simon Alberto Rodriguez Pacheco',
     'website': '',
     'category': '',
-    'depends': ['base', 'crm', 'web','website','ai_chatbot_0_core'],
+    'depends': ['base', 'crm', 'mail', 'web','website','ai_chatbot_0_core'],
     "data": [
         "security/ir.model.access.csv",
         "data/chatbot_flujos_data.xml",
         "data/chatbot_teams_data.xml",
+        "data/chatbot_email_template.xml",
         "views/res_config_settings_view.xml",  # AÑADIDO: El XML debe ir aquí
         "views/login_templates.xml",  # AÑADIDO: El XML debe ir aquí
         "views/remove_powered_by.xml",  # AÑADIDO: El xml para eliminar el footer debe ir aquí
