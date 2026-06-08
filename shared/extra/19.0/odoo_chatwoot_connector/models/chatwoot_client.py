@@ -294,7 +294,12 @@ class ChatwootClient(models.AbstractModel):
                     agents = data if isinstance(data, list) else data.get('payload') or data.get('data') or []
                     for a in agents:
                         if a.get('email') == email or a.get('agent') and a.get('agent').get('email') == email:
-                            return a.get('id') or a.get('agent', {}).get('id')
+                            found_id = a.get('id') or a.get('agent', {}).get('id')
+                            _logger.info('assign_conversation[conv=%s]: resolved agent email=%s -> id=%s',
+                                         conversation_id, email, found_id)
+                            return found_id
+                    _logger.warning('assign_conversation[conv=%s]: email=%s no encontrado en lista de agents',
+                                    conversation_id, email)
             except Exception as e:
                 _logger.warning('Error listing agents by email: %s', e)
             return None
@@ -302,10 +307,12 @@ class ChatwootClient(models.AbstractModel):
         # Resolve agent id: prefer mapping.agent_id, else mapping.agent_email
         agent_id = mapping.get('agent_id')
         if not agent_id and mapping.get('agent_email'):
+            _logger.info('assign_conversation[conv=%s]: agent_id no proporcionado, buscando por email=%s',
+                         conversation_id, mapping.get('agent_email'))
             agent_id = _get_agent_id_by_email(mapping.get('agent_email'))
 
-        _logger.info('assign_conversation[conv=%s]: resolved agent_id=%s, assigned=%s',
-                     conversation_id, agent_id, assigned)
+        _logger.info('assign_conversation[conv=%s]: resolved agent_id=%s, prefer_assign=%s, inbox_id=%s',
+                     conversation_id, agent_id, mapping.get('prefer_assign_to_agent', True), mapping.get('inbox_id'))
 
         if agent_id and mapping.get('inbox_id'):
             try:
@@ -396,8 +403,9 @@ class ChatwootClient(models.AbstractModel):
                 errors.append(f'exception_notify:{e}')
 
         ok = assigned is not None and len(errors) == 0
-        _logger.info('Chatwoot assign result [conv=%s]: assigned=%s, errors=%s, warnings=%s',
-                     conversation_id, assigned, errors, warnings)
+        _logger.info('assign_conversation[conv=%s]: FINAL assigned=%s assignee_id=%s ok=%s errors=%s warnings=%s',
+                     conversation_id, assigned, agent_id if assigned == 'agent' else None,
+                     ok, errors, warnings)
         return {
             'ok': ok,
             'assigned_to': assigned,

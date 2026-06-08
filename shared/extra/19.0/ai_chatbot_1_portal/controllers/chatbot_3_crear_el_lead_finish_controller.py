@@ -225,9 +225,9 @@ class ChatBotController(http.Controller):
                     if teams and nombre_grupo in teams:
                         team = teams.get(nombre_grupo)
                     else:
-                        team = env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
+                        team = env['crm.team'].sudo().search([('name', '=', nombre_grupo)], limit=1)
                         if not team:
-                            team = env['crm.team'].search([], limit=1)
+                            team = env['crm.team'].sudo().search([], limit=1)
                             _logger.warning(f"No se encontró el equipo {nombre_grupo}, usando {team.name if team else 'ninguno'}")
             
             _logger.info(f"Equipo asignado: {equipo_asignado} -> Grupo: {nombre_grupo or 'Sin grupo'} -> ID: {team.id if team else 'N/A'}")
@@ -239,8 +239,9 @@ class ChatBotController(http.Controller):
                 lead = ChatBotUtils.create_lead(env, data, partner, team, medium, source, campaign, tag)
             
             # Asignación round robin
-            if team and team.member_ids:
-                ChatBotUtils.assign_lead_round_robin(env, lead, team)
+            team_sudo = team.sudo() if team else None
+            if team_sudo and team_sudo.member_ids:
+                ChatBotUtils.assign_lead_round_robin(env, lead, team_sudo)
             
             # Manejar imágenes
             if data.get('solicitar_foto_vat') or data.get('foto_vat') or data.get('solicitar_imagenes_adicionales') or data.get('imagenes_adicionales'):
@@ -251,24 +252,46 @@ class ChatBotController(http.Controller):
             # Asignación Chatwoot (round-robin + notify)
             account_id_cw = data.get('account_id')
             conversation_id_cw = data.get('conversation_id')
+            _logger.info('RR[HTTP] INICIO bloque Chatwoot: account=%s conv=%s team=%s equipo=%s flow=%s',
+                         account_id_cw, conversation_id_cw,
+                         team.name if team else None, equipo_asignado, name_flow)
             if account_id_cw and conversation_id_cw:
                 try:
+                    _logger.info('RR[HTTP] llamando select_round_robin_mapping con team=%s(%s) equipo=%s flow=%s',
+                                 team.name if team else None, team.id if team else None, equipo_asignado, name_flow)
                     mapping_rec = env['chatwoot.mapping'].sudo().select_round_robin_mapping(
                         team=team,
                         equipo_asignado=equipo_asignado,
                         flow_name=name_flow,
                     )
                     if mapping_rec:
+                        _logger.info('RR[HTTP] mapping SELECCIONADO: id=%s name=%s agent_id=%s agent_email=%s inbox_id=%s tags=%s',
+                                     mapping_rec.id, mapping_rec.name,
+                                     mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email,
+                                     mapping_rec.chatwoot_inbox_id, mapping_rec.chatwoot_tags)
+                    else:
+                        _logger.warning('RR[HTTP] NO SE ENCONTRÓ MAPPING - team=%s equipo=%s flow=%s',
+                                        team.name if team else None, equipo_asignado, name_flow)
+
+                    if mapping_rec:
+                        _logger.info('RR[HTTP] consultando get_agent_details account=%s agent_id=%s agent_email=%s',
+                                     account_id_cw, mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
                         agent_details = env['chatwoot.client'].get_agent_details(
                             account_id_cw,
                             agent_id=mapping_rec.chatwoot_agent_id or None,
                             agent_email=mapping_rec.chatwoot_agent_email or None,
                         )
+                        _logger.info('RR[HTTP] agent_details RESULTADO: %s', agent_details)
                         assigned_agent_name = None
                         assigned_agent_email = None
                         if agent_details:
                             assigned_agent_name = agent_details.get('available_name') or agent_details.get('name') or agent_details.get('email')
                             assigned_agent_email = agent_details.get('email')
+                            _logger.info('RR[HTTP] agente resuelto: name=%s email=%s', assigned_agent_name, assigned_agent_email)
+                        else:
+                            _logger.warning('RR[HTTP] NO se obtuvieron agent_details - agent_id=%s agent_email=%s',
+                                            mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
+
                         mapping = {
                             'agent_id': mapping_rec.chatwoot_agent_id or None,
                             'agent_email': mapping_rec.chatwoot_agent_email or None,
@@ -282,12 +305,23 @@ class ChatBotController(http.Controller):
                                 + (f"\n👤 Ejecutivo asignado: {assigned_agent_name} ({assigned_agent_email})" if assigned_agent_name else '')
                             )
                         }
+                        _logger.info('RR[HTTP] asignando conversación conv=%s account=%s mapping=%s',
+                                     conversation_id_cw, account_id_cw, {
+                                         'agent_id': mapping['agent_id'],
+                                         'agent_email': mapping['agent_email'],
+                                         'inbox_id': mapping['inbox_id'],
+                                         'prefer_assign_to_agent': mapping['prefer_assign_to_agent'],
+                                         'tags': mapping['tags'],
+                                         'notify_message_len': len(mapping.get('notify_message', '')),
+                                     })
                         result = env['chatwoot.client'].assign_conversation(account_id_cw, conversation_id_cw, mapping)
+                        _logger.info('RR[HTTP] assign_conversation RESULTADO: %s', result)
                         ejecutivo = assigned_agent_name or mapping_rec.chatwoot_agent_email or 'sin datos'
                         if result.get('assigned_to') != 'existing':
                             lead.sudo().message_post(body=f"Solicitud recibida. Ejecutivo asignado: {ejecutivo}")
+                            _logger.info('RR[HTTP] chatter message posted: ejecutivo=%s', ejecutivo)
                         else:
-                            _logger.info('capturar_lead_http[conv=%s]: assignee preserved, skipping chatter message',
+                            _logger.info('RR[HTTP][conv=%s]: assignee preserved, skipping chatter message',
                                          conversation_id_cw)
                             ejecutivo = 'preservado'
                         try:
@@ -307,10 +341,16 @@ class ChatBotController(http.Controller):
                                 }),
                                 'chatwoot_assign_failed': not result.get('ok', False),
                             })
+                            _logger.info('RR[HTTP] lead %s escrito con estado=%s asignado_a=%s',
+                                         lead.id, result.get('ok', False), result.get('assigned_to'))
                         except Exception as e_write:
-                            _logger.warning('Error guardando chatwoot ids en lead %s: %s', lead.id, e_write)
+                            _logger.warning('RR[HTTP] Error guardando chatwoot ids en lead %s: %s', lead.id, e_write)
                 except Exception as e:
-                    _logger.error("Error asignando a Chatwoot desde HTTP: %s", e, exc_info=True)
+                    _logger.error("RR[HTTP] Error asignando a Chatwoot desde HTTP: %s", e, exc_info=True)
+            else:
+                _logger.warning('RR[HTTP] SKIP Chatwoot: faltan account_id(%s) o conversation_id(%s)',
+                                account_id_cw, conversation_id_cw)
+            _logger.info('RR[HTTP] FIN bloque Chatwoot')
 
             respuesta_bot = ChatBotUtils.generate_response(data, lead_id=lead.id, equipo_asignado=equipo_asignado, env=env)
             

@@ -23,47 +23,62 @@ class ChatbotSessionInherit(models.Model):
             except Exception:
                 lead_id = None
 
+            _logger.info('RR[session] INICIO: lead_id=%s account=%s conv=%s',
+                         lead_id, account_id, conversation_id)
+
             team = None
             if lead_id:
                 lead = self.env['crm.lead'].sudo().browse(int(lead_id))
                 if lead and lead.exists():
                     team = lead.team_id
+                    _logger.info('RR[session] lead encontrado: id=%s team=%s(%s)',
+                                 lead.id, team.name if team else None, team.id if team else None)
+                else:
+                    _logger.warning('RR[session] lead_id=%s no existe en BD', lead_id)
+            else:
+                _logger.warning('RR[session] no se pudo extraer lead_id de res=%s', res)
 
             equipo = datos.get('equipo_asignado') or (self and getattr(self, 'equipo_asignado', None))
             flow_name = datos.get('flow_name') or datos.get('name_flow')
+            _logger.info('RR[session] datos: equipo=%s flow_name=%s team=%s', equipo, flow_name, team.name if team else None)
 
             # Select mapping with round-robin across mappings that share the same flow/team
+            _logger.info('RR[session] llamando select_round_robin_mapping team=%s equipo=%s flow=%s',
+                         team.name if team else None, equipo, flow_name)
             mapping_rec = self.env['chatwoot.mapping'].sudo().select_round_robin_mapping(
                 team=team,
                 equipo_asignado=equipo,
                 flow_name=flow_name,
             )
 
+            if mapping_rec:
+                _logger.info('RR[session] mapping SELECCIONADO: id=%s name=%s agent_id=%s agent_email=%s inbox_id=%s',
+                             mapping_rec.id, mapping_rec.name,
+                             mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email,
+                             mapping_rec.chatwoot_inbox_id)
+            else:
+                _logger.warning('RR[session] NO SE ENCONTRÓ MAPPING - team=%s equipo=%s flow=%s',
+                                team.name if team else None, equipo, flow_name)
+
             if mapping_rec and account_id and conversation_id:
+                _logger.info('RR[session] consultando get_agent_details account=%s agent_id=%s agent_email=%s',
+                             account_id, mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
                 agent_details = self.env['chatwoot.client'].get_agent_details(
                     account_id,
                     agent_id=mapping_rec.chatwoot_agent_id or None,
                     agent_email=mapping_rec.chatwoot_agent_email or None,
                 )
+                _logger.info('RR[session] agent_details RESULTADO: %s', agent_details)
                 assigned_agent_name = None
                 assigned_agent_email = None
                 if agent_details:
                     assigned_agent_name = agent_details.get('available_name') or agent_details.get('name') or agent_details.get('email')
                     assigned_agent_email = agent_details.get('email')
+                    _logger.info('RR[session] agente resuelto: name=%s email=%s', assigned_agent_name, assigned_agent_email)
+                else:
+                    _logger.warning('RR[session] NO se obtuvieron agent_details - agent_id=%s agent_email=%s',
+                                    mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
 
-                # mapping = {
-                #     'agent_id': mapping_rec.chatwoot_agent_id or None,
-                #     'agent_email': mapping_rec.chatwoot_agent_email or None,
-                #     'inbox_id': mapping_rec.chatwoot_inbox_id or None,
-                #     'prefer_assign_to_agent': mapping_rec.prefer_assign_to_agent,
-                #     'tags': [t.strip() for t in (mapping_rec.chatwoot_tags or '').split(',') if t.strip()],
-                #     'notify_message': (
-                #         f"Nuevo lead: {res.get('lead_info', {}).get('lead_id', '')}"
-                #         f" - {datos.get('solicitar_name') or datos.get('name','Sin nombre')}"
-                #         f" - {datos.get('solicitar_phone') or datos.get('phone','')}"
-                #         + (f"\n👤 Ejecutivo asignado: {assigned_agent_name} ({assigned_agent_email})" if assigned_agent_name else '')
-                #     )
-                # }
                 if assigned_agent_name:
                     notify_msg = f"👤 Ejecutivo asignado: {assigned_agent_name} ({assigned_agent_email})"
                 else:
@@ -77,15 +92,26 @@ class ChatbotSessionInherit(models.Model):
                     'tags': [t.strip() for t in (mapping_rec.chatwoot_tags or '').split(',') if t.strip()],
                     'notify_message': notify_msg
                 }
+                _logger.info('RR[session] asignando conversación conv=%s account=%s mapping=%s',
+                             conversation_id, account_id, {
+                                 'agent_id': mapping['agent_id'],
+                                 'agent_email': mapping['agent_email'],
+                                 'inbox_id': mapping['inbox_id'],
+                                 'prefer_assign_to_agent': mapping['prefer_assign_to_agent'],
+                                 'tags': mapping['tags'],
+                                 'notify_message_len': len(mapping.get('notify_message', '')),
+                             })
                 # call client
                 try:
                     result = self.env['chatwoot.client'].assign_conversation(account_id, conversation_id, mapping)
+                    _logger.info('RR[session] assign_conversation RESULTADO: %s', result)
                     if lead and lead.exists():
                         ejecutivo = assigned_agent_name or mapping_rec.chatwoot_agent_email or 'sin datos'
                         if result.get('assigned_to') != 'existing':
                             lead.message_post(body=f"Solicitud recibida. Ejecutivo asignado: {ejecutivo}")
+                            _logger.info('RR[session] chatter message posted: ejecutivo=%s', ejecutivo)
                         else:
-                            _logger.info('capturar_lead[conv=%s]: assignee preserved, skipping chatter message',
+                            _logger.info('RR[session][conv=%s]: assignee preserved, skipping chatter message',
                                          conversation_id)
                             ejecutivo = 'preservado'
                         # Store chatwoot ids on the lead for backup lookups
@@ -106,10 +132,16 @@ class ChatbotSessionInherit(models.Model):
                                 }),
                                 'chatwoot_assign_failed': not result.get('ok', False),
                             })
+                            _logger.info('RR[session] lead %s escrito con estado=%s asignado_a=%s',
+                                         lead.id, result.get('ok', False), result.get('assigned_to'))
                         except Exception as e_write:
-                            _logger.warning('Error guardando chatwoot ids en lead %s: %s', lead.id, e_write)
+                            _logger.warning('RR[session] Error guardando chatwoot ids en lead %s: %s', lead.id, e_write)
                 except Exception:
-                    _logger.exception('Error al notificar/assign a Chatwoot')
+                    _logger.exception('RR[session] Error al notificar/assign a Chatwoot')
+            else:
+                _logger.warning('RR[session] SKIP: mapping=%s account=%s conv=%s',
+                                bool(mapping_rec), account_id, conversation_id)
+            _logger.info('RR[session] FIN')
         except Exception:
-            _logger.exception('Error en hook capturar_lead -> Chatwoot')
+            _logger.exception('RR[session] Error en hook capturar_lead -> Chatwoot')
         return res

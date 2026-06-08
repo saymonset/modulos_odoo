@@ -6,8 +6,8 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        6416,
-        26592
+        10512,
+        26480
       ],
       "id": "a4d625e2-5805-4088-86ca-bbb9e0ca5d89",
       "name": "When clicking ‘Execute workflow’"
@@ -1343,7 +1343,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfor (const item of items) {\n  const tipo = item.json.tipoPregunta;\n  const outputText = item.json.output;\n  let phone = item.json.user_number || item.json.phone_number || item.json.session_id;\n  \n  if (phone && !phone.startsWith('+')) {\n    phone = '+' + phone;\n  }\n  \n  let botones = [];\n  \n  // PRECIOS - botones Sí/No\n  if (tipo === 'PRECIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_PRECIOS\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // SERVICIOS - botones Sí/No\n  else if (tipo === 'SERVICIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_SERVICIOS\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // TARJETA - botones Sí/No\n  else if (tipo === 'TARJETA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_TARJETA\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  } \n  // CITA_DIRECTA - botones para elegir Medio de pago o Seguro\n  else if (tipo === 'CITA_DIRECTA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MEDIOS_PROPIOS\", title: \"💰 Medios propios\" } },\n      { type: \"reply\", reply: { id: \"SEGURO_MEDICO\", title: \"🩺 Seguro médico\" } }\n    ];\n  } \n  else if (tipo === 'RESULTADOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"LABORATORIO\", title: \"🔬 Laboratorio\" } },\n      { type: \"reply\", reply: { id: \"IMAGENES\", title: \"📷 Imágenes\" } }\n    ];\n  }\n  // ESTATICO - horario, promociones, resultados (botones: Menú y Salir)\n  else if (tipo === 'ESTATICO') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MENU_PRINCIPAL\", title: \"🔙 Menú\" } },\n      { type: \"reply\", reply: { id: \"SALIR\", title: \"👋 Salir\" } }\n    ];\n  } \n  // Si no hay tipoPregunta, no enviamos botones (se envía como texto normal)\n  else {\n    nuevosItems.push(item);\n    continue;\n  }\n  \n  // Construir el payload de WhatsApp\n  const whatsappPayload = {\n    messaging_product: \"whatsapp\",\n    recipient_type: \"individual\",\n    to: phone,\n    type: \"interactive\",\n    interactive: {\n      type: \"button\",\n      body: { text: outputText },\n      action: { buttons: botones }\n    }\n  };\n  \n  nuevosItems.push({ \n    json: {\n      ...item.json,\n      whatsappPayload: whatsappPayload,\n      phone_number_formatted: phone\n    }\n  });\n}\n\nreturn nuevosItems;"
+        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfor (const item of items) {\n  const tipo = item.json.tipoPregunta;\n  const outputText = item.json.output;\n  let phone = item.json.user_number || item.json.phone_number || item.json.session_id;\n\n  if (phone && !phone.startsWith('+')) {\n    phone = '+' + phone;\n  }\n\n  let botones = [];\n\n  // PRECIOS - botones Sí/No\n  if (tipo === 'PRECIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_PRECIOS\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  }\n  // SERVICIOS - botones Sí/No\n  else if (tipo === 'SERVICIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_SERVICIOS\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  }\n  // TARJETA - botones Sí/No\n  else if (tipo === 'TARJETA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_TARJETA\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  }\n  // CITA_DIRECTA - botones para elegir Medio de pago o Seguro\n  else if (tipo === 'CITA_DIRECTA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MEDIOS_PROPIOS\", title: \"💰 Medios propios\" } },\n      { type: \"reply\", reply: { id: \"SEGURO_MEDICO\", title: \"🩺 Seguro médico\" } }\n    ];\n  }\n  else if (tipo === 'RESULTADOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"LABORATORIO\", title: \"🔬 Laboratorio\" } },\n      { type: \"reply\", reply: { id: \"IMAGENES\", title: \"📷 Imágenes\" } }\n    ];\n  }\n  // ESTATICO - horario, promociones, resultados (botones: Menú y Salir)\n  else if (tipo === 'ESTATICO') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MENU_PRINCIPAL\", title: \"🔙 Menú\" } },\n      { type: \"reply\", reply: { id: \"SALIR\", title: \"👋 Salir\" } }\n    ];\n  }\n  // ✅ NUEVO: Si es pregunta Sí/No genérica sin tipo específico\n  else if (item.json.esPreguntaSiNo === true) {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_SI\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CONFIRMAR_NO\", title: \"❌ No\" } }\n    ];\n  }\n  // Si no hay tipoPregunta, no enviamos botones (se envía como texto normal)\n  else {\n    nuevosItems.push(item);\n    continue;\n  }\n\n  // Construir el payload de WhatsApp\n  const whatsappPayload = {\n    messaging_product: \"whatsapp\",\n    recipient_type: \"individual\",\n    to: phone,\n    type: \"interactive\",\n    interactive: {\n      type: \"button\",\n      body: { text: outputText },\n      action: { buttons: botones }\n    }\n  };\n\n  nuevosItems.push({\n    json: {\n      ...item.json,\n      whatsappPayload: whatsappPayload,\n      phone_number_formatted: phone\n    }\n  });\n}\n\nreturn nuevosItems;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1467,162 +1467,18 @@
     "When clicking ‘Execute workflow’": [
       {
         "json": {
-          "headers": {
-            "connection": "upgrade",
-            "host": "n8n.unisasalud.com",
-            "origin": "https://n8n.unisasalud.com",
-            "content-length": "2567",
-            "accept": "application/json",
-            "user-agent": "rest-client/2.1.0 (linux-musl x86_64) ruby/3.4.4p34",
-            "content-type": "application/json",
-            "x-chatwoot-delivery": "dda2d92c-02e8-4164-a69d-7b606ae79490",
-            "x-chatwoot-timestamp": "1780698369",
-            "x-chatwoot-signature": "sha256=269e941560aa46e0837413959d0cc84a7152fee6492e71a13cdfb58cbc70ba93",
-            "accept-encoding": "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "account": {
-              "id": 1,
-              "name": "UNISA Salud"
-            },
-            "additional_attributes": {},
-            "content_attributes": {},
-            "content_type": "text",
-            "content": "kk",
-            "conversation": {
-              "additional_attributes": {},
-              "can_reply": true,
-              "channel": "Channel::Whatsapp",
-              "contact_inbox": {
-                "id": 16,
-                "contact_id": 16,
-                "inbox_id": 7,
-                "source_id": "584142711347",
-                "created_at": "2026-06-05T20:14:48.635Z",
-                "updated_at": "2026-06-05T20:14:48.635Z",
-                "hmac_verified": false,
-                "pubsub_token": "EFWpzY2ncFweuCKFDnNu1K3C"
-              },
-              "id": 16,
-              "inbox_id": 7,
-              "messages": [
-                {
-                  "id": 2284,
-                  "content": "kk",
-                  "account_id": 1,
-                  "inbox_id": 7,
-                  "conversation_id": 16,
-                  "message_type": 0,
-                  "created_at": 1780698369,
-                  "updated_at": "2026-06-05T22:26:09.683Z",
-                  "private": false,
-                  "status": "sent",
-                  "source_id": "wamid.HBgMNTg0MTQyNzExMzQ3FQIAEhgUM0I4NkUwRTM3MURGOUJFNDA3NjUA",
-                  "content_type": "text",
-                  "content_attributes": {},
-                  "sender_type": "Contact",
-                  "sender_id": 16,
-                  "external_source_ids": {},
-                  "additional_attributes": {},
-                  "processed_message_content": "kk",
-                  "sentiment": {},
-                  "conversation": {
-                    "assignee_id": 10,
-                    "unread_count": 1,
-                    "last_activity_at": 1780698369,
-                    "contact_inbox": {
-                      "source_id": "584142711347"
-                    }
-                  },
-                  "sender": {
-                    "additional_attributes": {},
-                    "custom_attributes": {},
-                    "email": null,
-                    "id": 16,
-                    "identifier": null,
-                    "name": "saymon",
-                    "phone_number": "+584142711347",
-                    "thumbnail": "",
-                    "blocked": false,
-                    "type": "contact"
-                  }
-                }
-              ],
-              "labels": [
-                "citas",
-                "agente_desactivado"
-              ],
-              "meta": {
-                "sender": {
-                  "additional_attributes": {},
-                  "custom_attributes": {},
-                  "email": null,
-                  "id": 16,
-                  "identifier": null,
-                  "name": "saymon",
-                  "phone_number": "+584142711347",
-                  "thumbnail": "",
-                  "blocked": false,
-                  "type": "contact"
-                },
-                "assignee": {
-                  "id": 10,
-                  "name": "Simon Alberto Rodriguez Pacheco",
-                  "available_name": "Simon Alberto Rodriguez Pacheco",
-                  "avatar_url": "",
-                  "type": "user",
-                  "availability_status": null,
-                  "thumbnail": ""
-                },
-                "assignee_type": "User",
-                "team": null,
-                "hmac_verified": false
-              },
-              "status": "pending",
-              "custom_attributes": {},
-              "snoozed_until": null,
-              "unread_count": 1,
-              "first_reply_created_at": "2026-06-05T20:15:32.860Z",
-              "priority": null,
-              "waiting_since": 1780698284,
-              "agent_last_seen_at": 1780698321,
-              "contact_last_seen_at": 0,
-              "last_activity_at": 1780698369,
-              "timestamp": 1780698369,
-              "created_at": 1780690488,
-              "updated_at": 1780698369.6992817
-            },
-            "created_at": "2026-06-05T22:26:09.683Z",
-            "id": 2284,
-            "inbox": {
-              "id": 7,
-              "name": "Whatsapp Unisa Salud +58 424 8221683"
-            },
-            "message_type": "incoming",
-            "private": false,
-            "sender": {
-              "account": {
-                "id": 1,
-                "name": "UNISA Salud"
-              },
-              "additional_attributes": {},
-              "avatar": "",
-              "custom_attributes": {},
-              "email": null,
-              "id": 16,
-              "identifier": null,
-              "name": "saymon",
-              "phone_number": "+584142711347",
-              "thumbnail": "",
-              "blocked": false
-            },
-            "source_id": "wamid.HBgMNTg0MTQyNzExMzQ3FQIAEhgUM0I4NkUwRTM3MURGOUJFNDA3NjUA",
-            "event": "message_created"
-          },
-          "webhookUrl": "https://n8n.unisasalud.com/webhook/chatwoot_integraia",
-          "executionMode": "production"
+          "output": "¡Excelente decisión! Con la TARJETA DE LA SALUD obtienes:\n\n• Hasta 30% de descuento\n• 1 consulta gratuita al año\n• Vigencia de 12 meses\n• Costo total: 80 USD → pagas 20 USD al afiliarte + 6 cuotas de 10 USD\n\n¿Deseas que un ejecutivo se comunique contigo? Responde Sí o No.",
+          "session_id": "584123586929",
+          "conversation_id": "17",
+          "account_id": "1",
+          "platform": "whatsapp",
+          "timestamp_actividad": "2026-06-08T14:06:02.422-04:00",
+          "tipoPregunta": null,
+          "isMenu": false,
+          "esPreguntaSiNo": true,
+          "flow_name": "flujo_agendamiento_default",
+          "text": "¡Excelente decisión! Con la TARJETA DE LA SALUD obtienes:\n\n• Hasta 30% de descuento\n• 1 consulta gratuita al año\n• Vigencia de 12 meses\n• Costo total: 80 USD → pagas 20 USD al afiliarte + 6 cuotas de 10 USD\n\n¿Deseas que un ejecutivo se comunique contigo? Responde Sí o No.",
+          "content": "¡Excelente decisión! Con la TARJETA DE LA SALUD obtienes:\n\n• Hasta 30% de descuento\n• 1 consulta gratuita al año\n• Vigencia de 12 meses\n• Costo total: 80 USD → pagas 20 USD al afiliarte + 6 cuotas de 10 USD\n\n¿Deseas que un ejecutivo se comunique contigo? Responde Sí o No."
         }
       }
     ]
@@ -1926,7 +1782,7 @@
       "main": [
         [
           {
-            "node": "Obtener_Info_basica",
+            "node": "Construir_botones_WhatsApp",
             "type": "main",
             "index": 0
           }
@@ -1979,7 +1835,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "56fbcac8-9fa6-4c85-912b-8ecc040d9ecd",
+  "versionId": "df28492a-39f1-4873-898f-4df639be7171",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "27f2fbd44aea77cdc4ee5b60d7a4eb1783a710ad686d97e24edf8a6f5832f241"

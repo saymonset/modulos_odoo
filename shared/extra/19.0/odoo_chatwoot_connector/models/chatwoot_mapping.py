@@ -84,10 +84,14 @@ class ChatwootMapping(models.Model):
         3. team_id
         Then rotate among the candidate mappings in ascending id order.
         """
+        _logger.info('RR[mapping] INICIO: team=%s equipo_asignado=%s flow_name=%s', team, equipo_asignado, flow_name)
+
         candidates = self.sudo().search([('active', '=', True)]).sorted('id')
+        _logger.info('RR[mapping] candidates activos totales: %s', candidates.ids)
 
         if equipo_asignado:
             filtered = candidates.filtered(lambda m: m.equipo_asignado == equipo_asignado)
+            _logger.info('RR[mapping] filtrados por equipo_asignado=%s: %s', equipo_asignado, filtered.ids)
             if filtered:
                 candidates = filtered
 
@@ -95,16 +99,19 @@ class ChatwootMapping(models.Model):
             filtered = self.sudo().search([('active', '=', True)]).filtered(
                 lambda m: m.flow_id and m.flow_id.name == flow_name
             )
+            _logger.info('RR[mapping] filtrados por flow_name=%s: %s', flow_name, filtered.ids)
             if filtered:
                 candidates = filtered.sorted('id')
 
         if not candidates and team:
             team_id = team.id if hasattr(team, 'id') else int(team)
             filtered = self.sudo().search([('active', '=', True), ('team_id', '=', team_id)]).sorted('id')
+            _logger.info('RR[mapping] filtrados por team_id=%s: %s', team_id, filtered.ids)
             if filtered:
                 candidates = filtered
 
         if not candidates:
+            _logger.warning('RR[mapping] SIN CANDIDATOS - team=%s equipo=%s flow=%s', team, equipo_asignado, flow_name)
             return self.browse()
 
         rr_key_parts = [
@@ -115,6 +122,8 @@ class ChatwootMapping(models.Model):
         params = self.env['ir.config_parameter'].sudo()
         last_id = params.get_param(rr_key)
 
+        _logger.info('RR[mapping] rr_key=%s last_id=%s candidates=%s', rr_key, last_id, candidates.ids)
+
         next_rec = candidates[0]
         if last_id:
             try:
@@ -123,8 +132,17 @@ class ChatwootMapping(models.Model):
                 if last_id in ids:
                     idx = ids.index(last_id)
                     next_rec = candidates[(idx + 1) % len(candidates)]
-            except Exception:
+                    _logger.info('RR[mapping] rotando: idx=%d -> next index=%d next_id=%d', idx, (idx + 1) % len(candidates), next_rec.id)
+                else:
+                    _logger.info('RR[mapping] last_id=%s no está en candidates_ids=%s, usando primero', last_id, ids)
+            except Exception as e:
+                _logger.warning('RR[mapping] error rotando: %s, usando primero', e)
                 next_rec = candidates[0]
 
         params.set_param(rr_key, next_rec.id)
+        _logger.info('RR[mapping] MAPPING SELECCIONADO: id=%s name=%s agent_id=%s agent_email=%s inbox_id=%s',
+                     next_rec.id, next_rec.name, next_rec.chatwoot_agent_id,
+                     next_rec.chatwoot_agent_email, next_rec.chatwoot_inbox_id)
+        _logger.info('RR[mapping] nuevo last_id guardado=%s', next_rec.id)
+        _logger.info('RR[mapping] FIN')
         return next_rec

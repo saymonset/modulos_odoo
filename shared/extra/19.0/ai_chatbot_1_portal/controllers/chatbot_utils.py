@@ -289,13 +289,13 @@ class ChatBotUtils:
         teams = {}
         team_names = ['Grupo Citas', 'Grupo Ventas', 'Grupo Laboratorio', 'Grupo Imagenología', 'Grupo Informativo']
         for team_name in team_names:
-            team = env['crm.team'].search([('name', '=', team_name)], limit=1)
+            # Buscar con entorno sudo y contexto en_US porque name es translate=True y puede no tener es_VE
+            team = env['crm.team'].sudo().with_context(lang='en_US').search([('name', '=', team_name)], limit=1)
             if not team:
                 try:
                     team_data = {
                         'name': team_name,
                         'active': True,
-                        'member_ids': False,
                     }
                     if team_name == 'Grupo Citas':
                         team_data['alias_name'] = 'citas-unisa'
@@ -312,7 +312,7 @@ class ChatBotUtils:
                 except Exception as e:
                     _logger.error(f"❌ Error creando equipo {team_name}: {str(e)}")
                     # Posible condición de carrera: reintentar buscar si otro proceso creó el equipo
-                    team = env['crm.team'].search([('name', '=', team_name)], limit=1)
+                    team = env['crm.team'].sudo().with_context(lang='en_US').search([('name', '=', team_name)], limit=1)
                     if not team:
                         # Como último recurso, crear un equipo con sufijo para evitar bloqueos por duplicado
                         try:
@@ -598,28 +598,41 @@ class ChatBotUtils:
     @staticmethod
     def assign_lead_round_robin(env, lead, team):
         """Asignar lead usando round robin y enviar email al asignado"""
+        _logger.info('RR[Odoo] INICIO: lead_id=%s team=%s(%s)', lead.id, team.name if team else None, team.id if team else None)
         if not team or not team.member_ids:
+            _logger.warning('RR[Odoo] SKIP: team=%s member_ids=%s', team.name if team else None, team.member_ids.ids if team and team.member_ids else 'vacio')
             return
         try:
             param_name = f'unisa_bot_last_user_{team.id}'
             last_assigned_user_id = env['ir.config_parameter'].sudo().get_param(param_name)
             team_members = team.member_ids.sorted('id')
+            _logger.info('RR[Odoo] team=%s members_count=%s members_ids=%s',
+                         team.name, len(team_members), team_members.ids)
+            _logger.info('RR[Odoo] last_assigned_user_id=%s (param=%s)', last_assigned_user_id, param_name)
             if last_assigned_user_id:
                 last_user = env['res.users'].browse(int(last_assigned_user_id))
+                _logger.info('RR[Odoo] last_user: id=%s name=%s in_team=%s',
+                             last_user.id, last_user.name, last_user in team_members)
                 if last_user in team_members:
                     current_index = team_members.ids.index(last_user.id)
                     next_index = (current_index + 1) % len(team_members)
                     next_user = team_members[next_index]
+                    _logger.info('RR[Odoo] rotando: last_index=%d next_index=%d', current_index, next_index)
                 else:
                     next_user = team_members[0]
+                    _logger.info('RR[Odoo] last_user no está en team, usando primero')
             else:
                 next_user = team_members[0]
+                _logger.info('RR[Odoo] sin last_assigned, usando primer miembro del team')
+            _logger.info('RR[Odoo] ASIGNADO: user_id=%s name=%s email=%s',
+                         next_user.id, next_user.name, next_user.partner_id.email)
             lead.write({'user_id': next_user.id})
             env['ir.config_parameter'].sudo().set_param(param_name, next_user.id)
-            _logger.info(f"Lead {lead.id} asignado a {next_user.name}")
+            _logger.info(f"RR[Odoo] Lead {lead.id} asignado a {next_user.name} (ID {next_user.id})")
             ChatBotUtils._send_assignment_email(env, lead, next_user)
+            _logger.info('RR[Odoo] FIN OK')
         except Exception as e:
-            _logger.warning(f"Error en round robin: {str(e)}")
+            _logger.warning(f"RR[Odoo] Error en round robin: {str(e)}", exc_info=True)
 
     @staticmethod
     def _send_assignment_email(env, lead, user):
