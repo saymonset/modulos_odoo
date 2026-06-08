@@ -56,17 +56,20 @@
 
 ### ✅ Completado
 - **Round-robin Chatwoot**: Rotación entre mappings del mismo `equipo_asignado`. Alterna entre IDs 3 y 9 para CITAS_MP (agent_id=14). Verificado via JSON-RPC. Funciona correctamente.
-- **Round-robin Odoo** (usuarios CRM): `assign_lead_round_robin` en `chatbot_utils.py` rota entre miembros del equipo. Equipo Grupo Citas tiene 4 miembros (IDs 5,6,7,8). No se ha probado vía JSON-RPC pero la lógica existe.
+- **Round-robin Odoo** (usuarios CRM): `assign_lead_round_robin` en `chatbot_utils.py` rota entre miembros del equipo. Equipo Grupo Citas tiene 4 miembros (IDs 5,6,7,8).
 - **HTTP endpoint reparado**: Error `"Failed to write field crm.team.member_ids. Public user (id=3) doesn't have read access to User (res.users)"` resuelto.
   - **Causa raíz**: `team` era un recordset en el env del user público (uid=3). Acceder a `team.member_ids` (campo Many2many a `res.users`) requiere permisos que el user público no tiene.
   - **Solución**: `chatbot_3_crear_el_lead_finish_controller.py:242`: usar `team_sudo = team.sudo()` y acceder `team_sudo.member_ids`. También se agregó `.sudo()` en la búsqueda fallback de equipos en `chatbot_utils.py:228-230`.
   - **Endpoint verificado**: POST a `/ai_chatbot_1_portal/capturar_lead_http` retorna HTTP 200 con lead creado (ID 151).
 - **Logging `RR[...]`**: Agregado en `chatwoot_mapping.py`, `chatbot_3_crear_el_lead_finish_controller.py`, `chatbot_session_inherit.py`, `chatbot_utils.py`, `chatwoot_client.py`.
 - **Chatwoot Mappings activos**: 12 registros (IDs 3-14) con pares duplicados (ID 3 y 9 ambos con agent_id=14, etc.). Todos inbox 7.
+- **Preservación de assignee en Chatwoot**: Cuando una conversación ya tiene un agente asignado y está `open`/`pending`, Odoo **NO reasigna** — preserva el agente actual. Cuando está `resolved`, reasigna normalmente.
+  - `chatwoot_client.py:assign_conversation` → verifica `_get_conversation_details` al inicio; si hay assignee activo, retorna `assigned_to='preserved'` sin llamar al API de assignments.
+  - `chatbot_session_inherit.py` → maneja `assigned_to='preserved'` sin publicar chatter, guarda log.
+  - `chatbot_3_crear_el_lead_finish_controller.py` → mismo manejo.
 
 ### 🔄 Pendiente
-- **Probar Odoo user RR**: Probar `assign_lead_round_robin` via JSON-RPC para verificar rotación entre miembros del equipo Grupo Citas.
-- **Verificar flujo completo**: n8n → Odoo → lead creado → RR Chatwoot → asignación en Chatwoot. Pendiente coordinación con n8n/WhatsApp.
+- **Probar flujo completo con preservación**: n8n → Odoo → lead creado → conversación con assignee activo → preservación. Requiere prueba con conversación real de Chatwoot.
 - **Limpiar mappings duplicados**: IDs 9-14 son duplicados de IDs 3-8. Se pueden desactivar (archivar) para evitar confusión en la rotación.
 
 ### 📝 Notas técnicas

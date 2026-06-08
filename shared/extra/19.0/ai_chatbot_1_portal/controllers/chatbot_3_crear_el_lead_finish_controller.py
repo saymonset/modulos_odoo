@@ -317,11 +317,14 @@ class ChatBotController(http.Controller):
                         result = env['chatwoot.client'].assign_conversation(account_id_cw, conversation_id_cw, mapping)
                         _logger.info('RR[HTTP] assign_conversation RESULTADO: %s', result)
                         ejecutivo = assigned_agent_name or mapping_rec.chatwoot_agent_email or 'sin datos'
-                        if result.get('assigned_to') != 'existing':
+                        if result.get('assigned_to') in ('agent', 'preserved'):
+                            lead.sudo().message_post(body=f"Solicitud recibida. Ejecutivo asignado: {ejecutivo}")
+                            _logger.info('RR[HTTP] chatter message posted: ejecutivo=%s', ejecutivo)
+                        elif result.get('assigned_to') != 'existing':
                             lead.sudo().message_post(body=f"Solicitud recibida. Ejecutivo asignado: {ejecutivo}")
                             _logger.info('RR[HTTP] chatter message posted: ejecutivo=%s', ejecutivo)
                         else:
-                            _logger.info('RR[HTTP][conv=%s]: assignee preserved, skipping chatter message',
+                            _logger.info('RR[HTTP][conv=%s]: assignee skipped, no chatter',
                                          conversation_id_cw)
                             ejecutivo = 'preservado'
                         try:

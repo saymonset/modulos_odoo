@@ -107,11 +107,14 @@ class ChatbotSessionInherit(models.Model):
                     _logger.info('RR[session] assign_conversation RESULTADO: %s', result)
                     if lead and lead.exists():
                         ejecutivo = assigned_agent_name or mapping_rec.chatwoot_agent_email or 'sin datos'
-                        if result.get('assigned_to') != 'existing':
+                        if result.get('assigned_to') in ('agent', 'preserved'):
+                            lead.message_post(body=f"Solicitud recibida. Ejecutivo asignado: {ejecutivo}")
+                            _logger.info('RR[session] chatter message posted: ejecutivo=%s', ejecutivo)
+                        elif result.get('assigned_to') != 'existing':
                             lead.message_post(body=f"Solicitud recibida. Ejecutivo asignado: {ejecutivo}")
                             _logger.info('RR[session] chatter message posted: ejecutivo=%s', ejecutivo)
                         else:
-                            _logger.info('RR[session][conv=%s]: assignee preserved, skipping chatter message',
+                            _logger.info('RR[session][conv=%s]: assignee skipped, no chatter',
                                          conversation_id)
                             ejecutivo = 'preservado'
                         # Store chatwoot ids on the lead for backup lookups

@@ -281,8 +281,28 @@ class ChatwootClient(models.AbstractModel):
         errors = []
         warnings = []
         assigned = None
-        # We always reassign according to the selected round-robin mapping.
-        # This prevents a previous assignee from blocking the next lead.
+
+        # Check if conversation already has an active agent (open/pending) — preserve it
+        current_data = self._get_conversation_details(account_id, conversation_id)
+        current_assignee = current_data.get('meta', {}).get('assignee', {}) if current_data else {}
+        current_status = current_data.get('status') if current_data else None
+        current_assignee_id = current_assignee.get('id')
+        current_assignee_name = current_assignee.get('name', '')
+        _logger.info('assign_conversation[conv=%s]: current status=%s assignee_id=%s name=%s',
+                     conversation_id, current_status, current_assignee_id, current_assignee_name)
+        preserve = bool(current_assignee_id and current_status in ('open', 'pending'))
+        if preserve:
+            _logger.info('assign_conversation[conv=%s]: preserving existing assignee id=%s name=%s',
+                         conversation_id, current_assignee_id, current_assignee.get('name', ''))
+            assigned = 'preserved'
+            # Override notify_message so the patient knows their current agent handles it
+            if mapping.get('notify_message'):
+                mapping = dict(mapping)
+                mapping['notify_message'] = (
+                    f"Ya tienes una solicitud en curso con {current_assignee_name}. "
+                    f"Tu nueva consulta ha sido registrada. "
+                    f"{current_assignee_name} atenderá ambos casos."
+                )
 
         def _get_agent_id_by_email(email):
             try:
@@ -327,32 +347,32 @@ class ChatwootClient(models.AbstractModel):
             except Exception as e:
                 warnings.append(f'exception_ensure_inbox_member:{e}')
 
-        # Always try to assign to the selected agent.
-        if agent_id and mapping.get('prefer_assign_to_agent', True):
-            try:
-                url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}/assignments"
-                payload = {"assignee_id": agent_id}
-                _logger.info('assign_conversation[conv=%s]: assigning to agent_id=%s', conversation_id, agent_id)
-                r = requests.post(url, json=payload, headers=headers, timeout=timeout)
-                if r.status_code in (200, 201):
-                    assigned = 'agent'
-                    _logger.info('assign_conversation[conv=%s]: assign to agent %s OK', conversation_id, agent_id)
-                else:
-                    errors.append(f'assign_agent_failed:{r.status_code}:{r.text}')
-                    _logger.warning('assign_conversation[conv=%s]: assign to agent %s FAILED: %s %s',
-                                    conversation_id, agent_id, r.status_code, r.text[:500])
-            except Exception as e:
-                errors.append(f'exception_assign_agent:{e}')
-                _logger.warning('assign_conversation[conv=%s]: assign exception: %s', conversation_id, e, exc_info=True)
+        if not preserve:
+            # Always try to assign to the selected agent.
+            if agent_id and mapping.get('prefer_assign_to_agent', True):
+                try:
+                    url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}/assignments"
+                    payload = {"assignee_id": agent_id}
+                    _logger.info('assign_conversation[conv=%s]: assigning to agent_id=%s', conversation_id, agent_id)
+                    r = requests.post(url, json=payload, headers=headers, timeout=timeout)
+                    if r.status_code in (200, 201):
+                        assigned = 'agent'
+                        _logger.info('assign_conversation[conv=%s]: assign to agent %s OK', conversation_id, agent_id)
+                    else:
+                        errors.append(f'assign_agent_failed:{r.status_code}:{r.text}')
+                        _logger.warning('assign_conversation[conv=%s]: assign to agent %s FAILED: %s %s',
+                                        conversation_id, agent_id, r.status_code, r.text[:500])
+                except Exception as e:
+                    errors.append(f'exception_assign_agent:{e}')
+                    _logger.warning('assign_conversation[conv=%s]: assign exception: %s', conversation_id, e, exc_info=True)
 
-        # Fallback to inbox: the conversation remains in its inbox.
-        # We do not call an API here because Chatwoot assigns conversations to inboxes at creation time.
-        if not assigned and mapping.get('inbox_id'):
-            assigned = 'inbox'
-            if errors:
-                warnings.extend(errors)
-                warnings.append('agent_assignment_failed_fallback_to_inbox')
-                errors = []
+            # Fallback to inbox: the conversation remains in its inbox.
+            if not assigned and mapping.get('inbox_id'):
+                assigned = 'inbox'
+                if errors:
+                    warnings.extend(errors)
+                    warnings.append('agent_assignment_failed_fallback_to_inbox')
+                    errors = []
 
         # Ensure account-level labels exist, but do not force them on the conversation.
         self._ensure_default_account_labels(account_id)
@@ -403,13 +423,14 @@ class ChatwootClient(models.AbstractModel):
                 errors.append(f'exception_notify:{e}')
 
         ok = assigned is not None and len(errors) == 0
+        final_assignee_id = current_assignee_id if preserve else (agent_id if assigned == 'agent' else None)
         _logger.info('assign_conversation[conv=%s]: FINAL assigned=%s assignee_id=%s ok=%s errors=%s warnings=%s',
-                     conversation_id, assigned, agent_id if assigned == 'agent' else None,
-                     ok, errors, warnings)
+                     conversation_id, assigned, final_assignee_id, ok, errors, warnings)
         return {
             'ok': ok,
             'assigned_to': assigned,
             'errors': errors,
             'warnings': warnings,
-            'assignee_id': agent_id if assigned == 'agent' else None,
+            'assignee_id': final_assignee_id,
+            'current_assignee_name': current_assignee_name if preserve else False,
         }
