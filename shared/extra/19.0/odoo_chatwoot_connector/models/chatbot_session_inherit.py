@@ -79,10 +79,11 @@ class ChatbotSessionInherit(models.Model):
                     _logger.warning('RR[session] NO se obtuvieron agent_details - agent_id=%s agent_email=%s',
                                     mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
 
-                if assigned_agent_name:
-                    notify_msg = f"👤 Ejecutivo asignado: {assigned_agent_name} ({assigned_agent_email})"
+                equipo_legible = (mapping_rec.equipo_asignado or '').replace('_', ' ')
+                if assigned_agent_email:
+                    notify_msg = f"Tu consulta sobre {equipo_legible} ha sido registrada.\n👤 Ejecutivo asignado: {assigned_agent_email}"
                 else:
-                    notify_msg = ""   # 👈 vacío cuando no hay asignación
+                    notify_msg = f"Tu consulta sobre {equipo_legible} ha sido registrada."
 
                 mapping = {
                     'agent_id': mapping_rec.chatwoot_agent_id or None,
@@ -90,7 +91,8 @@ class ChatbotSessionInherit(models.Model):
                     'inbox_id': mapping_rec.chatwoot_inbox_id or None,
                     'prefer_assign_to_agent': mapping_rec.prefer_assign_to_agent,
                     'tags': [t.strip() for t in (mapping_rec.chatwoot_tags or '').split(',') if t.strip()],
-                    'notify_message': notify_msg
+                    'notify_message': notify_msg,
+                    'equipo_asignado': mapping_rec.equipo_asignado or '',
                 }
                 _logger.info('RR[session] asignando conversación conv=%s account=%s mapping=%s',
                              conversation_id, account_id, {

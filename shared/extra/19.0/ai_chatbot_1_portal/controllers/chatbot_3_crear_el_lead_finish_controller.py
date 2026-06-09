@@ -299,11 +299,10 @@ class ChatBotController(http.Controller):
                             'prefer_assign_to_agent': mapping_rec.prefer_assign_to_agent,
                             'tags': [t.strip() for t in (mapping_rec.chatwoot_tags or '').split(',') if t.strip()],
                             'notify_message': (
-                                f"Nuevo lead: {lead.id}"
-                                f" - {data.get('solicitar_name') or data.get('name','Sin nombre')}"
-                                f" - {data.get('solicitar_phone') or data.get('phone','')}"
-                                + (f"\n👤 Ejecutivo asignado: {assigned_agent_name} ({assigned_agent_email})" if assigned_agent_name else '')
-                            )
+                                f"Tu consulta sobre {(mapping_rec.equipo_asignado or '').replace('_', ' ')} ha sido registrada."
+                                + (f"\n👤 Ejecutivo asignado: {assigned_agent_email}" if assigned_agent_email else '')
+                            ),
+                            'equipo_asignado': mapping_rec.equipo_asignado or '',
                         }
                         _logger.info('RR[HTTP] asignando conversación conv=%s account=%s mapping=%s',
                                      conversation_id_cw, account_id_cw, {

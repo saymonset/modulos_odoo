@@ -288,21 +288,25 @@ class ChatwootClient(models.AbstractModel):
         current_status = current_data.get('status') if current_data else None
         current_assignee_id = current_assignee.get('id')
         current_assignee_name = current_assignee.get('name', '')
-        _logger.info('assign_conversation[conv=%s]: current status=%s assignee_id=%s name=%s',
-                     conversation_id, current_status, current_assignee_id, current_assignee_name)
+        current_assignee_email = current_assignee.get('email', '')
+        _logger.info('assign_conversation[conv=%s]: current status=%s assignee_id=%s name=%s email=%s',
+                     conversation_id, current_status, current_assignee_id, current_assignee_name, current_assignee_email)
         preserve = bool(current_assignee_id and current_status in ('open', 'pending'))
         if preserve:
-            _logger.info('assign_conversation[conv=%s]: preserving existing assignee id=%s name=%s',
-                         conversation_id, current_assignee_id, current_assignee.get('name', ''))
+            _logger.info('assign_conversation[conv=%s]: preserving existing assignee id=%s name=%s email=%s',
+                         conversation_id, current_assignee_id, current_assignee_name, current_assignee_email)
             assigned = 'preserved'
-            # Override notify_message so the patient knows their current agent handles it
+            # Override notify_message with informative message about the new flow and current agent
             if mapping.get('notify_message'):
                 mapping = dict(mapping)
-                mapping['notify_message'] = (
-                    f"Ya tienes una solicitud en curso con {current_assignee_name}. "
-                    f"Tu nueva consulta ha sido registrada. "
-                    f"{current_assignee_name} atenderá ambos casos."
+                equipo_legible = (mapping.get('equipo_asignado', '') or '').replace('_', ' ') or 'la misma'
+                msg = (
+                    f"Ya tienes una solicitud en curso.\n"
+                    f"Tu nueva consulta sobre {equipo_legible} ha sido registrada.\n"
                 )
+                if current_assignee_email:
+                    msg += f"👤 Ejecutivo asignado: {current_assignee_email}"
+                mapping['notify_message'] = msg
 
         def _get_agent_id_by_email(email):
             try:
@@ -433,4 +437,5 @@ class ChatwootClient(models.AbstractModel):
             'warnings': warnings,
             'assignee_id': final_assignee_id,
             'current_assignee_name': current_assignee_name if preserve else False,
+            'current_assignee_email': current_assignee_email if preserve else False,
         }
