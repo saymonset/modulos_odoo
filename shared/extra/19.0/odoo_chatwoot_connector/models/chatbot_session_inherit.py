@@ -61,6 +61,50 @@ class ChatbotSessionInherit(models.Model):
                                 team.name if team else None, equipo, flow_name)
 
             if mapping_rec and account_id and conversation_id:
+                # Asignar usuario Odoo por email del mapping Chatwoot
+                user = self.env['res.users'].sudo().search([
+                    ('login', '=', mapping_rec.chatwoot_agent_email)
+                ], limit=1)
+                if user and lead and lead.exists():
+                    lead.write({'user_id': user.id})
+                    _logger.info('RR[session] lead user_id asignado: user=%s(%s) email=%s',
+                                 user.name, user.id, user.login)
+                    # Enviar email de notificación
+                    if user.partner_id.email:
+                        try:
+                            subject = f"Nuevo lead asignado: {lead.name}"
+                            servicio = lead.name.split(' - ')[0] if ' - ' in lead.name else lead.name
+                            body = (
+                                f"<p>Hola {user.name},</p>"
+                                f"<p>Se te ha asignado un nuevo lead generado desde el chatbot de UNISA.</p>"
+                                f"<br/>"
+                                f"<p><strong>Datos del paciente:</strong></p>"
+                                f"<ul>"
+                                f"<li><strong>Nombre:</strong> {lead.contact_name or ''}</li>"
+                                f"<li><strong>Teléfono:</strong> {lead.phone or ''}</li>"
+                                f"<li><strong>Email:</strong> {lead.email_from or ''}</li>"
+                                f"<li><strong>Servicio:</strong> {servicio}</li>"
+                                f"<li><strong>Equipo:</strong> {lead.team_id.name or 'Sin equipo'}</li>"
+                                f"</ul>"
+                                f"<p>Por favor, contacta al paciente a la brevedad para dar seguimiento a su solicitud.</p>"
+                                f"<p>Saludos,<br/><strong>Sistema UNISA Salud</strong></p>"
+                            )
+                            self.env['mail.mail'].sudo().create({
+                                'subject': subject,
+                                'body_html': body,
+                                'email_to': user.partner_id.email,
+                                'email_from': user.company_id.email or '',
+                                'model': 'crm.lead',
+                                'res_id': lead.id,
+                            })
+                            _logger.info('RR[session] email de notificación creado para %s (%s)',
+                                         user.name, user.partner_id.email)
+                        except Exception as e:
+                            _logger.warning('RR[session] error creando email: %s', e)
+                else:
+                    _logger.warning('RR[session] no se encontró user Odoo para email=%s',
+                                    mapping_rec.chatwoot_agent_email)
+
                 _logger.info('RR[session] consultando get_agent_details account=%s agent_id=%s agent_email=%s',
                              account_id, mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
                 agent_details = self.env['chatwoot.client'].get_agent_details(

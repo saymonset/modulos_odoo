@@ -238,11 +238,6 @@ class ChatBotController(http.Controller):
             else:
                 lead = ChatBotUtils.create_lead(env, data, partner, team, medium, source, campaign, tag)
             
-            # Asignación round robin
-            team_sudo = team.sudo() if team else None
-            if team_sudo and team_sudo.member_ids:
-                ChatBotUtils.assign_lead_round_robin(env, lead, team_sudo)
-            
             # Manejar imágenes
             if data.get('solicitar_foto_vat') or data.get('foto_vat') or data.get('solicitar_imagenes_adicionales') or data.get('imagenes_adicionales'):
                 validated_images = ChatBotUtils.validate_image_urls(data)
@@ -274,6 +269,19 @@ class ChatBotController(http.Controller):
                                         team.name if team else None, equipo_asignado, name_flow)
 
                     if mapping_rec:
+                        # Asignar usuario Odoo por email del mapping Chatwoot
+                        user = env['res.users'].sudo().search([
+                            ('login', '=', mapping_rec.chatwoot_agent_email)
+                        ], limit=1)
+                        if user and lead and lead.exists():
+                            lead.sudo().write({'user_id': user.id})
+                            ChatBotUtils._send_assignment_email(env, lead.sudo(), user)
+                            _logger.info('RR[HTTP] lead user_id asignado: user=%s(%s) email=%s',
+                                         user.name, user.id, user.login)
+                        else:
+                            _logger.warning('RR[HTTP] no se encontró user Odoo para email=%s',
+                                            mapping_rec.chatwoot_agent_email)
+
                         _logger.info('RR[HTTP] consultando get_agent_details account=%s agent_id=%s agent_email=%s',
                                      account_id_cw, mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
                         agent_details = env['chatwoot.client'].get_agent_details(

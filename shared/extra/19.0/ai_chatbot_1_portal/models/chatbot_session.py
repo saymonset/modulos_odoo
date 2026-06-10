@@ -854,8 +854,6 @@ class SessionState(models.Model):
             else:
                 lead = ChatBotUtils.create_lead(env, datos, partner, team, medium, source, campaign, tag)
             
-            if team and team.member_ids:
-                ChatBotUtils.assign_lead_round_robin(env, lead, team)
             if datos.get('solicitar_foto_vat') or datos.get('foto_vat') or datos.get('solicitar_imagenes_adicionales') or datos.get('imagenes_adicionales'):
                 validated_images = ChatBotUtils.validate_image_urls(datos)
                 datos.update(validated_images)
