@@ -378,6 +378,13 @@ class ChatwootClient(models.AbstractModel):
                     warnings.append('agent_assignment_failed_fallback_to_inbox')
                     errors = []
 
+        # Abrir la conversación para que el agente la vea en su bandeja "Open"
+        if assigned:
+            try:
+                self._set_conversation_status(account_id, conversation_id, 'open')
+            except Exception as e:
+                errors.append(f'exception_set_open:{e}')
+
         # Ensure account-level labels exist, but do not force them on the conversation.
         self._ensure_default_account_labels(account_id)
 
