@@ -43,7 +43,7 @@ def _populate_initial_usd_prices(env):
         count += 1
     _logger.info("Precios USD poblados para %s plantillas.", count)
     variants = env['product.product'].search([
-        ('lst_price', '>', 0),
+        ('product_tmpl_id.list_price', '>', 0),
         ('lst_price_usd', '=', 0),
     ])
     count_var = 0
