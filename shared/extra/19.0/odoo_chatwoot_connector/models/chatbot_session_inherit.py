@@ -89,11 +89,12 @@ class ChatbotSessionInherit(models.Model):
                                 f"<p>Por favor, contacta al paciente a la brevedad para dar seguimiento a su solicitud.</p>"
                                 f"<p>Saludos,<br/><strong>Sistema UNISA Salud</strong></p>"
                             )
+                            email_from = self.env['ir.config_parameter'].sudo().get_param('mail.default.from', 'admin@unisasalud.com')
                             self.env['mail.mail'].sudo().create({
                                 'subject': subject,
                                 'body_html': body,
                                 'email_to': user.partner_id.email,
-                                'email_from': user.company_id.email or '',
+                                'email_from': email_from,
                                 'model': 'crm.lead',
                                 'res_id': lead.id,
                             })
