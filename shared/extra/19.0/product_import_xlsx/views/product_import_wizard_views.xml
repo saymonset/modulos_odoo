@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_product_import_xlsx_wizard_form" model="ir.ui.view">
+        <field name="name">product.import.xlsx.wizard.form</field>
+        <field name="model">product.import.xlsx.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Importar productos desde XLSX">
+                <group>
+                    <group string="Archivos">
+                        <field name="xlsx_file" filename="xlsx_filename"
+                               required="1"
+                               placeholder="Seleccione archivo .xlsx"/>
+                        <field name="xlsx_filename" invisible="1"/>
+                        <field name="imagenes_zip" filename="imagenes_zip_filename"
+                               placeholder="(Opcional) Seleccione archivo .zip con imágenes"/>
+                        <field name="imagenes_zip_filename" invisible="1"/>
+                    </group>
+                    <group string="Opciones">
+                        <field name="categ_id"
+                               placeholder="(Opcional) Categoría para todos los productos"/>
+                    </group>
+                </group>
+                <group string="Formato esperado del XLSX" col="7">
+                    <p class="text-muted">
+                        Columnas requeridas: <b>Producto</b> | <b>Tipo</b> (Simple/Padre/Variante) | <b>Referencia</b> | <b>Precio ($)</b> | <b>Atributo</b> | <b>Valor Atributo</b> | <b>Imagen (nombre archivo)</b>
+                    </p>
+                </group>
+                <footer>
+                    <button name="action_import" string="Importar" type="object"
+                            class="btn-primary"/>
+                    <button string="Cerrar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_product_import_xlsx_result_form" model="ir.ui.view">
+        <field name="name">product.import.xlsx.result.form</field>
+        <field name="model">product.import.xlsx.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Resultado de importación">
+                <group>
+                    <group string="Resumen">
+                        <field name="created_products" string="Productos creados"/>
+                        <field name="created_variants" string="Variantes creadas"/>
+                        <field name="skipped_count" string="Omitidos"/>
+                        <field name="error_count" string="Errores"/>
+                    </group>
+                </group>
+                <field name="log" nolabel="1" readonly="1" colspan="2"/>
+                <footer>
+                    <button string="Aceptar" class="btn-primary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_product_import_xlsx_wizard" model="ir.actions.act_window">
+        <field name="name">Importar productos desde XLSX</field>
+        <field name="res_model">product.import.xlsx.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_state': 'confirm'}</field>
+    </record>
+</odoo>
