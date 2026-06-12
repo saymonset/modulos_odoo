@@ -66,6 +66,7 @@ class ProductImportXlsxWizard(models.TransientModel):
             'res_model': 'product.import.xlsx.wizard',
             'res_id': self.id,
             'view_mode': 'form',
+            'view_id': self.env.ref('product_import_xlsx.view_product_import_xlsx_result_form').id,
             'target': 'new',
             'context': self.env.context,
         }
