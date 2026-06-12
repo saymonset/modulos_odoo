@@ -109,3 +109,4 @@ Desktop.ini
 
 # NOTA: Cada módulo tendrá su propio .gitignore
 # Este es solo para la estructura padre
+session-ses_*
