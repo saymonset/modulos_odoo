@@ -138,14 +138,16 @@ class SaleOrder(models.Model):
                 ('description', '=', 'Comprobante de pago - Transferencia / Pago Móvil'),
             ], limit=1)
             if attachment:
-                # Si existe el servicio de WhatsApp (debe estar definido en otro archivo)
-                service = order.env['whatsapp.service']
-                result = service.sendWhatsappConfirmation(order)
-                if not result.get('success'):
-                    _logger.error(f"*** POST-CONFIRMACIÓN: Fallo en WhatsApp para {order.name}: {result.get('message')}")
+                if 'whatsapp.service' in order.env.registry:
+                    service = order.env['whatsapp.service']
+                    result = service.sendWhatsappConfirmation(order)
+                    if not result.get('success'):
+                        _logger.error(f"*** POST-CONFIRMACIÓN: Fallo en WhatsApp para {order.name}: {result.get('message')}")
+                    else:
+                        order.write({'whatsapp_sent': True})
+                        _logger.info(f"*** POST-CONFIRMACIÓN: WhatsApp enviado correctamente para {order.name}")
                 else:
-                    order.write({'whatsapp_sent': True})
-                    _logger.info(f"*** POST-CONFIRMACIÓN: WhatsApp enviado correctamente para {order.name}")
+                    _logger.info(f"*** POST-CONFIRMACIÓN: Módulo WhatsApp no instalado, saltando notificación para {order.name}")
             else:
                 _logger.warning(f"*** POST-CONFIRMACIÓN: No se encontró comprobante para orden {order.name}. WhatsApp NO enviado.")
         else:
