@@ -28,24 +28,23 @@ class SaleOrderLine(models.Model):
     @api.depends('price_unit', 'product_uom_qty')
     def _compute_usd_bcv(self):
         for line in self:
-            # Find the main provider for this specific company
             main_provider = self.env['currency.rate.provider'].sudo().search([
                 ('company_id', '=', line.order_id.company_id.id),
-                ('is_main_rate', '=', True)
+                ('provider_type', '=', 'bcv'),
+                ('active', '=', True),
             ], limit=1)
 
             rate_val = 0.0
             if main_provider:
                 rate_val = main_provider.last_rate
-            
-            # Fallback to old VES logic if no main provider or it returned 0
+
             if not rate_val:
                 rate = self.env['res.currency.rate'].search([
-                    ('currency_id.name', '=', 'VES'),
+                    ('currency_id.name', '=', 'USD'),
                     ('company_id', '=', line.order_id.company_id.id),
                 ], order='name desc', limit=1)
                 if rate:
-                    rate_val = rate.original_value or (1.0 / rate.rate if rate.rate else 0)
+                    rate_val = rate.original_value
 
             if not rate_val:
                 line.price_usd_bcv = 0.0
@@ -53,7 +52,6 @@ class SaleOrderLine(models.Model):
                 line.rate_value = 0.0
                 continue
 
-            # rate_val is "1 USD = X Local"
             line.rate_value = rate_val
             line.price_usd_bcv = float_round(line.price_unit / rate_val, precision_digits=2)
             line.price_subtotal_usd_bcv = float_round(line.price_usd_bcv * line.product_uom_qty, precision_digits=2)

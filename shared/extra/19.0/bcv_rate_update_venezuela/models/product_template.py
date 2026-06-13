@@ -31,6 +31,13 @@ class ProductTemplate(models.Model):
             if rate:
                 template.list_price_usd = float_round(template.list_price / rate, precision_digits=2)
 
+    @api.onchange('list_price_usd')
+    def _onchange_list_price_usd(self):
+        for template in self:
+            rate = self._get_bcv_rate(template.company_id)
+            if rate:
+                template.list_price = float_round(template.list_price_usd * rate, precision_digits=2)
+
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
@@ -47,14 +54,14 @@ class ProductTemplate(models.Model):
         return res
 
     def _sync_usd_ves_values(self, vals):
-        if 'list_price_usd' in vals and 'list_price' not in vals:
+        if 'list_price_usd' in vals:
             for template in self:
                 rate = self._get_bcv_rate(template.company_id)
                 if rate:
                     template.with_context(_skip_bcv_sync=True).write({
                         'list_price': float_round(template.list_price_usd * rate, precision_digits=2),
                     })
-        elif 'list_price' in vals and 'list_price_usd' not in vals:
+        elif 'list_price' in vals:
             for template in self:
                 rate = self._get_bcv_rate(template.company_id)
                 if rate:
@@ -68,18 +75,19 @@ class ProductTemplate(models.Model):
             company = self.env.company
         main_provider = self.env['currency.rate.provider'].sudo().search([
             ('company_id', '=', company.id),
-            ('is_main_rate', '=', True)
+            ('provider_type', '=', 'bcv'),
+            ('active', '=', True),
         ], limit=1)
         rate_val = 0.0
         if main_provider:
             rate_val = main_provider.last_rate
         if not rate_val:
             rate = self.env['res.currency.rate'].search([
-                ('currency_id.name', '=', 'VES'),
+                ('currency_id.name', '=', 'USD'),
                 ('company_id', '=', company.id),
             ], order='name desc', limit=1)
             if rate:
-                rate_val = rate.original_value or (1.0 / rate.rate if rate.rate else 0)
+                rate_val = rate.original_value
         return rate_val or 1.0
 
     @api.model
@@ -134,6 +142,13 @@ class ProductProduct(models.Model):
             if rate:
                 rec.lst_price_usd = float_round(rec.lst_price / rate, precision_digits=2)
 
+    @api.onchange('lst_price_usd')
+    def _onchange_lst_price_usd(self):
+        for rec in self:
+            rate = self.env['product.template']._get_bcv_rate(rec.company_id)
+            if rate:
+                rec.lst_price = float_round(rec.lst_price_usd * rate, precision_digits=2)
+
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
@@ -150,14 +165,14 @@ class ProductProduct(models.Model):
         return res
 
     def _sync_usd_ves_values(self, vals):
-        if 'lst_price_usd' in vals and 'lst_price' not in vals and 'list_price' not in vals:
+        if 'lst_price_usd' in vals:
             for rec in self:
                 rate = self.env['product.template']._get_bcv_rate(rec.company_id)
                 if rate:
                     rec.with_context(_skip_bcv_sync=True).write({
                         'lst_price': float_round(rec.lst_price_usd * rate, precision_digits=2),
                     })
-        elif ('lst_price' in vals or 'list_price' in vals or 'price_extra' in vals) and 'lst_price_usd' not in vals:
+        elif 'lst_price' in vals or 'list_price' in vals or 'price_extra' in vals:
             for rec in self:
                 rate = self.env['product.template']._get_bcv_rate(rec.company_id)
                 if rate:
@@ -192,6 +207,13 @@ class ProductTemplateAttributeValue(models.Model):
             if rate:
                 rec.price_extra_usd = float_round(rec.price_extra / rate, precision_digits=2)
 
+    @api.onchange('price_extra_usd')
+    def _onchange_price_extra_usd(self):
+        for rec in self:
+            rate = self.env['product.template']._get_bcv_rate(rec.product_tmpl_id.company_id)
+            if rate:
+                rec.price_extra = float_round(rec.price_extra_usd * rate, precision_digits=2)
+
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
@@ -208,14 +230,14 @@ class ProductTemplateAttributeValue(models.Model):
         return res
 
     def _sync_usd_ves_values(self, vals):
-        if 'price_extra_usd' in vals and 'price_extra' not in vals:
+        if 'price_extra_usd' in vals:
             for rec in self:
                 rate = self.env['product.template']._get_bcv_rate(rec.product_tmpl_id.company_id)
                 if rate:
                     rec.with_context(_skip_bcv_sync=True).write({
                         'price_extra': float_round(rec.price_extra_usd * rate, precision_digits=2),
                     })
-        elif 'price_extra' in vals and 'price_extra_usd' not in vals:
+        elif 'price_extra' in vals:
             for rec in self:
                 rate = self.env['product.template']._get_bcv_rate(rec.product_tmpl_id.company_id)
                 if rate:

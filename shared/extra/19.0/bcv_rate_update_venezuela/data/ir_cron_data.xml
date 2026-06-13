@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <record id="cron_fetch_bcv_rate" model="ir.cron">
+        <field name="name">Obtener tasa BCV</field>
+        <field name="model_id" ref="currency_rate_update_base.model_currency_rate_provider"/>
+        <field name="state">code</field>
+        <field name="code">model.run_cron_update()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="priority">10</field>
+    </record>
+
     <record id="cron_update_ves_prices_from_usd" model="ir.cron">
         <field name="name">Actualizar precios VES desde USD (tasa BCV)</field>
         <field name="model_id" ref="product.model_product_template"/>
