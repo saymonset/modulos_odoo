@@ -9,11 +9,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -4672,
-        64
+        800,
+        384
       ],
       "typeVersion": 1,
-      "id": "dde7882f-67ff-4eb2-89b1-1a53afe6092d",
+      "id": "8e664e8e-5d6d-422e-b5b5-e2763c191e47",
       "name": "Sticky Note2"
     },
     {
@@ -21,10 +21,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -896,
-        672
+        4576,
+        992
       ],
-      "id": "f887a8cc-1dc8-46a6-9977-839803524df7",
+      "id": "75ab4176-8c62-4889-ad2f-955638263ee5",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -35,10 +35,10 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        -5168,
-        1584
+        304,
+        1904
       ],
-      "id": "9c341150-1609-4166-800d-f602785531d6",
+      "id": "cd098a3f-5831-437d-89c8-1759176b07f2",
       "name": "When chat message received",
       "webhookId": "d7373d29-7364-41f7-a73f-bd24b72daeea"
     },
@@ -143,10 +143,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -5024,
-        1504
+        448,
+        1824
       ],
-      "id": "f218fee7-d4c8-4a29-a377-106ee9b1bdb7",
+      "id": "86c7e752-12c0-49b2-8aa7-0ec2a3ef0a4c",
       "name": "Seteamos_variables"
     },
     {
@@ -276,10 +276,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -4096,
-        1488
+        1376,
+        1808
       ],
-      "id": "51269677-76c9-42ed-b547-101334698abd",
+      "id": "506e4b0a-df09-4717-accd-d98744f9b5cd",
       "name": "Indentifica_canal"
     },
     {
@@ -287,10 +287,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -4768,
-        1856
+        704,
+        2176
       ],
-      "id": "2bd55182-6f1e-40ba-b4ca-ae824177f57f",
+      "id": "8f3ae7ba-f0d4-4c24-b67c-ba43bb0b6615",
       "name": "Dueno_o_Bot_responde"
     },
     {
@@ -350,10 +350,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -4480,
-        1504
+        992,
+        1824
       ],
-      "id": "061f8556-95a8-40c2-9f97-37f14cf7e12e",
+      "id": "55230564-df38-4ed5-95c2-a47325f23162",
       "name": "Configurar_IA_Responda?"
     },
     {
@@ -413,10 +413,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -4720,
-        1520
+        752,
+        1840
       ],
-      "id": "56412844-ff1f-499e-ac4f-280de2740e23",
+      "id": "66b140ac-fd7f-4c33-a038-b51e7aecd460",
       "name": "Pregunta_el_Cliente?"
     },
     {
@@ -424,10 +424,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -4176,
-        1232
+        1296,
+        1552
       ],
-      "id": "cc33e521-6f34-4ce5-9916-53ce3db0355e",
+      "id": "cb1e2fb9-23af-43e8-9714-c8bb7262a404",
       "name": "End1"
     },
     {
@@ -439,10 +439,10 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        -1936,
-        1216
+        3536,
+        1536
       ],
-      "id": "3f3d224d-34d9-4871-baaa-455260cdd578",
+      "id": "d6bded5d-eaea-4bb3-a780-c9c80710503e",
       "name": "Simple Memory"
     },
     {
@@ -454,10 +454,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -5248,
-        864
+        224,
+        1184
       ],
-      "id": "4fdd7519-a697-42a8-82e4-d56a533c09e0",
+      "id": "563dd87e-b858-4185-a31a-304fc01f2c7d",
       "name": "Entrar_ChattWoot",
       "webhookId": "f2f3dab4-9ee7-4ad7-9fe8-96f79468b1f4"
     },
@@ -568,10 +568,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -4976,
-        1104
+        496,
+        1424
       ],
-      "id": "e7495be7-9897-4199-9b76-cac53d9128fe",
+      "id": "0545a910-ac1c-4ce9-ad5c-c5bebcc534c3",
       "name": "Obtener_Info_basica"
     },
     {
@@ -654,10 +654,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -2752,
-        1760
+        2720,
+        2080
       ],
-      "id": "3a42d123-7e6c-484d-b6bc-7f97936e70e4",
+      "id": "b43952a3-049b-4073-9303-8c8ea43ac656",
       "name": "Consulta_o_agendar_cita"
     },
     {
@@ -675,10 +675,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        -2048,
-        1216
+        3424,
+        1536
       ],
-      "id": "4f6ebb4e-713e-40e1-b921-375ae6bae26d",
+      "id": "5e6d329e-f85c-4f41-bdf5-515d2c1e5d4e",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
@@ -698,10 +698,10 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        -2032,
-        960
+        3440,
+        1280
       ],
-      "id": "5fd4cdc0-9502-4fee-8f97-a3599ce0d5eb",
+      "id": "1c16c00a-8d45-4d30-8487-b099c6931965",
       "name": "Agente_Informacion_basica"
     },
     {
@@ -711,10 +711,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -960,
-        912
+        4512,
+        1232
       ],
-      "id": "16516824-ca7d-48bc-b924-3a441bdc2284",
+      "id": "236d6490-4333-4d9a-a263-fe81426bb375",
       "name": "Unificar_salida"
     },
     {
@@ -745,10 +745,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1264,
-        800
+        4208,
+        1120
       ],
-      "id": "1c192629-19e0-47df-8b3d-8c926991e0e8",
+      "id": "64727f24-4d55-455f-ad3d-cb616b094fee",
       "name": "Cita_con_Equipo_asignado"
     },
     {
@@ -759,11 +759,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -2208,
-        816
+        3264,
+        1136
       ],
       "typeVersion": 1,
-      "id": "0e17ad10-4152-4b84-b109-06ffe73a61ac",
+      "id": "eced8eec-9f0d-4123-947b-e15cc364ef32",
       "name": "Sticky Note"
     },
     {
@@ -772,11 +772,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -2800,
-        1632
+        2672,
+        1952
       ],
       "typeVersion": 1,
-      "id": "6fee0ae5-3ff3-4387-a564-8f8917a25262",
+      "id": "91b70e4f-42b6-46f9-b7e6-1b20c8c47c26",
       "name": "Sticky Note3"
     },
     {
@@ -965,10 +965,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -3568,
-        1776
+        1904,
+        2096
       ],
-      "id": "4f0de93d-0c6c-40cd-b40d-02ee5ec515c0",
+      "id": "15c2b824-a9e5-4c84-9b11-aeb4d7d07bac",
       "name": "Call 'chatbot-simple_1_subflow'"
     },
     {
@@ -983,10 +983,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -880,
-        464
+        4592,
+        784
       ],
-      "id": "901b2e60-f0f8-460e-acb3-d70f630ee7d3",
+      "id": "f909050a-5b56-48a2-9a00-8d589c8bcfbc",
       "name": "paso_0_inicio_agendar",
       "alwaysOutputData": true
     },
@@ -997,10 +997,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1696,
-        960
+        3776,
+        1280
       ],
-      "id": "ad40ae97-96c7-4649-9312-aa919c07b31a",
+      "id": "8f477499-2b55-4522-a9cc-6f94f378dd36",
       "name": "Separar_variables_en_json"
     },
     {
@@ -1056,10 +1056,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -688,
-        464
+        4784,
+        784
       ],
-      "id": "06e49ecf-4cd0-43cf-b649-3ee42bac2d11",
+      "id": "5f43aa71-5677-4896-bed8-3feacdd06960",
       "name": "Agendar_cita"
     },
     {
@@ -1093,10 +1093,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -432,
-        1152
+        5040,
+        1472
       ],
-      "id": "7b648701-194d-44cd-840b-92fafe1f75ac",
+      "id": "eb214152-b017-4de9-a979-c4e39c554a16",
       "name": "Enviar_mensaje_de_IA1"
     },
     {
@@ -1130,10 +1130,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -400,
-        464
+        5072,
+        784
       ],
-      "id": "e713b0f6-754c-4229-a0e7-1f0579cba1cf",
+      "id": "a159effa-2bad-49d6-a403-2a2b7a17245f",
       "name": "Enviar_mensaje_de_IA2"
     },
     {
@@ -1177,10 +1177,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2304,
-        1856
+        3168,
+        2176
       ],
-      "id": "38d8d5a3-241c-4f50-bec4-356fdd4be580",
+      "id": "7ccb9d7e-4daa-4158-a6b5-adcc43c91ee5",
       "name": "tomar_parametros"
     },
     {
@@ -1214,10 +1214,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -2000,
-        1728
+        3472,
+        2048
       ],
-      "id": "7f9c01b6-66cd-4bf0-9418-b8fafbf90394",
+      "id": "fef886e7-6aab-4027-8f89-e7087be8d0cd",
       "name": "Enviar_mensaje_de_IA3"
     },
     {
@@ -1247,10 +1247,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1520,
-        976
+        3952,
+        1296
       ],
-      "id": "752f7dde-4b3e-44a8-bed8-a26374506f0c",
+      "id": "4a42c053-b3ac-4a73-ab0e-1d065644beb8",
       "name": "¿Enviar menú interactivo?"
     },
     {
@@ -1260,10 +1260,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1200,
-        1120
+        4272,
+        1440
       ],
-      "id": "a5f0cce4-7546-4043-abf8-a03ce55ecefb",
+      "id": "eef3fba7-8ff8-400c-9dda-2c09f44ddedc",
       "name": "Formatear número de teléfono"
     },
     {
@@ -1285,27 +1285,64 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $json.phone_number_formatted }}\",\n  \"type\": \"interactive\",\n  \"interactive\": {\n    \"type\": \"list\",\n    \"header\": {\n      \"type\": \"text\",\n      \"text\": \"🚀 IntegraIA - Automatización con Odoo CE 19\"\n    },\n    \"body\": {\n      \"text\": \"Hola! 😊 Bienvenido/a. ¿Qué necesitas hoy? Selecciona una opción:\"\n    },\n    \"footer\": {\n      \"text\": \"Elige una opción del menú\"\n    },\n    \"action\": {\n      \"button\": \"📋 Ver opciones\",\n      \"sections\": [\n        {\n          \"title\": \"Nuestros Servicios\",\n          \"rows\": [\n            { \"id\": \"precios\", \"title\": \"💰 Tienda Virtual\", \"description\": \"Tienda online profesional con Odoo CE 19\" },\n            { \"id\": \"servicios\", \"title\": \"🤖 Agentes de IA\", \"description\": \"Chatbots WhatsApp, FB, Instagram 24/7\" },\n            { \"id\": \"agendar_cita\", \"title\": \"📅 Agendar Demo\", \"description\": \"Demo interactiva o asesoría Odoo\" }\n          ]\n        },\n        {\n          \"title\": \"Infraestructura\",\n          \"rows\": [\n            { \"id\": \"tarjeta_salud\", \"title\": \"🖥️ Hosting Dedicado\", \"description\": \"Servidor, SSL, dominio y mantenimiento\" },\n            { \"id\": \"otra_consulta\", \"title\": \"🔧 Desarrollo a medida\", \"description\": \"Módulos, migraciones, APIs\" }\n          ]\n        },\n        {\n          \"title\": \"Información\",\n          \"rows\": [\n            { \"id\": \"horario\", \"title\": \"🕒 Soporte y ubicación\", \"description\": \"Horarios y contacto\" },\n            { \"id\": \"promociones\", \"title\": \"🎉 Promociones\", \"description\": \"Ofertas y descuentos vigentes\" },\n            { \"id\": \"resultados\", \"title\": \"🧪 Resultados\", \"description\": \"Consultar resultados de estudios\" }\n          ]\n        }\n      ]\n    }\n  }\n}",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $json.phone_number_formatted }}\",\n  \"type\": \"interactive\",\n  \"interactive\": {\n    \"type\": \"list\",\n    \"header\": {\n      \"type\": \"text\",\n      \"text\": \"🚀 IntegraIA - Automatización con Odoo CE 19\"\n    },\n    \"body\": {\n      \"text\": \"Hola! 😊 Bienvenido/a a IntegraIA (https://integraia.lat). ¿Qué necesitas hoy?\"\n    },\n    \"footer\": {\n      \"text\": \"https://integraia.lat\"\n    },\n    \"action\": {\n      \"button\": \"📋 Ver opciones\",\n      \"sections\": [\n        {\n          \"title\": \"Nuestros Servicios\",\n          \"rows\": [\n            { \"id\": \"precios\", \"title\": \"💰 Tienda Virtual\", \"description\": \"Tienda online profesional con Odoo CE 19 → https://integraia.lat\" },\n            { \"id\": \"servicios\", \"title\": \"🤖 Agentes de IA\", \"description\": \"Chatbots WhatsApp, FB, Instagram 24/7\" },\n            { \"id\": \"agendar_cita\", \"title\": \"📅 Agendar Demo\", \"description\": \"Demo interactiva o asesoría Odoo\" }\n          ]\n        },\n        {\n          \"title\": \"Infraestructura\",\n          \"rows\": [\n            { \"id\": \"tarjeta_salud\", \"title\": \"🖥️ Hosting Dedicado\", \"description\": \"Servidor, SSL, dominio y mantenimiento → https://integraia.lat\" },\n            { \"id\": \"otra_consulta\", \"title\": \"🔧 Desarrollo\", \"description\": \"Módulos, migraciones, APIs\" }\n          ]\n        },\n        {\n          \"title\": \"Información\",\n          \"rows\": [\n            { \"id\": \"horario\", \"title\": \"🕒 Soporte\", \"description\": \"Horarios y contacto\" },\n            { \"id\": \"promociones\", \"title\": \"🎉 Promociones\", \"description\": \"Ofertas y descuentos vigentes\" },\n            { \"id\": \"resultados\", \"title\": \"🧪 Resultados\", \"description\": \"Consultar resultados de estudios\" }\n          ]\n        }\n      ]\n    }\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -880,
-        1680
+        4592,
+        2000
       ],
-      "id": "418aa4fe-a91c-4e82-8026-37eda9d6f7a9",
+      "id": "cf117a5d-10f7-4807-81c8-f1c465957647",
       "name": "Enviar menú interactivo a WhatsApp"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://chatwoot.integraia.lat/api/v1/accounts/{{$json.account_id}}/conversations/{{ $json.conversation_id }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "api_access_token",
+              "value": "kdNeLrJ5boGw3k3nMUgKeBMi"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "🌐 Conoce más en https://integraia.lat"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4784,
+        2000
+      ],
+      "id": "a8b1c2d3-e4f5-6789-abcd-ef0123456789",
+      "name": "Enviar texto despues del menu"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -496,
-        1696
+        4976,
+        2016
       ],
-      "id": "89bafd6a-05e1-420e-9e2f-636c0d5dfdbe",
+      "id": "4e48c5b6-2879-4042-af63-be919857b545",
       "name": "Fin menú WhatsApp"
     },
     {
@@ -1335,23 +1372,23 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -752,
-        928
+        4720,
+        1248
       ],
-      "id": "587e0259-dc67-40ed-a41a-74d54a3dcb98",
+      "id": "23e12edd-1bc1-44d7-a139-8e0040c1dd11",
       "name": "¿Enviar menú interactivo?1"
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfor (const item of items) {\n  const tipo = item.json.tipoPregunta;\n  const outputText = item.json.output;\n  let phone = item.json.user_number || item.json.phone_number || item.json.session_id;\n\n  if (phone && !phone.startsWith('+')) {\n    phone = '+' + phone;\n  }\n\n  let botones = [];\n\n  // PRECIOS - botones Sí/No\n  if (tipo === 'PRECIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_PRECIOS\", title: \"✅ Sí, quiero cotización\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No, gracias\" } }\n    ];\n  }\n  // SERVICIOS - botones Sí/No\n  else if (tipo === 'SERVICIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_SERVICIOS\", title: \"✅ Sí, quiero demo\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No, gracias\" } }\n    ];\n  }\n  // TARJETA - botones Sí/No\n  else if (tipo === 'TARJETA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_TARJETA\", title: \"✅ Sí, quiero contratar\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No, gracias\" } }\n    ];\n  }\n  // CITA_DIRECTA - botones para elegir Demo o Asesoría\n  else if (tipo === 'CITA_DIRECTA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MEDIOS_PROPIOS\", title: \"💰 Demo Chatbot\" } },\n      { type: \"reply\", reply: { id: \"SEGURO_MEDICO\", title: \"🩺 Asesoría Odoo\" } }\n    ];\n  }\n  else if (tipo === 'RESULTADOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"LABORATORIO\", title: \"🔬 Laboratorio\" } },\n      { type: \"reply\", reply: { id: \"IMAGENES\", title: \"📷 Imágenes\" } }\n    ];\n  }\n  // ESTATICO - horario, promociones, resultados (botones: Menú y Salir)\n  else if (tipo === 'ESTATICO') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MENU_PRINCIPAL\", title: \"🔙 Menú\" } },\n      { type: \"reply\", reply: { id: \"SALIR\", title: \"👋 Salir\" } }\n    ];\n  }\n  // ✅ NUEVO: Si es pregunta Sí/No genérica sin tipo específico\n  else if (item.json.esPreguntaSiNo === true) {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_SI\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CONFIRMAR_NO\", title: \"❌ No\" } }\n    ];\n  }\n  // Si no hay tipoPregunta, no enviamos botones (se envía como texto normal)\n  else {\n    nuevosItems.push(item);\n    continue;\n  }\n\n  // Construir el payload de WhatsApp\n  const whatsappPayload = {\n    messaging_product: \"whatsapp\",\n    recipient_type: \"individual\",\n    to: phone,\n    type: \"interactive\",\n    interactive: {\n      type: \"button\",\n      body: { text: outputText },\n      action: { buttons: botones }\n    }\n  };\n\n  nuevosItems.push({\n    json: {\n      ...item.json,\n      whatsappPayload: whatsappPayload,\n      phone_number_formatted: phone\n    }\n  });\n}\n\nreturn nuevosItems;"
+        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfor (const item of items) {\n  const tipo = item.json.tipoPregunta;\n  const outputText = item.json.output;\n  let phone = item.json.user_number || item.json.phone_number || item.json.session_id;\n\n  if (phone && !phone.startsWith('+')) {\n    phone = '+' + phone;\n  }\n\n  let botones = [];\n\n  // PRECIOS - botones Sí/No\n  if (tipo === 'PRECIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_PRECIOS\", title: \"✅ Quiero cotización\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No, gracias\" } }\n    ];\n  }\n  // SERVICIOS - botones Sí/No\n  else if (tipo === 'SERVICIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_SERVICIOS\", title: \"✅ Sí, quiero demo\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No, gracias\" } }\n    ];\n  }\n  // TARJETA - botones Sí/No\n  else if (tipo === 'TARJETA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_TARJETA\", title: \"✅ Sí, contratar\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No, gracias\" } }\n    ];\n  }\n  // CITA_DIRECTA - botones para elegir Demo o Asesoría\n  else if (tipo === 'CITA_DIRECTA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MEDIOS_PROPIOS\", title: \"💰 Demo Chatbot\" } },\n      { type: \"reply\", reply: { id: \"SEGURO_MEDICO\", title: \"🩺 Asesoría Odoo\" } }\n    ];\n  }\n  else if (tipo === 'RESULTADOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"LABORATORIO\", title: \"🔬 Laboratorio\" } },\n      { type: \"reply\", reply: { id: \"IMAGENES\", title: \"📷 Imágenes\" } }\n    ];\n  }\n  // ESTATICO - horario, promociones, resultados (botones: Menú y Salir)\n  else if (tipo === 'ESTATICO') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MENU_PRINCIPAL\", title: \"🔙 Menú\" } },\n      { type: \"reply\", reply: { id: \"SALIR\", title: \"👋 Salir\" } }\n    ];\n  }\n  // ✅ NUEVO: Si es pregunta Sí/No genérica sin tipo específico\n  else if (item.json.esPreguntaSiNo === true) {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_SI\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CONFIRMAR_NO\", title: \"❌ No\" } }\n    ];\n  }\n  // Si no hay tipoPregunta, no enviamos botones (se envía como texto normal)\n  else {\n    nuevosItems.push(item);\n    continue;\n  }\n\n  // Construir el payload de WhatsApp\n  const whatsappPayload = {\n    messaging_product: \"whatsapp\",\n    recipient_type: \"individual\",\n    to: phone,\n    type: \"interactive\",\n    interactive: {\n      type: \"button\",\n      body: { text: outputText },\n      action: { buttons: botones }\n    }\n  };\n\n  nuevosItems.push({\n    json: {\n      ...item.json,\n      whatsappPayload: whatsappPayload,\n      phone_number_formatted: phone\n    }\n  });\n}\n\nreturn nuevosItems;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -624,
-        736
+        4848,
+        1056
       ],
-      "id": "f9f6f3ac-877f-4a3a-ac5f-f9771f06369c",
+      "id": "5a658fbd-5e94-4d49-a97b-47ee3219342c",
       "name": "Construir_botones_WhatsApp"
     },
     {
@@ -1379,10 +1416,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -400,
-        736
+        5072,
+        1056
       ],
-      "id": "375fff90-500c-47f6-a7e8-3d655170bc9f",
+      "id": "4f6b9b9c-bbb7-4f5b-9039-6a2287a761bf",
       "name": "Enviar menú interactivo a WhatsApp1"
     },
     {
@@ -1390,76 +1427,76 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        64,
-        752
+        5536,
+        1072
       ],
-      "id": "3187d9a0-644c-45f1-81f8-b7fb69742067",
+      "id": "2db85e6c-b90b-4328-a052-dc04b707fbc3",
       "name": "Fin menú WhatsApp1"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -2784,
-        1360
+        2688,
+        1680
       ],
       "typeVersion": 1,
-      "id": "4bb40dd9-bf3b-4ac3-be08-66f2108c75d9",
+      "id": "a02a5322-a3de-41cf-bfb6-b4a2f738e121",
       "name": "Sticky Note1"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -2784,
-        1360
+        2688,
+        1680
       ],
       "typeVersion": 1,
-      "id": "4638cd8c-260f-4d5f-9ff6-d87a53a97ea8",
+      "id": "efedf729-ef58-4136-8d68-3ffa9b76e54d",
       "name": "Sticky Note4"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -2784,
-        1360
+        2688,
+        1680
       ],
       "typeVersion": 1,
-      "id": "bdac2b49-6277-4de9-8021-c2a50c10ce84",
+      "id": "e22123b7-0700-4cc7-9704-0122e68d8083",
       "name": "Sticky Note5"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -2704,
-        1440
+        2768,
+        1760
       ],
       "typeVersion": 1,
-      "id": "5982b459-fac3-4d5d-bc24-d0779d82a61a",
+      "id": "ae207340-bf7b-4c4f-aba8-64383249b880",
       "name": "Sticky Note6"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -2704,
-        1440
+        2768,
+        1760
       ],
       "typeVersion": 1,
-      "id": "6514c518-f1e4-48f8-8b52-514f1128f906",
+      "id": "ea57c218-fe86-45c6-9376-75ddbcce4e1b",
       "name": "Sticky Note7"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -2704,
-        1440
+        2768,
+        1760
       ],
       "typeVersion": 1,
-      "id": "dc82247c-3043-4d0f-823e-06a023247d9b",
+      "id": "9ec11a73-db71-467b-bb5e-c80f97f886df",
       "name": "Sticky Note8"
     },
     {
@@ -1470,11 +1507,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -3760,
-        1632
+        1712,
+        1952
       ],
       "typeVersion": 1,
-      "id": "4621c34c-31a6-4c3a-af31-9ba175c66e51",
+      "id": "f0be072b-1769-4fa7-a915-969d7f361d1c",
       "name": "Sticky Note9"
     }
   ],
@@ -1786,6 +1823,17 @@
       "main": [
         [
           {
+            "node": "Enviar texto despues del menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar texto despues del menu": {
+      "main": [
+        [
+          {
             "node": "Fin menú WhatsApp",
             "type": "main",
             "index": 0
@@ -1861,11 +1909,11 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "6c8714ab-904f-4f8b-bfc9-3c4ece9d35b2",
+  "versionId": "831d2b0d-564e-4aa2-b8a6-79bf0a4bff6c",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "ac8b8e9b824b3711008329bf41bf68736c3261debaa6dcb0eaceede9a0a7edac"
   },
   "id": "rawHArcQkOt5uVmz",
   "tags": []
-}
+} 

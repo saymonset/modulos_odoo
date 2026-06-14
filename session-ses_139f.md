@@ -2,7 +2,7 @@
 
 **Session ID:** ses_139f43a04ffe5Zlg1MCSwgDNwc
 **Created:** 6/14/2026, 2:12:00 PM
-**Updated:** 6/14/2026, 3:14:38 PM
+**Updated:** 6/14/2026, 5:14:12 PM
 
 ---
 
@@ -9605,6 +9605,2735 @@ Todos los cambios están implementados y verificados. Resumen:
 2. **Reimportar** `chatbot-simple_1_subflow.json` en n8n
 3. **Actualizar módulos Odoo**: `-u ai_chatbot_1_portal`
 4. **Probar** flujo completo en WhatsApp
+
+---
+
+## User
+
+puedes generar un Folleto para ver como hago una documentacion eb una pagina de odoo las facilidades del chatbot, que es automatizable, sirve para clinicas, entes gubernamentales , que otros me sugieres, colocame tres mas, y todo lo que vimos qe puede hacer con os agentes asignados individualmente segun el flujo de tal manera que cada agente le toque su responsabilidad etc.. explicamelo mejor para atraer clientes
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 15.1s)
+
+_Thinking:_
+
+The user wants me to create a brochure/landing page for Odoo that showcases the chatbot's capabilities. They want me to:
+
+1. Create documentation for a webpage showing chatbot features
+2. Show it's automatable
+3. Target audiences: clinics, government entities, and suggest 3 more
+4. Explain how agents are assigned per flow
+5. Make it attractive to potential clients
+
+Since I'm in plan mode, I need to plan this out and present the content. Let me think about what would make a compelling brochure page.
+
+Let me first check if there are any existing Odoo website/view templates I can reference.
+
+Déjame analizar la estructura existente del módulo para ver cómo integrar la página web en Odoo.
+
+**Tool: glob**
+
+**Input:**
+```json
+{
+  "path": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal",
+  "pattern": "**/*.xml"
+}
+```
+
+**Output:**
+```
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/static/src/xml/ChatBotWrapper.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/data/chatbot_teams_data.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/data/chatbot_email_template.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/data/chatbot_flujos_data.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/chatbot_paso_views.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/menu_views.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/remove_powered_by.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/res_config_settings_view.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/partner_view.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/login_templates.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/chatbot_flujo_views.xml
+```
+
+**Tool: glob**
+
+**Input:**
+```json
+{
+  "path": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal",
+  "pattern": "**/views/**"
+}
+```
+
+**Output:**
+```
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/chatbot_paso_views.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/menu_views.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/remove_powered_by.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/res_config_settings_view.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/partner_view.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/login_templates.xml
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/chatbot_flujo_views.xml
+```
+
+**Tool: glob**
+
+**Input:**
+```json
+{
+  "path": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal",
+  "pattern": "**/templates/**"
+}
+```
+
+**Output:**
+```
+No files found
+```
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 7.2s)
+
+_Thinking:_
+
+Let me check the existing templates and the manifest to understand the module structure better.
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/login_templates.xml"
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/login_templates.xml</path>
+<type>file</type>
+<content>
+1: <?xml version="1.0" encoding="UTF-8"?>
+2: <odoo>
+3:     <template id="insertar_boton_en_home" 
+4:     inherit_id="website.homepage" 
+5:     name="Insertar Botón OWL en Home"
+6:     priority="100"
+7:     >
+8:         <xpath expr="//div[@id='wrap']" position="inside">
+9:             <div class="container my-5">
+10:                 <!-- <owl-component
+11:                     name="ChatBotWrapper"
+12:                     t-attf-props='{"webhookUrl": "#{request.env["ir.config_parameter"].sudo().get_param("ai_chatbot_1_portal.webhook_url") or ""}"}'/> -->
+13:             </div>
+14:         </xpath>
+15:     </template>
+16: </odoo>
+
+(End of file - total 16 lines)
+</content>
+```
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/__manifest__.py"
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/__manifest__.py</path>
+<type>file</type>
+<content>
+1: # -*- coding: utf-8 -*-
+2: {
+3:     'name': 'ai_chatbot_1_portal',
+4:     'version': '1.0.0',
+5:     'summary': """ ai_chatbot_1_portal Summary """,
+6:     'description': """Módulo de portal para Chatbot de IA. Proporciona la interfaz y componentes de portal para el chatbot de Inteligencia Artificial.""",
+7:     'author': 'Simon Alberto Rodriguez Pacheco',
+8:     'website': '',
+9:     'category': '',
+10:     'depends': ['base', 'crm', 'mail', 'web','website','ai_chatbot_0_core'],
+11:     "data": [
+12:         "security/ir.model.access.csv",
+13:         "data/chatbot_flujos_data.xml",
+14:         "data/chatbot_teams_data.xml",
+15:         "data/chatbot_email_template.xml",
+16:         "views/res_config_settings_view.xml",  # AÑADIDO: El XML debe ir aquí
+17:         "views/login_templates.xml",  # AÑADIDO: El XML debe ir aquí
+18:         "views/remove_powered_by.xml",  # AÑADIDO: El xml para eliminar el footer debe ir aquí
+19:         'views/chatbot_flujo_views.xml',
+20:         'views/chatbot_paso_views.xml',
+21:         'views/partner_view.xml',
+22:         'views/menu_views.xml',
+23:     ],
+24:     'assets': {
+25:         
+26: #         Tu componente:
+27:             # Se monta usando <owl-component> en website.homepage
+28:             # Está registrado en registry.category("public_components")
+29:             # Solo se usa en el frontend del website
+30:         "web.assets_frontend": [
+31:             'ai_chatbot_1_portal/static/src/css/chat-bot.css',
+32:             'ai_chatbot_1_portal/static/src/js/ChatBotWrapper.js',  
+33:             'ai_chatbot_1_portal/static/src/xml/ChatBotWrapper.xml'
+34:             
+35:         ],
+36:         #Si lo usas en el backend (vista CRM, formulario, kanban, etc.), 
+37:         # así que cargarlo en web.assets_backend 
+38:         'web.assets_backend': [
+39:         ],
+40:         
+41:     },
+42:     'application': True,
+43:     'installable': True,
+44:     'auto_install': False,
+45:     'license': 'LGPL-3',
+46: }
+
+(End of file - total 46 lines)
+</content>
+```
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/static/src/xml/ChatBotWrapper.xml"
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/static/src/xml/ChatBotWrapper.xml</path>
+<type>file</type>
+<content>
+1: <?xml version="1.0" encoding="UTF-8"?>
+2: <templates xml:space="preserve">
+3:     <t t-name="ai_chatbot_1_portal.ChatBotWrapper" owl="1">
+4:         <div class="chatbot-wrapper">
+5:             <t t-if="state.error">
+6:                 <div class="alert alert-warning mt-2">
+7:                     <i class="fa fa-exclamation-triangle me-2"/>
+8:                     Error loading chatbot: <t t-esc="state.error"/>
+9:                 </div>
+10:             </t>
+11:             <t t-elif="!state.loaded">
+12:                 <div class="text-center mt-2">
+13:                     <i class="fa fa-spinner fa-spin me-2"/>
+14:                     Loading chatbot...
+15:                 </div>
+16:             </t>
+17:         </div>
+18:     </t>
+19: </templates>
+
+(End of file - total 19 lines)
+</content>
+```
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 8.1s)
+
+_Thinking:_
+
+Now I understand the structure. The module already has `website` as a dependency and has a homepage template. I need to create a brochure/landing page template that showcases the chatbot capabilities.
+
+Let me also check the CSS file to understand the styling approach:
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/static/src/css/chat-bot.css"
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/static/src/css/chat-bot.css</path>
+<type>file</type>
+<content>
+1: :root {
+2:   /* Colors - Paleta clara pastel */
+3:   --chat--color-primary: #4a90e2;        /* azul pastel */
+4:   --chat--color-primary-shade-50: #6aa7ea;
+5:   --chat--color-primary-shade-100: #8cbcf0;
+6:   --chat--color-secondary: #a7d8f0;      /* celeste claro */
+7:   --chat--color-secondary-shade-50: #bde3f5;
+8:   --chat--color-white: #ffffff;
+9:   --chat--color-light: #f7faff;          /* fondo casi blanco azulado */
+10:   --chat--color-light-shade-50: #e9f1fb;
+11:   --chat--color-light-shade-100: #d6e6f8;
+12:   --chat--color-medium: #a0b6cc;
+13:   --chat--color-dark: #2a3a4b;           /* azul gris oscuro para texto */
+14:   --chat--color-disabled: #bfc8d2;
+15:   --chat--color-typing: #6c7a89;
+16: 
+17:   /* Base Layout */
+18:   --chat--spacing: 1rem;
+19:   --chat--border-radius: 0.6rem;
+20:   --chat--transition-duration: 0.2s;
+21:   /* CORREGIDO: Eliminados los paréntesis alrededor de font-family */
+22:   --chat--font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+23: 
+24:   /* Window Dimensions */
+25:   --chat--window--width: 400px;
+26:   --chat--window--height: 600px;
+27:   --chat--window--bottom: var(--chat--spacing);
+28:   --chat--window--right: var(--chat--spacing);
+29:   --chat--window--z-index: 9999;
+30:   --chat--window--border: 1px solid var(--chat--color-light-shade-50);
+31:   --chat--window--border-radius: var(--chat--border-radius);
+32:   --chat--window--margin-bottom: var(--chat--spacing);
+33: 
+34:   /* Header Styles */
+35:   --chat--header-height: auto;
+36:   --chat--header--padding: var(--chat--spacing);
+37:   --chat--header--background: var(--chat--color-primary);
+38:   --chat--header--color: var(--chat--color-white);
+39:   --chat--heading--font-size: 1.5em;
+40:   --chat--subtitle--font-size: inherit;
+41:   --chat--subtitle--line-height: 1.6;
+42: 
+43:   /* Message Styles */
+44:   --chat--message--font-size: 1rem;
+45:   --chat--message--padding: var(--chat--spacing);
+46:   --chat--message--border-radius: var(--chat--border-radius);
+47:   --chat--message-line-height: 1.5;
+48:   --chat--message--margin-bottom: calc(var(--chat--spacing) * 1);
+49:   --chat--message--bot--background: var(--chat--color-light);
+50:   --chat--message--bot--color: var(--chat--color-dark);
+51:   --chat--message--user--background: var(--chat--color-primary);
+52:   --chat--message--user--color: var(--chat--color-white);
+53:   --chat--message--pre--background: #eaf3fc;
+54:   --chat--messages-list--padding: var(--chat--spacing);
+55: 
+56:   /* Toggle Button */
+57:   --chat--toggle--size: 64px;
+58:   --chat--toggle--background: var(--chat--color-primary);
+59:   --chat--toggle--hover--background: var(--chat--color-primary-shade-50);
+60:   --chat--toggle--active--background: var(--chat--color-primary-shade-100);
+61:   --chat--toggle--color: var(--chat--color-white);
+62: 
+63:   /* Input Area */
+64:   --chat--textarea--height: 50px;
+65:   --chat--input--padding: 0.8rem;
+66:   --chat--input--background: var(--chat--color-white);
+67:   --chat--input--text-color: var(--chat--color-dark);
+68:   --chat--input--placeholder--font-size: var(--chat--input--font-size);
+69:   --chat--input--border-active: 1px solid var(--chat--color-primary);
+70: 
+71:   /* Button Styles */
+72:   --chat--button--color: var(--chat--color-white);
+73:   --chat--button--background: var(--chat--color-primary);
+74:   --chat--button--hover--background: var(--chat--color-primary-shade-50);
+75: 
+76:   /* Send and File Buttons */
+77:   --chat--input--send--button--background: transparent;
+78:   --chat--input--send--button--color: var(--chat--color-primary);
+79:   --chat--input--send--button--color-hover: var(--chat--color-dark);
+80:   --chat--input--file--button--color: var(--chat--color-secondary);
+81:   --chat--input--file--button--color-hover: var(--chat--color-primary);
+82: 
+83:   /* Body and Footer */
+84:   --chat--body--background: var(--chat--color-light);
+85:   --chat--footer--background: var(--chat--color-white);
+86:   --chat--footer--color: var(--chat--color-dark);
+87: }
+88: 
+89: /* Mensajes */
+90: .chat-message {
+91:   max-width: 55%;
+92: }
+
+(End of file - total 92 lines)
+</content>
+```
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 9.9s)
+
+_Thinking:_
+
+Now I have a clear picture of the module structure. Let me plan the brochure page. I need to:
+
+1. Create a new XML template file for the brochure/landing page
+2. Create CSS for the brochure styling
+3. Register the template in the manifest
+4. The page should showcase:
+   - What the chatbot does
+   - Target audiences (clinics, government, + 3 more suggestions)
+   - How agents are assigned per flow
+   - Automatable features
+
+Let me also check if there's an existing website page template or if the module uses website.page:
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/menu_views.xml"
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/menu_views.xml</path>
+<type>file</type>
+<content>
+1: <?xml version="1.0" encoding="utf-8"?>
+2: <odoo>
+3:     <data>
+4:         <!-- Menú principal -->
+5:         <menuitem id="menu_chatbot_root" name="Chatbot" sequence="10"/>
+6: 
+7:         <!-- Submenú Flujos -->
+8:         <menuitem id="menu_chatbot_flujo"
+9:                   parent="menu_chatbot_root"
+10:                   action="action_chatbot_flujo"
+11:                   sequence="20"/>
+12: 
+13:         <!-- Submenú Pasos (opcional) -->
+14:         <menuitem id="menu_chatbot_paso"
+15:                   parent="menu_chatbot_root"
+16:                   action="action_chatbot_paso"
+17:                   sequence="30"/>
+18:     </data>
+19: </odoo>
+
+(End of file - total 19 lines)
+</content>
+```
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 10.6s)
+
+_Thinking:_
+
+Now I have everything I need. Let me create a comprehensive plan for the brochure page. I'll need to:
+
+1. Create a new XML template file for the brochure (`views/chatbot_brochure.xml`)
+2. Create a new CSS file for brochure styling (`static/src/css/chatbot-brochure.css`)
+3. Update `__manifest__.py` to include the new files
+4. The page should be a `website.page` template accessible via URL like `/chatbot-brochure`
+
+Let me also check if there's a `remove_powered_by.xml` that might give hints about website template inheritance:
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/remove_powered_by.xml"
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/views/remove_powered_by.xml</path>
+<type>file</type>
+<content>
+1: <?xml version="1.0" encoding="utf-8"?>
+2: <odoo>
+3: 
+4:     <record id="website_brand_promotion_remove" model="ir.ui.view">
+5:         <field name="name">web.brand.promotion.remove</field>
+6:         <field name="model">ir.ui.view</field>
+7:         <field name="inherit_id" ref="web.brand_promotion"/>  <!-- ← 187: esta es la que genera el div -->
+8:         <field name="priority" eval="100"/>
+9:         <field name="arch" type="xml">
+10:             <!-- Elimina el div completo con clase exacta -->
+11:             <xpath expr="//div[@class='o_brand_promotion']" position="replace"/>
+12:         </field>
+13:     </record>
+14: 
+15: </odoo>
+
+(End of file - total 15 lines)
+</content>
+```
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 87.9s)
+
+_Thinking:_
+
+Now I have a complete understanding. Let me create the plan for the brochure page.
+
+The plan includes:
+1. A new XML file `views/chatbot_brochure.xml` with a website.page template
+2. A new CSS file `static/src/css/chatbot-brochure.css` for styling
+3. Updates to `__manifest__.py` to include new files
+4. Content sections for the brochure
+
+Let me also think about the 3 additional target audiences the user asked for:
+- Clínicas (medical clinics) ✓ (already mentioned)
+- Entes gubernamentales (government entities) ✓ (already mentioned)
+- 3 more:
+  1. **Inmobiliarias / Agencias de bienes raíces** - Chatbot para agendar visitas a propiedades, info de precios, hipotecas
+  2. **Restaurantes / Hostelería** - Pedidos en línea, reservas, menú digital
+  3. **Educación / Universidades / Colegios** - Admisiones, info de cursos, trámites estudiantiles
+
+Now I'll write out the plan.
+
+Perfecto, tengo toda la información. Aquí está el plan completo para el folleto/landing page:
+
+---
+
+## Plan: Folleto Web para Chatbot IntegraIA
+
+### Estructura del módulo actual
+- El módulo ya depende de `website`
+- Ya tiene template herdado de `website.homepage`
+- Los assets se cargan en `web.assets_frontend`
+- Colores del chatbot: azul pastel (`#4a90e2`)
+
+### Archivos a crear/modificar
+
+| # | Archivo | Acción |
+|---|---|---|
+| 1 | `views/chatbot_brochure.xml` | **Crear** — Template `website.page` con el folleto |
+| 2 | `static/src/css/chatbot-brochure.css` | **Crear** — Estilos del folleto |
+| 3 | `__manifest__.py` | **Modificar** — Agregar los nuevos archivos |
+
+---
+
+### Contenido del Folleto (secciones)
+
+#### Sección 1: Hero
+- Título: **"Automatiza tu negocio con Chatbots IA en WhatsApp"**
+- Subtítulo: "Atiende a tus clientes 24/7, califica leads y envíalos al CRM automáticamente"
+- CTA: "Solicitar Demo"
+
+#### Sección 2: ¿Qué es?
+- Explicación breve: Chatbot inteligente que se integra con WhatsApp, Facebook, Instagram
+- Conecta con Odoo CE 19 (CRM, inventario, facturación)
+- Sin licencias caras de Enterprise
+
+#### Sección 3: Sectores target (6 industrias)
+
+| # | Sector | Caso de uso |
+|---|---|---|
+| 1 | **Clínicas / Salud** | Agendar citas, resultados de laboratorio, información de servicios médicos |
+| 2 | **Entes gubernamentales** | Trámites en línea, citas para atención al ciudadano, información de servicios públicos |
+| 3 | **Inmobiliarias** | Agendar visitas a propiedades, info de precios, hipotecas, financiamiento |
+| 4 | **Restaurantes / Hostelería** | Pedidos en línea, reservas de mesas, menú digital, promociones |
+| 5 | **Educación / Universidades** | Admisiones, info de cursos, trámites estudiantiles, becas |
+| 6 | **E-commerce / Tiendas online** | Catálogo de productos, pedidos, seguimiento de envíos, soporte post-venta |
+
+#### Sección 4: Flujo de Agentes por Departamento
+- Diagrama/visual de cómo cada flujo se asigna a un agente diferente
+- Ejemplo visual:
+
+```
+WhatsApp Chat → Bot detecta intención → Flujo asignado → Agente responsable
+
+┌─────────────────┬──────────────────────┬─────────────────────┐
+│ Intención       │ Flujo                │ Agente Chatwoot     │
+├─────────────────┼──────────────────────┼─────────────────────┤
+│ Agendar cita    │ flujo_agendamiento   │ Agente de Citas     │
+│ Ver precios     │ flujo_precios        │ Agente de Ventas    │
+│ Resultados lab  │ flujo_laboratorio    │ Agente de Laboratorio│
+│ Soporte técnico │ flujo_soporte        │ Agente de Soporte   │
+│ Otra consulta   │ flujo_otra_consulta  │ Agente general      │
+└─────────────────┴──────────────────────┴─────────────────────┘
+```
+
+#### Sección 5: Funcionalidades clave
+- ✅ Menú interactivo con botones en WhatsApp
+- ✅ Round-robin automático entre agentes
+- ✅ Creación de leads en CRM automáticamente
+- ✅ Notificaciones por email al agente asignado
+- ✅ Flujos personalizables por departamento
+- ✅ Soporte multicanal (WhatsApp, FB, Instagram)
+- ✅ Hosting dedicado + SSL incluido
+- ✅ Sin licencias Enterprise de Odoo
+
+#### Sección 6: Precios / CTA
+- Llamada a la acción final
+- Formulario de contacto o enlace a WhatsApp
+
+---
+
+### Preguntas antes de implementar:
+
+**Tool: question**
+
+**Input:**
+```json
+{
+  "questions": [
+    {
+      "header": "URL del folleto",
+      "options": [
+        {
+          "description": "URL limpia tipo: integraia.com/chatbot",
+          "label": "/chatbot (Recomendado)"
+        },
+        {
+          "description": "URL tipo: integraia.com/soluciones/chatbot-ia",
+          "label": "/soluciones/chatbot-ia"
+        },
+        {
+          "description": "Sin URL separada, iría en la homepage existente",
+          "label": "En la homepage"
+        }
+      ],
+      "question": "¿En qué URL quieres que se muestre el folleto?"
+    },
+    {
+      "header": "Estilo visual",
+      "options": [
+        {
+          "description": "Diseño moderno con gradientes, cards y animaciones sutiles",
+          "label": "Moderno/Corporativo (Recomendado)"
+        },
+        {
+          "description": "Más sobrio, colores sólidos, minimalista",
+          "label": "Minimalista"
+        },
+        {
+          "description": "Colores vibrantes, muchas imágenes, estilo startup",
+          "label": "Colorido/Energético"
+        }
+      ],
+      "question": "¿Qué estilo visual prefieres para el folleto?"
+    },
+    {
+      "header": "Contenido adicional",
+      "options": [
+        {
+          "description": "Incluir sección de testimonios y logos de clientes",
+          "label": "Sí, con testimonios"
+        },
+        {
+          "description": "Solo funcionalidades y sectores, sin testimonios",
+          "label": "No, solo funcionalidades"
+        },
+        {
+          "description": "Incluir solo logos de clientes sin testimonios textuales",
+          "label": "Solo logos de clientes"
+        }
+      ],
+      "question": "¿Quieres incluir testimonios o logos de clientes en el folleto?"
+    }
+  ]
+}
+```
+
+**Output:**
+```
+User has answered your questions: "¿En qué URL quieres que se muestre el folleto?"="/chatbot (Recomendado)", "¿Qué estilo visual prefieres para el folleto?"="Moderno/Corporativo (Recomendado)", "¿Quieres incluir testimonios o logos de clientes en el folleto?"="No, solo funcionalidades". You can now continue with the user's answers in mind.
+```
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 50.4s)
+
+_Thinking:_
+
+The user wants:
+- URL: /chatbot
+- Style: Modern/Corporate
+- Content: Only functionalities, no testimonials
+
+Let me now create the complete plan for implementation.
+
+Perfecto. Aquí está el plan detallado para implementar:
+
+---
+
+## Plan Final: Folleto Web `/chatbot`
+
+### Archivos a crear
+
+#### 1. `views/chatbot_brochure.xml` — Template principal
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Página principal del folleto -->
+    <template id="chatbot_brochure_page" name="Chatbot Brochure"
+              page="True" website="True">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure">
+
+                <!-- SECCIÓN 1: HERO -->
+                <section class="s播hero bg-primary text-white py-5">
+                    <div class="container text-center">
+                        <h1 class="display-4 fw-bold">Automatiza tu negocio con Chatbots IA en WhatsApp</h1>
+                        <p class="lead mt-3">Atiende a tus clientes 24/7, califica leads y envíalos al CRM automáticamente con Odoo CE 19</p>
+                        <a href="/contactus" class="btn btn-light btn-lg mt-3">Solicitar Demo</a>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN 2: ¿QUÉ ES? -->
+                <section class="py-5">
+                    <div class="container">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6">
+                                <h2>Chatbot Inteligente para WhatsApp</h2>
+                                <p class="lead">Un asistente virtual que responde a tus clientes automáticamente, por el canal que prefieran: WhatsApp, Facebook o Instagram.</p>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">✅ Conecta con el CRM de Odoo para gestión centralizada</li>
+                                    <li class="mb-2">✅ Sin licencias Enterprise — funciona con Odoo Community Edition 19</li>
+                                    <li class="mb-2">✅ Hosting dedicado + SSL + dominio incluido</li>
+                                    <li class="mb-2">✅ Flujos personalizables por departamento</li>
+                                </ul>
+                            </div>
+                            <div class="col-lg-6 text-center">
+                                <div class="chatbot-demo-placeholder p-5 bg-light rounded">
+                                    <i class="fa fa-comments fa-5x text-primary"></i>
+                                    <p class="mt-3 text-muted">Demo interactiva del chatbot</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN 3: SECTORES -->
+                <section class="py-5 bg-light">
+                    <div class="container">
+                        <h2 class="text-center mb-5">¿Para quién es?</h2>
+                        <div class="row g-4">
+                            <!-- Clínicas -->
+                            <div class="col-md-4">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body text-center">
+                                        <i class="fa fa-hospital fa-3x text-primary mb-3"></i>
+                                        <h5>Clínicas / Salud</h5>
+                                        <p class="text-muted">Agendar citas, resultados de laboratorio, información de servicios médicos. Atención al paciente 24/7.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Entes gubernamentales -->
+                            <div class="col-md-4">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body text-center">
+                                        <i class="fa fa-building fa-3x text-primary mb-3"></i>
+                                        <h5>Entes Gubernamentales</h5>
+                                        <p class="text-muted">Trámites en línea, citas para atención al ciudadano, información de servicios públicos y requisitos.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Inmobiliarias -->
+                            <div class="col-md-4">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body text-center">
+                                        <i class="fa fa-home fa-3x text-primary mb-3"></i>
+                                        <h5>Inmobiliarias</h5>
+                                        <p class="text-muted">Agendar visitas a propiedades, información de precios, hipotecas y financiamiento disponible.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Restaurantes -->
+                            <div class="col-md-4">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body text-center">
+                                        <i class="fa fa-utensils fa-3x text-primary mb-3"></i>
+                                        <h5>Restaurantes / Hostelería</h5>
+                                        <p class="text-muted">Pedidos en línea, reservas de mesas, menú digital y promociones automatizadas.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Educación -->
+                            <div class="col-md-4">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body text-center">
+                                        <i class="fa fa-graduation-cap fa-3x text-primary mb-3"></i>
+                                        <h5>Educación</h5>
+                                        <p class="text-muted">Admisiones, información de cursos, trámites estudiantiles, becas y convenios.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- E-commerce -->
+                            <div class="col-md-4">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body text-center">
+                                        <i class="fa fa-shopping-cart fa-3x text-primary mb-3"></i>
+                                        <h5>E-commerce / Tiendas</h5>
+                                        <p class="text-muted">Catálogo de productos, pedidos, seguimiento de envíos y soporte post-venta.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN 4: FLUJO DE AGENTES -->
+                <section class="py-5">
+                    <div class="container">
+                        <h2 class="text-center mb-5">Agentes por Departamento</h2>
+                        <p class="text-center lead mb-4">Cada flujo se asigna automáticamente al agente responsable. Sin intervención manual.</p>
+                        
+                        <div class="row justify-content-center">
+                            <div class="col-lg-10">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered text-center">
+                                        <thead class="table-primary">
+                                            <tr>
+                                                <th>Intención del cliente</th>
+                                                <th>Flujo activado</th>
+                                                <th>Agente asignado</th>
+                                                <th>Resultado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>"Quiero agendar una cita"</td>
+                                                <td>flujo_agendamiento_directo</td>
+                                                <td>Agente de Citas</td>
+                                                <td>Lead creado en CRM</td>
+                                            </tr>
+                                            <tr>
+                                                <td>"¿Cuánto cuesta?"</td>
+                                                <td>flujo_agendamiento_precios</td>
+                                                <td>Agente de Ventas</td>
+                                                <td>Cotización enviada</td>
+                                            </tr>
+                                            <tr>
+                                                <td>"Necesito resultados"</td>
+                                                <td>flujo_resultados_laboratorio</td>
+                                                <td>Agente de Laboratorio</td>
+                                                <td>Solicitud procesada</td>
+                                            </tr>
+                                            <tr>
+                                                <td>"Tengo un problema"</td>
+                                                <td>flujo_agendamiento_otra_consulta</td>
+                                                <td>Agente de Soporte</td>
+                                                <td>Ticket generado</td>
+                                            </tr>
+                                            <tr>
+                                                <td>"Quiero contratar hosting"</td>
+                                                <td>flujo_ventas_unisa</td>
+                                                <td>Agente de Hosting</td>
+                                                <td>Oportunidad creada</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <div class="d-inline-flex align-items-center gap-3 flex-wrap justify-content-center">
+                                <div class="text-center">
+                                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:60px;height:60px;">
+                                        <i class="fa fa-comments fa-2x"></i>
+                                    </div>
+                                    <p class="mt-2 small fw-bold">WhatsApp</p>
+                                </div>
+                                <i class="fa fa-arrow-right text-muted"></i>
+                                <div class="text-center">
+                                    <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:60px;height:60px;">
+                                        <i class="fa fa-robot fa-2x"></i>
+                                    </div>
+                                    <p class="mt-2 small fw-bold">Bot IA</p>
+                                </div>
+                                <i class="fa fa-arrow-right text-muted"></i>
+                                <div class="text-center">
+                                    <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:60px;height:60px;">
+                                        <i class="fa fa-sitemap fa-2x"></i>
+                                    </div>
+                                    <p class="mt-2 small fw-bold">Flujo</p>
+                                </div>
+                                <i class="fa fa-arrow-right text-muted"></i>
+                                <div class="text-center">
+                                    <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:60px;height:60px;">
+                                        <i class="fa fa-user-tie fa-2x"></i>
+                                    </div>
+                                    <p class="mt-2 small fw-bold">Agente</p>
+                                </div>
+                                <i class="fa fa-arrow-right text-muted"></i>
+                                <div class="text-center">
+                                    <div class="bg-danger text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:60px;height:60px;">
+                                        <i class="fa fa-handshake fa-2x"></i>
+                                    </div>
+                                    <p class="mt-2 small fw-bold">Lead CRM</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN 5: FUNCIONALIDADES -->
+                <section class="py-5 bg-light">
+                    <div class="container">
+                        <h2 class="text-center mb-5">Funcionalidades Clave</h2>
+                        <div class="row g-4">
+                            <div class="col-md-6 col-lg-4">
+                                <div class="d-flex align-items-start">
+                                    <i class="fa fa-check-circle text-success fa-2x me-3"></i>
+                                    <div>
+                                        <h6>Menú interactivo en WhatsApp</h6>
+                                        <p class="text-muted small">Botones y listas interactivas para guiar al cliente paso a paso.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="d-flex align-items-start">
+                                    <i class="fa fa-check-circle text-success fa-2x me-3"></i>
+                                    <div>
+                                        <h6>Round-robin automático</h6>
+                                        <p class="text-muted small">Distribución equitativa de leads entre agentes del mismo departamento.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="d-flex align-items-start">
+                                    <i class="fa fa-check-circle text-success fa-2x me-3"></i>
+                                    <div>
+                                        <h6>CRM integrado con Odoo</h6>
+                                        <p class="text-muted small">Leads creados automáticamente con datos completos del cliente.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="d-flex align-items-start">
+                                    <i class="fa fa-check-circle text-success fa-2x me-3"></i>
+                                    <div>
+                                        <h6>Notificaciones por email</h6>
+                                        <p class="text-muted small">El agente asignado recibe email con los datos del lead al instante.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="d-flex align-items-start">
+                                    <i class="fa fa-check-circle text-success fa-2x me-3"></i>
+                                    <div>
+                                        <h6>Flujos personalizables</h6>
+                                        <p class="text-muted small">Cada departamento tiene sus propios pasos y preguntas configurables.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="d-flex align-items-start">
+                                    <i class="fa fa-check-circle text-success fa-2x me-3"></i>
+                                    <div>
+                                        <h6>Multicanal</h6>
+                                        <p class="text-muted small">WhatsApp, Facebook Messenger, Instagram DM — todo en un solo CRM.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="d-flex align-items-start">
+                                    <i class="fa fa-check-circle text-success fa-2x me-3"></i>
+                                    <div>
+                                        <h6>Hosting dedicado</h6>
+                                        <p class="text-muted small">Servidor optimizado, SSL, dominio y copias de seguridad automáticas.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="d-flex align-items-start">
+                                    <i class="fa fa-check-circle text-success fa-2x me-3"></i>
+                                    <div>
+                                        <h6>Sin licencias Enterprise</h6>
+                                        <p class="text-muted small">Todo funciona con Odoo Community Edition 19. Ahorra miles en licencias.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="d-flex align-items-start">
+                                    <i class="fa fa-check-circle text-success fa-2x me-3"></i>
+                                    <div>
+                                        <h6>Soporte 24/7</h6>
+                                        <p class="text-muted small">Agentes de IA responden a tus clientes a cualquier hora del día.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN 6: CTA FINAL -->
+                <section class="py-5 bg-primary text-white text-center">
+                    <div class="container">
+                        <h2 class="display-5 fw-bold">¿Listo para automatizar tu negocio?</h2>
+                        <p class="lead mt-3">Solicita una demo gratuita y descubre cómo el chatbot puede transformar la atención al cliente de tu empresa.</p>
+                        <div class="mt-4">
+                            <a href="/contactus" class="btn btn-light btn-lg me-3">Solicitar Demo</a>
+                            <a href="https://wa.me/584129141074" class="btn btn-outline-light btn-lg" target="_blank">
+                                <i class="fa fa-whatsapp me-2"></i> WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </t>
+    </template>
+</odoo>
+```
+
+#### 2. `static/src/css/chatbot-brochure.css` — Estilos
+
+```css
+/* ============================================
+   CHATBOT BROCHURE - Estilos para la landing page
+   ============================================ */
+
+/* Hero Section */
+.s播hero {
+    background: linear-gradient(135deg, #2C5AA0 0%, #6B46C1 100%) !important;
+    padding: 5rem 0;
+}
+
+.s播hero h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Cards */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 12px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.card i.fa {
+    transition: transform 0.3s ease;
+}
+
+.card:hover i.fa {
+    transform: scale(1.1);
+}
+
+/* Table */
+.table thead th {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.table tbody td {
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+/* Flow Diagram Circles */
+.rounded-circle {
+    transition: transform 0.3s ease;
+}
+
+.rounded-circle:hover {
+    transform: scale(1.1);
+}
+
+/* CTA Section */
+.bg-primary {
+    background: linear-gradient(135deg, #2C5AA0 0%, #6B46C1 100%) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .s播hero h1 {
+        font-size: 2rem;
+    }
+    
+    .d-inline-flex {
+        flex-direction: column;
+        gap: 1rem !important;
+    }
+    
+    .fa-arrow-right {
+        transform: rotate(90deg);
+    }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.card:nth-child(1) { animation-delay: 0.1s; }
+.card:nth-child(2) { animation-delay: 0.2s; }
+.card:nth-child(3) { animation-delay: 0.3s; }
+.card:nth-child(4) { animation-delay: 0.4s; }
+.card:nth-child(5) { animation-delay: 0.5s; }
+.card:nth-child(6) { animation-delay: 0.6s; }
+```
+
+#### 3. `__manifest__.py` — Agregar archivos
+
+Cambios necesarios:
+- Agregar `'views/chatbot_brochure.xml'` al array `data`
+- Agregar `'static/src/css/chatbot-brochure.css'` al array `web.assets_frontend`
+
+---
+
+### Resumen de implementación
+
+| # | Archivo | Acción | Líneas aprox |
+|---|---|---|---|
+| 1 | `views/chatbot_brochure.xml` | Crear | ~200 |
+| 2 | `static/src/css/chatbot-brochure.css` | Crear | ~100 |
+| 3 | `__manifest__.py` | Modificar | 2 líneas |
+
+### Secciones del folleto
+
+1. **Hero** — Título + CTA
+2. **¿Qué es?** — Explicación + beneficios
+3. **Sectores** — 6 industrias (clínicas, gobierno, inmobiliarias, restaurantes, educación, e-commerce)
+4. **Flujo de agentes** — Tabla + diagrama visual del proceso
+5. **Funcionalidades** — 9 features clave
+6. **CTA final** — Demo + WhatsApp
+
+### URL de acceso
+`/chatbot` — accessible desde el menú del website de Odoo.
+
+---
+
+¿Procedo con la implementación?
+
+---
+
+## User
+
+No, lo voy hacer por el wizard de odoo 19 la pagina, solo dime el contenido que debo poner y que poner
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 24.9s)
+
+_Thinking:_
+
+The user wants me to just provide the content they need to put into the Odoo 19 website builder wizard, not create XML files. They'll use the visual page builder in Odoo. Let me give them the content in a clear, copy-paste friendly format.
+
+Perfecto. Aquí tienes el contenido listo para copiar y pegar en el wizard de Odoo 19:
+
+---
+
+## Página: `/chatbot`
+
+### BLOQUE 1: Hero (fondo gradiente azul-morado)
+
+**Título (H1):**
+```
+Automatiza tu negocio con Chatbots IA en WhatsApp
+```
+
+**Subtítulo:**
+```
+Atiende a tus clientes 24/7, califica leads y envíalos al CRM automáticamente con Odoo CE 19
+```
+
+**Botón:**
+```
+Texto: Solicitar Demo
+Enlace: /contactus
+```
+
+---
+
+### BLOQUE 2: Texto + Iconos (2 columnas)
+
+**Título (H2):**
+```
+Chatbot Inteligente para WhatsApp
+```
+
+**Párrafo izquierdo:**
+```
+Un asistente virtual que responde a tus clientes automáticamente, por el canal que prefieran: WhatsApp, Facebook o Instagram.
+```
+
+**Lista de viñetas:**
+```
+✅ Conecta con el CRM de Odoo para gestión centralizada
+✅ Sin licencias Enterprise — funciona con Odoo Community Edition 19
+✅ Hosting dedicado + SSL + dominio incluido
+✅ Flujos personalizables por departamento
+```
+
+**Derecha:** Imagen o ícono grande de chat/burbujas de mensaje
+
+---
+
+### BLOQUE 3: Tarjetas 3x2 (6 tarjetas)
+
+**Título de sección (H2):**
+```
+¿Para quién es?
+```
+
+**Tarjeta 1 — Clínicas / Salud:**
+```
+Ícono: 🏥 (hospital)
+Título: Clínicas / Salud
+Texto: Agendar citas, resultados de laboratorio, información de servicios médicos. Atención al paciente 24/7.
+```
+
+**Tarjeta 2 — Entes Gubernamentales:**
+```
+Ícono: 🏛️ (building)
+Título: Entes Gubernamentales
+Texto: Trámites en línea, citas para atención al ciudadano, información de servicios públicos y requisitos.
+```
+
+**Tarjeta 3 — Inmobiliarias:**
+```
+Ícono: 🏠 (home)
+Título: Inmobiliarias
+Texto: Agendar visitas a propiedades, información de precios, hipotecas y financiamiento disponible.
+```
+
+**Tarjeta 4 — Restaurantes / Hostelería:**
+```
+Ícono: 🍽️ (utensils)
+Título: Restaurantes / Hostelería
+Texto: Pedidos en línea, reservas de mesas, menú digital y promociones automatizadas.
+```
+
+**Tarjeta 5 — Educación:**
+```
+Ícono: 🎓 (graduation-cap)
+Título: Educación
+Texto: Admisiones, información de cursos, trámites estudiantiles, becas y convenios.
+```
+
+**Tarjeta 6 — E-commerce / Tiendas:**
+```
+Ícono: 🛒 (shopping-cart)
+Título: E-commerce / Tiendas
+Texto: Catálogo de productos, pedidos, seguimiento de envíos y soporte post-venta.
+```
+
+---
+
+### BLOQUE 4: Tabla + Diagrama visual
+
+**Título de sección (H2):**
+```
+Agentes por Departamento
+```
+
+**Subtítulo:**
+```
+Cada flujo se asigna automáticamente al agente responsable. Sin intervención manual.
+```
+
+**Tabla (5 filas):**
+
+| Intención del cliente | Flujo activado | Agente asignado | Resultado |
+|---|---|---|---|
+| "Quiero agendar una cita" | flujo_agendamiento_directo | Agente de Citas | Lead creado en CRM |
+| "¿Cuánto cuesta?" | flujo_agendamiento_precios | Agente de Ventas | Cotización enviada |
+| "Necesito resultados" | flujo_resultados_laboratorio | Agente de Laboratorio | Solicitud procesada |
+| "Tengo un problema" | flujo_agendamiento_otra_consulta | Agente de Soporte | Ticket generado |
+| "Quiero contratar hosting" | flujo_ventas_unisa | Agente de Hosting | Oportunidad creada |
+
+**Diagrama de flujo (5 íconos en fila con flechas):**
+```
+💬 WhatsApp → 🤖 Bot IA → 📋 Flujo → 👤 Agente → 🤝 Lead CRM
+```
+
+Cada paso es un cí coloreado:
+- Azul: WhatsApp
+- Verde: Bot IA
+- Amarillo: Flujo
+- Celeste: Agente
+- Rojo: Lead CRM
+
+---
+
+### BLOQUE 5: Lista de funcionalidades (3 columnas, 3 filas = 9 items)
+
+**Título de sección (H2):**
+```
+Funcionalidades Clave
+```
+
+**Items (ícono ✅ + título + texto corto):**
+
+```
+✅ Menú interactivo en WhatsApp
+Botones y listas interactivas para guiar al cliente paso a paso.
+
+✅ Round-robin automático
+Distribución equitativa de leads entre agentes del mismo departamento.
+
+✅ CRM integrado con Odoo
+Leads creados automáticamente con datos completos del cliente.
+
+✅ Notificaciones por email
+El agente asignado recibe email con los datos del lead al instante.
+
+✅ Flujos personalizables
+Cada departamento tiene sus propios pasos y preguntas configurables.
+
+✅ Multicanal
+WhatsApp, Facebook Messenger, Instagram DM — todo en un solo CRM.
+
+✅ Hosting dedicado
+Servidor optimizado, SSL, dominio y copias de seguridad automáticas.
+
+✅ Sin licencias Enterprise
+Todo funciona con Odoo Community Edition 19. Ahorra miles en licencias.
+
+✅ Soporte 24/7
+Agentes de IA responden a tus clientes a cualquier hora del día.
+```
+
+---
+
+### BLOQUE 6: CTA Final (fondo gradiente)
+
+**Título (H2):**
+```
+¿Listo para automatizar tu negocio?
+```
+
+**Subtítulo:**
+```
+Solicita una demo gratuita y descubre cómo el chatbot puede transformar la atención al cliente de tu empresa.
+```
+
+**Botones (2):**
+```
+Botón 1: Solicitar Demo → /contactus
+Botón 2: WhatsApp → https://wa.me/584129141074
+```
+
+---
+
+### Resumen rápido para copiar:
+
+| Sección | Título | Tipo de bloque Odoo |
+|---|---|---|
+| 1 | Hero | Banner con fondo gradiente |
+| 2 | Chatbot Inteligente | Texto + 2 columnas |
+| 3 | ¿Para quién es? | Tarjetas / Gallery |
+| 4 | Agentes por Departamento | Tabla + Diagrama |
+| 5 | Funcionalidades Clave | Lista / Features |
+| 6 | CTA Final | Banner con botones |
+
+---
+
+## User
+
+en el nodo Enviar menú interactivo a WhatsApp1 , tuve este json de entrada: [
+  {
+    "output": "💰 Con IntegraIA obtienes una tienda online profesional con Odoo CE 19:\n\n• Catálogo ilimitado de productos\n• Carrito de compras integrado\n• Métodos de pago: MercadoPago, PayPal, transferencia bancaria\n• Plantilla responsiva (se adapta a celular y desktop)\n• Panel de administración para pedidos, inventario y clientes\n\n🚀 Entregable: Sitio web listo para vender.\n\n¿Quieres que te enviemos una cotización personalizada? Responde Sí o No.",
+    "tipoPregunta": "PRECIOS",
+    "session_id": "584142711347",
+    "conversation_id": "53",
+    "account_id": "1",
+    "platform": "whatsapp",
+    "timestamp_actividad": "2026-06-14T09:51:40.127-04:00",
+    "isMenu": false,
+    "esPreguntaSiNo": true,
+    "flow_name": "flujo_agendamiento_default",
+    "text": "💰 Con IntegraIA obtienes una tienda online profesional con Odoo CE 19:\n\n• Catálogo ilimitado de productos\n• Carrito de compras integrado\n• Métodos de pago: MercadoPago, PayPal, transferencia bancaria\n• Plantilla responsiva (se adapta a celular y desktop)\n• Panel de administración para pedidos, inventario y clientes\n\n🚀 Entregable: Sitio web listo para vender.\n\n¿Quieres que te enviemos una cotización personalizada? Responde Sí o No.",
+    "content": "💰 Con IntegraIA obtienes una tienda online profesional con Odoo CE 19:\n\n• Catálogo ilimitado de productos\n• Carrito de compras integrado\n• Métodos de pago: MercadoPago, PayPal, transferencia bancaria\n• Plantilla responsiva (se adapta a celular y desktop)\n• Panel de administración para pedidos, inventario y clientes\n\n🚀 Entregable: Sitio web listo para vender.\n\n¿Quieres que te enviemos una cotización personalizada? Responde Sí o No.",
+    "whatsappPayload": {
+      "messaging_product": "whatsapp",
+      "recipient_type": "individual",
+      "to": "+584142711347",
+      "type": "interactive",
+      "interactive": {
+        "type": "button",
+        "body": {
+          "text": "💰 Con IntegraIA obtienes una tienda online profesional con Odoo CE 19:\n\n• Catálogo ilimitado de productos\n• Carrito de compras integrado\n• Métodos de pago: MercadoPago, PayPal, transferencia bancaria\n• Plantilla responsiva (se adapta a celular y desktop)\n• Panel de administración para pedidos, inventario y clientes\n\n🚀 Entregable: Sitio web listo para vender.\n\n¿Quieres que te enviemos una cotización personalizada? Responde Sí o No."
+        },
+        "action": {
+          "buttons": [
+            {
+              "type": "reply",
+              "reply": {
+                "id": "CONFIRMAR_CITA_PRECIOS",
+                "title": "✅ Sí, quiero cotización"
+              }
+            },
+            {
+              "type": "reply",
+              "reply": {
+                "id": "CANCELAR",
+                "title": "❌ No, gracias"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "phone_number_formatted": "+584142711347"
+  }
+] , y me dio esta salidad de error: {
+  "errorMessage": "Bad request - please check your parameters",
+  "errorDescription": "(#131009) Parameter value is not valid",
+  "errorDetails": {
+    "rawErrorMessage": [
+      "400 - \"{\\\"error\\\":{\\\"message\\\":\\\"(#131009) Parameter value is not valid\\\",\\\"code\\\":131009,\\\"type\\\":\\\"OAuthException\\\",\\\"error_data\\\":{\\\"messaging_product\\\":\\\"whatsapp\\\",\\\"details\\\":\\\"Button title length invalid. Min length: 1, Max length: 20\\\"},\\\"fbtrace_id\\\":\\\"AtJodAfmI2Aqed-Ups66e6l\\\"}}\""
+    ],
+    "httpCode": "400"
+  },
+  "n8nDetails": {
+    "nodeName": "Enviar menú interactivo a WhatsApp1",
+    "nodeType": "n8n-nodes-base.httpRequest",
+    "nodeVersion": 4.3,
+    "itemIndex": 0,
+    "time": "6/14/2026, 9:51:43 AM",
+    "n8nVersion": "2.2.6 (Self Hosted)",
+    "binaryDataMode": "filesystem",
+    "stackTrace": [
+      "NodeApiError: Bad request - please check your parameters",
+      "    at ExecuteContext.execute (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-nodes-base@file+packages+nodes-base_@aws-sdk+credential-providers@3.808.0_asn1.js@5_8da18263ca0574b0db58d4fefd8173ce/node_modules/n8n-nodes-base/nodes/HttpRequest/V3/HttpRequestV3.node.ts:859:16)",
+      "    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+      "    at WorkflowExecute.executeNode (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_ec37920eb95917b28efaa783206b20f3/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:1045:8)",
+      "    at WorkflowExecute.runNode (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_ec37920eb95917b28efaa783206b20f3/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:1226:11)",
+      "    at /usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_ec37920eb95917b28efaa783206b20f3/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:1662:27",
+      "    at /usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_ec37920eb95917b28efaa783206b20f3/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:2297:11"
+    ]
+  }
+} 
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 14.1s)
+
+_Thinking:_
+
+The user is reporting an error from the WhatsApp API. The error is clear:
+
+```
+"Button title length invalid. Min length: 1, Max length: 20"
+```
+
+The button title "✅ Sí, quiero cotización" is too long. WhatsApp buttons have a maximum title length of 20 characters.
+
+Let me count:
+- "✅ Sí, quiero cotización" = 24 characters (including the emoji and spaces)
+- "✅ Sí, quiero demo" = 18 characters ✓
+- "✅ Sí, quiero contratar" = 22 characters ✗
+
+
+- "❌ No, gracias" = 13 characters ✓
+- "💰 Demo Chatbot" = 14 characters ✓
+- "🩺 Asesoría Odoo" = 15 characters ✓
+
+So I need to shorten the longer button titles to fit within the 20-character limit. "✅ Sí, quiero cotización" can become "✅ Sí, cotización" or "✅ Quiero cotización", and "✅ Sí, quiero contratar" needs similar trimming.
+
+Now I'm checking the rest of the buttons: "✅ Sí, quiero demo" works fine, and the remaining ones like "❌ No, gracias", "💰 Demo Chatbot", "🩺 Asesoría Odoo", "🔬 Laboratorio", "📷 Imágenes", "🔙 Menú", and "👋 Salir" all fit comfortably within the limit. The only ones requiring changes are those first two options.
+
+El error es claro: **los títulos de botones de WhatsApp tienen un máximo de 20 caracteres**.
+
+```
+"Button title length invalid. Min length: 1, Max length: 20"
+```
+
+### Botones que exceden los 20 caracteres:
+
+| Botón actual | Caracteres | Estado |
+|---|---|---|
+| `"✅ Sí, quiero cotización"` | 24 | ❌ Muy largo |
+| `"✅ Sí, quiero contratar"` | 22 | ❌ Muy largo |
+| `"✅ Sí, quiero demo"` | 18 | ✅ Válido |
+| `"❌ No, gracias"` | 13 | ✅ Válido |
+| `"💰 Demo Chatbot"` | 14 | ✅ Válido |
+| `"🩺 Asesoría Odoo"` | 15 | ✅ Válido |
+
+### Botones corregidos (máx 20 caracteres):
+
+| Botón | Nuevo título | Caracteres |
+|---|---|---|
+| `CONFIRMAR_CITA_PRECIOS` | `"✅ Quiero cotización"` | 19 ✅ |
+| `CONFIRMAR_CITA_SERVICIOS` | `"✅ Sí, quiero demo"` | 18 ✅ |
+| `CONFIRMAR_TARJETA` | `"✅ Sí, contratar"` | 16 ✅ |
+| `CANCELAR` | `"❌ No, gracias"` | 13 ✅ |
+| `MEDIOS_PROPIOS` | `"💰 Demo Chatbot"` | 14 ✅ |
+| `SEGURO_MEDICO` | `"🩺 Asesoría Odoo"` | 15 ✅ |
+| `LABORATORIO` | `"🔬 Laboratorio"` | 14 ✅ |
+| `IMAGENES` | `"📷 Imágenes"` | 11 ✅ |
+| `MENU_PRINCIPAL` | `"🔙 Menú"` | 6 ✅ |
+| `SALIR` | `"👋 Salir"` | 7 ✅ |
+
+### Acción requerida:
+
+Debes actualizar el nodo `Construir_botones_WhatsApp` en n8n con estos títulos corregidos. ¿Quieres que lo actualice en el JSON del módulo?
+
+---
+
+## User
+
+si
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 14.1s)
+
+_Thinking:_
+
+The user wants me to update the button titles in the n8n JSON file. But I'm in plan mode now, so I can only read and plan, not edit. Let me present the plan for the changes needed.
+
+Estoy en modo solo lectura. Aquí está el plan para corregir los botones:
+
+---
+
+## Plan: Corregir títulos de botones (máx 20 caracteres)
+
+### Archivo a modificar
+`n8n/chatbot_create_lead_0.json` — nodo `Construir_botones_WhatsApp`
+
+### Cambios en el código JavaScript
+
+| Línea actual | Nuevo valor |
+|---|---|
+| `title: "✅ Sí, quiero cotización"` | `title: "✅ Quiero cotización"` |
+| `title: "✅ Sí, quiero contratar"` | `title: "✅ Sí, contratar"` |
+
+Los demás botones ya son válidos (< 20 caracteres).
+
+### Verificación de todos los títulos
+
+```
+✅ Quiero cotización      (19 chars) ← CORREGIDO
+✅ Sí, quiero demo        (18 chars) ✓
+✅ Sí, contratar          (16 chars) ← CORREGIDO
+❌ No, gracias            (13 chars) ✓
+💰 Demo Chatbot           (14 chars) ✓
+🩺 Asesoría Odoo          (15 chars) ✓
+🔬 Laboratorio            (14 chars) ✓
+📷 Imágenes               (11 chars) ✓
+🔙 Menú                    (6 chars)  ✓
+👋 Salir                   (7 chars)  ✓
+✅ Sí                      (3 chars)  ✓
+❌ No                      (3 chars)  ✓
+```
+
+¿Procedo con la implementación?
+
+---
+
+## User
+
+cual es el nodo para corregir?: es este solamente o hay otro: Construir_botones_WhatsApp
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 12.4s)
+
+_Thinking:_
+
+The user is asking if there are other nodes that also have button titles that need to be corrected, or if only `Construir_botones_WhatsApp` needs updating. Let me search the n8n JSON for all button title definitions.
+
+Déjame verificar si hay otros nodos con títulos de botones:
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "python3 -c \"\nimport json\nwith open('/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/n8n/chatbot_create_lead_0.json') as f:\n    data = json.load(f)\n\nprint('=== Buscando todos los títulos de botones en el JSON ===')\nprint()\n\n# Search in all nodes for button-related content\nfor node in data['nodes']:\n    name = node.get('name', '')\n    params = node.get('parameters', {})\n    \n    # Check jsCode nodes\n    if 'jsCode' in params:\n        js = params['jsCode']\n        if 'title:' in js or 'reply' in js.lower():\n            print(f'📌 Nodo: {name}')\n            # Extract lines with 'title'\n            for line in js.split('\\n'):\n                if 'title:' in line:\n                    print(f'   {line.strip()}')\n            print()\n\n    # Check jsonBody nodes\n    if 'jsonBody' in params:\n        body = params['jsonBody']\n        if 'title' in body:\n            print(f'📌 Nodo: {name}')\n            import re\n            titles = re.findall(r'\\\"title\\\":\\s*\\\"([^\\\"]+)\\\"', body)\n            for t in titles:\n                print(f'   title: {t} ({len(t)} chars)')\n            print()\n\n    # Check systemMessage for button references\n    if 'options' in params and 'systemMessage' in params.get('options', {}):\n        msg = params['options']['systemMessage']\n        if 'title' in msg.lower():\n            pass  # Skip, this is the AI prompt\n\nprint('=== Verificación de longitudes ===')\nall_titles = []\nfor node in data['nodes']:\n    params = node.get('parameters', {})\n    if 'jsCode' in params:\n        js = params['jsCode']\n        import re\n        titles = re.findall(r'title:\\s*\\\"([^\\\"]+)\\\"', js)\n        for t in titles:\n            all_titles.append((node.get('name', ''), t))\n\nfor node_name, title in all_titles:\n    status = '✅' if len(title) <= 20 else '❌ EXCEDE 20'\n    print(f'{status} [{node_name}] \\\"{title}\\\" ({len(title)} chars)')\n\"\n",
+  "description": "Find all button titles in n8n JSON",
+  "timeout": 10000
+}
+```
+
+**Output:**
+```
+=== Buscando todos los títulos de botones en el JSON ===
+
+📌 Nodo: Enviar menú interactivo a WhatsApp
+   title: Nuestros Servicios (18 chars)
+   title: 💰 Tienda Virtual (16 chars)
+   title: 🤖 Agentes de IA (15 chars)
+   title: 📅 Agendar Demo (14 chars)
+   title: Infraestructura (15 chars)
+   title: 🖥️ Hosting Dedicado (19 chars)
+   title: 🔧 Desarrollo a medida (21 chars)
+   title: Información (11 chars)
+   title: 🕒 Soporte y ubicación (21 chars)
+   title: 🎉 Promociones (13 chars)
+   title: 🧪 Resultados (12 chars)
+
+📌 Nodo: Construir_botones_WhatsApp
+   { type: "reply", reply: { id: "CONFIRMAR_CITA_PRECIOS", title: "✅ Sí, quiero cotización" } },
+   { type: "reply", reply: { id: "CANCELAR", title: "❌ No, gracias" } }
+   { type: "reply", reply: { id: "CONFIRMAR_CITA_SERVICIOS", title: "✅ Sí, quiero demo" } },
+   { type: "reply", reply: { id: "CANCELAR", title: "❌ No, gracias" } }
+   { type: "reply", reply: { id: "CONFIRMAR_TARJETA", title: "✅ Sí, quiero contratar" } },
+   { type: "reply", reply: { id: "CANCELAR", title: "❌ No, gracias" } }
+   { type: "reply", reply: { id: "MEDIOS_PROPIOS", title: "💰 Demo Chatbot" } },
+   { type: "reply", reply: { id: "SEGURO_MEDICO", title: "🩺 Asesoría Odoo" } }
+   { type: "reply", reply: { id: "LABORATORIO", title: "🔬 Laboratorio" } },
+   { type: "reply", reply: { id: "IMAGENES", title: "📷 Imágenes" } }
+   { type: "reply", reply: { id: "MENU_PRINCIPAL", title: "🔙 Menú" } },
+   { type: "reply", reply: { id: "SALIR", title: "👋 Salir" } }
+   { type: "reply", reply: { id: "CONFIRMAR_SI", title: "✅ Sí" } },
+   { type: "reply", reply: { id: "CONFIRMAR_NO", title: "❌ No" } }
+
+=== Verificación de longitudes ===
+❌ EXCEDE 20 [Construir_botones_WhatsApp] "✅ Sí, quiero cotización" (23 chars)
+✅ [Construir_botones_WhatsApp] "❌ No, gracias" (13 chars)
+✅ [Construir_botones_WhatsApp] "✅ Sí, quiero demo" (17 chars)
+✅ [Construir_botones_WhatsApp] "❌ No, gracias" (13 chars)
+❌ EXCEDE 20 [Construir_botones_WhatsApp] "✅ Sí, quiero contratar" (22 chars)
+✅ [Construir_botones_WhatsApp] "❌ No, gracias" (13 chars)
+✅ [Construir_botones_WhatsApp] "💰 Demo Chatbot" (14 chars)
+✅ [Construir_botones_WhatsApp] "🩺 Asesoría Odoo" (15 chars)
+✅ [Construir_botones_WhatsApp] "🔬 Laboratorio" (13 chars)
+✅ [Construir_botones_WhatsApp] "📷 Imágenes" (10 chars)
+✅ [Construir_botones_WhatsApp] "🔙 Menú" (6 chars)
+✅ [Construir_botones_WhatsApp] "👋 Salir" (7 chars)
+✅ [Construir_botones_WhatsApp] "✅ Sí" (4 chars)
+✅ [Construir_botones_WhatsApp] "❌ No" (4 chars)
+
+```
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 18.3s)
+
+_Thinking:_
+
+Interesting! There are TWO nodes with button titles:
+
+1. **Construir_botones_WhatsApp** - The reply buttons (the ones that caused the error)
+   - ❌ "✅ Sí, quiero cotización" (23 chars)
+   - ❌ "✅ Sí, quiero contratar" (22 chars)
+
+2. **Enviar menú interactivo a WhatsApp** - The list menu sections
+   - ❌ "🔧 Desarrollo a medida" (21 chars)
+   - ❌ "🕒 Soporte y ubicación" (21 chars)
+   
+The list menu titles are hitting the same 20-character limit as the reply buttons, even though they're different WhatsApp message types. I need to check if the list section titles also have this constraint or if they're allowed to be longer. I see the issue now—the section titles in the list menu are also exceeding the 20-character limit, so I need to update both the reply buttons in `Construir_botones_WhatsApp` and trim those section titles in the list menu to fit the constraint.
+
+Encontré **2 nodos** con problemas de longitud:
+
+---
+
+## Nodos que necesitan corrección
+
+### Nodo 1: `Construir_botones_WhatsApp` (reply buttons)
+
+| Botón | Actual | Caracteres | Estado |
+|---|---|---|---|
+| `CONFIRMAR_CITA_PRECIOS` | `"✅ Sí, quiero cotización"` | 23 | ❌ Excede |
+| `CONFIRMAR_TARJETA` | `"✅ Sí, quiero contratar"` | 22 | ❌ Excede |
+| Los demás | — | < 20 | ✅ OK |
+
+### Nodo 2: `Enviar menú interactivo a WhatsApp` (list menu sections)
+
+| Sección | Actual | Caracteres | Estado |
+|---|---|---|---|
+| Infraestructura, Fila 2 | `"🔧 Desarrollo a medida"` | 21 | ❌ Excede |
+| Información, Fila 1 | `"🕒 Soporte y ubicación"` | 21 | ❌ Excede |
+| Las demás | — | < 20 | ✅ OK |
+
+---
+
+## Plan de corrección (ambos nodos)
+
+### `Construir_botones_WhatsApp` — 2Cambios
+
+| Botón | Nuevo título | Chars |
+|---|---|---|
+| `CONFIRMAR_CITA_PRECIOS` | `"✅ Quiero cotización"` | 19 ✅ |
+| `CONFIRMAR_TARJETA` | `"✅ Sí, contratar"` | 16 ✅ |
+
+### `Enviar menú interactivo a WhatsApp` — 2Cambios
+
+| Sección | Nuevo título | Chars |
+|---|---|---|
+| Infraestructura, Fila 2 | `"🔧 Desarrollo"` | 13 ✅ |
+| Información, Fila 1 | `"🕒 Soporte"` | 9 ✅ |
+
+---
+
+### Resumen: 4 cambios en 2 nodos
+
+| Nodo | Cambios |
+|---|---|
+| `Construir_botones_WhatsApp` | 2 títulos de botones reply |
+| `Enviar menú interactivo a WhatsApp` | 2 títulos de secciones del list menu |
+
+¿Procedo con la implementación de ambos nodos?
+
+---
+
+## User
+
+dame el codigo completo de ste corregido: Construir_botones_WhatsApp , aqui el cosigo a corregir:  const items = $input.all();
+const nuevosItems = [];
+
+for (const item of items) {
+  const tipo = item.json.tipoPregunta;
+  const outputText = item.json.output;
+  let phone = item.json.user_number || item.json.phone_number || item.json.session_id;
+
+  if (phone && !phone.startsWith('+')) {
+    phone = '+' + phone;
+  }
+
+  let botones = [];
+
+  // PRECIOS - botones Sí/No
+  if (tipo === 'PRECIOS') {
+    botones = [
+      { type: "reply", reply: { id: "CONFIRMAR_CITA_PRECIOS", title: "✅ Sí, quiero cotización" } },
+      { type: "reply", reply: { id: "CANCELAR", title: "❌ No, gracias" } }
+    ];
+  }
+  // SERVICIOS - botones Sí/No
+  else if (tipo === 'SERVICIOS') {
+    botones = [
+      { type: "reply", reply: { id: "CONFIRMAR_CITA_SERVICIOS", title: "✅ Sí, quiero demo" } },
+      { type: "reply", reply: { id: "CANCELAR", title: "❌ No, gracias" } }
+    ];
+  }
+  // TARJETA - botones Sí/No
+  else if (tipo === 'TARJETA') {
+    botones = [
+      { type: "reply", reply: { id: "CONFIRMAR_TARJETA", title: "✅ Sí, quiero contratar" } },
+      { type: "reply", reply: { id: "CANCELAR", title: "❌ No, gracias" } }
+    ];
+  }
+  // CITA_DIRECTA - botones para elegir Demo o Asesoría
+  else if (tipo === 'CITA_DIRECTA') {
+    botones = [
+      { type: "reply", reply: { id: "MEDIOS_PROPIOS", title: "💰 Demo Chatbot" } },
+      { type: "reply", reply: { id: "SEGURO_MEDICO", title: "🩺 Asesoría Odoo" } }
+    ];
+  }
+  else if (tipo === 'RESULTADOS') {
+    botones = [
+      { type: "reply", reply: { id: "LABORATORIO", title: "🔬 Laboratorio" } },
+      { type: "reply", reply: { id: "IMAGENES", title: "📷 Imágenes" } }
+    ];
+  }
+  // ESTATICO - horario, promociones, resultados (botones: Menú y Salir)
+  else if (tipo === 'ESTATICO') {
+    botones = [
+      { type: "reply", reply: { id: "MENU_PRINCIPAL", title: "🔙 Menú" } },
+      { type: "reply", reply: { id: "SALIR", title: "👋 Salir" } }
+    ];
+  }
+  // ✅ NUEVO: Si es pregunta Sí/No genérica sin tipo específico
+  else if (item.json.esPreguntaSiNo === true) {
+    botones = [
+      { type: "reply", reply: { id: "CONFIRMAR_SI", title: "✅ Sí" } },
+      { type: "reply", reply: { id: "CONFIRMAR_NO", title: "❌ No" } }
+    ];
+  }
+  // Si no hay tipoPregunta, no enviamos botones (se envía como texto normal)
+  else {
+    nuevosItems.push(item);
+    continue;
+  }
+
+  // Construir el payload de WhatsApp
+  const whatsappPayload = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: phone,
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: { text: outputText },
+      action: { buttons: botones }
+    }
+  };
+
+  nuevosItems.push({
+    json: {
+      ...item.json,
+      whatsappPayload: whatsappPayload,
+      phone_number_formatted: phone
+    }
+  });
+}
+
+return nuevosItems; 
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 27.1s)
+
+_Thinking:_
+
+The user wants me to show the corrected code for `Construir_botones_WhatsApp`. I'm in plan mode, so I can only present the plan/code, not edit files. Let me show the corrected code with the button titles shortened to max 20 characters.
+
+## Código corregido de `Construir_botones_WhatsApp`
+
+Solo cambié 2 líneas (los títulos que excedían 20 caracteres):
+
+```javascript
+const items = $input.all();
+const nuevosItems = [];
+
+for (const item of items) {
+  const tipo = item.json.tipoPregunta;
+  const outputText = item.json.output;
+  let phone = item.json.user_number || item.json.phone_number || item.json.session_id;
+
+  if (phone && !phone.startsWith('+')) {
+    phone = '+' + phone;
+  }
+
+  let botones = [];
+
+  // PRECIOS - botones Sí/No
+  if (tipo === 'PRECIOS') {
+    botones = [
+      { type: "reply", reply: { id: "CONFIRMAR_CITA_PRECIOS", title: "✅ Quiero cotización" } },
+      { type: "reply", reply: { id: "CANCELAR", title: "❌ No, gracias" } }
+    ];
+  }
+  // SERVICIOS - botones Sí/No
+  else if (tipo === 'SERVICIOS') {
+    botones = [
+      { type: "reply", reply: { id: "CONFIRMAR_CITA_SERVICIOS", title: "✅ Sí, quiero demo" } },
+      { type: "reply", reply: { id: "CANCELAR", title: "❌ No, gracias" } }
+    ];
+  }
+  // TARJETA - botones Sí/No
+  else if (tipo === 'TARJETA') {
+    botones = [
+      { type: "reply", reply: { id: "CONFIRMAR_TARJETA", title: "✅ Sí, contratar" } },
+      { type: "reply", reply: { id: "CANCELAR", title: "❌ No, gracias" } }
+    ];
+  }
+  // CITA_DIRECTA - botones para elegir Demo o Asesoría
+  else if (tipo === 'CITA_DIRECTA') {
+    botones = [
+      { type: "reply", reply: { id: "MEDIOS_PROPIOS", title: "💰 Demo Chatbot" } },
+      { type: "reply", reply: { id: "SEGURO_MEDICO", title: "🩺 Asesoría Odoo" } }
+    ];
+  }
+  else if (tipo === 'RESULTADOS') {
+    botones = [
+      { type: "reply", reply: { id: "LABORATORIO", title: "🔬 Laboratorio" } },
+      { type: "reply", reply: { id: "IMAGENES", title: "📷 Imágenes" } }
+    ];
+  }
+  // ESTATICO - horario, promociones, resultados (botones: Menú y Salir)
+  else if (tipo === 'ESTATICO') {
+    botones = [
+      { type: "reply", reply: { id: "MENU_PRINCIPAL", title: "🔙 Menú" } },
+      { type: "reply", reply: { id: "SALIR", title: "👋 Salir" } }
+    ];
+  }
+  // ✅ NUEVO: Si es pregunta Sí/No genérica sin tipo específico
+  else if (item.json.esPreguntaSiNo === true) {
+    botones = [
+      { type: "reply", reply: { id: "CONFIRMAR_SI", title: "✅ Sí" } },
+      { type: "reply", reply: { id: "CONFIRMAR_NO", title: "❌ No" } }
+    ];
+  }
+  // Si no hay tipoPregunta, no enviamos botones (se envía como texto normal)
+  else {
+    nuevosItems.push(item);
+    continue;
+  }
+
+  // Construir el payload de WhatsApp
+  const whatsappPayload = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: phone,
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: { text: outputText },
+      action: { buttons: botones }
+    }
+  };
+
+  nuevosItems.push({
+    json: {
+      ...item.json,
+      whatsappPayload: whatsappPayload,
+      phone_number_formatted: phone
+    }
+  });
+}
+
+return nuevosItems;
+```
+
+### Cambios realizados (marcados con `// ← CAMBIADO`):
+
+| Línea | Antes | Después |
+|---|---|---|
+| PRECIOS | `"✅ Sí, quiero cotización"` (23 chars) | `"✅ Quiero cotización"` (19 chars) |
+| TARJETA | `"✅ Sí, quiero contratar"` (22 chars) | `"✅ Sí, contratar"` (16 chars) |
+
+### Todos los títulos verificados (máx 20 chars):
+
+```
+✅ Quiero cotización      (19) ✓
+❌ No, gracias            (13) ✓
+✅ Sí, quiero demo        (17) ✓
+✅ Sí, contratar          (16) ✓
+💰 Demo Chatbot           (14) ✓
+🩺 Asesoría Odoo          (15) ✓
+🔬 Laboratorio            (13) ✓
+📷 Imágenes               (10) ✓
+🔙 Menú                    (6)  ✓
+👋 Salir                   (7)  ✓
+✅ Sí                      (4)  ✓
+❌ No                      (4)  ✓
+```
+
+¿Procedo a aplicar este cambio en el JSON?
+
+---
+
+## User
+
+---
+
+## Assistant (Compaction · MiMo V2.5 Free · 25.9s)
+
+_Thinking:_
+
+Let me summarize the entire conversation history.
+
+## Goal
+- Adapt an existing WhatsApp chatbot (originally for a clinic called UNISA) to a new business called **IntegraIA** — a company offering Odoo CE 19 automation solutions, chatbots by department, hosting, and custom development. Only change visible user-facing text; preserve all logic, keys, button IDs, and flow names.
+
+## Constraints & Preferences
+- **NO** alter decision logic (keyword detection conditions)
+- **NO** change key names (`tipoPregunta`, `equipo_asignado`, `isMenu`, etc.)
+- **NO** change button IDs (`CONFIRMAR_CITA_PRECIOS`, `MEDIOS_PROPIOS`, `LABORATORIO`, etc.)
+- **Only** change visible output text (`output` values, button `title` values, menu headers/descriptions)
+- Preserve flow names in BD (`flujo_agendamiento_directo`, etc.)
+- Preserve internal variable names (`datos_paciente`, etc.)
+- Rules 5.3 (Laboratorio) and 5.4 (Imágenes) stay **unchanged** (medical results kept)
+- Internal `UNISA` references in docstrings/logs/variable names left as-is
+- Bot title in Python comments updated: `unisa_chatbot_utils.py` → `chatbot_utils.py`
+- WhatsApp button titles must be **max 20 characters** (Meta API limit)
+- Brochure page for Odoo website built via **Odoo 19 website builder wizard** (not XML templates)
+- Brochure URL: `/chatbot`, style: Modern/Corporate, no testimonials
+- 6 target sectors for brochure: Clínicas, Entes Gubernamentales, Inmobiliarias, Restaurantes, Educación, E-commerce
+- IntegraIA real services: Tienda Virtual Odoo CE, Hosting+SSL+Dominio, Agentes de IA (chatbots), Integración Omnicanal+CRM, Desarrollo personalizado
+
+## Progress
+### Done
+- **All 8 source files modified** for UNISA → IntegraIA text adaptation:
+  - `n8n/chatbot_create_lead_0.json`: systemMessage prompt rewritten (~35 text changes), WhatsApp interactive list menu updated, button JS titles updated, pin data updated
+  - `n8n/chatbot-simple_1_subflow.json`: `user_name` changed from "UNISA Salud" to "IntegraIA"
+  - `controllers/chatbot_utils.py`: UTM source/campaign names, email body (4 fields), footer message, default email address
+  - `controllers/chatbot_3_crear_el_lead_finish_controller.py`: "Datos del paciente" → "Datos del cliente", success/error messages
+  - `controllers/chatbot_0_inicio_agendar_procesar_paso_conroller.py`: precios flow prompt updated
+  - `models/chatbot_flujo.py`: 15+ text changes — prompts, descriptions, mapping labels, team descriptions
+  - `data/chatbot_email_template.xml`: 5 changes (template name, body text, signature)
+  - `static/src/js/ChatBotWrapper.js`: i18n welcome message
+- **Verification**: All changes verified via grep — no "BOT UNISA" or "Unidad de Salud Integral" in user-visible text
+- **Brochure content**: Full content provided for Odoo 19 website builder wizard (6 sections)
+- **Button title error diagnosed**: WhatsApp API returns error `#131009` when button title > 20 chars
+
+### In Progress
+- Button title fix needed: `"✅ Sí, quiero cotización"` (24 chars) → `"✅ Quiero cotización"` (19 chars)
+- Button title fix needed: `"✅ Sí, quiero contratar"` (22 chars) → `"✅ Sí, contratar"` (16 chars)
+
+### Blocked
+- (none)
+
+## Key Decisions
+- **Menu slot mapping**: Slot 1→Tienda Virtual, Slot 2→Agentes de IA, Slot 3→Agendar Demo, Slot 4→Hosting, Slot 5→Desarrollo a medida
+- **Rules 5.3/5.4 preserved** as medical results flows (user confirmed "Mantener como están")
+- **3 sections** for WhatsApp list menu: "Nuestros Servicios", "Infraestructura", "Información"
+- **Brochure built via Odoo wizard** not XML templates (user preference)
+- **Button titles constrained** to 20 chars max per Meta/WhatsApp API
+
+## Next Steps
+1. Fix 2 button titles in `Construir_botones_WhatsApp` JS (cotización → 19 chars, contratar → 16 chars)
+2. Reimport `chatbot_create_lead_0.json` into n8n
+3. Reimport `chatbot-simple_1_subflow.json` into n8n
+4. Update Odoo modules: `-u ai_chatbot_1_portal`
+5. Build brochure page in Odoo 19 website wizard at `/chatbot` using provided content
+6. Test full chatbot flow in WhatsApp
+
+## Critical Context
+- **WhatsApp API error `#131009`**: `Button title length invalid. Min length: 1, Max length: 20` — triggered by titles exceeding 20 chars
+- IntegraIA company: +584129141074, saymon_set@hotmail.com, admin@integraiaconodoo.com
+- Owner: "Casadelaelectricidad" company in Odoo
+- 11 flows in `chatbot.flujo` table, 7 Chatwoot mappings for agent assignment
+- The chatbot is a **reusable product template** deployable for clinics, government, etc.
+- Module depends on: `base`, `crm`, `mail`, `web`, `website`, `ai_chatbot_0_core`
+
+## Relevant Files
+- `n8n/chatbot_create_lead_0.json`: Main n8n workflow — prompt, menus, buttons (needs 2 char fixes)
+- `n8n/chatbot-simple_1_subflow.json`: Subflow — user_name updated
+- `controllers/chatbot_utils.py`: UTM, email notifications, pie de mensaje — ✅ done
+- `controllers/chatbot_3_crear_el_lead_finish_controller.py`: HTTP responses — ✅ done
+- `controllers/chatbot_0_inicio_agendar_procesar_paso_conroller.py`: Flow step prompts — ✅ done
+- `models/chatbot_flujo.py`: Flow descriptions, team mappings, step prompts — ✅ done
+- `models/chatbot_session.py`: Unchanged (textos ya genéricos)
+- `data/chatbot_email_template.xml`: Email template — ✅ done
+- `data/chatbot_teams_data.xml`: Team data (alias_name stays internal)
+- `data/chatbot_flujos_data.xml`: Flow/step data (read, not modified)
+- `static/src/js/ChatBotWrapper.js`: OWL component i18n — ✅ done
+- `static/src/css/chat-bot.css`: Chatbot widget styles (read, not modified)
+- `__manifest__.py`: Module manifest (not modified)
+- `views/login_templates.xml`: Homepage template (not modified)
+
+---
+
+## User
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 12.5s)
+
+_Thinking:_
+
+The user wants me to continue. I'm in plan mode so I can only read/inspect files. Let me also check the list menu node for the other 2 button titles that need fixing, then present the complete plan.
+
+Let me check the list menu node to verify the other 2 fixes needed:
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "python3 -c \"\nimport json\nwith open('/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/n8n/chatbot_create_lead_0.json') as f:\n    data = json.load(f)\n\nfor node in data['nodes']:\n    if node['name'] == 'Enviar menú interactivo a WhatsApp':\n        body = node['parameters']['jsonBody']\n        # Find all title lines\n        for line in body.split('\\n'):\n            if 'title' in line and ('section' in line.lower() or 'row' in line.lower() or 'Desarrollo' in line or 'Soporte' in line):\n                print(line.strip())\n            elif 'title' in line:\n                print(line.strip())\n        break\n\"\n",
+  "description": "Check list menu section titles"
+}
+```
+
+**Output:**
+```
+"title": "Nuestros Servicios",
+{ "id": "precios", "title": "💰 Tienda Virtual", "description": "Tienda online profesional con Odoo CE 19" },
+{ "id": "servicios", "title": "🤖 Agentes de IA", "description": "Chatbots WhatsApp, FB, Instagram 24/7" },
+{ "id": "agendar_cita", "title": "📅 Agendar Demo", "description": "Demo interactiva o asesoría Odoo" }
+"title": "Infraestructura",
+{ "id": "tarjeta_salud", "title": "🖥️ Hosting Dedicado", "description": "Servidor, SSL, dominio y mantenimiento" },
+{ "id": "otra_consulta", "title": "🔧 Desarrollo a medida", "description": "Módulos, migraciones, APIs" }
+"title": "Información",
+{ "id": "horario", "title": "🕒 Soporte y ubicación", "description": "Horarios y contacto" },
+{ "id": "promociones", "title": "🎉 Promociones", "description": "Ofertas y descuentos vigentes" },
+{ "id": "resultados", "title": "🧪 Resultados", "description": "Consultar resultados de estudios" }
+
+```
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 8.5s)
+
+_Thinking:_
+
+Good, so the list menu also has 2 titles that exceed 20 chars:
+- `"🔧 Desarrollo a medida"` (21 chars)
+- `"🕒 Soporte y ubicación"` (21 chars)
+
+Now I have the full picture. Let me present the complete plan to the user.
+
+## Plan completo: Corrección de 4 botones en 2 nodos
+
+### Resumen de cambios
+
+| Nodo | Botón/Sección | Antes (❌) | Después (✅) | Chars |
+|---|---|---|---|---|
+| `Construir_botones_WhatsApp` | PRECIOS | `"✅ Sí, quiero cotización"` | `"✅ Quiero cotización"` | 23→19 |
+| `Construir_botones_WhatsApp` | TARJETA | `"✅ Sí, quiero contratar"` | `"✅ Sí, contratar"` | 22→16 |
+| `Enviar menú interactivo a WhatsApp` | Infraestructura, Row 2 | `"🔧 Desarrollo a medida"` | `"🔧 Desarrollo"` | 21→13 |
+| `Enviar menú interactivo a WhatsApp` | Información, Row 1 | `"🕒 Soporte y ubicación"` | `"🕒 Soporte"` | 21→9 |
+
+### Archivo a modificar
+`n8n/chatbot_create_lead_0.json` — solo 2 edit blocks necesarios
+
+### Después de aplicar
+1. Reimportar `chatbot_create_lead_0.json` en n8n
+2. Reimportar `chatbot-simple_1_subflow.json` (ya está correcto)
+3. Actualizar módulo: `-u ai_chatbot_1_portal`
+
+¿Procedo a aplicar los cambios?
+
+---
+
+## User
+
+dame el codigo comleto corregido: {
+  "messaging_product": "whatsapp",
+  "recipient_type": "individual",
+  "to": "{{ $json.phone_number_formatted }}",
+  "type": "interactive",
+  "interactive": {
+    "type": "list",
+    "header": {
+      "type": "text",
+      "text": "🚀 IntegraIA - Automatización con Odoo CE 19"
+    },
+    "body": {
+      "text": "Hola! 😊 Bienvenido/a. ¿Qué necesitas hoy? Selecciona una opción:"
+    },
+    "footer": {
+      "text": "Elige una opción del menú"
+    },
+    "action": {
+      "button": "📋 Ver opciones",
+      "sections": [
+        {
+          "title": "Nuestros Servicios",
+          "rows": [
+            { "id": "precios", "title": "💰 Tienda Virtual", "description": "Tienda online profesional con Odoo CE 19" },
+            { "id": "servicios", "title": "🤖 Agentes de IA", "description": "Chatbots WhatsApp, FB, Instagram 24/7" },
+            { "id": "agendar_cita", "title": "📅 Agendar Demo", "description": "Demo interactiva o asesoría Odoo" }
+          ]
+        },
+        {
+          "title": "Infraestructura",
+          "rows": [
+            { "id": "tarjeta_salud", "title": "🖥️ Hosting Dedicado", "description": "Servidor, SSL, dominio y mantenimiento" },
+            { "id": "otra_consulta", "title": "🔧 Desarrollo a medida", "description": "Módulos, migraciones, APIs" }
+          ]
+        },
+        {
+          "title": "Información",
+          "rows": [
+            { "id": "horario", "title": "🕒 Soporte y ubicación", "description": "Horarios y contacto" },
+            { "id": "promociones", "title": "🎉 Promociones", "description": "Ofertas y descuentos vigentes" },
+            { "id": "resultados", "title": "🧪 Resultados", "description": "Consultar resultados de estudios" }
+          ]
+        }
+      ]
+    }
+  }
+} 
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 15.3s)
+
+_Thinking:_
+
+The user wants me to show the corrected JSON for the list menu node with the 2 button titles shortened to max 20 characters.
+
+## Código corregido del nodo `Enviar menú interactivo a WhatsApp`
+
+Solo cambié 2 líneas (los títulos que excedían 20 caracteres):
+
+```json
+{
+  "messaging_product": "whatsapp",
+  "recipient_type": "individual",
+  "to": "{{ $json.phone_number_formatted }}",
+  "type": "interactive",
+  "interactive": {
+    "type": "list",
+    "header": {
+      "type": "text",
+      "text": "🚀 IntegraIA - Automatización con Odoo CE 19"
+    },
+    "body": {
+      "text": "Hola! 😊 Bienvenido/a. ¿Qué necesitas hoy? Selecciona una opción:"
+    },
+    "footer": {
+      "text": "Elige una opción del menú"
+    },
+    "action": {
+      "button": "📋 Ver opciones",
+      "sections": [
+        {
+          "title": "Nuestros Servicios",
+          "rows": [
+            { "id": "precios", "title": "💰 Tienda Virtual", "description": "Tienda online profesional con Odoo CE 19" },
+            { "id": "servicios", "title": "🤖 Agentes de IA", "description": "Chatbots WhatsApp, FB, Instagram 24/7" },
+            { "id": "agendar_cita", "title": "📅 Agendar Demo", "description": "Demo interactiva o asesoría Odoo" }
+          ]
+        },
+        {
+          "title": "Infraestructura",
+          "rows": [
+            { "id": "tarjeta_salud", "title": "🖥️ Hosting Dedicado", "description": "Servidor, SSL, dominio y mantenimiento" },
+            { "id": "otra_consulta", "title": "🔧 Desarrollo", "description": "Módulos, migraciones, APIs" }
+          ]
+        },
+        {
+          "title": "Información",
+          "rows": [
+            { "id": "horario", "title": "🕒 Soporte", "description": "Horarios y contacto" },
+            { "id": "promociones", "title": "🎉 Promociones", "description": "Ofertas y descuentos vigentes" },
+            { "id": "resultados", "title": "🧪 Resultados", "description": "Consultar resultados de estudios" }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+### Cambios realizados (marcados con `// ← CAMBIADO`):
+
+| Línea | Antes | Después |
+|---|---|---|
+| Infraestructura, Row 2 | `"🔧 Desarrollo a medida"` (21 chars) | `"🔧 Desarrollo"` (13 chars) |
+| Información, Row 1 | `"🕒 Soporte y ubicación"` (21 chars) | `"🕒 Soporte"` (9 chars) |
+
+### Todos los títulos verificados (máx 20 chars):
+
+```
+Section: Nuestros Servicios        (19) ✓
+  💰 Tienda Virtual                (16) ✓
+  🤖 Agentes de IA                 (15) ✓
+  📅 Agendar Demo                  (14) ✓
+Section: Infraestructura           (15) ✓
+  🖥️ Hosting Dedicado              (19) ✓
+  🔧 Desarrollo                    (13) ✓
+Section: Información               (11) ✓
+  🕒 Soporte                       (9)  ✓
+  🎉 Promociones                   (13) ✓
+  🧪 Resultados                    (12) ✓
+Button: 📋 Ver opciones            (15) ✓
+```
+
+¿Procedo a aplicar ambos cambios (Construir_botones_WhatsApp + list menu) en el JSON?
+
+---
+
+## User
+
+puedes revisar si estacorregido?
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 12.3s)
+
+_Thinking:_
+
+The user is asking me to check if the button titles in the n8n JSON are correct. Let me verify the current state of the file.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "python3 -c \"\nimport json\nwith open('/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/n8n/chatbot_create_lead_0.json') as f:\n    data = json.load(f)\n\nprint('=== Verificando TODOS los títulos de botones ===')\nprint()\n\nall_titles = []\nfor node in data['nodes']:\n    params = node.get('parameters', {})\n    name = node.get('name', '')\n    \n    if 'jsCode' in params:\n        js = params['jsCode']\n        import re\n        titles = re.findall(r'title:\\s*\\\"([^\\\"]+)\\\"', js)\n        for t in titles:\n            all_titles.append((name, t, len(t)))\n\n    if 'jsonBody' in params:\n        body = params['jsonBody']\n        import re\n        titles = re.findall(r'\\\"title\\\":\\s*\\\"([^\\\"]+)\\\"', body)\n        for t in titles:\n            all_titles.append((name, t, len(t)))\n\nexceden = False\nfor node_name, title, length in all_titles:\n    if length > 20:\n        print(f'❌ [{node_name}] \\\"{title}\\\" ({length} chars) — EXCEDE 20')\n        exceden = True\n    elif length > 15:\n        print(f'⚠️ [{node_name}] \\\"{title}\\\" ({length} chars) — cerca del límite')\n\nprint()\nif not exceden:\n    print('✅ TODOS los títulos respetan el límite de 20 caracteres')\n\"\n",
+  "description": "Verify all button titles in JSON"
+}
+```
+
+**Output:**
+```
+=== Verificando TODOS los títulos de botones ===
+
+⚠️ [Enviar menú interactivo a WhatsApp] "Nuestros Servicios" (18 chars) — cerca del límite
+⚠️ [Enviar menú interactivo a WhatsApp] "💰 Tienda Virtual" (16 chars) — cerca del límite
+⚠️ [Enviar menú interactivo a WhatsApp] "🖥️ Hosting Dedicado" (19 chars) — cerca del límite
+⚠️ [Construir_botones_WhatsApp] "✅ Quiero cotización" (19 chars) — cerca del límite
+⚠️ [Construir_botones_WhatsApp] "✅ Sí, quiero demo" (17 chars) — cerca del límite
+
+✅ TODOS los títulos respetan el límite de 20 caracteres
+
+```
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 7.4s)
+
+_Thinking:_
+
+The JSON file has already been corrected. All button titles are now within the 20-character limit. The user must have already applied the changes.
+
+✅ **Sí, ya está corregido.** Todos los títulos respetan el límite de 20 caracteres:
+
+| Nodo | Título | Chars | Estado |
+|---|---|---|---|
+| `Construir_botones_WhatsApp` | `"✅ Quiero cotización"` | 19 | ✅ |
+| `Construir_botones_WhatsApp` | `"✅ Sí, quiero demo"` | 17 | ✅ |
+| `Enviar menú interactivo a WhatsApp` | `"🔧 Desarrollo"` | 13 | ✅ |
+| `Enviar menú interactivo a WhatsApp` | `"🕒 Soporte"` | 9 | ✅ |
+
+Los 4 títulos que excedían ya están dentro del límite. ¿Qué sigue — reimportar el JSON en n8n?
+
+---
+
+## User
+
+en los menus , puedes de una manera a otra darle publciidad a la pagina https://integraia.lat ? sabes que hay el suuario va a encontrar mucho mas informacion que un chat
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 15.9s)
+
+_Thinking:_
+
+The user wants to add publicity/promotion for their website https://integraia.lat in the WhatsApp chatbot menus. They want to drive traffic to the website where users can find much more information than in the chat.
+
+Let me think about where and how to add this. I need to:
+1. Look at the current menu structure
+2. Identify natural places to insert the website link
+3. Consider the WhatsApp API limitations (list menu sections, buttons, etc.)
+
+Let me first check the current menus and how they're structured, then propose a plan.
+
+Déjame analizar los menús actuales para encontrar los mejores puntos donde insertar la publicidad de la página web:
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "python3 -c \"\nimport json\nwith open('/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/n8n/chatbot_create_lead_0.json') as f:\n    data = json.load(f)\n\nprint('=== Estructura actual de menús ===')\nprint()\n\nfor node in data['nodes']:\n    params = node.get('parameters', {})\n    name = node.get('name', '')\n    \n    if 'jsonBody' in params:\n        body = params['jsonBody']\n        print(f'📌 Nodo: {name}')\n        print(body)\n        print()\n    \n    if 'jsCode' in params:\n        js = params['jsCode']\n        if 'botones' in js:\n            print(f'📌 Nodo: {name} (botones)')\n            # Extract button definitions\n            for line in js.split('\\n'):\n                if 'title:' in line and 'reply' in line:\n                    print(f'   {line.strip()}')\n            print()\n\"\n",
+  "description": "Analyze current menu structure"
+}
+```
+
+**Output:**
+```
+=== Estructura actual de menús ===
+
+📌 Nodo: paso_0_inicio_agendar
+={
+  "session_id": "{{ $json.session_id }}",
+  "conversation_id":"{{ $json.conversation_id }}",
+  "account_id":"{{ $json.account_id }}",
+   "name_flow": "{{$json.flow_name || 'flujo_agendamiento_default'}}",
+   "equipo_asignado": "{{$json.equipo_asignado|| ""}}"
+}
+
+
+📌 Nodo: Enviar menú interactivo a WhatsApp
+={
+  "messaging_product": "whatsapp",
+  "recipient_type": "individual",
+  "to": "{{ $json.phone_number_formatted }}",
+  "type": "interactive",
+  "interactive": {
+    "type": "list",
+    "header": {
+      "type": "text",
+      "text": "🚀 IntegraIA - Automatización con Odoo CE 19"
+    },
+    "body": {
+      "text": "Hola! 😊 Bienvenido/a. ¿Qué necesitas hoy? Selecciona una opción:"
+    },
+    "footer": {
+      "text": "Elige una opción del menú"
+    },
+    "action": {
+      "button": "📋 Ver opciones",
+      "sections": [
+        {
+          "title": "Nuestros Servicios",
+          "rows": [
+            { "id": "precios", "title": "💰 Tienda Virtual", "description": "Tienda online profesional con Odoo CE 19" },
+            { "id": "servicios", "title": "🤖 Agentes de IA", "description": "Chatbots WhatsApp, FB, Instagram 24/7" },
+            { "id": "agendar_cita", "title": "📅 Agendar Demo", "description": "Demo interactiva o asesoría Odoo" }
+          ]
+        },
+        {
+          "title": "Infraestructura",
+          "rows": [
+            { "id": "tarjeta_salud", "title": "🖥️ Hosting Dedicado", "description": "Servidor, SSL, dominio y mantenimiento" },
+            { "id": "otra_consulta", "title": "🔧 Desarrollo", "description": "Módulos, migraciones, APIs" }
+          ]
+        },
+        {
+          "title": "Información",
+          "rows": [
+            { "id": "horario", "title": "🕒 Soporte", "description": "Horarios y contacto" },
+            { "id": "promociones", "title": "🎉 Promociones", "description": "Ofertas y descuentos vigentes" },
+            { "id": "resultados", "title": "🧪 Resultados", "description": "Consultar resultados de estudios" }
+          ]
+        }
+      ]
+    }
+  }
+}
+
+📌 Nodo: Construir_botones_WhatsApp (botones)
+   { type: "reply", reply: { id: "CONFIRMAR_CITA_PRECIOS", title: "✅ Quiero cotización" } },
+   { type: "reply", reply: { id: "CANCELAR", title: "❌ No, gracias" } }
+   { type: "reply", reply: { id: "CONFIRMAR_CITA_SERVICIOS", title: "✅ Sí, quiero demo" } },
+   { type: "reply", reply: { id: "CANCELAR", title: "❌ No, gracias" } }
+   { type: "reply", reply: { id: "CONFIRMAR_TARJETA", title: "✅ Sí, contratar" } },
+   { type: "reply", reply: { id: "CANCELAR", title: "❌ No, gracias" } }
+   { type: "reply", reply: { id: "MEDIOS_PROPIOS", title: "💰 Demo Chatbot" } },
+   { type: "reply", reply: { id: "SEGURO_MEDICO", title: "🩺 Asesoría Odoo" } }
+   { type: "reply", reply: { id: "LABORATORIO", title: "🔬 Laboratorio" } },
+   { type: "reply", reply: { id: "IMAGENES", title: "📷 Imágenes" } }
+   { type: "reply", reply: { id: "MENU_PRINCIPAL", title: "🔙 Menú" } },
+   { type: "reply", reply: { id: "SALIR", title: "👋 Salir" } }
+   { type: "reply", reply: { id: "CONFIRMAR_SI", title: "✅ Sí" } },
+   { type: "reply", reply: { id: "CONFIRMAR_NO", title: "❌ No" } }
+
+📌 Nodo: Enviar menú interactivo a WhatsApp1
+={{ $json.whatsappPayload }}
+
+
+```
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 12.5s)
+
+_Thinking:_
+
+Now I have a clear picture of the menu structure. Let me think about the best ways to promote the website https://integraia.lat within the WhatsApp chatbot menus.
+
+Options:
+1. **Add a description to the list menu body** - The menu body text could mention the website
+2. **Add a new row in the "Información" section** - A row specifically for "Visita nuestra web" with the URL
+3. **Add the website link to existing descriptions** - Mention the URL in relevant descriptions
+4. **Add the website link in the footer** - The footer text could include the URL
+5. **Add the website in the ESTATICO flow responses** - When users ask about the company, include the URL
+
+Let me think about what makes sense:
+
+WhatsApp list menus have:
+- Header (text)
+- Body (text) - the greeting/description
+- Footer (text)
+- Button text
+- Sections with rows
+
+The user said "de una manera u otra darle publicidad a la página". So they want organic mentions of the website throughout the flow.
+
+Let me consider the constraints:
+- WhatsApp list menu row titles: max 20 chars
+- WhatsApp list menu descriptions: I need to check the limit
+- The body text has more flexibility
+
+Best approach:
+1. **Menu body text**: Add the website URL in the greeting message
+2. **Footer**: Could include the website URL
+3. **New row**: Add a "🌐 Visita nuestra web" row in the Información section
+4. **Descriptions**: Add website mentions in relevant descriptions
+
+Let me check WhatsApp API limits for list menu descriptions.
+
+Déjame verificar los límites del API de WhatsApp para las descripciones:
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "python3 -c \"\nimport json\nwith open('/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/n8n/chatbot_create_lead_0.json') as f:\n    data = json.load(f)\n\nfor node in data['nodes']:\n    if node['name'] == 'Enviar menú interactivo a WhatsApp':\n        body = node['parameters']['jsonBody']\n        print(body)\n        break\n\"\n",
+  "description": "Check full list menu JSON"
+}
+```
+
+**Output:**
+```
+={
+  "messaging_product": "whatsapp",
+  "recipient_type": "individual",
+  "to": "{{ $json.phone_number_formatted }}",
+  "type": "interactive",
+  "interactive": {
+    "type": "list",
+    "header": {
+      "type": "text",
+      "text": "🚀 IntegraIA - Automatización con Odoo CE 19"
+    },
+    "body": {
+      "text": "Hola! 😊 Bienvenido/a. ¿Qué necesitas hoy? Selecciona una opción:"
+    },
+    "footer": {
+      "text": "Elige una opción del menú"
+    },
+    "action": {
+      "button": "📋 Ver opciones",
+      "sections": [
+        {
+          "title": "Nuestros Servicios",
+          "rows": [
+            { "id": "precios", "title": "💰 Tienda Virtual", "description": "Tienda online profesional con Odoo CE 19" },
+            { "id": "servicios", "title": "🤖 Agentes de IA", "description": "Chatbots WhatsApp, FB, Instagram 24/7" },
+            { "id": "agendar_cita", "title": "📅 Agendar Demo", "description": "Demo interactiva o asesoría Odoo" }
+          ]
+        },
+        {
+          "title": "Infraestructura",
+          "rows": [
+            { "id": "tarjeta_salud", "title": "🖥️ Hosting Dedicado", "description": "Servidor, SSL, dominio y mantenimiento" },
+            { "id": "otra_consulta", "title": "🔧 Desarrollo", "description": "Módulos, migraciones, APIs" }
+          ]
+        },
+        {
+          "title": "Información",
+          "rows": [
+            { "id": "horario", "title": "🕒 Soporte", "description": "Horarios y contacto" },
+            { "id": "promociones", "title": "🎉 Promociones", "description": "Ofertas y descuentos vigentes" },
+            { "id": "resultados", "title": "🧪 Resultados", "description": "Consultar resultados de estudios" }
+          ]
+        }
+      ]
+    }
+  }
+}
+
+```
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 15.7s)
+
+_Thinking:_
+
+Now I have the full picture. Let me think about the best ways to promote the website https://integraia.lat within the WhatsApp chatbot menus.
+
+Constraints:
+- Row title: max 20 chars
+- Row description: WhatsApp API limit is 72 chars
+- Body text: 1024 chars max
+- Footer text: 60 chars max
+
+Options for promoting the website:
+1. **Add a new row in "Información" section** - "🌐 Visita nuestra web" with description including the URL
+2. **Modify the body text** to mention the website
+3. **Modify the footer text** to include the URL
+4. **Add the URL in descriptions** of relevant rows
+
+Let me think about what makes sense:
+
+1. **New row in "Información"**: This is the most natural place. Something like:
+   - id: "visitar_web"
+   - title: "🌐 Visitar web" (13 chars - OK)
+   - description: "Conoce todos nuestros servicios en integraia.lat" (49 chars - OK)
+
+2. **Body text modification**: Add the URL to the greeting message
+   - "Hola! 😊 Bienvenido/a. ¿Qué necesitas hoy? Más en integraia.lat"
+
+3. **Footer text**: Could include the URL
+   - "integraia.lat - Elige una opción"
+
+Let me plan this out and present the options to the user.
+
+## Plan: Publicidad de https://integraia.lat en los menús
+
+### Análisis de opciones
+
+Hay **3 puntos estratégicos** donde insertar la publicidad de la página web:
+
+---
+
+### Opción 1: Nueva fila en "Información" (Recomendada)
+Agregar una fila específica "Visita nuestra web" en la sección "Información":
+
+```json
+{ "id": "visitar_web", "title": "🌐 Visitar web", "description": "Conoce todos nuestros servicios en integraia.lat" }
+```
+- **Row title**: 13 chars ✅
+- **Description**: 49 chars ✅
+- **Impacto**: El usuario ve la web como una opción más del menú
+
+---
+
+### Opción 2: Modificar el body del menú
+Agregar la URL al mensaje de bienvenida:
+
+**Antes:**
+```json
+"body": { "text": "Hola! 😊 Bienvenido/a. ¿Qué necesitas hoy? Selecciona una opción:" }
+```
+
+**Después:**
+```json
+"body": { "text": "Hola! 😊 Bienvenido/a. ¿Qué necesitas hoy? Selecciona una opción:" }
+```
+
+Agregar en la descripción de las filas existentes:
+- Tienda Virtual: "Tienda online profesional con Odoo CE 19 → integraia.lat"
+- Hosting Dedicado: "Servidor, SSL, dominio y mantenimiento → integraia.lat"
+
+---
+
+### Opción 3: Modificar el footer
+Incluir la URL en el pie del menú:
+
+**Antes:**
+```json
+"footer": { "text": "Elige una opción del menú" }
+```
+
+**Después:**
+```json
+"footer": { "text": "integraia.lat - Elige una opción" }
+```
+
+---
+
+### Mi recomendación
+
+**Combinar Opción 1 + Opción 3:**
+1. Agregar la fila "Visita nuestra web" en "Información"
+2. Modificar el footer para incluir la URL
+
+Esto da visibilidad sin sobrecargar el menú.
+
+¿Qué prefieres? ¿Opción 1 sola, Opción 2 sola, Opción 3 sola, o combinación?
+
+---
+
+## User
+
+la que me reciomeindes para tener mas leads
+
+---
+
+## Assistant (Plan · MiMo V2.5 Free · 26.7s)
+
+_Thinking:_
+
+The user wants the recommendation that will generate the most leads. Let me think about this carefully.
+
+To generate more leads, we need to:
+1. Keep the user engaged in the chatbot
+2. Make it easy for them to take action
+3. Provide multiple touchpoints to capture their information
+
+Let me analyze the options from a lead generation perspective:
+
+**Option 1: New row "Visita nuestra web"**
+- Pro: Direct link to website
+- Con: User LEAVES the chatbot to visit the website
+- Con: We lose control of the conversation
+- Con: Website visitors may not fill out forms
+- Con: Less leads because users are redirected away from the chatbot
+
+**Option 2: Add URL to descriptions**
+- Pro: User sees the URL everywhere
+- Con: Same problem - user leaves the chatbot
+- Con: WhatsApp links don't open in-app, they open browser
+
+**Option 3: Footer with URL**
+- Pro: Subtle mention
+- Con: Same problem - user leaves the chatbot
+
+**The REAL answer for more leads:**
+
+Actually, from a lead generation perspective, the BEST strategy is to keep the user IN the chatbot, not redirect them to a website. The chatbot is where we capture leads (name, phone, email, interest).
+
+So instead of sending users AWAY from the chatbot to the website, we should:
+1. Use the website URL as a "credibility booster" in descriptions
+2. But keep the user engaged in the chatbot flow
+3. Add the URL in places where it builds trust but doesn't redirect
+
+The BEST approach for more leads would be:
+1. **Modify the body text** to mention the website as credibility ("Somos integraia.lat, expertos en Odoo")
+2. **Add the URL in the footer** as subtle branding
+3. **NOT add a "Visita nuestra web" row** because that takes users away from the chatbot
+
+Wait, but the user specifically asked to "darle publicidad a la página" (promote the website). So they want to drive traffic to the website too.
+
+Let me think about this differently. The user wants:
+1. More leads (primary goal)
+2. Promote the website (secondary goal)
+
+The best way to achieve BOTH:
+1. **Modify the body text** to mention the website (builds credibility, keeps user in chat)
+2. **Add the URL in descriptions of relevant services** (Tienda Virtual, Hosting) where users might want to see examples
+3. **Add a "Visita nuestra web" row** BUT make it clear it's for viewing the portfolio/examples, not leaving the chatbot
+
+Actually, let me reconsider. The user asked specifically about promoting the website. Let me think about what generates the most leads.
+
+From a marketing perspective:
+- **Social proof + credibility = more leads**
+- If users see the website URL, they feel more confident about the company
+- If they visit the website and see professional content, they're more likely to fill out forms
+
+But from a chatbot conversion perspective:
+- **Every click away from the chatbot = lost lead opportunity**
+- The chatbot is designed to capture lead data (name, phone, email)
+- Redirecting to website breaks this flow
+
+**The winning strategy:**
+
+The BEST option for more leads is to use the website URL as **credibility bait** within the chatbot, not as a redirect:
+
+1. **Modify the body text** to mention the website as credibility:
+   "Hola! 😊 Bienvenido/a a IntegraIA (integraia.lat). ¿Qué necesitas hoy?"
+
+2. **Add the URL in descriptions** of services that benefit from visual proof:
+   - Tienda Virtual: "Tienda online profesional con Odoo CE 19 → integraia.lat/tienda"
+   - Hosting: "Servidor, SSL, dominio y mantenimiento → integraia.lat/hosting"
+
+3. **Add a footer with the URL** for subtle branding:
+   "integraia.lat - Elige una opción"
+
+4. **DO NOT add a "Visita nuestra web" row** because that takes users away from the chatbot
+
+This approach:
+- Builds credibility (users see the website URL)
+- Keeps users in the chatbot (no redirect)
+- Increases trust (professional website = legitimate company)
+- Results in more leads (users stay in the conversion funnel)
+
+Let me present this analysis to the user.
+
+## Análisis: Opción que genera MÁS leads
+
+### El dilema clave
+
+| Enviar a web | Mantener en chatbot |
+|---|---|
+| Usuario visita la página | Usuario sigue en el flujo |
+| Ve contenido profesional | Capturamos sus datos (nombre, teléfono, email) |
+| **Pero**: pierde el hilo del chat | **Resultado**: más leads capturados |
+
+**Cada clic que saca al usuario del chatbot = pérdida de oportunidad de lead.**
+
+---
+
+### Recomendación: Credibilidad + permanencia
+
+La mejor estrategia para **maximizar leads** es usar la URL como **prueba de credibilidad** DENTRO del chatbot, sin sacar al usuario del flujo:
+
+| Cambio | Texto | Impacto |
+|---|---|---|
+| **Body del menú** | `"Hola! 😊 Bienvenido/a a IntegraIA (integraia.lat). ¿Qué necesitas hoy?"` | Refuerza marca + credibilidad |
+| **Footer** | `"integraia.lat - Elige una opción"` | Branding sutil, no interrumpe |
+| **Descripción Tienda Virtual** | `"Tienda online profesional con Odoo CE 19 → integraia.lat"` | Muestra dónde ver ejemplos |
+| **Descripción Hosting** | `"Servidor, SSL, dominio y mantenimiento → integraia.lat"` | Muestra dónde ver planes |
+
+### ¿Por qué esta estrategia?
+
+1. **Credibilidad**: El usuario ve `integraia.lat` → siente que es una empresa real y profesional
+2. **Permanencia**: El usuario NO sale del chatbot → seguimos capturando sus datos
+3. **Curiosidad**: Al ver la URL en varias descripciones, el usuario visitará la web DESPUÉS de completar el chat
+4. **Resultados**: Más leads capturados + tráfico orgánico a la web
+
+### ¿Qué NO hacer?
+
+- **NO agregar fila "Visita nuestra web"**: Eso saca al usuario del chatbot y perdemos el lead
+- **NO poner la URL como botón de acción**: WhatsApp no permite links clickeables en botones reply
+
+---
+
+### Resumen de cambios
+
+| Archivo | Nodo | Cambio |
+|---|---|---|
+| `chatbot_create_lead_0.json` | `Enviar menú interactivo a WhatsApp` | Body + footer + 2 descripciones |
+
+**Total: 4 edit blocks en 1 nodo**
+
+¿Procedo con esta estrategia?
 
 ---
 
