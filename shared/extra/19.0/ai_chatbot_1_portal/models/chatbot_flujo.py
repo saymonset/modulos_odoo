@@ -154,7 +154,7 @@ class ChatbotFlujo(models.Model):
             {
                 "secuencia": 18,
                 "nombre_interno": "solicitar_es_paciente_nuevo",
-                "nombre_mostrar": "¿Eres paciente nuevo?",
+                "nombre_mostrar": "¿Eres cliente nuevo?",
                 "tipo_dato": "text",
                 "campo_destino": "es_paciente_nuevo",
                 "es_requerido": False,
@@ -257,7 +257,7 @@ class ChatbotFlujo(models.Model):
                 "campo_destino": "nombre_seguro",
                 "es_requerido": True,
                 "es_paso_telefono": False,
-                "mensaje_prompt": "🩺 Has indicado que usarás un seguro médico.\nPor favor, escríbeme el nombre completo de tu seguro para poder validar la cobertura y agendar tu cita sin contratiempos. ✅\n\n✏️ Ejemplos:\n    • FASME\n    • FASDEM\n    • SENIAT\n    • ALCALDIA DE MANEIRO\n    • LA INTERNACIONAL\n\n📌 Si tu seguro no está en convenio con UNISA, nuestro equipo te informará las opciones de pago particular.",
+                "mensaje_prompt": "🩺 Has indicado que usarás un seguro médico.\nPor favor, escríbeme el nombre completo de tu seguro para poder validar la cobertura y agendar tu cita sin contratiempos. ✅\n\n✏️ Ejemplos:\n    • FASME\n    • FASDEM\n    • SENIAT\n    • ALCALDIA DE MANEIRO\n    • LA INTERNACIONAL\n\n📌 Si tu seguro no está en convenio con IntegraIA, nuestro equipo te informará las opciones de pago particular.",
                 "mensaje_error": "Por favor indica el nombre de tu seguro médico.",
             },
             {
@@ -293,12 +293,12 @@ class ChatbotFlujo(models.Model):
             {
                 "secuencia": 10,
                 "nombre_interno": "solicitar_identificacion",
-                "nombre_mostrar": "Identificación del paciente",
+                "nombre_mostrar": "Identificación del cliente",
                 "tipo_dato": "text",
                 "campo_destino": "identificacion_paciente",
                 "es_requerido": True,
                 "es_paso_telefono": False,
-                "mensaje_prompt": "📄 Por favor, escribe el nombre completo y cédula del paciente:",
+                "mensaje_prompt": "📄 Por favor, escribe el nombre completo y cédula del cliente:",
                 "mensaje_error": "Por favor proporciona nombre completo y cédula.",
             },
             {
@@ -322,12 +322,12 @@ class ChatbotFlujo(models.Model):
             {
                 "secuencia": 10,
                 "nombre_interno": "solicitar_identificacion",
-                "nombre_mostrar": "Identificación del paciente",
+                "nombre_mostrar": "Identificación del cliente",
                 "tipo_dato": "text",
                 "campo_destino": "identificacion_paciente",
                 "es_requerido": True,
                 "es_paso_telefono": False,
-                "mensaje_prompt": "📄 Por favor, escribe el nombre completo y cédula del paciente:",
+                "mensaje_prompt": "📄 Por favor, escribe el nombre completo y cédula del cliente:",
                 "mensaje_error": "Por favor proporciona nombre completo y cédula.",
             },
             {
@@ -380,7 +380,7 @@ class ChatbotFlujo(models.Model):
                     "campo_destino": "informacion_precios",
                     "es_requerido": False,
                     "es_paso_telefono": False,
-                    "mensaje_prompt": "Conoce nuestros precios básicos 2026. ¿Deseas que te ayudemos a agendar una cita? Responde 'Sí' para continuar.",
+                    "mensaje_prompt": "💰 Conoce nuestros planes de tienda virtual con Odoo CE 19. ¿Deseas que te enviemos una cotización? Responde 'Sí' para continuar.",
                     "mensaje_error": "",
                 }
             ]
@@ -459,17 +459,18 @@ class ChatbotFlujo(models.Model):
         el área responsable para cada equipo_asignado.
         """
         return {
-            "Agendamiento_Directo": "información general y ubicación",
-            "flujo_agendamiento_directo": "información general y ubicación",
-            "Agendamiento_Precios": "información de precios y promociones",
-            "flujo_agendamiento_precios": "información de precios y promociones",
-            "Agendamiento_Servicios": "información sobre nuestros servicios",
-            "flujo_agendamiento_servicios": "información sobre nuestros servicios",
-            "Agendamiento_Otra_Consulta": "consultas generales",
-            "flujo_agendamiento_otra_consulta": "consultas generales",
-            "Agendamiento_Tarjeta": "ventas y afiliación a nuestra tarjeta",
-            "flujo_ventas_unisa": "ventas y afiliación a nuestra tarjeta",
-            "Ventas_UNISA": "ventas y afiliación a nuestra tarjeta",
+            "Agendamiento_Directo": "soporte general e información",
+            "flujo_agendamiento_directo": "soporte general e información",
+            "Agendamiento_Precios": "información de tienda virtual y planes",
+            "flujo_agendamiento_precios": "información de tienda virtual y planes",
+            # Cambiado: flujo_agendamiento_servicios ahora apunta a Grupo Ventas
+            "Agendamiento_Servicios": "información sobre agentes de IA",
+            "flujo_agendamiento_servicios": "información sobre agentes de IA",
+            "Agendamiento_Otra_Consulta": "desarrollo y consultoría",
+            "flujo_agendamiento_otra_consulta": "desarrollo y consultoría",
+            "Agendamiento_Tarjeta": "ventas de hosting y dominio",
+            "flujo_ventas_unisa": "ventas de hosting y dominio",
+            "Ventas_UNISA": "ventas de hosting y dominio",
             "CITAS_MP": "citas por medios propios",
             "flujo_citas_medios_propios": "citas por medios propios",
             "CITAS_SEGUROS": "citas con seguro médico",

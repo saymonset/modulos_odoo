@@ -66,7 +66,7 @@ export class ChatBotWrapper extends Component {
             ],
             i18n: {
                 en: {
-                    title: 'Bienvenido/a a integraIA,  tu asistente digital inteligente.',
+                    title: '¡Hola! 👋 Bienvenido/a a IntegraIA, tu aliado en automatización empresarial.',
                     subtitle: "Estamos aquí para ayudarte 24/7. ¿En qué puedo asistirte hoy?",
                     footer: '',
                     getStarted: 'Nueva Conversación',
