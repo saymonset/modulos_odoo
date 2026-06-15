@@ -2,2144 +2,7 @@
 
 **Session ID:** ses_1817334d9ffeWymYX5xxkyOuHj
 **Created:** 5/31/2026, 5:00:16 PM
-**Updated:** 6/15/2026, 3:00:29 PM
-
----
-
-## Assistant (Plan · DeepSeek V4 Flash Free · 22.8s)
-
-_Thinking:_
-
-The user is confused about my mapping table. Let me clarify.
-
-In the AGENTS.md it says:
-- **Usuarios Odoo creados**: 10 usuarios con login=email, password `Unisa2024!`, email configurado. IDs 5-14.
-
-Let me look up the actual Odoo users to understand which user corresponds to which email.
-
-The user is saying: "Why is the mapping Simon (user 5)? The mapping should be with the user CITAS_MP because it corresponds to the same Chatwoot email."
-
-Let me check what the actual user names and emails are in the system.
-
-Actually, I need to look at the actual data. The AGENTS.md mentions:
-- User 5: Simon (login: simon@... ? or cita.unisa@gmail.com?)
-- User 6: oracle (login: unisaseniat@gmail.com?)
-- Users 7,8: CITAS MP, CITAS SEGUROS
-- Users 9,10: VENTAS1, VENTAS2
-- Users 11: LAB
-- User 12: IMAGENES
-- User 13: admin@unisasalud.com
-- User 14: ? 
-
-Wait, let me re-read the AGENTS.md more carefully:
-
-"10 usuarios Odoo creados desde Chatwoot agents: login=email, password `Unisa2024!`, con email configurado. Asignados como miembros de equipos CRM. IDs 5-14."
-
-"Equipos CRM poblados: Grupo Citas (Simon ID5, oracle ID6, CITAS MP ID7, CITAS SEGUROS ID8)"
-
-Wait, that's interesting. So:
-- User 5: Simon (login: maybe cita.unisa@gmail.com?)
-- User 6: oracle (login: unisaseniat@gmail.com?)
-- User 7: CITAS MP (login: maybe citasmp@...?)
-- User 8: CITAS SEGUROS (login: citasseguros@...?)
-
-Hmm, but the user says "el mapeo debe ser con el usuario CITAS_MP porque corresponde al mismo correo de chatwoot". They're saying the CITAS_MP mapping has agent_email = cita.unisa@gmail.com, and that email should match an Odoo user with that login. But I said "Simon" - maybe Simon has login cita.unisa@gmail.com?
-
-Actually, I don't have the actual data. I assumed the names based on AGENTS.md but I should verify. Let me check the actual users in the database.
-
-But I'm in plan mode (read-only), so I can read to verify.
-
-Tienes razón, asumí mal los nombres. Déjame verificar los usuarios reales en la base de datos y los mappings:
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "source /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/.venv/bin/activate && python3 -c \"\nimport xmlrpc.client\nurl = 'http://127.0.0.1:38069'\ndb = 'integraiadev_19'\ncommon = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/common')\nuid = common.authenticate(db, 'admin@unisasalud.com', 'Unisa2024!', {})\nmodels = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/object')\nusers = models.execute_kw(db, uid, 'Unisa2024!', 'res.users', 'search_read', [[('id','in',[5,6,7,8,9,10,11,12,13,14])]], {'fields':['id','login','name','email']})\nfor u in sorted(users, key=lambda x: x['id']):\n    print(f\\\"  ID {u['id']}: login={u['login']:40s} name={u['name']:20s} email={u['email']}\\\")\n\"\n",
-  "description": "Check Odoo users and their emails",
-  "timeout": 15000
-}
-```
-
-**Output:**
-```
-Traceback (most recent call last):
-  File "<string>", line 6, in <module>
-  File "/home/odoo/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/xmlrpc/client.py", line 1122, in __call__
-    return self.__send(self.__name, args)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/odoo/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/xmlrpc/client.py", line 1464, in __request
-    response = self.__transport.request(
-               ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/odoo/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/xmlrpc/client.py", line 1166, in request
-    return self.single_request(host, handler, request_body, verbose)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/odoo/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/xmlrpc/client.py", line 1182, in single_request
-    return self.parse_response(resp)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/odoo/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/xmlrpc/client.py", line 1354, in parse_response
-    return u.close()
-           ^^^^^^^^^
-  File "/home/odoo/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/xmlrpc/client.py", line 668, in close
-    raise Fault(**self._stack[0])
-xmlrpc.client.Fault: <Fault 1: 'Traceback (most recent call last):\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/orm/registry.py", line 118, in __new__\n    return cls.registries[db_name]\n           ~~~~~~~~~~~~~~^^^^^^^^^\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/tools/lru.py", line 57, in __getitem__\n    val = self._values[key]\n          ~~~~~~~~~~~~^^^^^\nKeyError: \'integraiadev_19\'\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/rpc/controllers/xmlrpc.py", line 162, in xmlrpc_2\n    response = self._xmlrpc(service)\n               ^^^^^^^^^^^^^^^^^^^^^\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/rpc/controllers/xmlrpc.py", line 134, in _xmlrpc\n    result = dispatch_rpc(service, method, params)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/http.py", line 449, in dispatch_rpc\n    return dispatch(method, params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/service/common.py", line 60, in dispatch\n    return g[exp_method_name](*params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/service/common.py", line 26, in exp_authenticate\n    with Registry(db).cursor() as cr:\n         ^^^^^^^^^^^^\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/orm/registry.py", line 120, in __new__\n    return cls.new(db_name)\n           ^^^^^^^^^^^^^^^^\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/tools/func.py", line 88, in locked\n    return func(inst, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/orm/registry.py", line 164, in new\n    registry.init(db_name)\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/orm/registry.py", line 301, in init\n    with closing(self.cursor()) as cr:\n                 ^^^^^^^^^^^^^\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/orm/registry.py", line 1174, in cursor\n    return self._db.cursor()\n           ^^^^^^^^^^^^^^^^^\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/sql_db.py", line 763, in cursor\n    return Cursor(self.__pool, self.__dbname, self.__dsn)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/sql_db.py", line 365, in __init__\n    self._cnx: PsycoConnection = pool.borrow(dsn)\n                                 ^^^^^^^^^^^^^^^^\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/tools/func.py", line 88, in locked\n    return func(inst, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/sql_db.py", line 687, in borrow\n    result = psycopg2.connect(\n             ^^^^^^^^^^^^^^^^^\n  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/.venv/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect\n    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\npsycopg2.OperationalError: connection to server at "127.0.0.1", port 5433 failed: FATAL:  database "integraiadev_19" does not exist\n\n'>
-
-```
-
----
-
-## Assistant (Plan · DeepSeek V4 Flash Free · 9.8s)
-
-_Thinking:_
-
-The RPC failed because of database name issue. Let me check the actual database name from the config.
-
-**Tool: grep**
-
-**Input:**
-```json
-{
-  "pattern": "db_name|dbname|database",
-  "path": "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/clientes/integraiadev_19/conf/odoo.cfg"
-}
-```
-
-**Output:**
-```
-Found 2 matches
-/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/clientes/integraiadev_19/conf/odoo.cfg:
-  Line 11: db_name = dbintegraiadev_19
-
-  Line 35: #geoip_database = False
-
-```
-
----
-
-## Assistant (Plan · DeepSeek V4 Flash Free · 7.5s)
-
-_Thinking:_
-
-The database is `dbintegraiadev_19`, not `integraiadev_19`. Let me fix the RPC call.
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "source /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/.venv/bin/activate && python3 -c \"\nimport xmlrpc.client\nurl = 'http://127.0.0.1:38069'\ndb = 'dbintegraiadev_19'\ncommon = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/common')\nuid = common.authenticate(db, 'admin@unisasalud.com', 'Unisa2024!', {})\nmodels = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/object')\n# Get chatwoot mappings\nmappings = models.execute_kw(db, uid, 'Unisa2024!', 'chatwoot.mapping', 'search_read', [[('active','=',True)]], {'fields':['id','name','equipo_asignado','chatwoot_agent_email','chatwoot_agent_id','team_id']})\nprint('=== CHATWOOT MAPPINGS ===')\nfor m in sorted(mappings, key=lambda x: x['id']):\n    print(f\\\"  ID {m['id']}: name={m['name']:20s} equipo={str(m['equipo_asignado']):25s} email={str(m['chatwoot_agent_email']):30s} agent_id={m['chatwoot_agent_id']} team_id={m['team_id']}\\\")\n# Get users\nusers = models.execute_kw(db, uid, 'Unisa2024!', 'res.users', 'search_read', [[('id','in',[5,6,7,8,9,10,11,12,13,14])]], {'fields':['id','login','name']})\nprint()\nprint('=== USERS ===')\nfor u in sorted(users, key=lambda x: x['id']):\n    print(f\\\"  ID {u['id']}: login={u['login']:40s} name={u['name']}\\\")\n\"\n",
-  "description": "Check mappings and users",
-  "timeout": 15000
-}
-```
-
-**Output:**
-```
-=== CHATWOOT MAPPINGS ===
-  ID 3: name=CITAS_MP (3)         equipo=CITAS_MP                  email=cita.unisa@gmail.com           agent_id=14 team_id=[4, 'Grupo Citas']
-  ID 4: name=CITAS_SEGUROS        equipo=CITAS_SEGUROS             email=unisaseniat@gmail.com          agent_id=13 team_id=[4, 'Grupo Citas']
-  ID 5: name=Ventas_UNISA (1)     equipo=Ventas_UNISA              email=unisacomercializacion@gmail.com agent_id=15 team_id=[5, 'Grupo Ventas']
-  ID 6: name=Ventas_UNISA (2)     equipo=Ventas_UNISA              email=veronica.unisapp@gmail.com     agent_id=16 team_id=[5, 'Grupo Ventas']
-  ID 7: name=RESULTADOS_LAB       equipo=RESULTADOS_LAB            email=unisa.resultados.laboratorio@gmail.com agent_id=17 team_id=[6, 'Grupo Laboratorio']
-  ID 8: name=RESULTADOS_IMAGENES  equipo=RESULTADOS_IMAGENES       email=unisa.resultados.imagenes@gmail.com agent_id=18 team_id=[7, 'Grupo Imagenología']
-
-=== USERS ===
-  ID 5: login=saymon_set@hotmail.com                   name=Simon Alberto Rodriguez Pacheco
-  ID 6: login=oraclefedora@gmail.com                   name=oracle fedora super admin chatwoot
-  ID 7: login=cita.unisa@gmail.com                     name=CITAS MP
-  ID 8: login=unisaseniat@gmail.com                    name=CITAS SEGUROS
-  ID 9: login=unisacomercializacion@gmail.com          name=VENTAS 1
-  ID 10: login=veronica.unisapp@gmail.com               name=VENTAS 2
-  ID 11: login=unisa.resultados.laboratorio@gmail.com   name=RESULTADOS LAB
-  ID 12: login=unisa.resultados.imagenes@gmail.com      name=RESULTADOS IMAGENES
-  ID 13: login=admin@unisasalud.com                     name=Admin UNISA
-  ID 14: login=tecnologiaunisa@gmail.com                name=Daniel Sistemas Unisa
-
-```
-
----
-
-## Assistant (Plan · DeepSeek V4 Flash Free · 11.8s)
-
-_Thinking:_
-
-Now I see the actual data. The user was right to question my earlier table.
-
-**Chatwoot Mappings:**
-| ID | Equipo | Email Chatwoot | Agent ID | Team |
-|---|---|---|---|---|
-| 3 | CITAS_MP | cita.unisa@gmail.com | 14 | Grupo Citas (ID 4) |
-| 4 | CITAS_SEGUROS | unisaseniat@gmail.com | 13 | Grupo Citas (ID 4) |
-| 5 | Ventas_UNISA | unisacomercializacion@gmail.com | 15 | Grupo Ventas (ID 5) |
-| 6 | Ventas_UNISA | veronica.unisapp@gmail.com | 16 | Grupo Ventas (ID 5) |
-| 7 | RESULTADOS_LAB | unisa.resultados.laboratorio@gmail.com | 17 | Grupo Laboratorio (ID 6) |
-| 8 | RESULTADOS_IMAGENES | unisa.resultados.imagenes@gmail.com | 18 | Grupo Imagenología (ID 7) |
-
-**Odoo Users:**
-| ID | Login | Name |
-|---|---|---|
-| 5 | saymon_set@hotmail.com | Simon Alberto Rodriguez Pacheco |
-| 6 | oraclefedora@gmail.com | oracle fedora super admin chatwoot |
-| 7 | cita.unisa@gmail.com | **CITAS MP** |
-| 8 | unisaseniat@gmail.com | **CITAS SEGUROS** |
-| 9 | unisacomercializacion@gmail.com | **VENTAS 1** |
-| 10 | veronica.unisapp@gmail.com | **VENTAS 2** |
-| 11 | unisa.resultados.laboratorio@gmail.com | **RESULTADOS LAB** |
-| 12 | unisa.resultados.imagenes@gmail.com | **RESULTADOS IMAGENES** |
-| 13 | admin@unisasalud.com | Admin UNISA |
-| 14 | tecnologiaunisa@gmail.com | Daniel Sistemas Unisa |
-
-So the matching is straightforward:
-
-| Mapping email | → | `res.users.login` | → | User Name |
-|---|---|---|---|---|
-| cita.unisa@gmail.com | → | cita.unisa@gmail.com | → | **CITAS MP** (ID 7) |
-| unisaseniat@gmail.com | → | unisaseniat@gmail.com | → | **CITAS SEGUROS** (ID 8) |
-| unisacomercializacion@gmail.com | → | unisacomercializacion@gmail.com | → | **VENTAS 1** (ID 9) |
-| veronica.unisapp@gmail.com | → | veronica.unisapp@gmail.com | → | **VENTAS 2** (ID 10) |
-| unisa.resultados.laboratorio@gmail.com | → | unisa.resultados.laboratorio@gmail.com | → | **RESULTADOS LAB** (ID 11) |
-| unisa.resultados.imagenes@gmail.com | → | unisa.resultados.imagenes@gmail.com | → | **RESULTADOS IMAGENES** (ID 12) |
-
-The match is direct: `mapping.chatwoot_agent_email == res.users.login`.
-
-So the user was right - when mapping ID 3 (CITAS_MP, email cita.unisa@gmail.com) is selected, the Odoo user assigned should be **CITAS MP (ID 7)**, not Simon (ID 5). Simon has login saymon_set@hotmail.com which doesn't match any mapping email.
-
-Now I can present the correct architecture table to the user.
-
-Tienes toda la razón. Ahora veo los datos reales:
-
-**El match es directo:** `chatwoot_agent_email` = `res.users.login`:
-
-| Mapping Email | → | `res.users.login` | User Odoo |
-|---|---|---|---|
-| cita.unisa@gmail.com | → | cita.unisa@gmail.com | **CITAS MP** (ID 7) |
-| unisaseniat@gmail.com | → | unisaseniat@gmail.com | **CITAS SEGUROS** (ID 8) |
-| unisacomercializacion@gmail.com | → | unisacomercializacion@gmail.com | **VENTAS 1** (ID 9) |
-| veronica.unisapp@gmail.com | → | veronica.unisapp@gmail.com | **VENTAS 2** (ID 10) |
-| unisa.resultados.laboratorio@gmail.com | → | unisa.resultados.laboratorio@gmail.com | **RESULTADOS LAB** (ID 11) |
-| unisa.resultados.imagenes@gmail.com | → | unisa.resultados.imagenes@gmail.com | **RESULTADOS IMAGENES** (ID 12) |
-
-Simon (ID 5) tiene login `saymon_set@hotmail.com` — no corresponde a ningún mapping. Mi tabla anterior estaba incorrecta.
-
-**Arquitectura final:**
-
-```
-round-robin Chatwoot → mapping elegido
-                           │
-                           ├─ chatwoot_agent_email = cita.unisa@gmail.com
-                           ├─ chatwoot_agent_id = 14 → asignación en Chatwoot
-                           │
-                           └─ buscar res.users donde login = cita.unisa@gmail.com
-                               → user CITAS MP (ID 7)
-                               → lead.user_id = 7
-                               → enviar email a CITAS MP
-```
-
-**Coherencia lograda:** el usuario Odoo que aparece como responsable del lead en CRM es exactamente el mismo agente que tiene la conversación en Chatwoot.
-
-Los cambios son los que describí antes, solo que ahora con los nombres correctos. ¿Aplico?
-
----
-
-## User
-
-aplica
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 5.0s)
-
-_Thinking:_
-
-Now I need to implement the changes. Let me plan the exact edits:
-
-1. **`chatbot_3_crear_el_lead_finish_controller.py`** — Replace `assign_lead_round_robin` call with direct user assignment from mapping email
-2. **`chatbot_session.py`** — Same change
-3. **`chatbot_utils.py`** — The `assign_lead_round_robin` method can stay (or be removed), but the `_send_assignment_email` should be kept since we'll reuse it.
-
-Let me read the current state of both callers to make precise edits.
-
-**Tool: todowrite**
-
-**Input:**
-```json
-{
-  "todos": [
-    {
-      "priority": "high",
-      "content": "Controller: reemplazar assign_lead_round_robin por match por email",
-      "status": "in_progress"
-    },
-    {
-      "priority": "high",
-      "content": "Session.py: mismo cambio",
-      "status": "pending"
-    },
-    {
-      "priority": "high",
-      "content": "Actualizar módulos y probar",
-      "status": "pending"
-    }
-  ]
-}
-```
-
-**Output:**
-```
-[
-  {
-    "content": "Controller: reemplazar assign_lead_round_robin por match por email",
-    "status": "in_progress",
-    "priority": "high"
-  },
-  {
-    "content": "Session.py: mismo cambio",
-    "status": "pending",
-    "priority": "high"
-  },
-  {
-    "content": "Actualizar módulos y probar",
-    "status": "pending",
-    "priority": "high"
-  }
-]
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 3.9s)
-
-_Thinking:_
-
-Let me read the controller around line 244 to see the current context.
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "offset": 230,
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/controllers/chatbot_3_crear_el_lead_finish_controller.py",
-  "limit": 30
-}
-```
-
-**Output:**
-```
-<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/controllers/chatbot_3_crear_el_lead_finish_controller.py</path>
-<type>file</type>
-<content>
-230:                             team = env['crm.team'].sudo().search([], limit=1)
-231:                             _logger.warning(f"No se encontró el equipo {nombre_grupo}, usando {team.name if team else 'ninguno'}")
-232:             
-233:             _logger.info(f"Equipo asignado: {equipo_asignado} -> Grupo: {nombre_grupo or 'Sin grupo'} -> ID: {team.id if team else 'N/A'}")
-234:             
-235:             # Crear lead según el tipo de flujo
-236:             if equipo_asignado in ['RESULTADOS_LAB', 'RESULTADOS_IMAGENES', 'flujo_resultados_laboratorio', 'flujo_resultados_imagenes']:
-237:                 lead = ChatBotUtils.create_resultados_lead(env, data, team, medium, source, campaign, tag)
-238:             else:
-239:                 lead = ChatBotUtils.create_lead(env, data, partner, team, medium, source, campaign, tag)
-240:             
-241:             # Asignación round robin
-242:             team_sudo = team.sudo() if team else None
-243:             if team_sudo and team_sudo.member_ids:
-244:                 ChatBotUtils.assign_lead_round_robin(env, lead, team_sudo)
-245:             
-246:             # Manejar imágenes
-247:             if data.get('solicitar_foto_vat') or data.get('foto_vat') or data.get('solicitar_imagenes_adicionales') or data.get('imagenes_adicionales'):
-248:                 validated_images = ChatBotUtils.validate_image_urls(data)
-249:                 data.update(validated_images)
-250:                 ChatBotUtils.handle_images(env, data, lead, partner)
-251: 
-252:             # Asignación Chatwoot (round-robin + notify)
-253:             account_id_cw = data.get('account_id')
-254:             conversation_id_cw = data.get('conversation_id')
-255:             _logger.info('RR[HTTP] INICIO bloque Chatwoot: account=%s conv=%s team=%s equipo=%s flow=%s',
-256:                          account_id_cw, conversation_id_cw,
-257:                          team.name if team else None, equipo_asignado, name_flow)
-258:             if account_id_cw and conversation_id_cw:
-259:                 try:
-
-(Showing lines 230-259 of 407. Use offset=260 to continue.)
-</content>
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 9.4s)
-
-_Thinking:_
-
-Now I need to:
-1. Replace lines 241-244 (the round robin assignment) with direct match by email
-2. Keep the email notification working
-
-But wait, there's a problem: `mapping_rec` might not exist yet at line 241-244 because the Chatwoot mapping selection happens later (line 260+). Let me see...
-
-Actually, looking at the code flow:
-- Lines 241-244: round robin Odoo (using team_sudo.member_ids)
-- Lines 252+: Chatwoot block (selects mapping, assigns conversation)
-
-The Chatwoot block is inside `if account_id_cw and conversation_id_cw`. So if there's no Chatwoot integration (no account/conversation), the mapping_rec won't exist.
-
-I have two options:
-1. Move the user assignment INSIDE the Chatwoot block (after mapping_rec is selected)
-2. Keep it at line 241 but use `data.get('equipo_asignado')` to find the mapping first
-
-The cleanest approach: move the user assignment inside the Chatwoot block, after the mapping is selected. That way:
-- If no Chatwoot → no mapping → no user assignment (fallback: leave lead unassigned or use old round robin as fallback)
-- If Chatwoot → mapping selected → user = match by email
-
-But the user said to remove round robin Odoo entirely. Let me think about the fallback case (no Chatwoot).
-
-Actually, according to the AGENTS.md, the endpoint `/capturar_lead_http` is called from n8n which always includes `account_id` and `conversation_id`. So the Chatwoot block always executes.
-
-But there's another path: `chatbot_session.py:858` which also calls `assign_lead_round_robin`. That's the RPC path.
-
-Let me check that path too.
-
-For now, let me handle both callers. The simplest approach for the controller:
-
-Replace lines 241-244 with: nothing for now, and add the assignment inside the Chatwoot block after mapping_rec is determined.
-
-Wait, but the lead is created at line 239 and the Chatwoot block is at 252. If we remove the user assignment at 241-244, the lead is created without a user_id for a few lines. That's fine - it's just in memory.
-
-Let me move the user assignment to after mapping_rec is known. But where exactly?
-
-Looking at the code flow after mapping_rec is selected and assigned:
-1. mapping_rec is selected (line 266ish)
-2. Agent details are fetched (line 279)
-3. Mapping dict is built (line 295)
-4. `assign_conversation` is called (line 317)
-5. Result is checked (line 318+)
-
-I should add the user assignment right after mapping_rec is confirmed, inside the `if mapping_rec:` block.
-
-Let me also read the session.py caller to understand both places.
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "offset": 840,
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/models/chatbot_session.py",
-  "limit": 30
-}
-```
-
-**Output:**
-```
-<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/models/chatbot_session.py</path>
-<type>file</type>
-<content>
-840:             mapeo_grupos = self.env['chatbot.flujo']._get_mapeo_equipo_grupo()
-841:             nombre_grupo = mapeo_grupos.get(equipo_asignado)
-842:             team = None
-843:             if nombre_grupo:
-844:                 if teams and nombre_grupo in teams:
-845:                     team = teams[nombre_grupo]
-846:                 else:
-847:                     team = env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
-848:                     if not team:
-849:                         team = env['crm.team'].search([], limit=1)
-850:             
-851:             # Crear lead según el tipo de flujo
-852:             if equipo_asignado in ['RESULTADOS_LAB', 'RESULTADOS_IMAGENES', 'flujo_resultados_laboratorio', 'flujo_resultados_imagenes']:
-853:                 lead = ChatBotUtils.create_resultados_lead(env, datos, team, medium, source, campaign, tag)
-854:             else:
-855:                 lead = ChatBotUtils.create_lead(env, datos, partner, team, medium, source, campaign, tag)
-856:             
-857:             if team and team.member_ids:
-858:                 ChatBotUtils.assign_lead_round_robin(env, lead, team)
-859:             if datos.get('solicitar_foto_vat') or datos.get('foto_vat') or datos.get('solicitar_imagenes_adicionales') or datos.get('imagenes_adicionales'):
-860:                 validated_images = ChatBotUtils.validate_image_urls(datos)
-861:                 datos.update(validated_images)
-862:                 ChatBotUtils.handle_images(env, datos, lead, partner)
-863:             return {'success': True, 'lead_info': {'lead_id': lead.id, 'cliente_id': partner.id}}
-864:         except Exception as e:
-865:             _logger.error("Error en capturar_lead: %s", str(e), exc_info=True)
-866:             return {'success': False, 'error': str(e)}   
-867:     
-868:     def _generar_mensaje_sin_sesion(self, texto_usuario):
-869:         service = self._get_gpt_service()
-
-(Showing lines 840-869 of 928. Use offset=870 to continue.)
-</content>
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 4.2s)
-
-_Thinking:_
-
-I see. Now let me understand the controller flow better. Let me find where mapping_rec is first determined in the controller.
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "offset": 258,
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/controllers/chatbot_3_crear_el_lead_finish_controller.py",
-  "limit": 50
-}
-```
-
-**Output:**
-```
-<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/controllers/chatbot_3_crear_el_lead_finish_controller.py</path>
-<type>file</type>
-<content>
-258:             if account_id_cw and conversation_id_cw:
-259:                 try:
-260:                     _logger.info('RR[HTTP] llamando select_round_robin_mapping con team=%s(%s) equipo=%s flow=%s',
-261:                                  team.name if team else None, team.id if team else None, equipo_asignado, name_flow)
-262:                     mapping_rec = env['chatwoot.mapping'].sudo().select_round_robin_mapping(
-263:                         team=team,
-264:                         equipo_asignado=equipo_asignado,
-265:                         flow_name=name_flow,
-266:                     )
-267:                     if mapping_rec:
-268:                         _logger.info('RR[HTTP] mapping SELECCIONADO: id=%s name=%s agent_id=%s agent_email=%s inbox_id=%s tags=%s',
-269:                                      mapping_rec.id, mapping_rec.name,
-270:                                      mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email,
-271:                                      mapping_rec.chatwoot_inbox_id, mapping_rec.chatwoot_tags)
-272:                     else:
-273:                         _logger.warning('RR[HTTP] NO SE ENCONTRÓ MAPPING - team=%s equipo=%s flow=%s',
-274:                                         team.name if team else None, equipo_asignado, name_flow)
-275: 
-276:                     if mapping_rec:
-277:                         _logger.info('RR[HTTP] consultando get_agent_details account=%s agent_id=%s agent_email=%s',
-278:                                      account_id_cw, mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
-279:                         agent_details = env['chatwoot.client'].get_agent_details(
-280:                             account_id_cw,
-281:                             agent_id=mapping_rec.chatwoot_agent_id or None,
-282:                             agent_email=mapping_rec.chatwoot_agent_email or None,
-283:                         )
-284:                         _logger.info('RR[HTTP] agent_details RESULTADO: %s', agent_details)
-285:                         assigned_agent_name = None
-286:                         assigned_agent_email = None
-287:                         if agent_details:
-288:                             assigned_agent_name = agent_details.get('available_name') or agent_details.get('name') or agent_details.get('email')
-289:                             assigned_agent_email = agent_details.get('email')
-290:                             _logger.info('RR[HTTP] agente resuelto: name=%s email=%s', assigned_agent_name, assigned_agent_email)
-291:                         else:
-292:                             _logger.warning('RR[HTTP] NO se obtuvieron agent_details - agent_id=%s agent_email=%s',
-293:                                             mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
-294: 
-295:                         mapping = {
-296:                             'agent_id': mapping_rec.chatwoot_agent_id or None,
-297:                             'agent_email': mapping_rec.chatwoot_agent_email or None,
-298:                             'inbox_id': mapping_rec.chatwoot_inbox_id or None,
-299:                             'prefer_assign_to_agent': mapping_rec.prefer_assign_to_agent,
-300:                             'tags': [t.strip() for t in (mapping_rec.chatwoot_tags or '').split(',') if t.strip()],
-301:                             'notify_message': (
-302:                                 f"Tu consulta sobre {(mapping_rec.equipo_asignado or '').replace('_', ' ')} ha sido registrada."
-303:                                 + (f"\n👤 Ejecutivo asignado: {assigned_agent_email}" if assigned_agent_email else '')
-304:                             ),
-305:                             'equipo_asignado': mapping_rec.equipo_asignado or '',
-306:                         }
-307:                         _logger.info('RR[HTTP] asignando conversación conv=%s account=%s mapping=%s',
-
-(Showing lines 258-307 of 407. Use offset=308 to continue.)
-</content>
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 6.1s)
-
-_Thinking:_
-
-Now I have a clear picture. I'll make these changes:
-
-### Controller (`chatbot_3_crear_el_lead_finish_controller.py`):
-1. **Remove** lines 241-244 (the old round robin call)
-2. **Add** inside the `if mapping_rec:` block (after line 276, right after the log), assign user by email and send notification
-
-### Session (`chatbot_session.py`):
-1. **Remove** lines 857-858 (the old round robin call)
-2. The session doesn't have a Chatwoot mapping block here because it's NOT in the same function - wait, let me check. The session's `capturar_lead` method at line 857 doesn't handle Chatwoot mapping. The Chatwoot mapping is in `chatbot_session_inherit.py`. So in the session, we need to either:
-   a. Also look up the mapping here (duplicate logic) 
-   b. Or move the user assignment to `chatbot_session_inherit.py` where the mapping is selected
-
-Looking at the code flow:
-- `chatbot_session.py` → `capturar_lead` (creates lead, old RR)
-- `chatbot_session_inherit.py` → `capturar_lead` override (calls `super().capturar_lead()`, then assigns Chatwoot mapping)
-
-So the session inherit overrides `capturar_lead`, calls `super()` which creates the lead in `chatbot_session.py`, then assigns Chatwoot. So inside `chatbot_session_inherit.py`, the mapping is already selected and `mapping_rec` is available.
-
-Let me check that flow in `chatbot_session_inherit.py`.
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/odoo_chatwoot_connector/models/chatbot_session_inherit.py",
-  "limit": 80
-}
-```
-
-**Output:**
-```
-<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/odoo_chatwoot_connector/models/chatbot_session_inherit.py</path>
-<type>file</type>
-<content>
-1: import json
-2: import logging
-3: from odoo import models, fields
-4: 
-5: _logger = logging.getLogger(__name__)
-6: 
-7: 
-8: class ChatbotSessionInherit(models.Model):
-9:     _inherit = 'chatbot.session'
-10: 
-11:     def capturar_lead(self, datos):
-12:         res = super(ChatbotSessionInherit, self).capturar_lead(datos)
-13:         try:
-14:             account_id = datos.get('account_id')
-15:             conversation_id = datos.get('conversation_id')
-16:             mapping_rec = None
-17:             lead = None
-18: 
-19:             # Try to find lead id from the result and get its team
-20:             lead_id = None
-21:             try:
-22:                 lead_id = res.get('lead_info', {}).get('lead_id') or res.get('lead_id')
-23:             except Exception:
-24:                 lead_id = None
-25: 
-26:             _logger.info('RR[session] INICIO: lead_id=%s account=%s conv=%s',
-27:                          lead_id, account_id, conversation_id)
-28: 
-29:             team = None
-30:             if lead_id:
-31:                 lead = self.env['crm.lead'].sudo().browse(int(lead_id))
-32:                 if lead and lead.exists():
-33:                     team = lead.team_id
-34:                     _logger.info('RR[session] lead encontrado: id=%s team=%s(%s)',
-35:                                  lead.id, team.name if team else None, team.id if team else None)
-36:                 else:
-37:                     _logger.warning('RR[session] lead_id=%s no existe en BD', lead_id)
-38:             else:
-39:                 _logger.warning('RR[session] no se pudo extraer lead_id de res=%s', res)
-40: 
-41:             equipo = datos.get('equipo_asignado') or (self and getattr(self, 'equipo_asignado', None))
-42:             flow_name = datos.get('flow_name') or datos.get('name_flow')
-43:             _logger.info('RR[session] datos: equipo=%s flow_name=%s team=%s', equipo, flow_name, team.name if team else None)
-44: 
-45:             # Select mapping with round-robin across mappings that share the same flow/team
-46:             _logger.info('RR[session] llamando select_round_robin_mapping team=%s equipo=%s flow=%s',
-47:                          team.name if team else None, equipo, flow_name)
-48:             mapping_rec = self.env['chatwoot.mapping'].sudo().select_round_robin_mapping(
-49:                 team=team,
-50:                 equipo_asignado=equipo,
-51:                 flow_name=flow_name,
-52:             )
-53: 
-54:             if mapping_rec:
-55:                 _logger.info('RR[session] mapping SELECCIONADO: id=%s name=%s agent_id=%s agent_email=%s inbox_id=%s',
-56:                              mapping_rec.id, mapping_rec.name,
-57:                              mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email,
-58:                              mapping_rec.chatwoot_inbox_id)
-59:             else:
-60:                 _logger.warning('RR[session] NO SE ENCONTRÓ MAPPING - team=%s equipo=%s flow=%s',
-61:                                 team.name if team else None, equipo, flow_name)
-62: 
-63:             if mapping_rec and account_id and conversation_id:
-64:                 _logger.info('RR[session] consultando get_agent_details account=%s agent_id=%s agent_email=%s',
-65:                              account_id, mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
-66:                 agent_details = self.env['chatwoot.client'].get_agent_details(
-67:                     account_id,
-68:                     agent_id=mapping_rec.chatwoot_agent_id or None,
-69:                     agent_email=mapping_rec.chatwoot_agent_email or None,
-70:                 )
-71:                 _logger.info('RR[session] agent_details RESULTADO: %s', agent_details)
-72:                 assigned_agent_name = None
-73:                 assigned_agent_email = None
-74:                 if agent_details:
-75:                     assigned_agent_name = agent_details.get('available_name') or agent_details.get('name') or agent_details.get('email')
-76:                     assigned_agent_email = agent_details.get('email')
-77:                     _logger.info('RR[session] agente resuelto: name=%s email=%s', assigned_agent_name, assigned_agent_email)
-78:                 else:
-79:                     _logger.warning('RR[session] NO se obtuvieron agent_details - agent_id=%s agent_email=%s',
-80:                                     mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
-
-(Showing lines 1-80 of 152. Use offset=81 to continue.)
-</content>
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 7.9s)
-
-_Thinking:_
-
-Now I see the full picture. In both callers:
-
-**Controller** (`chatbot_3_crear_el_lead_finish_controller.py`):
-- Line 241-244: Old round robin Odoo
-- Line 262-266: mapping_rec is selected
-- Line 276-306: Within `if mapping_rec:`, agent details and mapping dict built
-
-**Session inherit** (`chatbot_session_inherit.py`):
-- Line 857-858 (in super): Old round robin Odoo
-- Line 48-52: mapping_rec is selected
-- Line 63+: Within `if mapping_rec and account_id and conversation_id:`
-
-So the plan:
-1. **Controller**: Remove lines 241-244. Add user assignment inside `if mapping_rec:` block (after line 276, before agent details).
-2. **Session inherit**: The super call creates the lead and does the old RR. I need to either modify the super to not do RR, or handle it here. Since the user wants to remove the old RR, I should modify `chatbot_session.py` line 857-858 to not call it. Then in `chatbot_session_inherit.py`, add the user assignment inside the `if mapping_rec:` block.
-
-Actually, simplest approach:
-- In `chatbot_session.py` line 857-858: comment out or remove the round robin call
-- In both callers (controller and session inherit), inside the `if mapping_rec:` block, add:
-  ```python
-  user = env['res.users'].sudo().search([('login', '=', mapping_rec.chatwoot_agent_email)], limit=1)
-  if user and lead and lead.exists():
-      lead.write({'user_id': user.id})
-      # Keep the email notification logic
-  ```
-
-Let me do all edits now.
-
-Perfecto. Ahora veo ambos caminos. Cambios:
-
-1. **Controller**: remover `assign_lead_round_robin` y agregar match por email dentro del bloque `if mapping_rec:`
-2. **Session.py**: remover `assign_lead_round_robin`
-3. **Session inherit**: agregar match por email dentro de `if mapping_rec:`
-
-**Tool: edit**
-
-**Input:**
-```json
-{
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/controllers/chatbot_3_crear_el_lead_finish_controller.py",
-  "oldString": "            # Asignación round robin\n            team_sudo = team.sudo() if team else None\n            if team_sudo and team_sudo.member_ids:\n                ChatBotUtils.assign_lead_round_robin(env, lead, team_sudo)\n            \n            # Manejar imágenes",
-  "newString": "            # Manejar imágenes"
-}
-```
-
-**Output:**
-```
-Edit applied successfully.
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 3.8s)
-
-_Thinking:_
-
-Now add the user assignment inside the `if mapping_rec:` block in the controller. Let me find the right spot - right after the `if mapping_rec:` (line 276) and before the agent details fetch.
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "offset": 260,
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/controllers/chatbot_3_crear_el_lead_finish_controller.py",
-  "limit": 25
-}
-```
-
-**Output:**
-```
-<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/controllers/chatbot_3_crear_el_lead_finish_controller.py</path>
-<type>file</type>
-<content>
-260:                         flow_name=name_flow,
-261:                     )
-262:                     if mapping_rec:
-263:                         _logger.info('RR[HTTP] mapping SELECCIONADO: id=%s name=%s agent_id=%s agent_email=%s inbox_id=%s tags=%s',
-264:                                      mapping_rec.id, mapping_rec.name,
-265:                                      mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email,
-266:                                      mapping_rec.chatwoot_inbox_id, mapping_rec.chatwoot_tags)
-267:                     else:
-268:                         _logger.warning('RR[HTTP] NO SE ENCONTRÓ MAPPING - team=%s equipo=%s flow=%s',
-269:                                         team.name if team else None, equipo_asignado, name_flow)
-270: 
-271:                     if mapping_rec:
-272:                         _logger.info('RR[HTTP] consultando get_agent_details account=%s agent_id=%s agent_email=%s',
-273:                                      account_id_cw, mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
-274:                         agent_details = env['chatwoot.client'].get_agent_details(
-275:                             account_id_cw,
-276:                             agent_id=mapping_rec.chatwoot_agent_id or None,
-277:                             agent_email=mapping_rec.chatwoot_agent_email or None,
-278:                         )
-279:                         _logger.info('RR[HTTP] agent_details RESULTADO: %s', agent_details)
-280:                         assigned_agent_name = None
-281:                         assigned_agent_email = None
-282:                         if agent_details:
-283:                             assigned_agent_name = agent_details.get('available_name') or agent_details.get('name') or agent_details.get('email')
-284:                             assigned_agent_email = agent_details.get('email')
-
-(Showing lines 260-284 of 402. Use offset=285 to continue.)
-</content>
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 6.2s)
-
-_Thinking:_
-
-I need to add the user assignment inside the second `if mapping_rec:` block (starting at line 271). I'll add it right after the `_logger.info` at line 272, before the agent details fetch.
-
-I also need to handle the email notification for the user. Currently `_send_assignment_email` is in `ChatBotUtils`. Let me add the user assignment and notification.
-
-**Tool: edit**
-
-**Input:**
-```json
-{
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/controllers/chatbot_3_crear_el_lead_finish_controller.py",
-  "oldString": "                    if mapping_rec:\n                        _logger.info('RR[HTTP] consultando get_agent_details account=%s agent_id=%s agent_email=%s',\n                                     account_id_cw, mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)\n                        agent_details = env['chatwoot.client'].get_agent_details(",
-  "newString": "                    if mapping_rec:\n                        # Asignar usuario Odoo por email del mapping Chatwoot\n                        user = env['res.users'].sudo().search([\n                            ('login', '=', mapping_rec.chatwoot_agent_email)\n                        ], limit=1)\n                        if user and lead and lead.exists():\n                            lead.write({'user_id': user.id})\n                            ChatBotUtils._send_assignment_email(env, lead, user)\n                            _logger.info('RR[HTTP] lead user_id asignado: user=%s(%s) email=%s',\n                                         user.name, user.id, user.login)\n                        else:\n                            _logger.warning('RR[HTTP] no se encontró user Odoo para email=%s',\n                                            mapping_rec.chatwoot_agent_email)\n\n                        _logger.info('RR[HTTP] consultando get_agent_details account=%s agent_id=%s agent_email=%s',\n                                     account_id_cw, mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)\n                        agent_details = env['chatwoot.client'].get_agent_details("
-}
-```
-
-**Output:**
-```
-Edit applied successfully.
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 4.2s)
-
-_Thinking:_
-
-Now do the same for `chatbot_session.py` — remove the old round robin call.
-
-**Tool: edit**
-
-**Input:**
-```json
-{
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/models/chatbot_session.py",
-  "oldString": "            if team and team.member_ids:\n                ChatBotUtils.assign_lead_round_robin(env, lead, team)\n            if datos.get('solicitar_foto_vat')",
-  "newString": "            if datos.get('solicitar_foto_vat')"
-}
-```
-
-**Output:**
-```
-Edit applied successfully.
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 4.1s)
-
-_Thinking:_
-
-Now add the user assignment in `chatbot_session_inherit.py` inside the `if mapping_rec and account_id and conversation_id:` block. Let me find the right spot.
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "offset": 60,
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/odoo_chatwoot_connector/models/chatbot_session_inherit.py",
-  "limit": 25
-}
-```
-
-**Output:**
-```
-<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/odoo_chatwoot_connector/models/chatbot_session_inherit.py</path>
-<type>file</type>
-<content>
-60:                 _logger.warning('RR[session] NO SE ENCONTRÓ MAPPING - team=%s equipo=%s flow=%s',
-61:                                 team.name if team else None, equipo, flow_name)
-62: 
-63:             if mapping_rec and account_id and conversation_id:
-64:                 _logger.info('RR[session] consultando get_agent_details account=%s agent_id=%s agent_email=%s',
-65:                              account_id, mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
-66:                 agent_details = self.env['chatwoot.client'].get_agent_details(
-67:                     account_id,
-68:                     agent_id=mapping_rec.chatwoot_agent_id or None,
-69:                     agent_email=mapping_rec.chatwoot_agent_email or None,
-70:                 )
-71:                 _logger.info('RR[session] agent_details RESULTADO: %s', agent_details)
-72:                 assigned_agent_name = None
-73:                 assigned_agent_email = None
-74:                 if agent_details:
-75:                     assigned_agent_name = agent_details.get('available_name') or agent_details.get('name') or agent_details.get('email')
-76:                     assigned_agent_email = agent_details.get('email')
-77:                     _logger.info('RR[session] agente resuelto: name=%s email=%s', assigned_agent_name, assigned_agent_email)
-78:                 else:
-79:                     _logger.warning('RR[session] NO se obtuvieron agent_details - agent_id=%s agent_email=%s',
-80:                                     mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
-81: 
-82:                 equipo_legible = (mapping_rec.equipo_asignado or '').replace('_', ' ')
-83:                 if assigned_agent_email:
-84:                     notify_msg = f"Tu consulta sobre {equipo_legible} ha sido registrada.\n👤 Ejecutivo asignado: {assigned_agent_email}"
-
-(Showing lines 60-84 of 152. Use offset=85 to continue.)
-</content>
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 5.7s)
-
-_Thinking:_
-
-I need to add the user assignment in `chatbot_session_inherit.py` right at the beginning of the `if mapping_rec and account_id and conversation_id:` block, before the agent details fetch.
-
-**Tool: edit**
-
-**Input:**
-```json
-{
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/odoo_chatwoot_connector/models/chatbot_session_inherit.py",
-  "oldString": "            if mapping_rec and account_id and conversation_id:\n                _logger.info('RR[session] consultando get_agent_details account=%s agent_id=%s agent_email=%s',\n                             account_id, mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)",
-  "newString": "            if mapping_rec and account_id and conversation_id:\n                # Asignar usuario Odoo por email del mapping Chatwoot\n                user = self.env['res.users'].sudo().search([\n                    ('login', '=', mapping_rec.chatwoot_agent_email)\n                ], limit=1)\n                if user and lead and lead.exists():\n                    lead.write({'user_id': user.id})\n                    # Reuse _send_assignment_email from ChatBotUtils\n                    from ..controllers.chatbot_utils import ChatBotUtils\n                    ChatBotUtils._send_assignment_email(self.env, lead, user)\n                    _logger.info('RR[session] lead user_id asignado: user=%s(%s) email=%s',\n                                 user.name, user.id, user.login)\n                else:\n                    _logger.warning('RR[session] no se encontró user Odoo para email=%s',\n                                    mapping_rec.chatwoot_agent_email)\n\n                _logger.info('RR[session] consultando get_agent_details account=%s agent_id=%s agent_email=%s',\n                             account_id, mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)"
-}
-```
-
-**Output:**
-```
-Edit applied successfully.
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 6.9s)
-
-_Thinking:_
-
-Wait, importing from controllers inside a model file is not ideal in Odoo. The `ChatBotUtils._send_assignment_email` is a static method in `chatbot_utils.py` inside `ai_chatbot_1_portal/controllers/`. Let me check if this import will work.
-
-Actually, Odoo modules can import from each other as long as the dependencies are declared. But importing from a controller in a model is unusual. Let me think of a better approach.
-
-Option 1: Import at the top of the file
-Option 2: Move the email logic directly inline instead of importing
-
-Actually, the cleanest approach for the module independence: `odoo_chatwoot_connector` depends on `ai_chatbot_1_portal` (it inherits `chatbot.session`). So importing from `ai_chatbot_1_portal.controllers.chatbot_utils` should work.
-
-But controllers in Odoo are not always loaded as regular Python modules in the same way. Let me use a different approach - just inline the email sending logic.
-
-Actually, let me check if `ChatBotUtils` is registered in `__init__.py` of the controllers module. Even if it is, importing from a controllers file inside a models file is considered bad practice in Odoo.
-
-A better approach: duplicate the minimal email logic inline, or better yet, keep the `_send_assignment_email` logic but call it differently. 
-
-Actually, the simplest: just inline the email notification code directly. It's just a `mail.thread` message_post call.
-
-Let me read the `_send_assignment_email` method to see what it does.
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "offset": 637,
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/controllers/chatbot_utils.py",
-  "limit": 40
-}
-```
-
-**Output:**
-```
-<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/controllers/chatbot_utils.py</path>
-<type>file</type>
-<content>
-637:     @staticmethod
-638:     def _send_assignment_email(env, lead, user):
-639:         """Enviar email de notificación al usuario asignado"""
-640:         if not user.partner_id.email:
-641:             _logger.warning(f"Usuario {user.name} no tiene email, no se envía notificación")
-642:             return
-643:         try:
-644:             subject = f"Nuevo lead asignado: {lead.name}"
-645:             servicio = lead.name.split(' - ')[0] if ' - ' in lead.name else lead.name
-646:             body = (
-647:                 f"<p>Hola {user.name},</p>"
-648:                 f"<p>Se te ha asignado un nuevo lead generado desde el chatbot de UNISA.</p>"
-649:                 f"<br/>"
-650:                 f"<p><strong>Datos del paciente:</strong></p>"
-651:                 f"<ul>"
-652:                 f"<li><strong>Nombre:</strong> {lead.contact_name or ''}</li>"
-653:                 f"<li><strong>Teléfono:</strong> {lead.phone or ''}</li>"
-654:                 f"<li><strong>Email:</strong> {lead.email_from or ''}</li>"
-655:                 f"<li><strong>Servicio:</strong> {servicio}</li>"
-656:                 f"<li><strong>Equipo:</strong> {lead.team_id.name or 'Sin equipo'}</li>"
-657:                 f"</ul>"
-658:                 f"<p>Por favor, contacta al paciente a la brevedad para dar seguimiento a su solicitud.</p>"
-659:                 f"<p>Saludos,<br/><strong>Sistema UNISA Salud</strong></p>"
-660:             )
-661:             env['mail.mail'].sudo().create({
-662:                 'subject': subject,
-663:                 'body_html': body,
-664:                 'email_to': user.partner_id.email,
-665:                 'email_from': user.company_id.email or '',
-666:                 'model': 'crm.lead',
-667:                 'res_id': lead.id,
-668:             })
-669:             _logger.info(f"Email de notificación creado para {user.name} ({user.partner_id.email}) por lead {lead.id}")
-670:         except Exception as e:
-671:             _logger.warning(f"Error creando email de asignación: {str(e)}")
-672: 
-673:     @staticmethod
-674:     def handle_images(env, data, lead, partner):
-675:         """Manejar imágenes adjuntas y publicarlas en el Chatter"""
-676:         _logger.info("Iniciando handle_images para Lead %s y Partner %s", lead.id, partner.id)
-
-(Showing lines 637-676 of 973. Use offset=677 to continue.)
-</content>
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 7.7s)
-
-_Thinking:_
-
-The email logic is simple. Instead of importing from the controller (which is bad practice in Odoo), I'll just inline it in `chatbot_session_inherit.py`. Let me update the code.
-
-**Tool: edit**
-
-**Input:**
-```json
-{
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/odoo_chatwoot_connector/models/chatbot_session_inherit.py",
-  "oldString": "                # Asignar usuario Odoo por email del mapping Chatwoot\n                user = self.env['res.users'].sudo().search([\n                    ('login', '=', mapping_rec.chatwoot_agent_email)\n                ], limit=1)\n                if user and lead and lead.exists():\n                    lead.write({'user_id': user.id})\n                    # Reuse _send_assignment_email from ChatBotUtils\n                    from ..controllers.chatbot_utils import ChatBotUtils\n                    ChatBotUtils._send_assignment_email(self.env, lead, user)\n                    _logger.info('RR[session] lead user_id asignado: user=%s(%s) email=%s',\n                                 user.name, user.id, user.login)\n                else:\n                    _logger.warning('RR[session] no se encontró user Odoo para email=%s',\n                                    mapping_rec.chatwoot_agent_email)",
-  "newString": "                # Asignar usuario Odoo por email del mapping Chatwoot\n                user = self.env['res.users'].sudo().search([\n                    ('login', '=', mapping_rec.chatwoot_agent_email)\n                ], limit=1)\n                if user and lead and lead.exists():\n                    lead.write({'user_id': user.id})\n                    _logger.info('RR[session] lead user_id asignado: user=%s(%s) email=%s',\n                                 user.name, user.id, user.login)\n                    # Enviar email de notificación\n                    if user.partner_id.email:\n                        try:\n                            subject = f\"Nuevo lead asignado: {lead.name}\"\n                            servicio = lead.name.split(' - ')[0] if ' - ' in lead.name else lead.name\n                            body = (\n                                f\"<p>Hola {user.name},</p>\"\n                                f\"<p>Se te ha asignado un nuevo lead generado desde el chatbot de UNISA.</p>\"\n                                f\"<br/>\"\n                                f\"<p><strong>Datos del paciente:</strong></p>\"\n                                f\"<ul>\"\n                                f\"<li><strong>Nombre:</strong> {lead.contact_name or ''}</li>\"\n                                f\"<li><strong>Teléfono:</strong> {lead.phone or ''}</li>\"\n                                f\"<li><strong>Email:</strong> {lead.email_from or ''}</li>\"\n                                f\"<li><strong>Servicio:</strong> {servicio}</li>\"\n                                f\"<li><strong>Equipo:</strong> {lead.team_id.name or 'Sin equipo'}</li>\"\n                                f\"</ul>\"\n                                f\"<p>Por favor, contacta al paciente a la brevedad para dar seguimiento a su solicitud.</p>\"\n                                f\"<p>Saludos,<br/><strong>Sistema UNISA Salud</strong></p>\"\n                            )\n                            self.env['mail.mail'].sudo().create({\n                                'subject': subject,\n                                'body_html': body,\n                                'email_to': user.partner_id.email,\n                                'email_from': user.company_id.email or '',\n                                'model': 'crm.lead',\n                                'res_id': lead.id,\n                            })\n                            _logger.info('RR[session] email de notificación creado para %s (%s)',\n                                         user.name, user.partner_id.email)\n                        except Exception as e:\n                            _logger.warning('RR[session] error creando email: %s', e)\n                else:\n                    _logger.warning('RR[session] no se encontró user Odoo para email=%s',\n                                    mapping_rec.chatwoot_agent_email)"
-}
-```
-
-**Output:**
-```
-Edit applied successfully.
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 4.1s)
-
-_Thinking:_
-
-Now update modules and test.
-
-**Tool: todowrite**
-
-**Input:**
-```json
-{
-  "todos": [
-    {
-      "priority": "high",
-      "content": "Controller: reemplazar assign_lead_round_robin por match por email",
-      "status": "completed"
-    },
-    {
-      "priority": "high",
-      "content": "Session.py: remover assign_lead_round_robin",
-      "status": "completed"
-    },
-    {
-      "priority": "high",
-      "content": "Session inherit: agregar match por email",
-      "status": "completed"
-    },
-    {
-      "priority": "high",
-      "content": "Actualizar módulos y probar",
-      "status": "in_progress"
-    }
-  ]
-}
-```
-
-**Output:**
-```
-[
-  {
-    "content": "Controller: reemplazar assign_lead_round_robin por match por email",
-    "status": "completed",
-    "priority": "high"
-  },
-  {
-    "content": "Session.py: remover assign_lead_round_robin",
-    "status": "completed",
-    "priority": "high"
-  },
-  {
-    "content": "Session inherit: agregar match por email",
-    "status": "completed",
-    "priority": "high"
-  },
-  {
-    "content": "Actualizar módulos y probar",
-    "status": "in_progress",
-    "priority": "high"
-  }
-]
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 46.8s)
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "fuser -k 38069/tcp 2>/dev/null; sleep 2\nsource /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/.venv/bin/activate\nnohup python3 /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo-bin \\\n  -c /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/clientes/integraiadev_19/conf/odoo.cfg \\\n  -u odoo_chatwoot_connector -u ai_chatbot_1_portal > /tmp/update_coherente.txt 2>&1 &\necho \"PID: $!\"\nsleep 40\nss -tlnp | grep 38069 && echo \"Ready\"",
-  "description": "Restart with module update",
-  "timeout": 70000
-}
-```
-
-**Output:**
-```
- 3334787 3334849 3334851PID: 3676736
-LISTEN 0      16         127.0.0.1:38069      0.0.0.0:*    users:(("python3",pid=3677196,fd=7),("python3",pid=3677194,fd=7),("python3",pid=3676736,fd=7))
-Ready
-
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 6.0s)
-
-_Thinking:_
-
-Let me check the log for any errors during update.
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "grep -E \"ERROR|CRITICAL|Traceback|No se encontró user Odoo\" /home/odoo/develop/modulos_odoo/clientes/integraiadev_19/log/odoo.log | tail -5",
-  "description": "Check for errors in log"
-}
-```
-
-**Output:**
-```
-2026-06-08 23:36:57,876 3333237 DEBUG dbintegraiadev_19 odoo.addons.base.models.ir_module: docutils' system message present: <system_message level="3" line="177" source="<string>" type="ERROR"><paragraph>Unexpected indentation.</paragraph></system_message> 
-Traceback (most recent call last):
-Traceback (most recent call last):
-2026-06-09 11:28:07,577 3676736 DEBUG dbintegraiadev_19 odoo.addons.base.models.ir_module: docutils' system message present: <system_message level="3" line="177" source="<string>" type="ERROR"><paragraph>Unexpected indentation.</paragraph></system_message> 
-Traceback (most recent call last):
-
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 7.1s)
-
-_Thinking:_
-
-Those are just docutils warnings, not real errors. Let me test the endpoint.
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "curl -s -X POST \"http://127.0.0.1:38069/ai_chatbot_1_portal/capturar_lead_http\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"solicitar_vat\":\"V-test-coherente\",\"solicitar_phone\":\"+584249999982\",\"solicitar_name\":\"Test Coherente\",\"solicitar_birthdate\":\"1990-01-01\",\"solicitar_email\":\"coherente@test.com\",\"consentimiento\":true,\"equipo_asignado\":\"CITAS_MP\",\"account_id\":1,\"conversation_id\":10003,\"plataforma\":\"whatsapp\"}' | python3 -c \"import sys,json; d=json.load(sys.stdin); print('lead:', d.get('lead_id'))\"",
-  "description": "Test endpoint",
-  "timeout": 15000
-}
-```
-
-**Output:**
-```
-lead: 190
-
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 4.6s)
-
-_Thinking:_
-
-Lead 190 was created. Let me verify it was assigned to the correct user (CITAS MP ID 7) by checking the logs.
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "grep \"RR\\[HTTP\\] lead user_id asignado\" /home/odoo/develop/modulos_odoo/clientes/integraiadev_19/log/odoo.log | tail -3",
-  "description": "Check user assignment in log"
-}
-```
-
-**Output:**
-```
-(no output)
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 4.7s)
-
-_Thinking:_
-
-Hmm, no output. Let me check the log more broadly for this request.
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "grep \"10003\" /home/odoo/develop/modulos_odoo/clientes/integraiadev_19/log/odoo.log | tail -10",
-  "description": "Check conversation 10003 in logs"
-}
-```
-
-**Output:**
-```
-2026-06-09 11:28:37,344 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: Datos recibidos para crear cita: {"solicitar_vat": "V-test-coherente", "solicitar_phone": "+584249999982", "solicitar_name": "Test Coherente", "solicitar_birthdate": "1990-01-01", "solicitar_email": "coherente@test.com", "consentimiento": true, "equipo_asignado": "CITAS_MP", "account_id": 1, "conversation_id": 10003, "plataforma": "whatsapp"} 
-2026-06-09 11:28:37,844 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: RR[HTTP] INICIO bloque Chatwoot: account=1 conv=10003 team=Grupo Citas equipo=CITAS_MP flow=None 
-
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 4.1s)
-
-_Thinking:_
-
-The request was received but there's no log about the mapping or user assignment after that. Let me check more logs further in the file.
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "grep -A3 \"10003\" /home/odoo/develop/modulos_odoo/clientes/integraiadev_19/log/odoo.log | tail -30",
-  "description": "Check logs around conversation 10003"
-}
-```
-
-**Output:**
-```
-2026-06-09 11:28:37,344 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: Datos recibidos para crear cita: {"solicitar_vat": "V-test-coherente", "solicitar_phone": "+584249999982", "solicitar_name": "Test Coherente", "solicitar_birthdate": "1990-01-01", "solicitar_email": "coherente@test.com", "consentimiento": true, "equipo_asignado": "CITAS_MP", "account_id": 1, "conversation_id": 10003, "plataforma": "whatsapp"} 
-2026-06-09 11:28:37,344 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: Email recibido: coherente@test.com 
-2026-06-09 11:28:37,344 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: Consentimiento recibido: True 
-2026-06-09 11:28:37,359 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: === BUSCANDO PARTNER POR TELÉFONO === 
---
-2026-06-09 11:28:37,844 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: RR[HTTP] INICIO bloque Chatwoot: account=1 conv=10003 team=Grupo Citas equipo=CITAS_MP flow=None 
-2026-06-09 11:28:37,844 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: RR[HTTP] llamando select_round_robin_mapping con team=Grupo Citas(4) equipo=CITAS_MP flow=None 
-2026-06-09 11:28:37,844 3677194 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_mapping: RR[mapping] INICIO: team=crm.team(4,) equipo_asignado=CITAS_MP flow_name=None 
-2026-06-09 11:28:37,847 3677194 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_mapping: RR[mapping] candidates activos totales: [3, 4, 5, 6, 7, 8] 
-
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 4.2s)
-
-_Thinking:_
-
-Let me see more of the log after these lines.
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "grep \"10003\" /home/odoo/develop/modulos_odoo/clientes/integraiadev_19/log/odoo.log -A20 | tail -40",
-  "description": "Full log for conversation 10003"
-}
-```
-
-**Output:**
-```
-2026-06-09 11:28:37,359 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: === BUSCANDO PARTNER POR TELÉFONO === 
-2026-06-09 11:28:37,359 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: Teléfono original: +584249999982 
-2026-06-09 11:28:37,359 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: Dígitos extraídos: 584249999982 
-2026-06-09 11:28:37,359 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: Estrategia 1 - Buscando por sufijo: 4249999982 
-2026-06-09 11:28:37,363 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: Estrategia 2 - Buscando por dígitos completos: 584249999982 
-2026-06-09 11:28:37,367 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: Estrategia 3 - Buscando por últimos 8 dígitos: 49999982 
-2026-06-09 11:28:37,370 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: Estrategia 4 - Búsqueda manual por comparación de dígitos 
-2026-06-09 11:28:37,383 3677194 WARNING dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: ❌ No se encontró partner para teléfono: +584249999982 
-2026-06-09 11:28:37,544 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: Contacto CREADO: ID 69 - Datos: ['name', 'vat', 'phone', 'email', 'type', 'company_type', 'consentimiento_whatsapp', 'birthdate', 'properties_base_definition_id'] 
-2026-06-09 11:28:37,576 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: ✅ UTM configurado para plataforma: WhatsApp 
-2026-06-09 11:28:37,586 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: ✅ Equipo UNISA encontrado: Grupo Citas (ID: 4) 
-2026-06-09 11:28:37,590 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: ✅ Equipo UNISA encontrado: Grupo Ventas (ID: 5) 
-2026-06-09 11:28:37,595 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: ✅ Equipo UNISA encontrado: Grupo Laboratorio (ID: 6) 
-2026-06-09 11:28:37,603 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: ✅ Equipo UNISA encontrado: Grupo Imagenología (ID: 7) 
-2026-06-09 11:28:37,610 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils: ✅ Equipo UNISA encontrado: Grupo Informativo (ID: 8) 
-2026-06-09 11:28:37,611 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: Equipo asignado: CITAS_MP -> Grupo: Grupo Citas -> ID: 4 
-2026-06-09 11:28:37,668 3677194 DEBUG dbintegraiadev_19 odoo.domains: The domain condition [('user_ids', 'in', 2)] should have a list value. 
-2026-06-09 11:28:37,693 3677194 INFO dbintegraiadev_19 odoo.addons.phone_validation.tools.phone_validation: The `phonenumbers` Python module is not installed, contact numbers will not be verified. Please install the `phonenumbers` Python module. 
---
-2026-06-09 11:28:37,844 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: RR[HTTP] INICIO bloque Chatwoot: account=1 conv=10003 team=Grupo Citas equipo=CITAS_MP flow=None 
-2026-06-09 11:28:37,844 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: RR[HTTP] llamando select_round_robin_mapping con team=Grupo Citas(4) equipo=CITAS_MP flow=None 
-2026-06-09 11:28:37,844 3677194 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_mapping: RR[mapping] INICIO: team=crm.team(4,) equipo_asignado=CITAS_MP flow_name=None 
-2026-06-09 11:28:37,847 3677194 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_mapping: RR[mapping] candidates activos totales: [3, 4, 5, 6, 7, 8] 
-2026-06-09 11:28:37,851 3677194 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_mapping: RR[mapping] filtrados por equipo_asignado=CITAS_MP: [3] 
-2026-06-09 11:28:37,854 3677194 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_mapping: RR[mapping] rr_key=odoo_chatwoot_connector_last_mapping_4_CITAS_MP last_id=9 candidates=[3] 
-2026-06-09 11:28:37,854 3677194 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_mapping: RR[mapping] last_id=9 no está en candidates_ids=[3], usando primero 
-2026-06-09 11:28:37,860 3677194 DEBUG dbintegraiadev_19 odoo.registry: Invalidating stable model caches from write /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/addons/base/models/ir_config_parameter.py:115 
-2026-06-09 11:28:37,862 3677194 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_mapping: RR[mapping] MAPPING SELECCIONADO: id=3 name=CITAS_MP (3) agent_id=14 agent_email=cita.unisa@gmail.com inbox_id=7 
-2026-06-09 11:28:37,862 3677194 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_mapping: RR[mapping] nuevo last_id guardado=3 
-2026-06-09 11:28:37,862 3677194 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_mapping: RR[mapping] FIN 
-2026-06-09 11:28:37,862 3677194 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: RR[HTTP] mapping SELECCIONADO: id=3 name=CITAS_MP (3) agent_id=14 agent_email=cita.unisa@gmail.com inbox_id=7 tags=Citas 
-2026-06-09 11:28:37,989 3677194 DEBUG dbintegraiadev_19 odoo.domains: The domain condition [('user_ids', 'in', 3)] should have a list value. 
-2026-06-09 11:28:38,028 3677194 INFO dbintegraiadev_19 odoo.addons.base.models.ir_rule: Access Denied by record rules for operation: read on record ids: [40], uid: 3, model: res.partner 
-2026-06-09 11:28:38,051 3677194 ERROR dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: RR[HTTP] Error asignando a Chatwoot desde HTTP: Failed to write field mail.message.partner_ids
-Uh-oh! Looks like you have stumbled upon some top-secret records.
-
-Sorry, Public user (id=3) doesn't have 'read' access to:
-- Contact (res.partner)
-
-If you really, really need access, perhaps you can win over your friendly administrator with a batch of freshly baked cookies. 
-
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 10.6s)
-
-_Thinking:_
-
-There's an error! The issue is that when the controller tries to access `lead.contact_name` (or similarly `lead.partner_id`) inside the email body construction, it's running in the public user context (uid=3) and doesn't have read access to `res.partner`.
-
-The error is:
-```
-Failed to write field mail.message.partner_ids
-```
-
-This happens in `mail.mail.sudo().create({...})` because when creating a mail, Odoo tries to add the recipient as a partner, and the partner ID is from `user.partner_id` which is a `res.partner` record that the public user can't read.
-
-Wait, actually the error says "read on record ids: [40], uid: 3, model: res.partner". So the public user can't read the partner record.
-
-The fix: I need to add `.sudo()` when accessing `user.partner_id.email` and `user.company_id.email` in the email creation. Let me look at the code I added to the controller.
-
-Actually, the issue is more nuanced. The `lead` object is already in the env of the public user. When we try to read `lead.contact_name` or `lead.phone`, those might reference the partner. Let me check.
-
-But actually, the error specifically says "read on record ids: [40], uid: 3, model: res.partner". The partner ID 40 is probably the `user.partner_id`. Let me look at the existing `_send_assignment_email` method:
-
-```python
-env['mail.mail'].sudo().create({...})
-'email_to': user.partner_id.email,
-'email_from': user.company_id.email or '',
-```
-
-The issue is that `user.partner_id.email` is accessed in the public user's env. But `user` is searched with `.sudo()`:
-```python
-user = env['res.users'].sudo().search([...], limit=1)
-```
-
-So `user` itself is sudo'd, but `user.partner_id` might still be in the non-sudo env. Actually, in Odoo, when you browse a record with `.sudo()`, the related fields accessed from it should also be sudo'd. So `user.partner_id.email` should work.
-
-But wait, the error says "read on record ids: [40], uid: 3, model: res.partner". The problem might not be `user.partner_id` (that's a user, ID might be 7), but rather `lead.contact_name` or `lead.partner_id` which could reference a partner record (ID 40) that the public user can't read.
-
-Actually, looking more carefully: the error "Failed to write field mail.message.partner_ids" happens when creating `mail.mail`. When Odoo creates a mail, it also creates an `mail.message` with `partner_ids` = the recipients. The recipient partner is derived from `email_to` or from the model's partner. If `lead.partner_id` is used (partner ID 40) and the public user can't read that partner, the mail creation fails.
-
-The simplest fix: use `sudo()` on the lead when accessing its fields in the email body.
-
-Let me update the controller code to use `.sudo()` on lead and user data.
-
-Hay un error de permisos — el user público no puede leer `res.partner`. El `lead` está en env público. Uso `.sudo()` en los campos sensibles.
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "offset": 271,
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/controllers/chatbot_3_crear_el_lead_finish_controller.py",
-  "limit": 35
-}
-```
-
-**Output:**
-```
-<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/controllers/chatbot_3_crear_el_lead_finish_controller.py</path>
-<type>file</type>
-<content>
-271:                     if mapping_rec:
-272:                         # Asignar usuario Odoo por email del mapping Chatwoot
-273:                         user = env['res.users'].sudo().search([
-274:                             ('login', '=', mapping_rec.chatwoot_agent_email)
-275:                         ], limit=1)
-276:                         if user and lead and lead.exists():
-277:                             lead.write({'user_id': user.id})
-278:                             ChatBotUtils._send_assignment_email(env, lead, user)
-279:                             _logger.info('RR[HTTP] lead user_id asignado: user=%s(%s) email=%s',
-280:                                          user.name, user.id, user.login)
-281:                         else:
-282:                             _logger.warning('RR[HTTP] no se encontró user Odoo para email=%s',
-283:                                             mapping_rec.chatwoot_agent_email)
-284: 
-285:                         _logger.info('RR[HTTP] consultando get_agent_details account=%s agent_id=%s agent_email=%s',
-286:                                      account_id_cw, mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
-287:                         agent_details = env['chatwoot.client'].get_agent_details(
-288:                             account_id_cw,
-289:                             agent_id=mapping_rec.chatwoot_agent_id or None,
-290:                             agent_email=mapping_rec.chatwoot_agent_email or None,
-291:                         )
-292:                         _logger.info('RR[HTTP] agent_details RESULTADO: %s', agent_details)
-293:                         assigned_agent_name = None
-294:                         assigned_agent_email = None
-295:                         if agent_details:
-296:                             assigned_agent_name = agent_details.get('available_name') or agent_details.get('name') or agent_details.get('email')
-297:                             assigned_agent_email = agent_details.get('email')
-298:                             _logger.info('RR[HTTP] agente resuelto: name=%s email=%s', assigned_agent_name, assigned_agent_email)
-299:                         else:
-300:                             _logger.warning('RR[HTTP] NO se obtuvieron agent_details - agent_id=%s agent_email=%s',
-301:                                             mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
-302: 
-303:                         mapping = {
-304:                             'agent_id': mapping_rec.chatwoot_agent_id or None,
-305:                             'agent_email': mapping_rec.chatwoot_agent_email or None,
-
-(Showing lines 271-305 of 415. Use offset=306 to continue.)
-</content>
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 8.4s)
-
-_Thinking:_
-
-The problem is line 278: `ChatBotUtils._send_assignment_email(env, lead, user)`. Inside this method, it accesses `lead.contact_name`, `lead.phone`, etc. The `lead` recordset is in the public user's env. When the public user tries to `lead.contact_name` which might be a related partner field, it fails with access error.
-
-Wait, looking more carefully at the error:
-```
-ERROR ... RR[HTTP] Error asignando a Chatwoot desde HTTP: Failed to write field mail.message.partner_ids
-```
-
-This error comes from the try/except that wraps the whole Chatwoot block. It's happening during `mail.mail.sudo().create({...})` which creates a `mail.message` with `partner_ids`. The `partner_ids` are derived from the `email_to` and `email_from` fields, which involve `user.partner_id.email` and `user.company_id.email`.
-
-But `user` was fetched with `.sudo()`, so `user.partner_id` should be sudo'd too. However, actually in Odoo, browsing with `.sudo()` means the recordset itself is sudo'd, but `user.partner_id` creates a new recordset that is also sudo'd. So `user.partner_id.email` should work.
-
-Hmm, but the error says "read on record ids: [40], uid: 3, model: res.partner". Partner ID 40... that might be the `lead.partner_id` which is a different partner (the patient). When the mail is created and assigned to the `crm.lead` model, Odoo reads the `lead.partner_id` to add to the mail recipients. The public user (uid=3) can't read `res.partner` record ID 40.
-
-The fix: use `lead.sudo()` when passing to `_send_assignment_email`. Let me update to pass `lead.sudo()`.
-
-**Tool: edit**
-
-**Input:**
-```json
-{
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/controllers/chatbot_3_crear_el_lead_finish_controller.py",
-  "oldString": "                        if user and lead and lead.exists():\n                            lead.write({'user_id': user.id})\n                            ChatBotUtils._send_assignment_email(env, lead, user)\n                            _logger.info('RR[HTTP] lead user_id asignado: user=%s(%s) email=%s',\n                                         user.name, user.id, user.login)",
-  "newString": "                        if user and lead and lead.exists():\n                            lead.sudo().write({'user_id': user.id})\n                            ChatBotUtils._send_assignment_email(env, lead.sudo(), user)\n                            _logger.info('RR[HTTP] lead user_id asignado: user=%s(%s) email=%s',\n                                         user.name, user.id, user.login)"
-}
-```
-
-**Output:**
-```
-Edit applied successfully.
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 4.9s)
-
-_Thinking:_
-
-Also need to update the session_inherit.py which inlines the email logic but uses `lead.contact_name`, `lead.phone`, etc. Let me fix that too to use `lead.sudo()`.
-
-Also fix `chatbot_session_inherit.py` — need to `sudo()` the lead for the email:
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "offset": 63,
-  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/odoo_chatwoot_connector/models/chatbot_session_inherit.py",
-  "limit": 70
-}
-```
-
-**Output:**
-```
-<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/odoo_chatwoot_connector/models/chatbot_session_inherit.py</path>
-<type>file</type>
-<content>
-63:             if mapping_rec and account_id and conversation_id:
-64:                 # Asignar usuario Odoo por email del mapping Chatwoot
-65:                 user = self.env['res.users'].sudo().search([
-66:                     ('login', '=', mapping_rec.chatwoot_agent_email)
-67:                 ], limit=1)
-68:                 if user and lead and lead.exists():
-69:                     lead.write({'user_id': user.id})
-70:                     _logger.info('RR[session] lead user_id asignado: user=%s(%s) email=%s',
-71:                                  user.name, user.id, user.login)
-72:                     # Enviar email de notificación
-73:                     if user.partner_id.email:
-74:                         try:
-75:                             subject = f"Nuevo lead asignado: {lead.name}"
-76:                             servicio = lead.name.split(' - ')[0] if ' - ' in lead.name else lead.name
-77:                             body = (
-78:                                 f"<p>Hola {user.name},</p>"
-79:                                 f"<p>Se te ha asignado un nuevo lead generado desde el chatbot de UNISA.</p>"
-80:                                 f"<br/>"
-81:                                 f"<p><strong>Datos del paciente:</strong></p>"
-82:                                 f"<ul>"
-83:                                 f"<li><strong>Nombre:</strong> {lead.contact_name or ''}</li>"
-84:                                 f"<li><strong>Teléfono:</strong> {lead.phone or ''}</li>"
-85:                                 f"<li><strong>Email:</strong> {lead.email_from or ''}</li>"
-86:                                 f"<li><strong>Servicio:</strong> {servicio}</li>"
-87:                                 f"<li><strong>Equipo:</strong> {lead.team_id.name or 'Sin equipo'}</li>"
-88:                                 f"</ul>"
-89:                                 f"<p>Por favor, contacta al paciente a la brevedad para dar seguimiento a su solicitud.</p>"
-90:                                 f"<p>Saludos,<br/><strong>Sistema UNISA Salud</strong></p>"
-91:                             )
-92:                             self.env['mail.mail'].sudo().create({
-93:                                 'subject': subject,
-94:                                 'body_html': body,
-95:                                 'email_to': user.partner_id.email,
-96:                                 'email_from': user.company_id.email or '',
-97:                                 'model': 'crm.lead',
-98:                                 'res_id': lead.id,
-99:                             })
-100:                             _logger.info('RR[session] email de notificación creado para %s (%s)',
-101:                                          user.name, user.partner_id.email)
-102:                         except Exception as e:
-103:                             _logger.warning('RR[session] error creando email: %s', e)
-104:                 else:
-105:                     _logger.warning('RR[session] no se encontró user Odoo para email=%s',
-106:                                     mapping_rec.chatwoot_agent_email)
-107: 
-108:                 _logger.info('RR[session] consultando get_agent_details account=%s agent_id=%s agent_email=%s',
-109:                              account_id, mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
-110:                 agent_details = self.env['chatwoot.client'].get_agent_details(
-111:                     account_id,
-112:                     agent_id=mapping_rec.chatwoot_agent_id or None,
-113:                     agent_email=mapping_rec.chatwoot_agent_email or None,
-114:                 )
-115:                 _logger.info('RR[session] agent_details RESULTADO: %s', agent_details)
-116:                 assigned_agent_name = None
-117:                 assigned_agent_email = None
-118:                 if agent_details:
-119:                     assigned_agent_name = agent_details.get('available_name') or agent_details.get('name') or agent_details.get('email')
-120:                     assigned_agent_email = agent_details.get('email')
-121:                     _logger.info('RR[session] agente resuelto: name=%s email=%s', assigned_agent_name, assigned_agent_email)
-122:                 else:
-123:                     _logger.warning('RR[session] NO se obtuvieron agent_details - agent_id=%s agent_email=%s',
-124:                                     mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
-125: 
-126:                 equipo_legible = (mapping_rec.equipo_asignado or '').replace('_', ' ')
-127:                 if assigned_agent_email:
-128:                     notify_msg = f"Tu consulta sobre {equipo_legible} ha sido registrada.\n👤 Ejecutivo asignado: {assigned_agent_email}"
-129:                 else:
-130:                     notify_msg = f"Tu consulta sobre {equipo_legible} ha sido registrada."
-131: 
-132:                 mapping = {
-
-(Showing lines 63-132 of 196. Use offset=133 to continue.)
-</content>
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 62.1s)
-
-_Thinking:_
-
-In the session inherit, the `lead` record was already fetched with `.sudo()` at line 31: `lead = self.env['crm.lead'].sudo().browse(int(lead_id))`. So `lead` is already sudo'd. That should be fine.
-
-But `user.partner_id.email` — `user` was fetched with `.sudo()`, so `user.partner_id` should also be sudo'd. In Odoo, when you access a related field from a sudo'd recordset, it remains sudo'd. So this should be fine.
-
-The controller case is different — `lead` was created by `ChatBotUtils.create_lead(env, ...)` which uses `env` (the public user's env). Then the new code adds `lead.sudo()` before passing.
-
-Wait, let me check if the session inherit's lead is actually sudo'd:
-```python
-lead = self.env['crm.lead'].sudo().browse(int(lead_id))
-```
-
-Yes, it's `.sudo()`. Good.
-
-So the fix for the controller should be sufficient. Let me also look at the `_send_assignment_email` to make sure it can handle a sudo'd lead. It accesses `lead.contact_name`, `lead.phone`, etc. which are fine with sudo.
-
-Actually wait, there's another issue. The `_send_assignment_email` in utils does:
-```python
-env['mail.mail'].sudo().create({...})
-'email_to': user.partner_id.email,
-'email_from': user.company_id.email or '',
-'model': 'crm.lead',
-'res_id': lead.id,
-```
-
-The `user.partner_id.email` and `user.company_id.email` — if `user` is sudo'd, these are fine. But if `user` is NOT sudo'd but was searched with `.sudo()`, the recordset itself is sudo'd. Wait, `user = env['res.users'].sudo().search(...)`. So `user` itself is a sudo'd recordset. That means `user.partner_id.email` should be fine.
-
-Hmm, but actually, looking at the error message more carefully:
-```
-ERROR ... RR[HTTP] Error asignando a Chatwoot desde HTTP: Failed to write field mail.message.partner_ids
-```
-
-This error comes from the outer try/except that wraps the Chatwoot block. The `mail.mail` creation fails because when Odoo creates a mail record for a `crm.lead`, it also creates a mail.message with the lead's partner as a recipient. When the mail.mail is created with `sudo()`, it still tries to follow a mail thread, and the `mail.message` creation involves reading the lead's partner_id (which is in res.partner). Since the create is `sudo()`, it should work... but the `mail_thread` might also try to access related records.
-
-Actually, I think the issue is that even though `mail.mail.sudo().create()` is run, when it triggers the `mail.message` creation, the env might be different. Let me check the existing `_send_assignment_email` — it's been working until now, so if I'm calling it the same way, it should still work.
-
-Wait, let me check the original code flow:
-- Before my change: `assign_lead_round_robin` was called, which internally calls `_send_assignment_email(env, lead, next_user)`.
-- The `lead` there was also in the public user's env (created by `create_lead(env, ...)`).
-- The `next_user` was fetched from `team.member_ids` which was sudo'd.
-
-So if `_send_assignment_email` worked before with the public env lead, passing `lead.sudo()` should be even safer.
-
-But why did it fail now? Let me look at the error stack trace more carefully. The error is:
-```
-ERROR ... RR[HTTP] Error asignando a Chatwoot desde HTTP: Failed to write field mail.message.partner_ids
-```
-
-And the error says `read on record ids: [40], uid: 3, model: res.partner`.
-
-Record ID 40 is likely the partner of the user (user.partner_id). But wait, user.partner_id for user ID 7 (CITAS MP) would have some partner ID, and user ID 3 would be the public user.
-
-Oh wait! The `user` variable might not be sudo'd properly. Let me check: `env['res.users'].sudo().search([...], limit=1)`. This returns a sudo'd recordset. But `user.partner_id.email` — in Odoo, related fields accessed from a sudo'd recordset inherit the sudo. So this should work.
-
-Actually, I think the issue might be that the error occurs AFTER the email creation — perhaps during the `assign_conversation` or `notify_message` part. Let me look at what happens after line 278...
-
-Actually, looking at the full log again:
-```
-2026-06-09 11:28:38,028 3677194 INFO odoo.addons.base.models.ir_rule: Access Denied by record rules for operation: read on record ids: [40], uid: 3, model: res.partner 
-2026-06-09 11:28:38,051 3677194 ERROR ... RR[HTTP] Error asignando a Chatwoot desde HTTP: Failed to write field mail.message.partner_ids
-Uh-oh! Looks like you have stumbled upon some top-secret records.
-Sorry, Public user (id=3) doesn't have 'read' access to:
-- Contact (res.partner)
-```
-
-So the error happens at some point when trying to read `res.partner` record ID 40. Let me trace what happens at line 278:
-
-`ChatBotUtils._send_assignment_email(env, lead, user)`
-
-Inside `_send_assignment_email`:
-```python
-env['mail.mail'].sudo().create({
-    'subject': subject,
-    'body_html': body,
-    'email_to': user.partner_id.email,   # This accesses user.partner_id.email
-    'email_from': user.company_id.email or '',
-    'model': 'crm.lead',
-    'res_id': lead.id,
-})
-```
-
-The `email_to` is `user.partner_id.email`. `user` was fetched with `.sudo()`. In Odoo, when you browse with `.sudo()`, related fields are also sudo'd. So `user.partner_id.email` should not raise an access error.
-
-But wait: Odoo might compute the `partner_ids` from `model` and `res_id`. When you create a `mail.mail` with `model='crm.lead'` and `res_id=lead.id`, Odoo looks up the lead and tries to add its partner to the message's `partner_ids`. The lead has a `partner_id` field, and even though the `mail.mail` is created with `.sudo()`, Odoo might use the ORIGINAL env (uid=3) to read the lead's partner_id.
-
-Actually, in Odoo, `sudo().create()` runs the create in sudo mode, so all reads/writes within that create should be sudo'd. But the error clearly shows uid=3.
-
-Let me check: the `_send_assignment_email` is a `@staticmethod` that receives `env` as first argument. The `env` passed is the public user's env. Inside the method, `env['mail.mail'].sudo().create()` creates the mail with sudo. But during the create, Odoo might read the lead's partner_id through the `mail_thread` mixin which might use the env from the lead record (not the sudo env).
-
-Actually, I think the fix with `lead.sudo()` should solve it because we pass `lead.sudo()` to `_send_assignment_email`. Inside that method, `lead.id` is accessed but `lead` is now sudo'd.
-
-But wait, actually, `lead` is only used as `lead.id` in the `mail.mail` create — `'res_id': lead.id`. The issue might be elsewhere. Let me just test after my fix.
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "fuser -k 38069/tcp 2>/dev/null; sleep 2\nsource /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/.venv/bin/activate\nnohup python3 /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo-bin \\\n  -c /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/clientes/integraiadev_19/conf/odoo.cfg \\\n  -u odoo_chatwoot_connector -u ai_chatbot_1_portal > /tmp/update_coherente2.txt 2>&1 &\necho \"PID: $!\"\nsleep 40\nss -tlnp | grep 38069 && echo \"Ready\"",
-  "description": "Restart with module update",
-  "timeout": 70000
-}
-```
-
-**Output:**
-```
- 3676736 3677194 3677196PID: 3678958
-LISTEN 0      16         127.0.0.1:38069      0.0.0.0:*    users:(("python3",pid=3679329,fd=7),("python3",pid=3679327,fd=7),("python3",pid=3678958,fd=7))
-Ready
-
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 9.1s)
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "description": "Test endpoint",
-  "command": "curl -s -X POST \"http://127.0.0.1:38069/ai_chatbot_1_portal/capturar_lead_http\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"solicitar_vat\":\"V-test-coherente2\",\"solicitar_phone\":\"+584249999981\",\"solicitar_name\":\"Test Coherente 2\",\"solicitar_birthdate\":\"1990-01-01\",\"solicitar_email\":\"coherente2@test.com\",\"consentimiento\":true,\"equipo_asignado\":\"CITAS_MP\",\"account_id\":1,\"conversation_id\":10004,\"plataforma\":\"whatsapp\"}' | python3 -c \"import sys,json; d=json.load(sys.stdin); print('lead:', d.get('lead_id'), '| ok:', 'existe' in d and d['existe'])\"",
-  "timeout": 15000
-}
-```
-
-**Output:**
-```
-lead: 191 | ok: True
-
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 4.4s)
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "description": "Check for errors and user assignment log",
-  "command": "grep -E \"10004|lead user_id asignado|error creando\" /home/odoo/develop/modulos_odoo/clientes/integraiadev_19/log/odoo.log | tail -15"
-}
-```
-
-**Output:**
-```
-2026-06-09 11:30:27,499 3679329 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: Datos recibidos para crear cita: {"solicitar_vat": "V-test-coherente2", "solicitar_phone": "+584249999981", "solicitar_name": "Test Coherente 2", "solicitar_birthdate": "1990-01-01", "solicitar_email": "coherente2@test.com", "consentimiento": true, "equipo_asignado": "CITAS_MP", "account_id": 1, "conversation_id": 10004, "plataforma": "whatsapp"} 
-2026-06-09 11:30:28,038 3679329 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: RR[HTTP] INICIO bloque Chatwoot: account=1 conv=10004 team=Grupo Citas equipo=CITAS_MP flow=None 
-2026-06-09 11:30:28,299 3679329 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: RR[HTTP] lead user_id asignado: user=CITAS MP(7) email=cita.unisa@gmail.com 
-2026-06-09 11:30:28,631 3679329 INFO dbintegraiadev_19 odoo.addons.ai_chatbot_1_portal.controllers.chatbot_3_crear_el_lead_finish_controller: RR[HTTP] asignando conversación conv=10004 account=1 mapping={'agent_id': 14, 'agent_email': 'cita.unisa@gmail.com', 'inbox_id': 7, 'prefer_assign_to_agent': True, 'tags': ['Citas'], 'notify_message_len': 89} 
-2026-06-09 11:30:28,632 3679329 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_client: _get_conversation_details calling GET https://chatwoot.unisasalud.com/api/v1/accounts/1/conversations/10004 
-2026-06-09 11:30:28,728 3679329 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_client: assign_conversation[conv=10004]: current status=None assignee_id=None name= email= 
-2026-06-09 11:30:28,728 3679329 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_client: assign_conversation[conv=10004]: resolved agent_id=14, prefer_assign=True, inbox_id=7 
-2026-06-09 11:30:28,925 3679329 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_client: assign_conversation[conv=10004]: assigning to agent_id=14 
-2026-06-09 11:30:28,995 3679329 WARNING dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_client: assign_conversation[conv=10004]: assign to agent 14 FAILED: 404 {"error":"Resource could not be found"} 
-2026-06-09 11:30:29,387 3679329 INFO dbintegraiadev_19 odoo.addons.odoo_chatwoot_connector.models.chatwoot_client: assign_conversation[conv=10004]: FINAL assigned=inbox assignee_id=None ok=False errors=['notify_failed:404:{"error":"Resource could not be found"}'] warnings=['assign_agent_failed:404:{"error":"Resource could not be found"}', 'agent_assignment_failed_fallback_to_inbox', 'conversation_labels_unavailable_skip_apply'] 
-
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 7.3s)
-
-_Thinking:_
-
-Now it works. The lead was assigned to user CITAS MP (ID 7) correctly:
-```
-RR[HTTP] lead user_id asignado: user=CITAS MP(7) email=cita.unisa@gmail.com
-```
-
-The Chatwoot conversation 10004 doesn't exist in Chatwoot (404 error), which is expected for a test conversation ID. The lead user_id assignment succeeded though.
-
-Now let me also verify via RPC that the lead ID 191 has the correct user_id.
-
-Funciona. Lead 191 asignado a **CITAS MP (ID 7)**. El 404 de Chatwoot es esperado — la conversación 10004 no existe en Chatwoot real.
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "source /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/.venv/bin/activate && python3 -c \"\nimport xmlrpc.client\nurl = 'http://127.0.0.1:38069'\ndb = 'dbintegraiadev_19'\ncommon = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/common')\nuid = common.authenticate(db, 'admin@unisasalud.com', 'Unisa2024!', {})\nmodels = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/object')\nlead = models.execute_kw(db, uid, 'Unisa2024!', 'crm.lead', 'search_read', [[('id','=',191)],], {'fields':['id','name','user_id','team_id']})\nimport json\nprint(json.dumps(lead, indent=2, default=str))\n\"\n",
-  "timeout": 15000,
-  "description": "Verify lead user assignment"
-}
-```
-
-**Output:**
-```
-[
-  {
-    "id": 191,
-    "name": "Consulta - Test Coherente 2 - ID 191 (09/06/2026)",
-    "user_id": [
-      7,
-      "CITAS MP"
-    ],
-    "team_id": [
-      4,
-      "Grupo Citas"
-    ]
-  }
-]
-
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 4.1s)
-
-Lead 191: `user_id = CITAS MP (ID 7)`, `team_id = Grupo Citas (ID 4)`. **Coherencia total** — el usuario Odoo que es responsable del lead es el mismo que el agente Chatwoot que tiene la conversación.
-
-**Tool: todowrite**
-
-**Input:**
-```json
-{
-  "todos": [
-    {
-      "priority": "high",
-      "content": "Controller: reemplazar assign_lead_round_robin por match por email",
-      "status": "completed"
-    },
-    {
-      "priority": "high",
-      "content": "Session.py: remover assign_lead_round_robin",
-      "status": "completed"
-    },
-    {
-      "priority": "high",
-      "content": "Session inherit: agregar match por email",
-      "status": "completed"
-    },
-    {
-      "priority": "high",
-      "content": "Actualizar módulos y probar",
-      "status": "completed"
-    }
-  ]
-}
-```
-
-**Output:**
-```
-[
-  {
-    "content": "Controller: reemplazar assign_lead_round_robin por match por email",
-    "status": "completed",
-    "priority": "high"
-  },
-  {
-    "content": "Session.py: remover assign_lead_round_robin",
-    "status": "completed",
-    "priority": "high"
-  },
-  {
-    "content": "Session inherit: agregar match por email",
-    "status": "completed",
-    "priority": "high"
-  },
-  {
-    "content": "Actualizar módulos y probar",
-    "status": "completed",
-    "priority": "high"
-  }
-]
-```
-
----
-
-## Assistant (Build · DeepSeek V4 Flash Free · 4.5s)
-
-Listo. Resumen de lo que cambió:
-
-1. **Se eliminó `assign_lead_round_robin`** de ambos callers (controller y session)
-2. **Nuevo flujo**: mapping Chatwoot elegido → `res.users` por `login = chatwoot_agent_email` → `lead.user_id` asignado al usuario correcto
-3. **Email de notificación**: se envía al usuario Odoo que corresponde (no al miembro rotado del team)
-
-**Antes**: Chatwoot elegía un agente, y Odoo elegía otro distinto por separado.
-**Ahora**: Chatwoot elige el mapping → Odoo asigna al usuario que tiene el mismo email → **coherencia garantizada**.
-
----
-
-## User
-
-puedes decirme si tengo algo hardcodeado? si cambio e nombre de bd por ejemplo o en unisa cambia nombres de x o y afectara la aplicacion? o si es portable a otras empresas que no sea de salud? como lo ves
-
----
-
-## Assistant (Plan · DeepSeek V4 Flash Free · 108.9s)
-
-_Thinking:_
-
-The user is asking about portability and hardcoded values in the modules. Let me analyze the codebase to find anything that's hardcoded or specific to UNISA/Venezuela/healthcare, and assess portability.
-
-Let me search through the modules systematically.
-
-Buena pregunta. Déjame revisar el código a fondo para identificar todo lo hardcodeado o específico de UNISA.
-
-**Tool: task**
-
-**Input:**
-```json
-{
-  "description": "Analyze hardcoded values",
-  "prompt": "I need to analyze two Odoo modules for hardcoded values, UNISA-specific strings, and portability issues. \n\nSearch these directories thoroughly:\n1. `/home/odoo/develop/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal/`\n2. `/home/odoo/develop/modulos_odoo/shared/extra/19.0/odoo_chatwoot_connector/`\n\nFind ALL instances of:\n- Hardcoded email addresses (like `admin@unisasalud.com`, `cita.unisa@gmail.com`, etc.)\n- Hardcoded URLs (like `chatwoot.unisasalud.com`)\n- Hardcoded names (UNISA, Unisa, Unidad Integral Salud, Venezuela, etc.)\n- Hardcoded user IDs or record IDs\n- Hardcoded phone numbers\n- Hardcoded strings in Spanish that would need translation\n- Any business logic specific to healthcare/medical clinics\n- Any assumptions about team structure, company structure\n- Hardcoded field names or model assumptions\n- Any configuration parameters that are read but depend on specific setup\n\nFor each finding, note:\n- The file path and line number\n- The exact hardcoded text\n- Whether it's easily configurable or needs refactoring\n- Impact level (low/medium/high) for portability to a different company/industry\n\nReturn a comprehensive list organized by category, with all file paths and line numbers.",
-  "subagent_type": "explore"
-}
-```
-
-**Output:**
-```
-<task id="ses_153cfd735ffecRB8B90kET93dl" state="completed">
-<task_result>
-I now have a complete picture. Here is the comprehensive analysis:
-
----
-
-## Comprehensive Portability Analysis for `ai_chatbot_1_portal` & `odoo_chatwoot_connector`
-
----
-
-### CATEGORY 1: HARDCODED COMPANY/BRAND NAMES (UNISA)
-
-| # | File | Line | Text | Impact | Configurable? |
-|---|------|------|------|--------|---------------|
-| 1 | `controllers/chatbot_utils.py` | 288 | `"""Obtener o crear equipos de UNISA..."""` | **Medium** - docstring references company | Refactor needed |
-| 2 | `controllers/chatbot_utils.py` | 311 | `f"✅ Equipo UNISA creado: {team.name}..."` | Low - log message | Easy to change |
-| 3 | `controllers/chatbot_utils.py` | 325 | `f"✅ Equipo UNISA encontrado: ..."` | Low - log message | Easy to change |
-| 4 | `controllers/chatbot_utils.py` | 341 | `source_name = f"{platform_display} Bot UNISA"` | **High** - UTM source visible in reports | Refactor to config |
-| 5 | `controllers/chatbot_utils.py` | 345 | `campaign_name = f"Campaña {platform_display} UNISA"` | **High** - UTM campaign visible in reports | Refactor to config |
-| 6 | `controllers/chatbot_utils.py` | 648 | `"Se te ha asignado un nuevo lead generado desde el chatbot de UNISA."` | **Medium** - email body text | Refactor to config/template |
-| 7 | `controllers/chatbot_utils.py` | 659 | `"<strong>Sistema UNISA Salud</strong>"` | **Medium** - email signature | Refactor to config/template |
-| 8 | `controllers/chatbot_utils.py` | 753 | `"� **¡Gracias por confiar en UNISA!**"` | **Medium** - final user message | Refactor to config/template |
-| 9 | `models/chatbot_session.py` | 62 | `help='Equipo... (Agendamiento_Directo, Ventas_UNISA, etc.)'` | Low - help text | Easy to change |
-| 10 | `models/chatbot_flujo.py` | 428 | `"Ventas_UNISA": "Grupo Ventas"` | **Medium** - selection key | Hardcoded mapping |
-| 11 | `models/chatbot_flujo.py` | 472 | `"Ventas_UNISA": "ventas y afiliación a nuestra tarjeta"` | **Medium** - mapping description | Hardcoded mapping |
-| 12 | `models/chatbot_flujo.py` | 504 | `# crear equipos UNISA si es necesario` | Low - comment | N/A |
-| 13 | `data/chatbot_email_template.xml` | 5 | `name="Nuevo Lead Asignado - Chatbot UNISA"` | **Medium** - template name | In XML noupdate |
-| 14 | `data/chatbot_email_template.xml` | 12 | `"Se te ha asignado un nuevo lead generado desde el chatbot de UNISA."` | **Medium** - email body | In XML noupdate |
-| 15 | `data/chatbot_email_template.xml` | 28 | `"Sistema UNISA Salud"` | **Medium** - email signature | In XML noupdate |
-| 16 | `odoo_chatwoot_connector/models/chatbot_session_inherit.py` | 79 | `"Se te ha asignado un nuevo lead generado desde el chatbot de UNISA."` | **Medium** (duplicate of #6) | Duplicate string |
-| 17 | `odoo_chatwoot_connector/models/chatbot_session_inherit.py` | 90 | `"<strong>Sistema UNISA Salud</strong>"` | **Medium** (duplicate of #7) | Duplicate string |
-| 18 | `odoo_chatwoot_connector/models/chatwoot_mapping.py` | 14 | `('Ventas_UNISA', 'Ventas UNISA')` | **Medium** - selection label | Hardcoded selection |
-| 19 | `odoo_chatwoot_connector/__manifest__.py` | 7 | `"author": "UNISA"` | Low - author field | Easy to change |
-| 20 | `odoo_chatwoot_connector/__init__.py` | 16 | `'flujo_ventas_unisa': 'Ventas_UNISA'` | **Medium** - legacy mapping | In migration code |
-| 21 | `n8n/chatbot_create_lead_0.json` | 680 | `"TÚ ERES: BOT UNISA, asistente virtual oficial de la Unidad de Salud Integral (UNISA), Venezuela."` | **High** - entire AI system prompt | In JSON export |
-| 22 | `n8n/chatbot_create_lead_0.json` | 995 | JS Code mapping keys like `'Ventas_UNISA': 'flujo_ventas_unisa'` | **High** - flow mapping in JS | In JSON export (n8n) |
-| 23 | `n8n/chatbot_create_lead_0.json` | 1288 | `"text": "🏥 UNISA - Unidad de Salud Integral"` | **High** - main menu header | In JSON export |
-| 24 | `README_MENU.md` | 25 | Unisa references in documentation | Low - docs | N/A |
-
----
-
-### CATEGORY 2: HARDCODED URLS
-
-| # | File | Line | URL | Impact | Notes |
-|---|------|------|-----|--------|-------|
-| 25 | `n8n/chatbot_create_lead_0.json` | 977 | `https://integraiadev.unisasalud.com/ai_chatbot_1_portal/inicioagendar` | **High** - Odoo webhook endpoint | Hardcoded in n8n JSON |
-| 26 | `n8n/chatbot-simple_1_subflow.json` | 531 | `https://integraiadev.unisasalud.com/ai_chatbot_1_portal/procesar_paso` | **High** - Odoo webhook endpoint | Hardcoded in n8n JSON |
-| 27 | `n8n/chatbot_create_lead_0.json` | 1068,1105,1189 | `https://chatwoot.unisasalud.com/api/v1/accounts/...` | **High** - Chatwoot API base URL | Hardcoded in n8n JSON |
-| 28 | `n8n/chatbot_create_lead_0.json` | 1272,1360 | `https://graph.facebook.com/v20.0/1136369756228609/messages` | **High** - WhatsApp phone number ID | Hardcoded in n8n JSON |
-| 29 | `static/src/js/ChatBotWrapper.js` | 35 | `https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css` | **Medium** - CDN dependency | Vendor lock-in risk |
-| 30 | `static/src/js/ChatBotWrapper.js` | 42 | `https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js` | **Medium** - CDN dependency | Vendor lock-in risk |
-| 31 | `README.md` | 34,46 | References to `integraia.lat` | Low - documentation | N/A |
-| 32 | `README.md` | 5 | `psql -U integraiadev -d dbintegraiadev` | Low - documentation | N/A |
-
----
-
-### CATEGORY 3: HARDCODED EMAIL ADDRESSES
-
-| # | File | Line | Email | Impact | Notes |
-|---|------|------|-------|--------|-------|
-| 33 | `tests/test_email_notification.py` | 22,83,89 | `saymon_set@hotmail.com` | **Low** - only in test files | Test-specific |
-| 34 | `tests/test_email_notification.py` | 21 | `test_agent@test.com` | Low - test data | Test-specific |
-| 35 | `tests/test_lead_creation.py` | 23,24,29,30 | `test_agent1@test.com`, `test_agent2@test.com` | Low - test data | Test-specific |
-| 36 | `README_MENU.md` | 54 | `saymon_set@hotmail.com` | Low - documentation | N/A |
-| 37 | `odoo_chatwoot_connector/README_ROUND_ROBIN.md` | 21,103 | `saymon_set@hotmail.com` | Low - documentation | N/A |
-
----
-
-### CATEGORY 4: HARDCODED PHONE NUMBERS
-
-| # | File | Line | Phone | Impact | Notes |
-|---|------|------|-------|--------|-------|
-| 38 | `n8n/chatbot-simple_1_subflow.json` | 746 | `+584142711347` | **Low** - test data in JSON | Example data |
-| 39 | `controllers/chatbot_utils.py` | 76-112 | Phone normalization assumes `+58` (Venezuela country code) | **High** - Venezuela-specific logic | See Category 5 |
-| 40 | `controllers/chatbot_utils.py` | 390-391 | Lead phone strips `+58` prefix for local WhatsApp | **Medium** - Venezuela-specific assumption | |
-| 41 | `controllers/chatbot_utils.py` | 905-924 | Validation errors reference `+584141234567` as example | **Medium** - Venezuela bias in error messages | |
-| 42 | `controllers/chatbot_utils.py` | 917-924 | Validates Venezuelan mobile prefixes (`412,414,416,424,426...`) | **High** - only Venezuelan prefixes accepted | |
-
----
-
-### CATEGORY 5: VENEZUELA-SPECIFIC BUSINESS LOGIC
-
-| # | File | Line | Issue | Impact | Notes |
-|---|------|------|-------|--------|-------|
-| 43 | `controllers/chatbot_utils.py` | 72-112 | `normalizar_telefono_internacional()` hardcodes `+58` country code | **High** - only works for Venezuela | Needs configurable country code |
-| 44 | `controllers/chatbot_utils.py` | 390-391 | Strip `+58` from phone for WhatsApp | **Medium** - Venezuela-specific WhatsApp behavior | |
-| 45 | `controllers/chatbot_utils.py` | 917-924 | Hardcoded list of Venezuelan mobile prefixes | **High** - validation will reject non-Venezuelan phones | |
-| 46 | `n8n/chatbot_create_lead_0.json` | 680 | System prompt mentions "Venezuela" | **High** - in AI prompt | In n8n JSON export |
-| 47 | `n8n/chatbot_create_lead_0.json` | 1288 | WhatsApp template message in Spanish, mentions local products | **High** - entire menu service structure | |
-
----
-
-### CATEGORY 6: HARDCODED INSURANCE/PRODUCT NAMES
-
-| # | File | Line | Issue | Impact | Notes |
-|---|------|------|-------|--------|-------|
-| 48 | `models/chatbot_flujo.py` | 260 | Hardcoded insurance examples: `FASME, FASDEM, SENIAT, ALCALDIA DE MANEIRO, LA INTERNACIONAL` | **High** - Venezuela-specific insurance companies | In flow step prompt |
-| 49 | `models/chatbot_flujo.py` | 173 | `"¿Te interesa la Tarjeta Salud?"` | **Medium** - UNISA-specific product | In flow step |
-| 50 | `controllers/chatbot_utils.py` | 508,563 | `"Interés Tarjeta Salud"` | **Medium** - product name in lead description | |
-| 51 | `n8n/chatbot_create_lead_0.json` | 1288 | `"title": "💙 Tarjeta de la Salud"` and `"description": "Información sobre la tarjeta o CREDIUNISA"` | **High** - UNISA-specific product | In n8n JSON |
-
----
-
-### CATEGORY 7: HARDCODED TEAM/GROUP NAMES AND STRUCTURES
-
-| # | File | Line | Issue | Impact | Notes |
-|---|------|------|-------|--------|-------|
-| 52 | `controllers/chatbot_utils.py` | 290 | `team_names = ['Grupo Citas', 'Grupo Ventas', 'Grupo Laboratorio', 'Grupo Imagenología', 'Grupo Informativo']` | **High** - healthcare-specific team names | Hardcoded list |
-| 53 | `controllers/chatbot_utils.py` | 300-309 | Alias names: `citas-unisa`, `ventas-unisa`, `laboratorio-unisa`, `imagenologia-unisa`, `informativo-unisa` | **Medium** - UNISA-specific aliases | |
-| 54 | `models/chatbot_flujo.py` | 19-25 | `grupo_asignado` Selection with `Grupo Citas`, `Grupo Ventas`, `Grupo Laboratorio`, `Grupo Imagenología`, `Grupo Informativo` | **High** - hardcoded team structure | |
-| 55 | `models/chatbot_flujo.py` | 407-438 | `_get_mapeo_equipo_grupo()` - all team mappings (20 entries) | **High** - entire flow-to-team mapping | |
-| 56 | `models/chatbot_flujo.py` | 454-481 | `_get_mapeo_equipo_descripcion()` - all description mappings (20 entries) | **High** - descriptions of team responsibilities | |
-| 57 | `data/chatbot_teams_data.xml` | 6 | `name="Grupo Informativo"` | **Medium** - creates specific team | In XML noupdate |
-| 58 | `data/chatbot_teams_data.xml` | 10 | `alias_name="informativo-unisa"` | **Medium** - UNISA-specific alias | In XML noupdate |
-| 59 | `odoo_chatwoot_connector/models/chatwoot_mapping.py` | 9-29 | `EQUIPO_ASIGNADO_SELECTION` with all 17 selection values | **High** - duplicates entire mapping | |
-| 60 | `odoo_chatwoot_connector/__init__.py` | 11-21 | Legacy mapping conversions | **Medium** - migration code | |
-
----
-
-### CATEGORY 8: HARDCODED USER/ADMIN GUESSES AND FALLBACKS
-
-| # | File | Line | Issue | Impact | Notes |
-|---|------|------|-------|--------|-------|
-| 61 | `controllers/chatbot_3_crear_el_lead_finish_controller.py` | 66,68,189,191 | `admin_uid = request.env.ref('base.user_admin').id or 2` / fallback to `2` | **Medium** - assumes admin user ID 2 | Multiple occurrences |
-| 62 | `controllers/chatbot_1_guardar_consultar_listar_eliminar_limpiar_antiguas_controller.py` | 139,141,478,480,630,632,779,781,902,904,968,970 | Same pattern in 6 more endpoints | **Medium** - repeated pattern | 12 total occurrences |
-| 63 | `controllers/chatbot_utils.py` | 606 | `param_name = f'unisa_bot_last_user_{team.id}'` | **Medium** - UNISA-specific config parameter name | Round-robin state key |
-| 64 | `odoo_chatwoot_connector/models/chatwoot_mapping.py` | 121 | `rr_key = 'odoo_chatwoot_connector_last_mapping_' + ...` | **Medium** - module-specific config key | Round-robin state key |
-
----
-
-### CATEGORY 9: HARDCODED SELECTION/VALUES IN MODELS (PORTABILITY ISSUES)
-
-| # | File | Line | Issue | Impact | Notes |
-|---|------|------|-------|--------|-------|
-| 65 | `models/chatbot_flujo.py` | 19-25 | `grupo_asignado` field is a Selection (not dynamic/relational) | **High** - cannot add groups without code change | See Category 7 |
-| 66 | `odoo_chatwoot_connector/models/chatwoot_mapping.py` | 9-29 | `EQUIPO_ASIGNADO_SELECTION` hardcoded | **High** - coupling with team structure | |
-| 67 | `odoo_chatwoot_connector/models/lead_inherit.py` | 11-19 | `chatwoot_processing_status` Selection with `new/assigned/error` | Low - generic enough | |
-| 68 | `models/chatbot_flujo.py` | 362-394 | Conditional logic by flow name string matching | **High** - fragile, name-dependent branching | |
-
----
-
-### CATEGORY 10: HEALTHCARE/MEDICAL-SPECIFIC ASSUMPTIONS
-
-| # | File | Line | Issue | Impact | Notes |
-|---|------|------|-------|--------|-------|
-| 69 | `models/chatbot_flujo.py` | 240,282 | Example services: `'medicina general'`, `'Ecografía abdominal'`, `'Examen de sangre'`, `'pediatra'` | **High** - medical clinic-specific | In flow step prompts |
-| 70 | `models/chatbot_flujo.py` | 312 | Lab study examples: `Hemoglobina, Glucosa, Colesterol, Examen de orina` | **High** - medical lab-specific | |
-| 71 | `models/chatbot_flujo.py` | 341 | Imaging study examples: `Radiografía, Ecografía, Mamografía, Tomografía` | **High** - medical imaging-specific | |
-| 72 | `models/chatbot_flujo.py` | 383 | `"Conoce nuestros precios básicos 2026"` | **Medium** - year-specific pricing text | |
-| 73 | `models/chatbot_flujo.py` | 229,271 | `"envíe una imagen o foto de su cédula o pasaporte"` | **Medium** - assumes identity document requirement | |
-| 74 | `n8n/chatbot_create_lead_0.json` | 680 | Healthcare-specific keywords: `"sangre", "orina", "heces", "laboratorio", "hemoglobina", "glucosa", "colesterol"` | **High** - in AI system prompt | |
-| 75 | `n8n/chatbot_create_lead_0.json` | 680 | Keywords: `"radiografía", "ecografía", "mamografía", "tomografía", "resonancia", "rayos x"` | **High** - in AI system prompt | |
-| 76 | `models/chatbot_flujo.py` | 229,271 | `"Tus datos están protegidos bajo nuestra política de privacidad."` | Low - generic privacy notice | Ok for most industries |
-
----
-
-### CATEGORY 11: SPANISH/HARDCODED UI STRINGS NEEDING TRANSLATION
-
-| # | File | Line | String | Impact | Notes |
-|---|------|------|--------|--------|-------|
-| 77 | `models/chatbot_flujo.py` | 56-102 | All `mensaje_prompt` and `mensaje_error` in required steps (phone, name, vat, birthdate, consent) | **High** - all user-facing | Not wrapped in `_()` |
-| 78 | `models/chatbot_flujo.py` | 109-208 | All `mensaje_prompt` and `mensaje_error` in optional steps (10 steps) | **High** - all user-facing | Not wrapped in `_()` |
-| 79 | `models/chatbot_flujo.py` | 219-284 | All prompts in medios_propios, seguro flows | **High** | Not wrapped in `_()` |
-| 80 | `models/chatbot_flujo.py` | 292-344 | All prompts for resultados flows | **High** | Not wrapped in `_()` |
-| 81 | `models/chatbot_session.py` | 112-126 | Fallback questions dict (Spanish fallbacks) | **Medium** | Hardcoded dict |
-| 82 | `models/chatbot_session.py` | 884-887 | `palabras_salida` list: `['salir', 'cancelar', 'terminar', 'menu', 'menú', 'volver']` | **Medium** | Exit detection in Spanish |
-| 83 | `models/chatbot_session.py` | 906-911 | `_generar_mensaje_finalizacion` fallback text | **Medium** | Hardcoded Spanish |
-| 84 | `controllers/chatbot_utils.py` | 785-795 | `generate_response` fallback text | **Medium** | Hardcoded Spanish |
-| 85 | `controllers/chatbot_utils.py` | 743-753 | `_pie_mensaje` text | **Medium** | Hardcoded Spanish |
-| 86 | `controllers/chatbot_3_crear_el_lead_finish_controller.py` | 90-94 | Response message building | **Medium** | Hardcoded Spanish |
-| 87 | `static/src/js/ChatBotWrapper.js` | 68-74 | i18n dict with Spanish/English title `'Bienvenido/a a integraIA'` | **Medium** | Brand-specific title |
-
----
-
-### CATEGORY 12: CONFIGURATION PARAMETERS (Good - Not Hardcoded)
-
-For completeness, here are parameters that are **properly configurable**:
-
-| File | Line | Parameter | Type |
-|------|------|-----------|------|
-| `odoo_chatwoot_connector/models/chatwoot_settings.py` | 7-9 | `chatwoot.base_url`, `chatwoot.api_access_token`, `chatwoot.timeout` | System parameters (UI-configurable) |
-| `ai_chatbot_1_portal/models/res_config_settings.py` | 9 | `ai_chatbot_1_portal.webhook_url` | System parameter (UI-configurable) |
-| `odoo_chatwoot_connector/models/chatwoot_client.py` | 12 | `DEFAULT_ACCOUNT_LABELS = ['#agente_desactivado']` | Class constant (could be configurable) |
-
----
-
-### SUMMARY OF CRITICAL ISSUES (HIGH IMPACT)
-
-1. **Venezuela Country Code Lock-in** (Items 39-45, 43-45): Phone number normalization hardcodes `+58` country code and validates against Venezuelan-only prefixes. A company in another country will need to modify `normalizar_telefono_internacional()` in `chatbot_utils.py`.
-
-2. **Healthcare-Specific Team Structure** (Items 52-60): The team names `Grupo Citas`, `Grupo Ventas`, `Grupo Laboratorio`, `Grupo Imagenología`, `Grupo Informativo` are hardcoded in 5+ locations. A non-healthcare company would need to replace all these with their own departments.
-
-3. **Medical Flows and Prompts** (Items 69-76, 77-86): All flow step prompts reference medical services (lab results, imaging, insurance validation). The entire conversational flow is designed for a healthcare clinic.
-
-4. **n8n JSON with Hardcoded Values** (Items 21-23, 25-28, 46-47, 51, 74-75): The n8n JSON exports contain hardcoded URL endpoints, chatwoot URLs, WhatsApp phone number IDs, the full AI system prompt with UNISA branding, and Venezuela-specific business rules. These exist outside the Odoo module structure.
-
-5. **Duplicate Mapping Definitions** (Items 54-55, 59): The flow-to-team mapping is defined in at least 3 separate places (`chatbot_flujo.py`, `chatwoot_mapping.py`, `n8n/chatbot_create_lead_0.json` JavaScript code), making changes error-prone.
-
-6. **User-facing strings not translatable** (Items 77-86): Most prompt strings use raw Spanish without Odoo's `_()` translation function.
-
----
-
-### RECOMMENDATIONS FOR PORTABILITY
-
-| Priority | Recommendation |
-|----------|---------------|
-| **Critical** | Make country code configurable via system parameter in `normalizar_telefono_internacional()` |
-| **Critical** | Externalize team/group names to a data model (not hardcoded Selection) |
-| **High** | Move all mapping dictionaries to a proper data model or config parameters |
-| **High** | Wrap all user-facing strings in `_()` for translation |
-| **High** | Externalize n8n JSON values (especially URLs, phone IDs, prompts) to environment variables or n8n credential store |
-| **Medium** | Create a company profile model that centralizes brand name references |
-| **Medium** | Remove `admin_uid = 2` fallback pattern -- use `SUPERUSER_ID` or a properly configured user |
-| **Medium** | Remove duplicate mapping definitions; keep only the `chatbot_flujo._get_mapeo_equipo_grupo()` as the single source of truth |
-</task_result>
-</task>
-```
-
----
-
-## Assistant (Plan · DeepSeek V4 Flash Free · 13.7s)
-
-_Thinking:_
-
-This is an excellent analysis. Let me present this to the user in a concise, actionable way.
-
-Excelente análisis. Aquí te resumo lo crítico:
-
-## Lo que ata a UNISA/Salud/Venezuela
-
-### 🔴 Crítico (rompe en otra empresa/país)
-
-| Qué | Dónde | Problema |
-|---|---|---|
-| **País Venezuela (+58)** | `chatbot_utils.py:72-112` | Normalización de teléfono hardcodea `+58` y solo acepta prefijos móviles venezolanos (412,414,416,...) |
-| **Equipos CRM** | `chatbot_utils.py:290` + `chatbot_flujo.py:19-25` + `chatwoot_mapping.py:9-29` | `['Grupo Citas', 'Grupo Ventas', 'Grupo Laboratorio', 'Grupo Imagenología', 'Grupo Informativo']` definidos en 3+ lugares con Selection fijo |
-| **Flujos médicos** | `chatbot_flujo.py` (todo el archivo) | Pasos enteros diseñados para servicio de salud: laboratorio, imágenes, seguros médicos, tarjeta de salud |
-| **n8n JSON** | `n8n/chatbot_create_lead_0.json` | Prompt de IA menciona "UNISA", "Venezuela". URLs hardcodeadas a `integraiadev.unisasalud.com` y `chatwoot.unisasalud.com`. Número de WhatsApp ID hardcodeado. |
-
-### 🟡 Medio (requiere cambios pero no bloquea)
-
-| Qué | Dónde |
-|---|---|
-| **Nombre "UNISA" en mensajes** | `chatbot_utils.py:648,659,753` — "chatbot de UNISA", "Sistema UNISA Salud", "confiar en UNISA" |
-| **Seguros venezolanos** | `chatbot_flujo.py:260` — FASME, FASDEM, SENIAT, ALCALDIA DE MANEIRO, etc. |
-| **admin_uid = 2** | Controladores: 12 ocurrencias de `base.user_admin` con fallback a ID 2 |
-| **Mapeos duplicados** | Flow↔team definido en `chatbot_flujo.py`, `chatwoot_mapping.py`, y n8n JS |
-
-### 🟢 Bajo (fáciles de cambiar)
-
-| Qué | Dónde |
-|---|---|
-| **Correos en tests** | `tests/test_*.py` — son datos de prueba |
-| **Strings en español** | Casi todos los prompts de flujo — no tienen `_()` para traducción |
-| **CDN n8n chat** | `ChatBotWrapper.js` — carga de CDN (fácil de cambiar a self-hosted) |
-
-## ¿Es portable a otra empresa que no sea de salud?
-
-**No, no es plug-and-play.** Para otra empresa necesitarías:
-
-1. **Reemplazar** el archivo `n8n/chatbot_create_lead_0.json` completo (prompts, URLs, WhatsApp ID, servicios)
-2. **Redefinir** los flujos en `chatbot_flujo.py` — cambiar todos los pasos, prompts, y lógica condicional
-3. **Reemplazar** `EQUIPO_ASIGNADO_SELECTION` y los equipos CRM
-4. **Cambiar** la normalización de teléfono para el país destino
-5. **Reemplazar** las referencias a UNISA en mensajes al usuario y emails
-
-**Para una empresa del mismo rubro** (clínica/seguro) en otro país hispanohablante, el cambio más importante es el punto 4 (país) + los seguros.
-
-En resumen: la lógica de integración Chatwoot↔Odoo es portable. El contenido (flujos, prompts, equipos) está 100% acoplado a UNISA Salud Venezuela. Para hacerlo genérico, habría que externalizar los flujos a datos (no código) y parametrizar país/productos.
-
----
-
-## User
-
-lo que hicimos anteriormente, le explicare a Daniel, lo puedes mejorar para que entienda?: Buenos dias Daniel. coloque una mejora, el agente nunca reasignara a otro agente mientras este abierto 
+**Updated:** 6/15/2026, 5:45:49 PM
 
 ---
 
@@ -4191,6 +2054,2103 @@ cur.close()
 conn.close()
 print('OK')
 "
+```
+
+---
+
+## User
+
+pero es en docker que esta la bd 
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 6.6s)
+
+_Thinking:_
+
+The user is saying the database is in Docker. I'm in plan mode so I can only read/plan, not execute. But the user has already been trying to run the command on the remote server via SSH and got `psql: command not found`. Now they're saying the DB is in Docker, so we need to use Docker to run psql.
+
+Let me just tell them the Docker command they need to run on the remote server.
+
+Ah, entonces corre el comando dentro del contenedor de PostgreSQL:
+
+```bash
+ssh odoo@95.111.235.36
+# ya dentro del server:
+docker exec -it <nombre_contenedor_postgres> psql -U integraiadev_19 -d dbintegraiadev_19 -c "UPDATE res_users SET password = 'Unisa2024!' WHERE login = 'oraclefedora@gmail.com';"
+```
+
+Si no sabes el nombre del contenedor, primero lista los contenedores:
+
+```bash
+docker ps | grep postgres
+```
+
+¿O quieres que te guíe paso a paso desde el inicio de la sesión SSH?
+
+---
+
+## User
+
+ya me conecte [unisa odoo@vmi3296692:~/develop$ docker exec -it odoo-db19-n8n bash
+psql -U odoo -d postgres
+root@7435ff13b70c:/# 
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 7.0s)
+
+_Thinking:_
+
+The user is inside the docker container (odoo-db19-n8n) and inside psql as root. They need to run the UPDATE but now they're connected to the `postgres` database, not `dbintegraiadev_19`. They need to connect to the correct database.
+
+I'm in plan mode, so I can only guide them with text.
+
+Estás dentro del contenedor y conectado a `psql -U odoo -d postgres`. Necesitas:
+
+1. Primero listar las bases de datos para confirmar:
+```sql
+\l
+```
+
+2. Conectarte a la base correcta:
+```sql
+\c dbintegraiadev_19
+```
+
+3. Ejecutar el UPDATE:
+```sql
+UPDATE res_users SET password = 'Unisa2024!' WHERE login = 'oraclefedora@gmail.com';
+```
+
+4. Verificar:
+```sql
+SELECT id, login, password FROM res_users WHERE login LIKE '%oracle%';
+```
+
+O hazlo todo de una vez desde fuera del contenedor (en el host del server):
+
+```bash
+docker exec -it odoo-db19-n8n psql -U odoo -d dbintegraiadev_19 -c "UPDATE res_users SET password = 'Unisa2024!' WHERE login = 'oraclefedora@gmail.com';"
+```
+
+---
+
+## User
+
+docker exec -it odoo-db19-n8n bash
+root@7435ff13b70c:/# psql -U integraiadev_19 -d postgres
+psql (15.17 (Debian 15.17-1.pgdg12+1))
+Type "help" for help.
+
+postgres=# 
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 6.2s)
+
+_Thinking:_
+
+The user is inside the Docker container and connected to psql. They're showing me they're at the `postgres=#` prompt. They need to connect to the correct database and run the UPDATE.
+
+Let me guide them step by step since I'm in plan/read-only mode.
+
+Perfecto, estás dentro. Solo falta conectar a la base correcta y ejecutar:
+
+```sql
+\c dbintegraiadev_19
+UPDATE res_users SET password = 'Unisa2024!' WHERE login = 'oraclefedora@gmail.com';
+SELECT id, login, name FROM res_users WHERE login LIKE '%oracle%';
+```
+
+O más rápido, todo en una línea desde el bash del contenedor (sin entrar a psql interactivo):
+
+```bash
+psql -U odoo -d dbintegraiadev_19 -c "UPDATE res_users SET password = 'Unisa2024!' WHERE login = 'oraclefedora@gmail.com';"
+```
+
+---
+
+## User
+
+ed to database "dbintegraiadev_19" as user "integraiadev_19".
+dbintegraiadev_19=# UPDATE res_users SET password = 'Unisa2024!' WHERE login = 'oraclefedora@gmail.com';
+SELECT id, login, name FROM res_users WHERE login LIKE '%oracle%';
+UPDATE 1
+ERROR:  column "name" does not exist
+LINE 1: SELECT id, login, name FROM res_users WHERE login LIKE '%ora...
+                          ^
+dbintegraiadev_19=# 
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 5.4s)
+
+_Thinking:_
+
+The user successfully ran the UPDATE and it updated 1 row. The SELECT failed because in Odoo, the field is called `display_name` or just checking with `login` is enough. The password was reset successfully.
+
+El `UPDATE 1` significa que sí se actualizó correctamente. El SELECT falló porque en la tabla `res_users` de PostgreSQL no existe el campo `name` directamente (Odoo lo obtiene de `res.partner`).
+
+Ya debería funcionar `oraclefedora@gmail.com` / `Unisa2024!` en `https://integraiadev.unisasalud.com/web/login`.
+
+---
+
+## User
+
+puedes revisar aqui /home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration , estoy tratando de enviar una plantilla whatsapp : y me da este error: Operación no válida
+
+Error al enviar: (#132012) Parameter format does not match format in the created template , la configuracione s esta: Campañas WhatsApp
+unisa_sabados test
+1 / 14
+unisa_sabados test
+Asunto
+unisa_sabados test
+Contactos con consentimiento?
+Programación
+Enviar ahora
+Programar para más tarde
+Contenido del Mensaje de WhatsApp
+Usar plantilla aprobada
+
+Plantilla WhatsApp (aprobada)
+unisa_sabados_TEST
+ Esta plantilla no tiene parámetros.
+Presione esc para salir de la pantalla completa , asi se creo:  Administrador de WhatsApp
+Editar plantilla
+unisa_sabados • Spanish
+Marketing
+• Predeterminado
+Nombre e idioma de la plantilla
+Asigna un nombre a la plantilla
+Nombre de la plantilla de mensaje
+unisa_sabados
+​
+13/512
+Selecciona un idioma
+Idiomas
+Spanish
+​
+Contenido
+Agrega un encabezado, cuerpo y pie de página a tu plantilla. La API de la nube, alojada por Meta, revisará el contenido y las variables de la plantilla para garantizar la seguridad e integridad de nuestros servicios. Información sobre las plantillas
+Tipo de variable
+Número
+​
+Muestra de contenido multimedia
+• Opcional
+Tipo de encabezado
+​
+Imagen
+​
+
+Elegir archivo JPG o PNG
+Título
+• Opcional
+Texto del encabezado
+Agrega una breve línea de texto en el encabezado del mensaje en Spanish
+​
+0/60
+Cuerpo
+Escribir texto en Spanish
+🩺 ATENCIÓN COMUNIDAD NEOESPARTANA 🩺
+
+📍 UNISA, pensando en tu comodidad, te informa:
+
+📅 Este y todos los sábados
+⏰ Horario: 7:00 a.m. a 12:00 m
+✅ Hasta nuevo aviso
+
+🔍 Estudios disponibles:
+🩻 Radiografías (Rx)
+🧪 Laboratorios
+📷 Ecografías
+
+💰 PAGO DE CONTADO:
+✨ 30% DE DESCUENTO ADICIONAL ✨
+
+💳 Si estás afiliado a la Tarjeta de la Salud, puedes pagar con CrediUnisa.
+
+📲 Reserva tu cita al:
+📞 *0424 849 51 92*
+
+💙 UNISA cuidamos de ti 💙
+​
+444/1024
+​
+Pie de página
+• Opcional
+Pie de página de la plantilla de mensaje
+Agrega una breve línea de texto en la parte inferior del mensaje en Spanish
+​
+0/60
+Botones
+• Opcional
+Crea botones para que los clientes puedan responder tu mensaje o realizar una acción. Puedes agregar un máximo de 10 botones. Si agregas más de 3 botones, aparecerán en forma de lista.
+Vista previa de la plantilla
+
+🩺 ATENCIÓN COMUNIDAD NEOESPARTANA 🩺
+
+📍 UNISA, pensando en tu comodidad, te informa:
+
+📅 Este y todos los sábados
+⏰ Horario: 7:00 a.m. a 12:00 m
+✅ Hasta nuevo aviso
+
+🔍 Estudios disponibles:
+🩻 Radiografías (Rx)
+🧪 Laboratorios
+📷 Ecografías
+
+💰 PAGO DE CONTADO:
+✨ 30% DE DESCUENTO ADICIONAL ✨
+
+💳 Si estás afiliado a la Tarjeta de la Salud, puedes pagar con CrediUnisa.
+
+📲 Reserva tu cita al:
+📞 0424 849 51 92
+
+💙 UNISA cuidamos de ti 💙
+3:33 pm
+Meta Business Suite
+Enlaces
+Más herramientas
+Buscar
+Enlaces
+Configuración
+Ayuda y asi se configuro: Plantillas WhatsApp
+unisa_sabados_TEST
+5 / 5
+unisa_sabados_TEST
+Nombre técnico?
+unisa_sabados
+Idioma
+Español
+Encabezado de video?
+
+Esquema de parámetros (JSON)?
+¿Cómo usar el esquema de parámetros?
+• Sin parámetros: Deja el campo vacío o escribe {}
+• Un parámetro (texto): {"1": "nombre_cliente"}
+• Para plantillas con video (encabezado activado): El primer parámetro debe ser la URL del video: {"1": "url_video"}
+• Varios parámetros: {"1": "nombre", "2": "producto", "3": "precio"}
+La clave (1,2,3...) es el número de la variable en Meta ({{1}}, {{2}}).
+El valor es solo una etiqueta interna para recordar qué significa cada parámetro.
+Cantidad de parámetros
+0
+Active
+
+Presione esc para salir de la pantalla completa 
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 56.3s)
+
+_Thinking:_
+
+The user is getting an error `(#132012) Parameter format does not match format in the created template` when trying to send a WhatsApp template. Let me analyze the issue.
+
+Looking at the template configuration:
+
+1. **In Meta (WhatsApp Manager)**: The template `unisa_sabados` has:
+   - Header type: **Image** (not text/variable)
+   - Body: Text (no variables/parameters)
+   - Footer: none
+   - Buttons: none
+
+2. **In Odoo (`whatsapp_cloud_integration` module)**: The template `unisa_sabados_TEST` is configured with:
+   - `Cantidad de parámetros`: 0
+   - No parameters
+
+The error "Parameter format does not match format in the created template" means Odoo is sending parameters that don't match the template's structure.
+
+Let me check the module to understand how it sends the template.
+
+Actually, let me look at the module code to understand the issue. I'm in plan mode so I can only read.
+
+The error could be:
+1. Odoo is sending an empty `parameters` object when the template expects none (or vice versa)
+2. Odoo is sending a header parameter but the template has an image header (not a text variable header)
+3. The template has an image header but Odoo is not sending the required image URL
+
+Let me explore the module code.
+
+**Tool: task**
+
+**Input:**
+```json
+{
+  "description": "Explore whatsapp_cloud_integration",
+  "subagent_type": "explore",
+  "prompt": "Explore the module at `/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/`. I need to understand:\n\n1. How WhatsApp templates are sent (find the code that calls the WhatsApp Cloud API to send messages)\n2. How parameters are constructed and sent in the API request\n3. How the module handles templates with headers (especially image headers)\n4. The model/fields for `whatsapp.template` and how `cantidad_parametros` and `esquema_parametros` work\n5. The code that builds the JSON payload for `POST /v20.0/{phone_number_id}/messages`\n\nSearch thoroughly for:\n- Files containing \"template\" and \"send\" logic\n- The API call to graph.facebook.com\n- How parameters are formatted\n- Any JSON construction for WhatsApp message templates\n\nReturn the relevant file paths, function names, and line numbers for each finding."
+}
+```
+
+**Output:**
+```
+<task id="ses_134149829ffecy7CysyUzIyY04" state="completed">
+<task_result>
+Here is a comprehensive analysis of the `whatsapp_cloud_integration` module.
+
+---
+
+## 1. How WhatsApp Templates Are Sent (API Call to graph.facebook.com)
+
+The main function that calls the WhatsApp Cloud API to send template messages is:
+
+**File:** `/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_message.py`
+- **Class:** `WhatsappMessageWizard` (transient model `whatsapp.message.wizard`)
+- **Method:** `action_send_whatsapp_message()` — **line 22**
+- **API URL constructed at:** **line 35**
+  ```python
+  url = f"https://graph.facebook.com/v25.0/{self.waba_account_id.phone_number_id}/messages"
+  ```
+- **`requests.post()` call:** **line 106**
+  ```python
+  response = requests.post(url, headers=headers, json=payload, timeout=15)
+  ```
+
+There is also a second sending path for **free-text messages** (without a template):
+
+**File:** `/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_mailing.py`
+- **Class:** `WhatsAppMailing` (model `whatsapp.mailing`)
+- **Method:** `_send_free_text_message()` — **line 151**
+- **API URL constructed at:** **line 159**
+- **`requests.post()` call:** **line 180**
+
+---
+
+## 2. How Parameters Are Constructed and Sent in the API Request
+
+### Entry Points That Feed Into `action_send_whatsapp_message`
+
+There are three paths that ultimately send template parameters:
+
+#### Path A: Direct wizard (`whatsapp.message.wizard`)
+- **File:** `models/whatsapp_message.py`, lines 53-60
+- `self.parameter_values` is a JSON string (a list like `["url", "text1"]`), parsed at **line 56**:
+  ```python
+  params = json.loads(self.parameter_values)
+  ```
+
+#### Path B: Template `send_to_partner()` method
+- **File:** `models/whatsapp_template.py`, lines 72-93
+- `send_to_partner()` creates a `whatsapp.message.wizard` transient record at **line 87**, storing `parameter_values` as JSON, then calls `wizard.action_send_whatsapp_message()`.
+
+#### Path C: Mailing campaign via `_extract_template_params()`
+- **File:** `models/whatsapp_mailing.py`, lines 121-149
+- `_extract_template_params()` parses `self.parameter_values` (line 128) and optionally renders placeholders (like `{{ partner.name }}`) using `mail.render.mixin._render_template` for body parameters (lines 145-147). It calls `template.send_to_partner()` at **line 100**, which goes to Path B.
+
+### Parameter Construction in `action_send_whatsapp_message` (the core logic)
+
+**File:** `/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_message.py`
+
+| Lines | Logic |
+|---|---|
+| 53-60 | Parse `self.parameter_values` (JSON string → Python list) |
+| 63 | Initialize empty `components = []` |
+| 66-76 | **If `template.has_video_header` is True** → first param is a video URL; build `header` component with `{'type': 'video', 'video': {'link': video_url}}` |
+| 78-87 | Remaining params after the video URL go into a `body` component; newlines are cleaned (line 83) |
+| 89-95 | **If no video header** → all params go into a `body` component; newlines are cleaned (line 91) |
+| 97-98 | If any components exist, attach them to `payload['template']['components']` |
+
+The final **JSON payload** structure is (lines 42-98):
+
+```python
+payload = {
+    'messaging_product': 'whatsapp',
+    'to': recipient,
+    'type': 'template',
+    'template': {
+        'name': template.name,
+        'language': {'code': template.language_code},
+        'components': components  # optional
+    }
+}
+```
+
+Each `body` parameter is formatted as:
+```python
+{'type': 'text', 'text': cleaned_text}
+```
+
+Each `header` (video) parameter is formatted as:
+```python
+{'type': 'video', 'video': {'link': video_url}}
+```
+
+---
+
+## 3. How the Module Handles Templates with Headers (Especially Image Headers)
+
+**Important finding:** The module only handles **video headers**, not image headers.
+
+**File:** `/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_template.py`
+- **Field `has_video_header`** (`Boolean`, line 45-51) — flags that a template has a **video** header type. Its help text explicitly says: *"Activa esta opción si la plantilla que creaste en Meta tiene un encabezado de tipo VIDEO."*
+
+**File:** `/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_message.py`
+- Lines 66-76: When `has_video_header` is True:
+  1. The **first parameter** in the list is taken as the video URL.
+  2. A `header` component is built with `type: 'video'` and `video: {link: video_url}`.
+  3. Any remaining parameters are placed in a `body` component as text.
+- There is **no code path** for `type: 'image'` or `type: 'document'` headers. Only video/text headers are supported.
+
+**Front-end widget:** `/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/static/src/js/dynamic_parameters_widget.js`
+- Lines 144-147: When `hasVideo && i === 1`, the first input's placeholder is set to `"URL del video (ej. https://.../video.mp4)"` and the field is marked `isUrl: true`.
+
+---
+
+## 4. The `whatsapp.template` Model — Fields and How `parameter_count` / `parameter_schema` Work
+
+**File:** `/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_template.py`
+
+### Fields
+
+| Field | Line | Type | Purpose |
+|---|---|---|---|
+| `name` | 14 | `Char` | Technical name — must match Meta exactly |
+| `friendly_name` | 19 | `Char` | Display name for the UI |
+| `language_code` | 24 | `Selection` | `es` or `en_US` |
+| `parameter_schema` | 28 | `Text` | JSON dict `{"1": "label1", "2": "label2", ...}` — defines expected params with descriptive labels |
+| `parameter_count` | 40 | `Integer` | **Computed** — number of keys in `parameter_schema` |
+| `has_video_header` | 45 | `Boolean` | Flags video header template |
+| `active` | 52 | `Boolean` | Active/inactive |
+
+### How `parameter_count` is computed
+
+- **`_compute_parameter_count()`** at **line 55**:
+  - Calls `rec._get_parameter_schema()` (line 58)
+  - Returns `len(schema)` — i.e., the number of keys in the parsed JSON dict
+
+### How `parameter_schema` is parsed
+
+- **`_get_parameter_schema()`** at **line 63**:
+  - Returns `json.loads(self.parameter_schema)` if non-empty, else `{}`
+  - Catches `json.JSONDecodeError` and returns `{}` on failure
+
+### How `parameter_count` is used
+
+- In `send_to_partner()` (line 80): validates that `len(parameter_values) == expected_count`
+- In the JS widget (`dynamic_parameters_widget.js`, line 122): determines how many input fields to render
+- In `_extract_template_params()` of `whatsapp.mailing` (line 123-124): validates expected count
+
+### Schema convention
+
+From the help text (lines 30-37):
+- `{}` or empty → no parameters
+- `{"1": "nombre_cliente"}` → one text parameter (maps to `{{1}}` in Meta)
+- `{"1": "url_video", "2": "nombre_cliente"}` → first is video URL, second is text (when `has_video_header=True`)
+- Keys are string numbers matching Meta's `{{1}}`, `{{2}}`, etc.
+- Values are labels for internal reference only
+
+---
+
+## 5. Code That Builds the JSON Payload for `POST /v20.0/{phone_number_id}/messages`
+
+The full JSON construction is in:
+
+**File:** `/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_message.py`
+
+### Lines 42-50 — Base payload structure
+```python
+payload = {
+    'messaging_product': 'whatsapp',
+    'to': recipient,
+    'type': 'template',
+    'template': {
+        'name': template.name,
+        'language': {'code': template.language_code}
+    }
+}
+```
+
+### Lines 53-60 — Parse parameters
+```python
+params = json.loads(self.parameter_values)
+```
+
+### Lines 63-98 — Build components (the variable part)
+
+**Video header path (lines 66-87):**
+```python
+components.append({
+    'type': 'header',
+    'parameters': [{
+        'type': 'video',
+        'video': {'link': video_url}
+    }]
+})
+# then for body:
+components.append({
+    'type': 'body',
+    'parameters': [{'type': 'text', 'text': p} for p in cleaned_body_params]
+})
+```
+
+**No-video-header path (lines 89-95):**
+```python
+components.append({
+    'type': 'body',
+    'parameters': [{'type': 'text', 'text': p} for p in cleaned_params]
+})
+```
+
+### Line 97-98 — Attach to payload
+```python
+if components:
+    payload['template']['components'] = components
+```
+
+### Line 106 — Send
+```python
+response = requests.post(url, headers=headers, json=payload, timeout=15)
+```
+
+Note: The URL uses `v25.0` (not `v20.0`), consistent throughout the module (lines 35, 41, 159).
+
+---
+
+## Summary Table of All Relevant Files and Locations
+
+| # | File | Key Lines | Purpose |
+|---|---|---|---|
+| 1 | `models/whatsapp_template.py` | 8-93 | `whatsapp.template` model: `parameter_schema`, `parameter_count`, `has_video_header`, `send_to_partner()` |
+| 2 | `models/whatsapp_message.py` | 9-149 | `whatsapp.message.wizard` transient model: **`action_send_whatsapp_message()`** — builds JSON payload and calls `POST` to `graph.facebook.com/v25.0/.../messages` |
+| 3 | `models/whatsapp_mailing.py` | 10-210 | `whatsapp.mailing` model: `_extract_template_params()`, `_send_free_text_message()`, campaign-based sending |
+| 4 | `models/waba_account.py` | 8-55 | `waba.account` model: stores `phone_number_id`, `access_token`, `verify_token` |
+| 5 | `models/whatsapp_history.py` | 3-24 | `whatsapp.history` model: logs all sent/received messages |
+| 6 | `controllers/webhook_controller.py` | 8-84 | Webhook endpoint at `/whatsapp/webhook` for receiving incoming messages |
+| 7 | `static/src/js/dynamic_parameters_widget.js` | 1-187 | OWL widget that dynamically renders parameter input fields on the mailing form |
+| 8 | `static/src/xml/dynamic_parameters_template.xml` | 1-50 | QWeb template for the dynamic parameters widget |
+| 9 | `views/whatsapp_template_views.xml` | 1-73 | Form/tree/search views for `whatsapp.template` |
+| 10 | `views/whatsapp_message_views.xml` | 1-36 | Form view for the `whatsapp.message.wizard` |
+| 11 | `views/whatsapp_mailing_views.xml` | 1-58 | Form view for `whatsapp.mailing` with the `dynamic_parameters` widget |
+| 12 | `data/server_actions_cron.xml` | 1-33 | Server action to launch the wizard from partner form, and a (disabled) cron |
+</task_result>
+</task>
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 13.5s)
+
+_Thinking:_
+
+Now I understand the issue clearly.
+
+The template `unisa_sabados_TEST` in Odoo:
+- `has_video_header`: probably False (since the template in Meta has an **Image** header, not video)
+- `parameter_schema`: `{}` (no parameters)
+- `parameter_count`: 0
+
+The actual Meta template `unisa_sabados`:
+- **Header type: IMAGE** (an image)
+- Body: plain text (no variables)
+- No buttons
+- No footer
+
+The problem: The Meta template has an **Image header**. The WhatsApp API requires that when a template has a media header (image, video, document), you MUST include a `header` component in the parameters with the media URL. Even though there are no text variables, the image header needs to be populated with an image URL.
+
+So the fix is: The module needs to handle **image headers** (not just video headers). Currently it only handles:
+1. No header → body params only
+2. Video header → first param is video URL
+3. But there's NO handling for **image header**
+
+The error `(#132012) Parameter format does not match format in the created template` means the API received a payload that doesn't match the template structure. Sending `components: [body: ...]` without a `header` component for a template that has an image header causes this error.
+
+Solutions:
+1. Add `has_image_header` field to `whatsapp.template`
+2. When `has_image_header` is True, the first parameter should be an image URL
+3. Build a `header` component with `type: 'image'` and `image: {link: url}`
+
+Or simpler: add a more generic `header_type` field (selection: none, image, video, document) and handle each case.
+
+Let me present this analysis to the user.
+
+I'm in plan mode so I can only present the analysis and plan.
+
+Ya encontré el problema. Te explico:
+
+## Diagnóstico
+
+Tu plantilla `unisa_sabados` en Meta tiene un **encabezado de tipo IMAGEN**, pero el módulo `whatsapp_cloud_integration` solo maneja dos casos:
+
+1. **Sin encabezado** → envía solo `body` parameters ✅
+2. **Encabezado VIDEO** (`has_video_header=True`) → primer parámetro es URL del video ✅
+3. **Encabezado IMAGEN** → **NO EXISTE** ❌
+
+La API de WhatsApp **exige** que cuando la plantilla tiene un media header (imagen/video/documento), el payload **debe incluir** un `header` component con la URL del recurso. Como no lo envías, Meta responde:
+
+> `(#132012) Parameter format does not match format in the created template`
+
+## Plan
+
+Agregar soporte para **encabezado de imagen**:
+
+### Archivos a modificar
+
+| Archivo | Cambio |
+|---|---|
+| `models/whatsapp_template.py` | Agregar campo `has_image_header` (Boolean) |
+| `models/whatsapp_message.py` | Agregar ruta para `type: 'image'` en components (similar a video) |
+| `views/whatsapp_template_views.xml` | Agregar campo en formulario |
+| `static/src/js/dynamic_parameters_widget.js` | Agregar lógica para image header |
+| `static/src/xml/dynamic_parameters_template.xml` | Si aplica |
+| `models/whatsapp_mailing.py` | Si necesita ajuste |
+
+### Lógica en `action_send_whatsapp_message`
+
+```
+if has_video_header:
+    header_param = {'type': 'video', 'video': {'link': params[0]}}
+elif has_image_header:
+    header_param = {'type': 'image', 'image': {'link': params[0]}}
+else:
+    no header → solo body
+```
+
+### Acción necesaria para la plantilla actual
+
+1. Marcar `unisa_sabados_TEST` con el nuevo campo `has_image_header = True`
+2. En `parameter_schema` poner `{"1": "url_imagen"}`
+3. Al enviar, pasar la URL de una imagen como parámetro
+
+¿Quieres que prepare la implementación?
+
+---
+
+## User
+
+donde vas a modificar?: 1. Marcar `unisa_sabados_TEST` con el nuevo campo `has_image_header = True`
+2. En `parameter_schema` poner `{"1": "url_imagen"}`
+3. Al enviar, pasar la URL de una imagen como parámetro
+
+¿Quieres que prepare la implementación? 
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 10.2s)
+
+_Thinking:_
+
+The system says I'm in plan/read-only mode. The user is asking if I should prepare the implementation. I'm in read-only mode, so I should just confirm the plan and wait for the go-ahead to implement, or answer their question about where I'll modify.
+
+Actually, the user's message is asking "¿Quieres que prepare la implementación?" - they're asking me if I should do it. And the system reminder says I'm in plan mode, so I should not execute. I'll answer their question about where exactly I'll modify and wait for their approval.
+
+Te detallo los cambios exactos que haría:
+
+### 1. `models/whatsapp_template.py`
+Agregar:
+```python
+has_image_header = fields.Boolean(
+    string='Encabezado de imagen',
+    help='Activa esta opción si la plantilla que creaste en Meta tiene un encabezado de tipo IMAGEN.'
+)
+```
+
+### 2. `models/whatsapp_message.py` (líneas ~66-95)
+Agregar ruta para image header, después del bloque de video:
+```python
+if template.has_video_header:
+    # lógica existente para video
+    ...
+elif template.has_image_header:
+    # nuevo: primer parámetro es URL de imagen
+    header_params = {'type': 'image', 'image': {'link': params[0]}}
+    components.append({'type': 'header', 'parameters': [header_params]})
+    remaining = params[1:]
+    if remaining:
+        cleaned = [p.replace('\n', ' ').strip() for p in remaining]
+        components.append({'type': 'body', 'parameters': [{'type': 'text', 'text': p} for p in cleaned]})
+```
+
+### 3. `views/whatsapp_template_views.xml`
+Agregar el campo `has_image_header` en el formulario, al lado de `has_video_header`.
+
+### 4. `static/src/js/dynamic_parameters_widget.js`
+Agregar soporte para image header (similar al video, pero con placeholder `"URL de la imagen (ej. https://.../imagen.jpg)"`).
+
+### 5. `whatsapp_template_views.xml` (formato mailing si aplica)
+Agregar el campo en las vistas donde se selecciona la plantilla.
+
+---
+
+Eso es todo. Nada en `whatsapp_mailing.py` — `_extract_template_params` ya usa `send_to_partner()` que a su vez llama a `action_send_whatsapp_message`, así que se beneficia automáticamente.
+
+¿Procedo con la implementación?
+
+---
+
+## User
+
+si
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 5.4s)
+
+_Thinking:_
+
+Let me implement the changes. I need to read the current files first to make precise edits.
+
+**Tool: todowrite**
+
+**Input:**
+```json
+{
+  "todos": [
+    {
+      "priority": "high",
+      "content": "Agregar campo has_image_header en whatsapp_template.py",
+      "status": "in_progress"
+    },
+    {
+      "priority": "high",
+      "content": "Agregar ruta image header en whatsapp_message.py",
+      "status": "pending"
+    },
+    {
+      "priority": "high",
+      "content": "Agregar campo en vistas whatsapp_template_views.xml",
+      "status": "pending"
+    },
+    {
+      "priority": "high",
+      "content": "Actualizar JS widget para image header",
+      "status": "pending"
+    },
+    {
+      "priority": "high",
+      "content": "Actualizar módulo y probar",
+      "status": "pending"
+    }
+  ]
+}
+```
+
+**Output:**
+```
+[
+  {
+    "content": "Agregar campo has_image_header en whatsapp_template.py",
+    "status": "in_progress",
+    "priority": "high"
+  },
+  {
+    "content": "Agregar ruta image header en whatsapp_message.py",
+    "status": "pending",
+    "priority": "high"
+  },
+  {
+    "content": "Agregar campo en vistas whatsapp_template_views.xml",
+    "status": "pending",
+    "priority": "high"
+  },
+  {
+    "content": "Actualizar JS widget para image header",
+    "status": "pending",
+    "priority": "high"
+  },
+  {
+    "content": "Actualizar módulo y probar",
+    "status": "pending",
+    "priority": "high"
+  }
+]
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 4.0s)
+
+_Thinking:_
+
+Let me read all the files I need to modify first.
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_template.py"
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_template.py</path>
+<type>file</type>
+<content>
+1: from odoo import models, fields, api, _
+2: from odoo.exceptions import UserError
+3: import json
+4: import logging
+5: 
+6: _logger = logging.getLogger(__name__)
+7: 
+8: class WhatsappTemplate(models.Model):
+9:     _name = 'whatsapp.template'
+10:     _description = 'Plantilla de WhatsApp (maestro)'
+11:     _rec_name = 'friendly_name'
+12:     _order = 'friendly_name'
+13: 
+14:     name = fields.Char(
+15:         string='Nombre técnico',
+16:         required=True,
+17:         help='Debe coincidir exactamente con el nombre registrado en Meta (ej: pedido_confirmado_ubicacion)'
+18:     )
+19:     friendly_name = fields.Char(
+20:         string='Nombre para mostrar',
+21:         required=True,
+22:         help='Texto que verá el usuario al seleccionar la plantilla (ej: Confirmación de pedido con ubicación)'
+23:     )
+24:     language_code = fields.Selection([
+25:         ('es', 'Español'),
+26:         ('en_US', 'Inglés (US)'),
+27:     ], string='Idioma', default='es', required=True)
+28:     parameter_schema = fields.Text(
+29:         string='Esquema de parámetros (JSON)',
+30:         help="""Define los parámetros que espera la plantilla en formato JSON.
+31: 
+32: Ejemplos:
+33: • Sin parámetros: {} o dejar vacío
+34: • Un parámetro de texto: {"1": "nombre_cliente"}
+35: • Dos parámetros: {"1": "url_video", "2": "nombre_cliente"}
+36: • Para plantillas con ENCABEZADO DE VIDEO: el primer parámetro (1) debe ser la URL del video.
+37: 
+38: La cantidad de parámetros se calcula automáticamente a partir del número de claves (1,2,3...)."""
+39:     )
+40:     parameter_count = fields.Integer(
+41:         string='Cantidad de parámetros',
+42:         compute='_compute_parameter_count',
+43:         store=False
+44:     )
+45:     has_video_header = fields.Boolean(
+46:         string='Encabezado de video',
+47:         default=False,
+48:         help="""Activa esta opción si la plantilla que creaste en Meta tiene un encabezado de tipo VIDEO.
+49:         IMPORTANTE: El primer parámetro ({{1}}) será la URL del video.
+50:         Debes incluir al menos {"1": "url_video"} en el esquema de parámetros."""
+51:     )
+52:     active = fields.Boolean(default=True)
+53: 
+54:     @api.depends('parameter_schema')
+55:     def _compute_parameter_count(self):
+56:         for rec in self:
+57:             try:
+58:                 schema = rec._get_parameter_schema()
+59:                 rec.parameter_count = len(schema) if schema else 0
+60:             except Exception:
+61:                 rec.parameter_count = 0
+62: 
+63:     def _get_parameter_schema(self):
+64:         if not self.parameter_schema:
+65:             return {}
+66:         try:
+67:             return json.loads(self.parameter_schema)
+68:         except json.JSONDecodeError:
+69:             _logger.warning(f"Error al parsear parameter_schema en plantilla {self.name}")
+70:             return {}
+71: 
+72:     def send_to_partner(self, partner, parameter_values, waba_account_id=None):
+73:         """Método reutilizable para enviar esta plantilla a un partner."""
+74:         if not waba_account_id:
+75:             waba_account = self.env['waba.account'].search([('active', '=', True)], limit=1)
+76:             if not waba_account:
+77:                 raise UserError(_('No hay una cuenta WABA activa. Configura una en WhatsApp > Cuentas WABA.'))
+78:             waba_account_id = waba_account.id
+79: 
+80:         expected_count = self.parameter_count
+81:         if expected_count and len(parameter_values) != expected_count:
+82:             raise UserError(_(
+83:                 'La plantilla "%s" espera %s parámetros, pero se recibieron %s.',
+84:                 self.friendly_name, expected_count, len(parameter_values)
+85:             ))
+86: 
+87:         wizard = self.env['whatsapp.message.wizard'].create({
+88:             'partner_id': partner.id,
+89:             'waba_account_id': waba_account_id,
+90:             'template_id': self.id,
+91:             'parameter_values': json.dumps(parameter_values),
+92:         })
+93:         return wizard.action_send_whatsapp_message()
+
+(End of file - total 93 lines)
+</content>
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 4.7s)
+
+_Thinking:_
+
+Good, I see the file. Now let me read the whatsapp_message.py and the JS widget and XML views.
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_message.py"
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_message.py</path>
+<type>file</type>
+<content>
+1: from odoo import models, fields, api, _
+2: from odoo.exceptions import UserError
+3: import requests
+4: import json
+5: import logging
+6: 
+7: _logger = logging.getLogger(__name__)
+8: 
+9: class WhatsappMessageWizard(models.TransientModel):
+10:     _name = 'whatsapp.message.wizard'
+11:     _description = 'Wizard para enviar mensajes de WhatsApp'
+12: 
+13:     partner_id = fields.Many2one('res.partner', string='Cliente', required=True)
+14:     waba_account_id = fields.Many2one('waba.account', string='Cuenta WhatsApp', required=True,
+15:                                       domain=[('active', '=', True)])
+16:     template_id = fields.Many2one('whatsapp.template', string='Plantilla', required=True)
+17:     parameter_values = fields.Text(
+18:         string='Valores de Parámetros (JSON)',
+19:         help='Ej: ["https://urlvideo.mp4", "Simón"] (primero la URL del video si la plantilla tiene header)'
+20:     )
+21: 
+22:     def action_send_whatsapp_message(self):
+23:         self.ensure_one()
+24:         recipient = self.partner_id.phone
+25:         if not recipient:
+26:             raise UserError(_('El cliente no tiene número de teléfono.'))
+27: 
+28:         recipient = recipient.strip().replace(' ', '').replace('+', '').replace('-', '')
+29:         # Formatear números de Venezuela si vienen sin código de país (ej: 0412... -> 58412...)
+30:         if recipient.startswith('04') and len(recipient) == 11:
+31:             recipient = '58' + recipient[1:]
+32:         elif recipient.startswith('4') and len(recipient) == 10:
+33:             recipient = '58' + recipient
+34: 
+35:         url = f"https://graph.facebook.com/v25.0/{self.waba_account_id.phone_number_id}/messages"
+36:         headers = {
+37:             'Authorization': f'Bearer {self.waba_account_id.access_token}',
+38:             'Content-Type': 'application/json'
+39:         }
+40: 
+41:         template = self.template_id
+42:         payload = {
+43:             'messaging_product': 'whatsapp',
+44:             'to': recipient,
+45:             'type': 'template',
+46:             'template': {
+47:                 'name': template.name,
+48:                 'language': {'code': template.language_code}
+49:             }
+50:         }
+51: 
+52:         # Procesar parámetros
+53:         params = []
+54:         if self.parameter_values:
+55:             try:
+56:                 params = json.loads(self.parameter_values)
+57:                 if not isinstance(params, list):
+58:                     raise UserError(_('Los parámetros deben ser un array JSON.'))
+59:             except json.JSONDecodeError:
+60:                 raise UserError(_('El campo de parámetros no es un JSON válido.'))
+61: 
+62:         # Construir componentes según el tipo de plantilla
+63:         components = []
+64: 
+65:         # Si tiene video header, el primer parámetro debe ser la URL del video
+66:         if template.has_video_header:
+67:             if not params or len(params) < 1:
+68:                 raise UserError(_('La plantilla con video requiere al menos la URL del video como primer parámetro.'))
+69:             video_url = params[0]
+70:             components.append({
+71:                 'type': 'header',
+72:                 'parameters': [{
+73:                     'type': 'video',
+74:                     'video': {'link': video_url}
+75:                 }]
+76:             })
+77:             # El resto de parámetros van al body (si hay)
+78:             body_params = params[1:]
+79:             if body_params:
+80:                 # Meta prohíbe terminantemente enviar saltos de línea dentro de las variables (como {{1}}).
+81:                 # Esto causa el error "132018 There’s an issue with the parameters".
+82:                 # Limpiamos los saltos de línea de todos los parámetros de texto.
+83:                 cleaned_body_params = [str(p).replace('\n', '  ').replace('\r', '') for p in body_params]
+84:                 components.append({
+85:                     'type': 'body',
+86:                     'parameters': [{'type': 'text', 'text': p} for p in cleaned_body_params]
+87:                 })
+88:         else:
+89:             # Plantilla sin header de video: todos los parámetros van al body
+90:             if params:
+91:                 cleaned_params = [str(p).replace('\n', '  ').replace('\r', '') for p in params]
+92:                 components.append({
+93:                     'type': 'body',
+94:                     'parameters': [{'type': 'text', 'text': p} for p in cleaned_params]
+95:                 })
+96: 
+97:         if components:
+98:             payload['template']['components'] = components
+99: 
+100:         # Enviar petición
+101:         try:
+102:             _logger.info("=== PAYLOAD A ENVIAR A WHATSAPP ===")
+103:             _logger.info(json.dumps(payload, indent=2))
+104:             _logger.info("===================================")
+105: 
+106:             response = requests.post(url, headers=headers, json=payload, timeout=15)
+107:             response.raise_for_status()
+108:             result = response.json()
+109:             history_vals = {
+110:                 'partner_id': self.partner_id.id,
+111:                 'waba_account_id': self.waba_account_id.id,
+112:                 'direction': 'outgoing',
+113:                 'template_name': template.display_name,
+114:                 'recipient_number': recipient,
+115:                 'message_body': json.dumps(payload, indent=2),
+116:                 'response_data': json.dumps(result, indent=2),
+117:                 'status': 'sent',
+118:                 'message_id': result.get('messages', [{}])[0].get('id', '')
+119:             }
+120:             self.env['whatsapp.history'].create(history_vals)
+121: 
+122:             return {
+123:                 'type': 'ir.actions.client',
+124:                 'tag': 'display_notification',
+125:                 'params': {
+126:                     'title': _('Mensaje enviado'),
+127:                     'message': _('WhatsApp enviado correctamente. ID: %s') % history_vals['message_id'],
+128:                     'type': 'success',
+129:                     'sticky': False,
+130:                 }
+131:             }
+132:         except requests.exceptions.RequestException as e:
+133:             error_detail = str(e)
+134:             if e.response is not None:
+135:                 try:
+136:                     error_detail = e.response.json().get('error', {}).get('message', error_detail)
+137:                 except:
+138:                     pass
+139:             self.env['whatsapp.history'].create({
+140:                 'partner_id': self.partner_id.id,
+141:                 'waba_account_id': self.waba_account_id.id,
+142:                 'direction': 'outgoing',
+143:                 'template_name': template.display_name,
+144:                 'recipient_number': recipient,
+145:                 'message_body': json.dumps(payload, indent=2),
+146:                 'response_data': error_detail,
+147:                 'status': 'error',
+148:             })
+149:             raise UserError(_(f'Error al enviar: {error_detail}'))
+
+(End of file - total 149 lines)
+</content>
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 4.3s)
+
+_Thinking:_
+
+Good. Now let me also read the XML views and JS widget.
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/views/whatsapp_template_views.xml"
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/views/whatsapp_template_views.xml</path>
+<type>file</type>
+<content>
+1: <?xml version="1.0" encoding="utf-8"?>
+2: <odoo>
+3:     <record id="action_whatsapp_template" model="ir.actions.act_window">
+4:         <field name="name">Plantillas WhatsApp</field>
+5:         <field name="res_model">whatsapp.template</field>
+6:         <field name="view_mode">list,form</field>
+7:         <field name="help" type="html">
+8:             <p>Define aquí las plantillas que has creado y aprobado en Meta (Business Manager).</p>
+9:             <p>El nombre técnico debe coincidir exactamente con el que registraste en Meta.</p>
+10:         </field>
+11:     </record>
+12: 
+13:     <record id="view_whatsapp_template_list" model="ir.ui.view">
+14:         <field name="name">whatsapp.template.list</field>
+15:         <field name="model">whatsapp.template</field>
+16:         <field name="arch" type="xml">
+17:             <list>
+18:                 <field name="friendly_name"/>
+19:                 <field name="name"/>
+20:                 <field name="language_code"/>
+21:                 <field name="parameter_count"/>
+22:                 <field name="has_video_header"/>
+23:                 <field name="active"/>
+24:             </list>
+25:         </field>
+26:     </record>
+27: 
+28:     <record id="view_whatsapp_template_form" model="ir.ui.view">
+29:         <field name="name">whatsapp.template.form</field>
+30:         <field name="model">whatsapp.template</field>
+31:         <field name="arch" type="xml">
+32:             <form>
+33:                 <sheet>
+34:                     <div class="oe_title">
+35:                         <h1><field name="friendly_name" placeholder="Nombre para mostrar..."/></h1>
+36:                     </div>
+37:                     <group>
+38:                         <field name="name" required="1" placeholder="nombre_tecnico_plantilla"/>
+39:                         <field name="language_code"/>
+40:                         <field name="has_video_header"/>
+41:                         <field name="parameter_schema" widget="ace" options="{'mode': 'json'}" 
+42:                                placeholder='{"1": "nombre_cliente", "2": "fecha_cita"}'/>
+43:                         <div class="alert alert-info" role="alert" style="margin-top: 5px; margin-bottom: 5px;">
+44:                             <i class="fa fa-info-circle"></i> 
+45:                             <strong>¿Cómo usar el esquema de parámetros?</strong><br/>
+46:                             • <strong>Sin parámetros:</strong> Deja el campo vacío o escribe <code>{}</code><br/>
+47:                             • <strong>Un parámetro (texto):</strong> <code>{"1": "nombre_cliente"}</code><br/>
+48:                             • <strong>Para plantillas con video (encabezado activado):</strong> El primer parámetro debe ser la URL del video: <code>{"1": "url_video"}</code><br/>
+49:                             • <strong>Varios parámetros:</strong> <code>{"1": "nombre", "2": "producto", "3": "precio"}</code><br/>
+50:                             La <strong>clave</strong> (1,2,3...) es el número de la variable en Meta (<code>{{1}}</code>, <code>{{2}}</code>).<br/>
+51:                             El <strong>valor</strong> es solo una etiqueta interna para recordar qué significa cada parámetro.
+52:                         </div>
+53:                         <field name="parameter_count" readonly="1"/>
+54:                         <field name="active"/>
+55:                     </group>
+56:                 </sheet>
+57:             </form>
+58:         </field>
+59:     </record>
+60: 
+61:     <record id="view_whatsapp_template_search" model="ir.ui.view">
+62:         <field name="name">whatsapp.template.search</field>
+63:         <field name="model">whatsapp.template</field>
+64:         <field name="arch" type="xml">
+65:             <search>
+66:                 <field name="friendly_name"/>
+67:                 <field name="name"/>
+68:                 <separator/>
+69:                 <filter name="active" string="Activas" domain="[('active','=',True)]"/>
+70:             </search>
+71:         </field>
+72:     </record>
+73: </odoo>
+
+(End of file - total 73 lines)
+</content>
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 4.1s)
+
+_Thinking:_
+
+Now let me read the JS widget.
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/static/src/js/dynamic_parameters_widget.js"
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/static/src/js/dynamic_parameters_widget.js</path>
+<type>file</type>
+<content>
+1: /** @odoo-module **/
+2: import { Component, useState, onWillStart, onError, useEffect } from "@odoo/owl";
+3: import { registry } from "@web/core/registry";
+4: import { useService } from "@web/core/utils/hooks";
+5: import { standardFieldProps } from "@web/views/fields/standard_field_props";
+6: 
+7: class DynamicParametersWidget extends Component {
+8:     static template = "whatsapp_cloud_integration.DynamicParametersWidget";
+9:     static props = { ...standardFieldProps };
+10: 
+11:     setup() {
+12:         console.log("🚀 Widget iniciado");
+13:         this.state = useState({
+14:             inputs: [],
+15:             templateId: null,
+16:             loading: false,
+17:             error: null,
+18:         });
+19:         this.notification = useService("notification");
+20:         this.orm = useService("orm");
+21: 
+22:         onError((error) => {
+23:             console.error("Error:", error);
+24:             this.state.error = error.message;
+25:             this.state.loading = false;
+26:         });
+27: 
+28:         // Usar useEffect para reaccionar a cambios en el campo de plantilla.
+29:         // OWL registrará esto como una dependencia reactiva.
+30:         useEffect(
+31:             (templateValue) => {
+32:                 console.log("🔄 useEffect: Cambio detectado en campaign_whatsapp_template_id:", templateValue);
+33:                 this._refresh();
+34:             },
+35:             () => [this.props.record.data.campaign_whatsapp_template_id]
+36:         );
+37: 
+38:         onWillStart(async () => {
+39:             await this._refresh();
+40:         });
+41:     }
+42: 
+43:     _getTemplateIdFromRecord() {
+44:         // Obtenemos los datos completos para depurar
+45:         const data = this.props.record?.data;
+46:         const template = data?.campaign_whatsapp_template_id;
+47:         
+48:         console.log("🔍 [1] Evaluando Template ID. this.props.record.data:", data);
+49:         console.log("🔍 [2] Template bruto:", template);
+50:         
+51:         if (template) {
+52:             // Odoo 18/19: el objeto Many2one tiene formato {id: 3, display_name: "..."}
+53:             if (template.id !== undefined) return template.id;
+54:             // Odoo < 18: los campos Many2one suelen ser arrays: [id, "display_name"]
+55:             if (Array.isArray(template) && template.length > 0) return template[0];
+56:             // En algunas versiones es un objeto proxy tipo tupla
+57:             if (template[0] !== undefined) return template[0];
+58:             // O un objeto con res_id
+59:             if (template.res_id) return template.res_id;
+60:             // O el ID directo
+61:             if (typeof template === 'number') return template;
+62:         }
+63:         return null;
+64:     }
+65: 
+66:     async _refresh() {
+67:         const templateId = this._getTemplateIdFromRecord();
+68:         console.log("🔍 [3] ID de plantilla parseado en _refresh:", templateId);
+69:         
+70:         if (!templateId) {
+71:             console.log("⚠️ No hay ID válido. Limpiando inputs.");
+72:             this.state.inputs = [];
+73:             this.state.templateId = null;
+74:             return;
+75:         }
+76:         if (templateId === this.state.templateId) {
+77:             console.log("✅ El ID de plantilla no ha cambiado. Omitiendo refresh.");
+78:             return;
+79:         }
+80:         
+81:         console.log("🚀 [4] Cargando esquema para plantilla ID:", templateId);
+82:         this.state.loading = true;
+83:         this.state.error = null;
+84:         try {
+85:             const result = await this.orm.read(
+86:                 "whatsapp.template",
+87:                 [templateId],
+88:                 ["parameter_schema", "has_video_header", "parameter_count"]
+89:             );
+90:             console.log("📊 [5] Resultado ORM read whatsapp.template:", result);
+91:             if (result && result.length) {
+92:                 const template = result[0];
+93:                 // Si el campo parameter_count no existe, usamos un valor simulado
+94:                 if (template.parameter_count === undefined) {
+95:                     console.warn("⚠️ El campo 'parameter_count' no existe en whatsapp.template. Usando valor simulado 2.");
+96:                     template.parameter_count = 2;
+97:                     template.parameter_schema = template.parameter_schema || '{"1":"Video URL","2":"Texto"}';
+98:                 }
+99:                 this.state.templateId = templateId;
+100:                 this._generateInputs(template);
+101:             } else {
+102:                 console.log("⚠️ No se encontraron resultados de la plantilla en la BD.");
+103:                 this.state.inputs = [];
+104:                 this.state.templateId = null;
+105:             }
+106:         } catch (err) {
+107:             console.error("❌ Error de red/ORM al cargar la plantilla:", err);
+108:             this.state.error = err.message;
+109:             this.notification.add("Error al cargar la plantilla: " + err.message, { type: "danger" });
+110:         } finally {
+111:             this.state.loading = false;
+112:         }
+113:     }
+114: 
+115:     _generateInputs(template) {
+116:         let schema = {};
+117:         try {
+118:             schema = JSON.parse(template.parameter_schema || "{}");
+119:         } catch (e) {
+120:             console.error("Error parseando parameter_schema:", e);
+121:         }
+122:         const count = template.parameter_count;
+123:         const hasVideo = template.has_video_header || false;
+124:         
+125:         console.log(`🛠️ [6] Generando ${count} inputs... Schema:`, schema);
+126: 
+127:         let currentValues = [];
+128:         const paramValuesStr = this.props.record?.data?.parameter_values || "[]";
+129:         try {
+130:             currentValues = JSON.parse(paramValuesStr);
+131:             if (!Array.isArray(currentValues)) currentValues = [];
+132:         } catch (e) {
+133:             currentValues = [];
+134:         }
+135:         while (currentValues.length < count) currentValues.push("");
+136:         if (currentValues.length > count) currentValues = currentValues.slice(0, count);
+137: 
+138:         const inputs = [];
+139:         for (let i = 1; i <= count; i++) {
+140:             let paramName = schema[i] || `Parámetro ${i}`;
+141:             let placeholder = "";
+142:             let isUrl = false;
+143:             
+144:             if (hasVideo && i === 1) {
+145:                 placeholder = "URL del video (ej. https://.../video.mp4)";
+146:                 paramName = "URL del video";
+147:                 isUrl = true;
+148:             } else {
+149:                 placeholder = `Valor para {{${i}}}`;
+150:             }
+151:             
+152:             inputs.push({
+153:                 index: i,
+154:                 paramName: paramName,
+155:                 value: currentValues[i - 1],
+156:                 placeholder: placeholder,
+157:                 isUrl: isUrl,
+158:             });
+159:         }
+160:         this.state.inputs = inputs;
+161:         console.log("✅ Inputs generados:", inputs);
+162:     }
+163: 
+164:     _onInputChange(event, idx) {
+165:         const newValue = event.target.value;
+166:         this.state.inputs[idx].value = newValue;
+167:         this._updateParameterValues();
+168:     }
+169: 
+170:     _updateParameterValues() {
+171:         const values = this.state.inputs.map(input => input.value);
+172:         const jsonValue = JSON.stringify(values);
+173:         if (this.props.record && this.props.record.update) {
+174:             this.props.record.update({ parameter_values: jsonValue });
+175:         }
+176:     }
+177: }
+178: 
+179: export const dynamicParametersField = {
+180:     component: DynamicParametersWidget,
+181:     supportedTypes: ["text", "char"],
+182:     fieldDependencies: [
+183:         { name: "campaign_whatsapp_template_id", type: "many2one" }
+184:     ],
+185: };
+186: 
+187: registry.category("fields").add("dynamic_parameters", dynamicParametersField);
+
+(End of file - total 187 lines)
+</content>
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 4.4s)
+
+_Thinking:_
+
+Now let me read the message view XML to see the wizard form.
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/views/whatsapp_message_views.xml"
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/views/whatsapp_message_views.xml</path>
+<type>file</type>
+<content>
+1: <?xml version="1.0" encoding="utf-8"?>
+2: <odoo>
+3:     <record id="action_send_whatsapp_message" model="ir.actions.act_window">
+4:         <field name="name">Send WhatsApp Message</field>
+5:         <field name="res_model">whatsapp.message.wizard</field>
+6:         <field name="view_mode">form</field>
+7:         <field name="target">new</field>
+8:         <field name="binding_model_id" ref="base.model_res_partner"/>
+9:         <field name="binding_view_types">form</field>
+10:         <field name="help" type="html">
+11:             <p>Send a templated message via WhatsApp Cloud API.</p>
+12:         </field>
+13:     </record>
+14: 
+15:     <record id="view_whatsapp_message_form" model="ir.ui.view">
+16:         <field name="name">whatsapp.message.wizard.form</field>
+17:         <field name="model">whatsapp.message.wizard</field>
+18:         <field name="arch" type="xml">
+19:             <form>
+20:                 <sheet>
+21:                     <group>
+22:                         <field name="partner_id"/>
+23:                         <field name="waba_account_id" options="{'no_create': True}"/>
+24:                         <field name="template_id" options="{'no_create': True}"/>
+25:                         <field name="parameter_values" 
+26:                                placeholder='["Simón", "s0003", "CC El Mercado", "7:00 p.m.", "+584142711347", "Mi Tienda"]'/>
+27:                     </group>
+28:                     <footer>
+29:                         <button name="action_send_whatsapp_message" string="Enviar" type="object" class="btn-primary"/>
+30:                         <button string="Cancelar" class="btn-secondary" special="cancel"/>
+31:                     </footer>
+32:                 </sheet>
+33:             </form>
+34:         </field>
+35:     </record>
+36: </odoo>
+
+(End of file - total 36 lines)
+</content>
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 7.8s)
+
+_Thinking:_
+
+Now I have all the information I need. Let me make all the edits:
+
+1. `whatsapp_template.py` - Add `has_image_header` field and update `send_to_partner` and `help` text
+2. `whatsapp_message.py` - Add image header handling in `action_send_whatsapp_message`
+3. `views/whatsapp_template_views.xml` - Add `has_image_header` in list, form, and help text
+4. `static/src/js/dynamic_parameters_widget.js` - Add image header handling
+
+Let's start.
+
+Now I'll make all four edits in parallel:
+
+**Tool: edit**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_template.py",
+  "oldString": "    has_video_header = fields.Boolean(\n        string='Encabezado de video',\n        default=False,\n        help=\"\"\"Activa esta opción si la plantilla que creaste en Meta tiene un encabezado de tipo VIDEO.\n        IMPORTANTE: El primer parámetro ({{1}}) será la URL del video.\n        Debes incluir al menos {\"1\": \"url_video\"} en el esquema de parámetros.\"\"\"\n    )\n    active = fields.Boolean(default=True)",
+  "newString": "    has_video_header = fields.Boolean(\n        string='Encabezado de video',\n        default=False,\n        help=\"\"\"Activa esta opción si la plantilla que creaste en Meta tiene un encabezado de tipo VIDEO.\n        IMPORTANTE: El primer parámetro ({{1}}) será la URL del video.\n        Debes incluir al menos {\"1\": \"url_video\"} en el esquema de parámetros.\"\"\"\n    )\n    has_image_header = fields.Boolean(\n        string='Encabezado de imagen',\n        default=False,\n        help=\"\"\"Activa esta opción si la plantilla que creaste en Meta tiene un encabezado de tipo IMAGEN.\n        IMPORTANTE: El primer parámetro ({{1}}) será la URL de la imagen.\n        Debes incluir al menos {\"1\": \"url_imagen\"} en el esquema de parámetros.\"\"\"\n    )\n    active = fields.Boolean(default=True)"
+}
+```
+
+**Output:**
+```
+Edit applied successfully.
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 5.1s)
+
+_Thinking:_
+
+Now update the help text for parameter_schema to mention image header, and update whatsapp_message.py.
+
+**Tool: edit**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_template.py",
+  "oldString": "• Para plantillas con ENCABEZADO DE VIDEO: el primer parámetro (1) debe ser la URL del video.\n\nLa cantidad de parámetros se calcula automáticamente a partir del número de claves (1,2,3...).\"\"\"",
+  "newString": "• Para plantillas con ENCABEZADO DE VIDEO: el primer parámetro (1) debe ser la URL del video.\n• Para plantillas con ENCABEZADO DE IMAGEN: el primer parámetro (1) debe ser la URL de la imagen.\n\nLa cantidad de parámetros se calcula automáticamente a partir del número de claves (1,2,3...).\"\"\""
+}
+```
+
+**Output:**
+```
+Edit applied successfully.
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 8.7s)
+
+_Thinking:_
+
+Now update whatsapp_message.py to add image header handling.
+
+**Tool: edit**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_message.py",
+  "newString": "        # Construir componentes según el tipo de plantilla\n        components = []\n\n        # Si tiene video header, el primer parámetro debe ser la URL del video\n        if template.has_video_header:\n            if not params or len(params) < 1:\n                raise UserError(_('La plantilla con video requiere al menos la URL del video como primer parámetro.'))\n            video_url = params[0]\n            components.append({\n                'type': 'header',\n                'parameters': [{\n                    'type': 'video',\n                    'video': {'link': video_url}\n                }]\n            })\n            # El resto de parámetros van al body (si hay)\n            body_params = params[1:]\n            if body_params:\n                cleaned_body_params = [str(p).replace('\\n', '  ').replace('\\r', '') for p in body_params]\n                components.append({\n                    'type': 'body',\n                    'parameters': [{'type': 'text', 'text': p} for p in cleaned_body_params]\n                })\n        elif template.has_image_header:\n            if not params or len(params) < 1:\n                raise UserError(_('La plantilla con imagen requiere al menos la URL de la imagen como primer parámetro.'))\n            image_url = params[0]\n            components.append({\n                'type': 'header',\n                'parameters': [{\n                    'type': 'image',\n                    'image': {'link': image_url}\n                }]\n            })\n            body_params = params[1:]\n            if body_params:\n                cleaned_body_params = [str(p).replace('\\n', '  ').replace('\\r', '') for p in body_params]\n                components.append({\n                    'type': 'body',\n                    'parameters': [{'type': 'text', 'text': p} for p in cleaned_body_params]\n                })\n        else:",
+  "oldString": "        # Construir componentes según el tipo de plantilla\n        components = []\n\n        # Si tiene video header, el primer parámetro debe ser la URL del video\n        if template.has_video_header:\n            if not params or len(params) < 1:\n                raise UserError(_('La plantilla con video requiere al menos la URL del video como primer parámetro.'))\n            video_url = params[0]\n            components.append({\n                'type': 'header',\n                'parameters': [{\n                    'type': 'video',\n                    'video': {'link': video_url}\n                }]\n            })\n            # El resto de parámetros van al body (si hay)\n            body_params = params[1:]\n            if body_params:\n                # Meta prohíbe terminantemente enviar saltos de línea dentro de las variables (como {{1}}).\n                # Esto causa el error \"132018 There's an issue with the parameters\".\n                # Limpiamos los saltos de línea de todos los parámetros de texto.\n                cleaned_body_params = [str(p).replace('\\n', '  ').replace('\\r', '') for p in body_params]\n                components.append({\n                    'type': 'body',\n                    'parameters': [{'type': 'text', 'text': p} for p in cleaned_body_params]\n                })\n        else:"
+}
+```
+
+**Output:**
+```
+Edit applied successfully.
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 4.8s)
+
+_Thinking:_
+
+Now update the XML views to include the `has_image_header` field.
+
+**Tool: edit**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/views/whatsapp_template_views.xml",
+  "newString": "                <field name=\"parameter_count\"/>\n                <field name=\"has_video_header\"/>\n                <field name=\"has_image_header\"/>\n                <field name=\"active\"/>",
+  "oldString": "                <field name=\"parameter_count\"/>\n                <field name=\"has_video_header\"/>\n                <field name=\"active\"/>"
+}
+```
+
+**Output:**
+```
+Edit applied successfully.
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 5.2s)
+
+_Thinking:_
+
+Now add the field in the form view too.
+
+**Tool: edit**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/views/whatsapp_template_views.xml",
+  "newString": "                        <field name=\"has_video_header\"/>\n                        <field name=\"has_image_header\"/>\n                        <field name=\"parameter_schema\" widget=\"ace\" options=\"{'mode': 'json'}\" \n                               placeholder='{\"1\": \"nombre_cliente\", \"2\": \"fecha_cita\"}'/>",
+  "oldString": "                        <field name=\"has_video_header\"/>\n                        <field name=\"parameter_schema\" widget=\"ace\" options=\"{'mode': 'json'}\" \n                               placeholder='{\"1\": \"nombre_cliente\", \"2\": \"fecha_cita\"}'/>"
+}
+```
+
+**Output:**
+```
+Edit applied successfully.
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 5.1s)
+
+_Thinking:_
+
+Now update the help text in the form to include image header info.
+
+**Tool: edit**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/views/whatsapp_template_views.xml",
+  "newString": "                            • <strong>Para plantillas con video (encabezado activado):</strong> El primer parámetro debe ser la URL del video: <code>{\"1\": \"url_video\"}</code><br/>\n                            • <strong>Para plantillas con imagen (encabezado activado):</strong> El primer parámetro debe ser la URL de la imagen: <code>{\"1\": \"url_imagen\"}</code><br/>",
+  "oldString": "                            • <strong>Para plantillas con video (encabezado activado):</strong> El primer parámetro debe ser la URL del video: <code>{\"1\": \"url_video\"}</code><br/>"
+}
+```
+
+**Output:**
+```
+Edit applied successfully.
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 4.8s)
+
+_Thinking:_
+
+Now update the JS widget to handle image header.
+
+**Tool: edit**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/static/src/js/dynamic_parameters_widget.js",
+  "newString": "                [\"parameter_schema\", \"has_video_header\", \"has_image_header\", \"parameter_count\"]",
+  "oldString": "                [\"parameter_schema\", \"has_video_header\", \"parameter_count\"]"
+}
+```
+
+**Output:**
+```
+Edit applied successfully.
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 4.8s)
+
+_Thinking:_
+
+Now update the `_generateInputs` function to handle image header similarly to video.
+
+**Tool: edit**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/static/src/js/dynamic_parameters_widget.js",
+  "newString": "        const count = template.parameter_count;\n        const hasVideo = template.has_video_header || false;\n        const hasImage = template.has_image_header || false;",
+  "oldString": "        const count = template.parameter_count;\n        const hasVideo = template.has_video_header || false;"
+}
+```
+
+**Output:**
+```
+Edit applied successfully.
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 5.0s)
+
+_Thinking:_
+
+Now update the input generation to handle image header.
+
+**Tool: edit**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/static/src/js/dynamic_parameters_widget.js",
+  "newString": "            if (hasVideo && i === 1) {\n                placeholder = \"URL del video (ej. https://.../video.mp4)\";\n                paramName = \"URL del video\";\n                isUrl = true;\n            } else if (hasImage && i === 1) {\n                placeholder = \"URL de la imagen (ej. https://.../imagen.jpg)\";\n                paramName = \"URL de la imagen\";\n                isUrl = true;\n            } else {",
+  "oldString": "            if (hasVideo && i === 1) {\n                placeholder = \"URL del video (ej. https://.../video.mp4)\";\n                paramName = \"URL del video\";\n                isUrl = true;\n            } else {"
+}
+```
+
+**Output:**
+```
+Edit applied successfully.
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 4.7s)
+
+_Thinking:_
+
+Now update the help text in the parameter_values field of the wizard form.
+
+**Tool: edit**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/models/whatsapp_message.py",
+  "newString": "        help='Ej: [\"https://urlvideo.mp4\", \"Simón\"] (primero la URL del video/imagen si la plantilla tiene header)'",
+  "oldString": "        help='Ej: [\"https://urlvideo.mp4\", \"Simón\"] (primero la URL del video si la plantilla tiene header)'"
+}
+```
+
+**Output:**
+```
+Edit applied successfully.
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 4.4s)
+
+_Thinking:_
+
+Now let me update the web template XML to also show the image header field if needed, but the dynamic_parameters_template.xml might need updating too.
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/static/src/xml/dynamic_parameters_template.xml"
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/static/src/xml/dynamic_parameters_template.xml</path>
+<type>file</type>
+<content>
+1: <?xml version="1.0" encoding="UTF-8"?>
+2: <templates xml:space="preserve">
+3:     <t t-name="whatsapp_cloud_integration.DynamicParametersWidget" owl="1">
+4:         <div class="o_dynamic_parameters" style="margin-top: 16px; margin-bottom: 16px;">
+5:             <t t-if="state.loading">
+6:                 <div class="text-center py-2">
+7:                     <i class="fa fa-spinner fa-spin"/> Cargando parámetros...
+8:                 </div>
+9:             </t>
+10:             <t t-elif="state.error">
+11:                 <div class="alert alert-danger mb-0">
+12:                     <i class="fa fa-exclamation-circle"/> Error: <t t-esc="state.error"/>
+13:                 </div>
+14:             </t>
+15:             <t t-else="">
+16:                 <div class="card">
+17:                     <div class="card-body">
+18:                         <t t-foreach="state.inputs" t-as="input" t-key="input_index">
+19:                             <div class="form-group row mb-3">
+20:                                 <label class="col-sm-3 col-form-label font-weight-bold" t-att-for="'param_' + input.index">
+21:                                     <t t-esc="input.paramName"/>
+22:                                 </label>
+23:                                 <div class="col-sm-9">
+24:                                     <t t-if="input.isUrl">
+25:                                         <input type="text" class="form-control" t-att-id="'param_' + input.index"
+26:                                                t-att-placeholder="input.placeholder"
+27:                                                t-att-value="input.value"
+28:                                                t-on-change="(ev) => this._onInputChange(ev, input_index)"/>
+29:                                     </t>
+30:                                     <t t-else="">
+31:                                         <textarea class="form-control" t-att-id="'param_' + input.index"
+32:                                                   t-att-placeholder="input.placeholder"
+33:                                                   rows="4"
+34:                                                   t-on-change="(ev) => this._onInputChange(ev, input_index)"
+35:                                                   t-esc="input.value"></textarea>
+36:                                     </t>
+37:                                 </div>
+38:                             </div>
+39:                         </t>
+40:                         <t t-if="state.inputs.length === 0">
+41:                             <div class="alert alert-info mb-0">
+42:                                 <i class="fa fa-info-circle"/> Esta plantilla no tiene parámetros.
+43:                             </div>
+44:                         </t>
+45:                     </div>
+46:                 </div>
+47:             </t>
+48:         </div>
+49:     </t>
+50: </templates>
+
+(End of file - total 50 lines)
+</content>
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 5.1s)
+
+_Thinking:_
+
+The template XML doesn't need changes - it already uses `input.isUrl` to conditionally render an input field (for URLs) vs a textarea (for text). Since the image header param is also a URL, this will work automatically.
+
+Now let me check if the mailing wizard's form view needs to include the has_image_header field. Let me check.
+
+**Tool: grep**
+
+**Input:**
+```json
+{
+  "pattern": "has_video_header",
+  "path": "/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/views"
+}
+```
+
+**Output:**
+```
+Found 2 matches
+/home/odoo/develop/modulos_odoo/shared/extra/19.0/whatsapp_cloud_integration/views/whatsapp_template_views.xml:
+  Line 22:                 <field name="has_video_header"/>
+
+  Line 41:                         <field name="has_video_header"/>
+
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 4.6s)
+
+_Thinking:_
+
+Good - only `whatsapp_template_views.xml` had `has_video_header`, and I've already added `has_image_header` alongside it. Now let me update the modules and test.
+
+**Tool: todowrite**
+
+**Input:**
+```json
+{
+  "todos": [
+    {
+      "priority": "high",
+      "content": "Agregar campo has_image_header en whatsapp_template.py",
+      "status": "completed"
+    },
+    {
+      "priority": "high",
+      "content": "Agregar ruta image header en whatsapp_message.py",
+      "status": "completed"
+    },
+    {
+      "priority": "high",
+      "content": "Agregar campo en vistas whatsapp_template_views.xml",
+      "status": "completed"
+    },
+    {
+      "priority": "high",
+      "content": "Actualizar JS widget para image header",
+      "status": "completed"
+    },
+    {
+      "priority": "high",
+      "content": "Actualizar módulo y probar",
+      "status": "in_progress"
+    }
+  ]
+}
+```
+
+**Output:**
+```
+[
+  {
+    "content": "Agregar campo has_image_header en whatsapp_template.py",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "content": "Agregar ruta image header en whatsapp_message.py",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "content": "Agregar campo en vistas whatsapp_template_views.xml",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "content": "Actualizar JS widget para image header",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "content": "Actualizar módulo y probar",
+    "status": "in_progress",
+    "priority": "high"
+  }
+]
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 47.1s)
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "fuser -k 38069/tcp 2>/dev/null; sleep 2\nsource /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/.venv/bin/activate\nnohup python3 /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo-bin \\\n  -c /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/clientes/integraiadev_19/conf/odoo.cfg \\\n  -u whatsapp_cloud_integration > /tmp/update_whatsapp.txt 2>&1 &\necho \"PID: $!\"\nsleep 40\nss -tlnp | grep 38069 && echo \"Ready\"",
+  "description": "Restart with module update",
+  "timeout": 70000
+}
+```
+
+**Output:**
+```
+ 1093907 1094339 1094340PID: 3574190
+LISTEN 0      16         127.0.0.1:38069      0.0.0.0:*    users:(("python3",pid=3574681,fd=7),("python3",pid=3574679,fd=7),("python3",pid=3574190,fd=7))
+Ready
+
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 6.1s)
+
+_Thinking:_
+
+Let me check for any errors during the update.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "grep -E \"ERROR|CRITICAL|Traceback\" /home/odoo/develop/modulos_odoo/clientes/integraiadev_19/log/odoo.log | tail -3",
+  "description": "Check for update errors"
+}
+```
+
+**Output:**
+```
+Mute this logger: --log-handler odoo.addons.rpc.controllers.xmlrpc:ERROR
+2026-06-15 15:41:05,062 3574190 DEBUG dbintegraiadev_19 odoo.addons.base.models.ir_module: docutils' system message present: <system_message level="3" line="177" source="<string>" type="ERROR"><paragraph>Unexpected indentation.</paragraph></system_message> 
+Traceback (most recent call last):
+
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 8.0s)
+
+_Thinking:_
+
+Only docutils warnings. No real errors. Let me verify the template config options to make sure the image header field shows up.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "source /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/.venv/bin/activate && python3 << 'EOF'\nimport xmlrpc.client\nurl = 'http://127.0.0.1:38069'\ndb = 'dbintegraiadev_19'\ncommon = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/common')\nuid = common.authenticate(db, 'admin@unisasalud.com', 'Unisa2024!', {})\nmodels = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/object')\n\n# Check field exists\nfields = models.execute_kw(db, uid, 'Unisa2024!', 'whatsapp.template', 'fields_get', [[]], {'attributes': ['string','help','type']})\nif 'has_image_header' in fields:\n    print(f\"✅ has_image_header field exists: {fields['has_image_header']}\")\nelse:\n    print(\"❌ has_image_header field NOT found\")\n\n# Check existing templates\ntemplates = models.execute_kw(db, uid, 'Unisa2024!', 'whatsapp.template', 'search_read', [[]], {'fields':['name','friendly_name','has_video_header','has_image_header']})\nprint(f\"\\nTemplates ({len(templates)}):\")\nfor t in templates:\n    print(f\"  ID {t['id']}: {t['name']:30s} video={t['has_video_header']} image={t['has_image_header']}\")\nEOF",
+  "description": "Verify image header field exists",
+  "timeout": 15000
+}
+```
+
+**Output:**
+```
+✅ has_image_header field exists: {'help': 'Activa esta opción si la plantilla que creaste en Meta tiene un encabezado de tipo IMAGEN.\n        IMPORTANTE: El primer parámetro ({{1}}) será la URL de la imagen.\n        Debes incluir al menos {"1": "url_imagen"} en el esquema de parámetros.', 'string': 'Encabezado de imagen', 'type': 'boolean'}
+
+Templates (5):
+  ID 1: hello_world                    video=False image=False
+  ID 2: unisa_dia_tarjeta              video=True image=False
+  ID 3: unisa_dia_tarjeta_dinamica     video=True image=False
+  ID 4: unisa_sabados                  video=True image=False
+  ID 5: unisa_sabados                  video=False image=False
+
+```
+
+---
+
+## Assistant (Build · DeepSeek V4 Flash Free · 7.5s)
+
+_Thinking:_
+
+The field exists. Now I notice something - ID 4 and ID 5 both have name "unisa_sabados" (same Meta template name). ID 4 has video=True, ID 5 has video=False. But the user's actual template in Meta has an IMAGE header, not video.
+
+The user needs to:
+1. Create a new template record (or update existing one) with:
+   - `name`: `unisa_sabados` (must match Meta)
+   - `has_image_header`: True (not video)
+   - `parameter_schema`: `{"1": "url_imagen"}`
+   - `parameter_count`: 1
+
+But wait, from the user's description, their template `unisa_sabados` in Meta has:
+- Header type: Image
+- Body: plain text (NO variables)
+
+So actually the template doesn't have any body text parameters. The image header itself needs the URL. So `parameter_schema` should be `{"1": "url_imagen"}` and `parameter_count` would be 1.
+
+The user needs to update the template record in Odoo. Let me tell them.
+
+Listo, la implementación está completa. Ahora necesitas **configurar la plantilla en Odoo** para usar el nuevo campo:
+
+1. Ve a **Plantillas WhatsApp** → busca `unisa_sabados_TEST` (o crea una nueva)
+2. Configura:
+   - `Nombre técnico`: `unisa_sabados`
+   - `Encabezado de imagen`: ✅ activado (en vez de video)
+   - `Encabezado de video`: ❌ desactivado
+   - `Esquema de parámetros`: `{"1": "url_imagen"}`
+3. Al enviar, pasa la URL de la imagen como primer (y único) parámetro
+
+Ejemplo de `parameter_values`:
+```json
+["https://media.unisalud.com/campanas/sabados.jpg"]
+```
+
+La plantilla en Meta no tiene variables de texto en el body, así que solo necesitas la URL de la imagen.
+
+---
+
+## User
+
+[unisa odoo@vmi3296692:~/develop/odoo-from-13-to-18/arquitectura/odoo19$ ./odoo/odoo-bin -c clientes/integraiadev_19/c
+onf/odoo.cfg -d dbintegraiadev_19  
+Traceback (most recent call last):
+  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/./odoo/odoo-bin", line 3, in <module>
+    import odoo.cli
+  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/cli/__init__.py", line 2, in <module>
+    from .command import Command, main  # noqa: F401
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/cli/command.py", line 8, in <module>
+    import odoo.init  # import first for core setup
+    ^^^^^^^^^^^^^^^^
+  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/init.py", line 28, in <module>
+    from .tools.gc import gc_set_timing
+  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/tools/__init__.py", line 8, in <module>
+    from .config import config
+  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/tools/config.py", line 19, in <module>
+    from passlib.context import CryptContext
+ModuleNotFoundError: No module named 'passlib'
+[unisa odoo@vmi3296692:~/develop/odoo-from-13-to-18/arquitectura/odoo19$ [unisa odoo@vmi3296692:~/develop/odoo-from-13-to-18/arquitectura/odoo19$ ./odoo/odoo-bin -c clientes/integraiadev_19/c
+onf/odoo.cfg -d dbintegraiadev_19  
+Traceback (most recent call last):
+  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/./odoo/odoo-bin", line 3, in <module>
+    import odoo.cli
+  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/cli/__init__.py", line 2, in <module>
+    from .command import Command, main  # noqa: F401
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/cli/command.py", line 8, in <module>
+    import odoo.init  # import first for core setup
+    ^^^^^^^^^^^^^^^^
+  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/init.py", line 28, in <module>
+    from .tools.gc import gc_set_timing
+  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/tools/__init__.py", line 8, in <module>
+    from .config import config
+  File "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/odoo/tools/config.py", line 19, in <module>
+    from passlib.context import CryptContext
+ModuleNotFoundError: No module named 'passlib'
+[unisa odoo@vmi3296692:~/develop/odoo-from-13-to-18/arquitectura/odoo19$ 
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 5.9s)
+
+_Thinking:_
+
+The user is trying to run Odoo from the server and getting a `ModuleNotFoundError: No module named 'passlib'`. They need to install the `passlib` Python package. Let me tell them the command.
+
+Falta el módulo `passlib`. Desde el server ejecuta:
+
+```bash
+source .venv/bin/activate
+pip install passlib
+```
+
+O si no usas venv:
+
+```bash
+pip3 install passlib
+```
+
+Si no tienes `pip` del sistema, usa el del venv de Odoo:
+
+```bash
+cd /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19
+source .venv/bin/activate
+pip install passlib
 ```
 
 ---

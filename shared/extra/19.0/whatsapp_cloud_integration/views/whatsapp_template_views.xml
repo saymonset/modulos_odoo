@@ -20,6 +20,7 @@
                 <field name="language_code"/>
                 <field name="parameter_count"/>
                 <field name="has_video_header"/>
+                <field name="has_image_header"/>
                 <field name="active"/>
             </list>
         </field>
@@ -38,6 +39,7 @@
                         <field name="name" required="1" placeholder="nombre_tecnico_plantilla"/>
                         <field name="language_code"/>
                         <field name="has_video_header"/>
+                        <field name="has_image_header"/>
                         <field name="parameter_schema" widget="ace" options="{'mode': 'json'}" 
                                placeholder='{"1": "nombre_cliente", "2": "fecha_cita"}'/>
                         <div class="alert alert-info" role="alert" style="margin-top: 5px; margin-bottom: 5px;">
@@ -46,6 +48,7 @@
                             • <strong>Sin parámetros:</strong> Deja el campo vacío o escribe <code>{}</code><br/>
                             • <strong>Un parámetro (texto):</strong> <code>{"1": "nombre_cliente"}</code><br/>
                             • <strong>Para plantillas con video (encabezado activado):</strong> El primer parámetro debe ser la URL del video: <code>{"1": "url_video"}</code><br/>
+                            • <strong>Para plantillas con imagen (encabezado activado):</strong> El primer parámetro debe ser la URL de la imagen: <code>{"1": "url_imagen"}</code><br/>
                             • <strong>Varios parámetros:</strong> <code>{"1": "nombre", "2": "producto", "3": "precio"}</code><br/>
                             La <strong>clave</strong> (1,2,3...) es el número de la variable en Meta (<code>{{1}}</code>, <code>{{2}}</code>).<br/>
                             El <strong>valor</strong> es solo una etiqueta interna para recordar qué significa cada parámetro.

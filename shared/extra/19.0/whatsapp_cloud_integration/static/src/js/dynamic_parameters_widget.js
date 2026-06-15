@@ -85,7 +85,7 @@ class DynamicParametersWidget extends Component {
             const result = await this.orm.read(
                 "whatsapp.template",
                 [templateId],
-                ["parameter_schema", "has_video_header", "parameter_count"]
+                ["parameter_schema", "has_video_header", "has_image_header", "parameter_count"]
             );
             console.log("📊 [5] Resultado ORM read whatsapp.template:", result);
             if (result && result.length) {
@@ -121,6 +121,7 @@ class DynamicParametersWidget extends Component {
         }
         const count = template.parameter_count;
         const hasVideo = template.has_video_header || false;
+        const hasImage = template.has_image_header || false;
         
         console.log(`🛠️ [6] Generando ${count} inputs... Schema:`, schema);
 
@@ -144,6 +145,10 @@ class DynamicParametersWidget extends Component {
             if (hasVideo && i === 1) {
                 placeholder = "URL del video (ej. https://.../video.mp4)";
                 paramName = "URL del video";
+                isUrl = true;
+            } else if (hasImage && i === 1) {
+                placeholder = "URL de la imagen (ej. https://.../imagen.jpg)";
+                paramName = "URL de la imagen";
                 isUrl = true;
             } else {
                 placeholder = `Valor para {{${i}}}`;

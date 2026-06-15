@@ -34,6 +34,7 @@ Ejemplos:
 • Un parámetro de texto: {"1": "nombre_cliente"}
 • Dos parámetros: {"1": "url_video", "2": "nombre_cliente"}
 • Para plantillas con ENCABEZADO DE VIDEO: el primer parámetro (1) debe ser la URL del video.
+• Para plantillas con ENCABEZADO DE IMAGEN: el primer parámetro (1) debe ser la URL de la imagen.
 
 La cantidad de parámetros se calcula automáticamente a partir del número de claves (1,2,3...)."""
     )
@@ -48,6 +49,13 @@ La cantidad de parámetros se calcula automáticamente a partir del número de c
         help="""Activa esta opción si la plantilla que creaste en Meta tiene un encabezado de tipo VIDEO.
         IMPORTANTE: El primer parámetro ({{1}}) será la URL del video.
         Debes incluir al menos {"1": "url_video"} en el esquema de parámetros."""
+    )
+    has_image_header = fields.Boolean(
+        string='Encabezado de imagen',
+        default=False,
+        help="""Activa esta opción si la plantilla que creaste en Meta tiene un encabezado de tipo IMAGEN.
+        IMPORTANTE: El primer parámetro ({{1}}) será la URL de la imagen.
+        Debes incluir al menos {"1": "url_imagen"} en el esquema de parámetros."""
     )
     active = fields.Boolean(default=True)
 

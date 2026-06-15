@@ -16,7 +16,7 @@ class WhatsappMessageWizard(models.TransientModel):
     template_id = fields.Many2one('whatsapp.template', string='Plantilla', required=True)
     parameter_values = fields.Text(
         string='Valores de Parámetros (JSON)',
-        help='Ej: ["https://urlvideo.mp4", "Simón"] (primero la URL del video si la plantilla tiene header)'
+        help='Ej: ["https://urlvideo.mp4", "Simón"] (primero la URL del video/imagen si la plantilla tiene header)'
     )
 
     def action_send_whatsapp_message(self):
@@ -77,9 +77,24 @@ class WhatsappMessageWizard(models.TransientModel):
             # El resto de parámetros van al body (si hay)
             body_params = params[1:]
             if body_params:
-                # Meta prohíbe terminantemente enviar saltos de línea dentro de las variables (como {{1}}).
-                # Esto causa el error "132018 There’s an issue with the parameters".
-                # Limpiamos los saltos de línea de todos los parámetros de texto.
+                cleaned_body_params = [str(p).replace('\n', '  ').replace('\r', '') for p in body_params]
+                components.append({
+                    'type': 'body',
+                    'parameters': [{'type': 'text', 'text': p} for p in cleaned_body_params]
+                })
+        elif template.has_image_header:
+            if not params or len(params) < 1:
+                raise UserError(_('La plantilla con imagen requiere al menos la URL de la imagen como primer parámetro.'))
+            image_url = params[0]
+            components.append({
+                'type': 'header',
+                'parameters': [{
+                    'type': 'image',
+                    'image': {'link': image_url}
+                }]
+            })
+            body_params = params[1:]
+            if body_params:
                 cleaned_body_params = [str(p).replace('\n', '  ').replace('\r', '') for p in body_params]
                 components.append({
                     'type': 'body',
