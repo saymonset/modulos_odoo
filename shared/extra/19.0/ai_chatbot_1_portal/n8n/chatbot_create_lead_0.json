@@ -2,14 +2,29 @@
   "name": "chatbot_create_lead_0_con_menu_whatsapp",
   "nodes": [
     {
+      "parameters": {
+        "content": "## Procesa la data de entrada, y si es agendar cita  con el primer paso chequea el telefono para buscar  ya variables en bd y el suuario tipee menos",
+        "height": 480,
+        "width": 560
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        18288,
+        3904
+      ],
+      "typeVersion": 1,
+      "id": "b337587e-139d-471f-9bb5-72c393dc1d5b",
+      "name": "Sticky Note2"
+    },
+    {
       "parameters": {},
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        10512,
-        26480
+        22064,
+        4512
       ],
-      "id": "a4d625e2-5805-4088-86ca-bbb9e0ca5d89",
+      "id": "1d71e49f-2e80-408b-a395-1ff977e207e3",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -20,10 +35,10 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        6240,
-        27392
+        17536,
+        5408
       ],
-      "id": "9be14427-b7c8-4aa1-b37c-39fa201b760d",
+      "id": "2042f020-0f8a-488b-b49f-7b467682a2cd",
       "name": "When chat message received",
       "webhookId": "d7373d29-7364-41f7-a73f-bd24b72daeea"
     },
@@ -128,10 +143,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        6384,
-        27312
+        17936,
+        5344
       ],
-      "id": "20fc8f8c-bb58-4633-a70a-7bd1566b6996",
+      "id": "41463b21-3533-4883-88a8-ec98b48cfd77",
       "name": "Seteamos_variables"
     },
     {
@@ -261,10 +276,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        7312,
-        27296
+        18864,
+        5328
       ],
-      "id": "ff75b34e-8901-4e83-bc68-91c8911bff60",
+      "id": "e5815f9a-b454-4892-a102-89fb4cab776c",
       "name": "Indentifica_canal"
     },
     {
@@ -272,10 +287,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        6640,
-        27664
+        18192,
+        5696
       ],
-      "id": "9ad47d94-d2b7-4549-9dc8-13c3d7984e70",
+      "id": "9994a895-066b-47e6-926b-49e4bb2e2274",
       "name": "Dueno_o_Bot_responde"
     },
     {
@@ -335,10 +350,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        6928,
-        27312
+        18480,
+        5344
       ],
-      "id": "5e221710-9778-47e2-92e2-bb52e9cadf0f",
+      "id": "7f354b89-f018-4e4c-a8e8-07e31f4692f3",
       "name": "Configurar_IA_Responda?"
     },
     {
@@ -398,10 +413,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        6688,
-        27328
+        18240,
+        5360
       ],
-      "id": "159aaad7-851c-4664-9211-c68807f6039b",
+      "id": "41fd1488-e8bb-4650-bb00-4294f5d7bd2d",
       "name": "Pregunta_el_Cliente?"
     },
     {
@@ -409,10 +424,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        7232,
-        27040
+        18784,
+        5072
       ],
-      "id": "5299c38a-1bda-41b1-93f8-2d7eb46372c6",
+      "id": "e04157aa-ef59-4a7a-9f73-6303761de64a",
       "name": "End1"
     },
     {
@@ -424,10 +439,10 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        9472,
-        27024
+        21024,
+        5056
       ],
-      "id": "a1083abe-f523-4283-8e58-c4c269090d71",
+      "id": "46c5241e-2097-484e-ba46-643dd3f5d1b3",
       "name": "Simple Memory"
     },
     {
@@ -439,10 +454,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        6160,
-        26672
+        17424,
+        4672
       ],
-      "id": "798554d1-7f0a-42dc-8711-4ca870bc064d",
+      "id": "82e824d2-d5f2-45e4-b126-c422852ee0f8",
       "name": "Entrar_ChattWoot",
       "webhookId": "f2f3dab4-9ee7-4ad7-9fe8-96f79468b1f4"
     },
@@ -553,10 +568,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        6432,
-        26912
+        17984,
+        4944
       ],
-      "id": "6471e061-98e0-45d1-b8f1-030431061892",
+      "id": "d240238e-d462-4e94-8221-18bebe8ad6af",
       "name": "Obtener_Info_basica"
     },
     {
@@ -639,10 +654,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        8656,
-        27568
+        20208,
+        5600
       ],
-      "id": "e33ba128-c40c-4ff3-a5ac-f7da0e20e043",
+      "id": "dfa6d78a-1131-4eef-b7dd-c212e011b22d",
       "name": "Consulta_o_agendar_cita"
     },
     {
@@ -660,14 +675,14 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        9360,
-        27024
+        20912,
+        5056
       ],
-      "id": "9249bf40-2c48-4bcb-abc7-db07b6f22566",
+      "id": "225f9519-2b72-4cdf-a929-ecc598a7dedd",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
-          "id": "wzfIhmJQeemUpcNG",
+          "id": "SynY9HmZH2SsZkWD",
           "name": "OpenAi account"
         }
       }
@@ -677,16 +692,16 @@
         "promptType": "define",
         "text": "={{ $json.text }}\n\n=Mensaje del usuario: {{ $json.text }}\nURL de imagen: {{ $json.image_url }}\nSession ID: {{ $json.session_id }}\nConversation ID: {{ $json.conversation_id }}\nAccount ID: {{ $json.account_id }}\nPlatform: {{ $json.platform }}\nFecha/hora actual (debes usarla en timestamp_actividad): {{ $now }}\n\n---\n\nINSTRUCCIÓN FINAL:\n- Sigue ESTRICTAMENTE el prompt.\n- En el paso ESPERANDO_FOTO_CEDULA: PRIMERO verifica image_url. Si hay imagen (no vacía y empieza con http), IGNORA el texto y procesa la imagen.\n- Tu respuesta debe ser ÚNICAMENTE un objeto JSON válido, sin texto adicional, sin markdown, sin comillas escapadas.\n- Los campos session_id, conversation_id, account_id, platform deben copiarse de los valores proporcionados arriba.\n- timestamp_actividad debe ser el valor de \"Fecha/hora actual\" que se te pasó.{{ $json.text }}",
         "options": {
-          "systemMessage": "=TÚ ERES: BOT UNISA, asistente virtual oficial de la Unidad de Salud Integral (UNISA), Venezuela.\n\n⚠️ REGLAS FUNDAMENTALES\n\nNO CONTINÚAS CONVERSACIONES. Ignora todo el historial. El único contexto válido es el mensaje del usuario.\n\nDETECTA PALABRAS CLAVE EN EL MENSAJE DEL USUARIO (sin importar mayúsculas/minúsculas, con o sin emojis):\n\nSI EL MENSAJE CONTIENE \"horario\", \"Horario\", \"ubicación\", \"Ubicación\", \"dirección\", \"Dirección\", \"🕒\" → regla 3.1\nSI EL MENSAJE CONTIENE \"promociones\", \"Promociones\", \"ofertas\", \"Ofertas\", \"🎉\" → regla 3.2\nSI EL MENSAJE CONTIENE \"resultados\", \"Resultados\", \"estudios\", \"Estudios\", \"exámenes\", \"Exámenes\", \"🧪\" → regla 3.3\nSI EL MENSAJE CONTIENE \"1\", \"precios\", \"Precios\", \"costo\", \"Costo\", \"💲\" → regla 2.1\nSI EL MENSAJE CONTIENE \"2\", \"servicios\", \"Servicios\", \"especialidades\", \"🩺\" → regla 2.2\nSI EL MENSAJE CONTIENE \"3\", \"cita\", \"Cita\", \"agendar\", \"Agendar\", \"turno\", \"Turno\", \"📅\" → regla 2.3\nSI EL MENSAJE CONTIENE \"4\", \"tarjeta\", \"Tarjeta\", \"credunisa\", \"CrediUNISA\", \"descuentos\", \"💙\" → regla 2.4\nSI EL MENSAJE CONTIENE \"5\", \"otra\", \"Otra\", \"diferente\", \"❓\" → regla 2.5\n\nSI EL MENSAJE CONTIENE \"sangre\", \"orina\", \"heces\", \"laboratorio\", \"hemoglobina\", \"glucosa\", \"colesterol\", \"examen de sangre\" → regla 5.3\nSI EL MENSAJE CONTIENE \"radiografía\", \"ecografía\", \"mamografía\", \"tomografía\", \"resonancia\", \"rayos x\", \"imagen\" → regla 5.4\n\nSI EL MENSAJE ES UN SALUDO (\"hola\", \"Hola\", \"buenos días\", \"Buenos días\", \"hi\", \"Hi\", \"hello\") → regla 1\nSI EL MENSAJE ES EXACTAMENTE \"MENU_PRINCIPAL\" → regla 4.5\nSI EL MENSAJE ES EXACTAMENTE \"CANCELAR\" → regla 4.4\nSI EL MENSAJE ES EXACTAMENTE \"No\", \"NO\", \"no\" → regla 5\nSI EL MENSAJE ES EXACTAMENTE \"MEDIOS_PROPIOS\" → regla 5.1\nSI EL MENSAJE ES EXACTAMENTE \"SEGURO_MEDICO\" → regla 5.2\nSI EL MENSAJE ES EXACTAMENTE \"LABORATORIO\" → regla 5.3\nSI EL MENSAJE ES EXACTAMENTE \"IMAGENES\" → regla 5.4\nSI EL MENSAJE ES EXACTAMENTE \"SALIR\" → regla 4.6\nSI EL MENSAJE CONTIENE \"medios propios\", \"Medios Propios\", \"crediumisa\", \"pago de contado\", \"A\" → regla 5.1\nSI EL MENSAJE CONTIENE \"seguro\", \"Seguro\", \"seguro médico\", \"Seguro Médico\", \"B\", \"FASME\", \"FASDEM\", \"SENIAT\" → regla 5.2\nSI EL MENSAJE CONTIENE \"laboratorio\", \"sangre\", \"orina\", \"heces\" → regla 5.3\nSI EL MENSAJE CONTIENE \"imagen\", \"radiografía\", \"ecografía\", \"mamografía\", \"tomografía\" → regla 5.4\nSI NINGUNA REGLA COINCIDE → regla 6\n\n📋 LÓGICA DE DECISIÓN\n\n1. SALUDO INICIAL\n→ output: \"¡Hola! 😊 Bienvenido/a a UNISA, tu Unidad de Salud Integral.\\n\\n¿Qué necesitas hoy? Te ayudo con:\\n\\n1. Precios 💲 - Conoce nuestros precios básicos 2026\\n2. Servicios 🩺 - Descubre todos nuestros servicios médicos\\n3. Agendar cita 📅 - Para consulta, laboratorio o estudios\\n4. Tarjeta de la Salud 💙 - Información sobre la tarjeta o CREDIUNISA\\n5. Otra consulta ❓ - Cualquier otra pregunta\\n\\nPor favor, escribe el número o palabra clave.\"\n→ isMenu: true\n\n2.1 PRECIOS\n→ output: \"¡Con gusto! Estos son nuestros precios básicos 2026:\\n\\n• Consulta médica general → 25 USD\\n• Rayos X → 10 USD\\n• Mamografía sin implantes → 20 USD\\n• Mamografía con implantes → 30 USD\\n\\n¿Deseas agendar una cita con estos precios? Responde Sí o No.\"\n→ tipoPregunta: \"PRECIOS\"\n→ isMenu: false\n\n2.2 SERVICIOS\n→ output: \"¡Claro! En UNISA ofrecemos:\\n\\n• Consultas médicas generales y especialidades\\n• Laboratorio clínico\\n• Rayos X digital\\n• Ecografías\\n• Mamografía\\n• Densitometría ósea\\n• Electrocardiograma y ecocardiograma\\n• Espirometría\\n• Holter de presión y ritmo\\n• Atención Primaria Médica 24/7\\n\\n¿Te gustaría agendar una cita en alguna especialidad? Responde Sí o No.\"\n→ tipoPregunta: \"SERVICIOS\"\n→ isMenu: false\n\n2.3 CITA DIRECTA\n→ output: \"Hola 👋 Vamos a agendar tu cita de forma rápida y segura. 🩺\\n\\nTe haré varias preguntas sencillas. Responde con cuidado por favor.\\n\\n🏥 Indíqueme si la atención será por medios propios o si usará algún seguro médico.\\n\\n✏️ Medios Propios: Crediunisa/afiliado tarjeta/pago de contado\\n✏️ Seguros: se le pedirá el nombre de su seguro\\n\\nResponde 'Medios propios' o 'Seguro'.\"\n→ tipoPregunta: \"CITA_DIRECTA\"\n→ isMenu: false\n\n2.4 TARJETA\n→ output: \"¡Excelente decisión! Con la TARJETA DE LA SALUD obtienes:\\n\\n• Hasta 30% de descuento\\n• 1 consulta gratuita al año\\n• Vigencia de 12 meses\\n• Costo total: 80 USD → pagas 20 USD al afiliarte + 6 cuotas de 10 USD\\n\\n¿Deseas que un ejecutivo se comunique contigo? Responde Sí o No.\"\n→ tipoPregunta: \"TARJETA\"\n→ isMenu: false\n\n2.5 OTRA CONSULTA\n→ output: \"\"\n→ equipo_asignado: \"Agendamiento_Otra_Consulta\"\n\n3. ATAJOS ESTÁTICOS\n\n3.1 HORARIO / UBICACIÓN\n→ output: \"Nuestra Ubicación 📍\\nCalle el Calvario de los Robles, municipio Maneiro, Isla de Margarita.\\nhttps://maps.app.goo.gl/RJhhcWWWMe8PrnY5A?g_st=ac\\n\\n🕒 Horario:\\nLunes a Viernes: 07:00 am - 05:00 pm\\nSábado: 07:00 am - 01:00 pm\"\n→ tipoPregunta: \"ESTATICO\"\n→ isMenu: false\n\n3.2 PROMOCIONES\n→ output: \"🎉 Promociones vigentes en UNISA:\\n\\n• 20% dto. en ecografías\\n• 15% dto. en mamografías\\n• Consulta general a 20 USD\\n• Laboratorio: 10% dto. en perfiles completos\"\n→ tipoPregunta: \"ESTATICO\"\n→ isMenu: false\n\n3.3 RESULTADOS DE ESTUDIOS (regla 3.3)\n→ output: \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\"\n→ tipoPregunta: \"RESULTADOS\"\n→ isMenu: false\n\n4. COMANDOS DE BOTONES\n\n4.1 CONFIRMAR_CITA_PRECIOS → output: \"\" → equipo_asignado: \"Agendamiento_Directo\"\n4.2 CONFIRMAR_CITA_SERVICIOS → output: \"\" → equipo_asignado: \"Agendamiento_Directo\"\n4.3 CONFIRMAR_TARJETA → output: \"\" → equipo_asignado: \"Ventas_UNISA\"\n4.4 CANCELAR → output: \"Entiendo. ¿En qué más puedo ayudarte?\\n\\n1 – Precios 💲\\n2 – Servicios 🩺\\n3 – Agendar cita 📅\\n4 – Tarjeta de la Salud 💙\\n5 – Otra consulta ❓\" → isMenu: true\n4.5 MENU_PRINCIPAL → output: \"¿Qué necesitas hoy?\\n\\n1. Precios 💲\\n2. Servicios 🩺\\n3. Agendar cita 📅\\n4. Tarjeta de la Salud 💙\\n5. Otra consulta ❓\" → isMenu: true\n4.6 SALIR → output: \"Gracias por contactar a UNISA. 😊 Que tengas un excelente día. 👋 Si más tarde necesitas ayuda, estaremos aquí para ti.\" → isMenu: false\n\n5. RESPUESTA NEGATIVA (\"No\")\n→ output: \"Entiendo. ¿En qué más puedo ayudarte?\\n\\n1 – Precios 💲\\n2 – Servicios 🩺\\n3 – Agendar cita 📅\\n4 – Tarjeta de la Salud 💙\\n5 – Otra consulta ❓\" → isMenu: true\n\n5.1 MEDIOS PROPIOS → output: \"\" → equipo_asignado: \"CITAS_MP\"\n5.2 SEGURO MÉDICO → output: \"\" → equipo_asignado: \"CITAS_SEGUROS\"\n5.3 RESULTADOS DE LABORATORIO → output: \"\" → equipo_asignado: \"RESULTADOS_LAB\"\n5.4 RESULTADOS DE IMÁGENES → output: \"\" → equipo_asignado: \"RESULTADOS_IMAGENES\"\n\n6. CUALQUIER OTRO MENSAJE\n→ output: \"Para ayudarte mejor, selecciona una opción:\\n\\n1. Precios 💲\\n2. Servicios 🩺\\n3. Agendar cita 📅\\n4. Tarjeta de la Salud 💙\\n5. Otra consulta ❓\\n\\nTambién puedes escribir: horario, ubicación, promociones o resultados.\" → isMenu: true\n\n🎯 FORMATO DE SALIDA - DEBES GENERAR UN JSON VÁLIDO (NO TEXTO ADICIONAL)\n\nEjemplo REAL cuando el usuario escribe \"🕒 Horario y ubicación\":\n{\"output\": \"Nuestra Ubicación 📍...\", \"tipoPregunta\": \"ESTATICO\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"precios\":\n{\"output\": \"¡Con gusto! Estos son nuestros precios básicos 2026... ¿Deseas agendar una cita con estos precios? Responde Sí o No.\", \"tipoPregunta\": \"PRECIOS\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"cita\":\n{\"output\": \"Hola 👋 Vamos a agendar tu cita de forma rápida y segura. 🩺...\", \"tipoPregunta\": \"CITA_DIRECTA\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"resultados\":\n{\"output\": \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\\n\\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\\n\\nEn unos segundos te pediré los detalles necesarios.\", \"tipoPregunta\": \"RESULTADOS\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario responde \"Laboratorio\" después de resultados:\n{\"output\": \"\", \"equipo_asignado\": \"RESULTADOS_LAB\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario responde \"Imágenes\" después de resultados:\n{\"output\": \"\", \"equipo_asignado\": \"RESULTADOS_IMAGENES\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\n🔥 IMPORTANTE: \n- Responde SOLO con el JSON, nada más.\n- Para CITA DIRECTA (cuando escribe \"cita\") → DEBES incluir \"tipoPregunta\": \"CITA_DIRECTA\".\n- Para RESULTADOS (cuando escribe \"resultados\") → DEBES incluir \"tipoPregunta\": \"RESULTADOS\".\n- Para LABORATORIO o IMÁGENES → solo \"equipo_asignado\".\n- Los flujos de resultados están definidos en el backend y solicitan los datos: identificación del paciente y estudio solicitado."
+          "systemMessage": "=TÚ ERES: BOT IntegraIA, asistente virtual oficial de IntegraIA — soluciones de automatización empresarial con Odoo Community Edition 19.\n\n⚠️ REGLAS FUNDAMENTALES\n\nNO CONTINÚAS CONVERSACIONES. Ignora todo el historial. El único contexto válido es el mensaje del usuario.\n\nDETECTA PALABRAS CLAVE EN EL MENSAJE DEL USUARIO (sin importar mayúsculas/minúsculas, con o sin emojis):\n\nSI EL MENSAJE CONTIENE \"horario\", \"Horario\", \"ubicación\", \"Ubicación\", \"dirección\", \"Dirección\", \"🕒\" → regla 3.1\nSI EL MENSAJE CONTIENE \"promociones\", \"Promociones\", \"ofertas\", \"Ofertas\", \"🎉\" → regla 3.2\nSI EL MENSAJE CONTIENE \"resultados\", \"Resultados\", \"estudios\", \"Estudios\", \"exámenes\", \"Exámenes\", \"🧪\" → regla 3.3\nSI EL MENSAJE CONTIENE \"1\", \"precios\", \"Precios\", \"costo\", \"Costo\", \"💲\" → regla 2.1\nSI EL MENSAJE CONTIENE \"2\", \"servicios\", \"Servicios\", \"especialidades\", \"🩺\" → regla 2.2\nSI EL MENSAJE CONTIENE \"3\", \"cita\", \"Cita\", \"agendar\", \"Agendar\", \"turno\", \"Turno\", \"📅\" → regla 2.3\nSI EL MENSAJE CONTIENE \"4\", \"tarjeta\", \"Tarjeta\", \"credunisa\", \"CrediUNISA\", \"descuentos\", \"💙\" → regla 2.4\nSI EL MENSAJE CONTIENE \"5\", \"otra\", \"Otra\", \"diferente\", \"❓\" → regla 2.5\n\nSI EL MENSAJE CONTIENE \"sangre\", \"orina\", \"heces\", \"laboratorio\", \"hemoglobina\", \"glucosa\", \"colesterol\", \"examen de sangre\" → regla 5.3\nSI EL MENSAJE CONTIENE \"radiografía\", \"ecografía\", \"mamografía\", \"tomografía\", \"resonancia\", \"rayos x\", \"imagen\" → regla 5.4\n\nSI EL MENSAJE ES UN SALUDO (\"hola\", \"Hola\", \"buenos días\", \"Buenos días\", \"hi\", \"Hi\", \"hello\") → regla 1\nSI EL MENSAJE ES EXACTAMENTE \"MENU_PRINCIPAL\" → regla 4.5\nSI EL MENSAJE ES EXACTAMENTE \"CANCELAR\" → regla 4.4\nSI EL MENSAJE ES EXACTAMENTE \"No\", \"NO\", \"no\" → regla 5\nSI EL MENSAJE ES EXACTAMENTE \"MEDIOS_PROPIOS\" → regla 5.1\nSI EL MENSAJE ES EXACTAMENTE \"SEGURO_MEDICO\" → regla 5.2\nSI EL MENSAJE ES EXACTAMENTE \"LABORATORIO\" → regla 5.3\nSI EL MENSAJE ES EXACTAMENTE \"IMAGENES\" → regla 5.4\nSI EL MENSAJE ES EXACTAMENTE \"SALIR\" → regla 4.6\nSI EL MENSAJE CONTIENE \"medios propios\", \"Medios Propios\", \"crediumisa\", \"pago de contado\", \"A\" → regla 5.1\nSI EL MENSAJE CONTIENE \"seguro\", \"Seguro\", \"seguro médico\", \"Seguro Médico\", \"B\", \"FASME\", \"FASDEM\", \"SENIAT\" → regla 5.2\nSI EL MENSAJE CONTIENE \"laboratorio\", \"sangre\", \"orina\", \"heces\" → regla 5.3\nSI EL MENSAJE CONTIENE \"imagen\", \"radiografía\", \"ecografía\", \"mamografía\", \"tomografía\" → regla 5.4\nSI NINGUNA REGLA COINCIDE → regla 6\n\n📋 LÓGICA DE DECISIÓN\n\n1. SALUDO INICIAL\n→ output: \"¡Hola! 😊 Bienvenido/a a IntegraIA, tu aliado en automatización empresarial con Odoo CE 19.\n\n¿Qué necesitas hoy? Te ayudo con:\n\n1. Tienda Virtual 💰 - Tienda online profesional con Odoo CE 19\n2. Agentes de IA 🤖 - Chatbots WhatsApp, FB, Instagram 24/7\n3. Agendar Demo 📅 - Demo interactiva o asesoría Odoo\n4. Hosting 🖥️ - Servidor, SSL, dominio y mantenimiento\n5. Desarrollo 🔧 - Módulos, migraciones, APIs\n\nPor favor, escribe el número o palabra clave.\"\n→ isMenu: true\n\n2.1 PRECIOS (Tienda Virtual)\n→ output: \"💰 Con IntegraIA obtienes una tienda online profesional con Odoo CE 19:\n\n• Catálogo ilimitado de productos\n• Carrito de compras integrado\n• Métodos de pago: MercadoPago, PayPal, transferencia bancaria\n• Plantilla responsiva (se adapta a celular y desktop)\n• Panel de administración para pedidos, inventario y clientes\n\n🚀 Entregable: Sitio web listo para vender.\n\n¿Quieres que te enviemos una cotización personalizada? Responde Sí o No.\"\n→ tipoPregunta: \"PRECIOS\"\n→ isMenu: false\n\n2.2 SERVICIOS (Agentes de IA)\n→ output: \"🚀 Nuestros Agentes de IA atienden a tus clientes 24/7 por WhatsApp, Facebook e Instagram.\n\n• Responden preguntas frecuentes automáticamente\n• Califican leads y los envían al CRM de Odoo\n• Soporte continuo sin intervención manual\n• Aumento en tasas de conversión\n\n💡 Ideales para clínicas, negocios, empresas y entes gubernamentales.\n\n¿Agendamos una demo? Responde Sí o No.\"\n→ tipoPregunta: \"SERVICIOS\"\n→ isMenu: false\n\n2.3 CITA DIRECTA (Agendar Demo)\n→ output: \"Hola 👋 Vamos a agendar tu demo personalizada. 🚀\n\nTe haré algunas preguntas sencillas para preparar tu demo.\n\n🏢 Indícanos si deseas una demo del chatbot o una asesoría general de Odoo.\n\n✏️ Demo Chatbot: Prueba interactiva del chatbot WhatsApp\n✏️ Asesoría Odoo: Consultoría sobre módulos y automatización\n\nResponde 'Demo Chatbot' o 'Asesoría Odoo'.\"\n→ tipoPregunta: \"CITA_DIRECTA\"\n→ isMenu: false\n\n2.4 TARJETA (Hosting)\n→ output: \"🖥️ Nuestro Hosting Dedicado incluye:\n\n• Servidor optimizado para Odoo (rendimiento y seguridad)\n• Certificado SSL y dominio incluidos\n• Copias de seguridad automáticas\n• Mantenimiento mensual\n\n🚀 Sin tiempo de inactividad ni rendimiento lento.\n\n¿Quieres contratar hosting para tu instancia Odoo? Responde Sí o No.\"\n→ tipoPregunta: \"TARJETA\"\n→ isMenu: false\n\n2.5 OTRA CONSULTA (Desarrollo a medida)\n→ output: \"\"\n→ equipo_asignado: \"Agendamiento_Otra_Consulta\"\n\n3. ATAJOS ESTÁTICOS\n\n3.1 HORARIO / UBICACIÓN\n→ output: \"📍 IntegraIA — Soporte remoto en toda América Latina.\n\n🕒 Horario de atención:\nLunes a Viernes: 08:00 am - 05:00 pm\nSábado: 09:00 am - 01:00 pm\n\n💡 Soporte técnico 24/7 para clientes activos.\n\n📞 +58 412 914 1074\n📧 saymon_set@hotmail.com\"\n→ tipoPregunta: \"ESTATICO\"\n→ isMenu: false\n\n3.2 PROMOCIONES\n→ output: \"🎉 Ofertas vigentes en IntegraIA:\n\n• Consultoría inicial gratuita para nuevos clientes\n• Hosting dedicado gratis por 3 meses al contratar Plan Enterprise\n• Migración de datos sin costo adicional\n• Soporte remoto disponible en toda América Latina\"\n→ tipoPregunta: \"ESTATICO\"\n→ isMenu: false\n\n3.3 RESULTADOS DE ESTUDIOS (regla 3.3)\n→ output: \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\n\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\n\nEn unos segundos te pediré los detalles necesarios.\"\n→ tipoPregunta: \"RESULTADOS\"\n→ isMenu: false\n\n4. COMANDOS DE BOTONES\n\n4.1 CONFIRMAR_CITA_PRECIOS → output: \"\" → equipo_asignado: \"Agendamiento_Directo\"\n4.2 CONFIRMAR_CITA_SERVICIOS → output: \"\" → equipo_asignado: \"Agendamiento_Directo\"\n4.3 CONFIRMAR_TARJETA → output: \"\" → equipo_asignado: \"Ventas_UNISA\"\n4.4 CANCELAR → output: \"Entiendo. ¿En qué más puedo ayudarte?\n\n1 – Tienda Virtual 💰\n2 – Agentes de IA 🤖\n3 – Agendar Demo 📅\n4 – Hosting 🖥️\n5 – Desarrollo 🔧\" → isMenu: true\n4.5 MENU_PRINCIPAL → output: \"¿Qué necesitas hoy?\n\n1. Tienda Virtual 💰\n2. Agentes de IA 🤖\n3. Agendar Demo 📅\n4. Hosting 🖥️\n5. Desarrollo 🔧\" → isMenu: true\n4.6 SALIR → output: \"Gracias por contactar a IntegraIA. 😊 Si más tarde necesitas automatizar tu negocio, estaremos aquí para ti.\" → isMenu: false\n\n5. RESPUESTA NEGATIVA (\"No\")\n→ output: \"Entiendo. ¿En qué más puedo ayudarte?\n\n1 – Tienda Virtual 💰\n2 – Agentes de IA 🤖\n3 – Agendar Demo 📅\n4 – Hosting 🖥️\n5 – Desarrollo 🔧\" → isMenu: true\n\n5.1 MEDIOS PROPIOS → output: \"\" → equipo_asignado: \"CITAS_MP\"\n5.2 SEGURO MÉDICO → output: \"\" → equipo_asignado: \"CITAS_SEGUROS\"\n5.3 RESULTADOS DE LABORATORIO → output: \"\" → equipo_asignado: \"RESULTADOS_LAB\"\n5.4 RESULTADOS DE IMÁGENES → output: \"\" → equipo_asignado: \"RESULTADOS_IMAGENES\"\n\n6. CUALQUIER OTRO MENSAJE\n→ output: \"Para ayudarte mejor, selecciona una opción:\n\n1. Tienda Virtual 💰\n2. Agentes de IA 🤖\n3. Agendar Demo 📅\n4. Hosting 🖥️\n5. Desarrollo 🔧\n\nTambién puedes escribir: horario, ubicación, promociones o resultados.\" → isMenu: true\n\n🎯 FORMATO DE SALIDA - DEBES GENERAR UN JSON VÁLIDO (NO TEXTO ADICIONAL)\n\nEjemplo REAL cuando el usuario escribe \"🕒 Horario y ubicación\":\n{\"output\": \"📍 IntegraIA — Soporte remoto en toda América Latina...\", \"tipoPregunta\": \"ESTATICO\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"precios\":\n{\"output\": \"💰 Con IntegraIA obtienes una tienda online profesional con Odoo CE 19... ¿Quieres que te enviemos una cotización personalizada? Responde Sí o No.\", \"tipoPregunta\": \"PRECIOS\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"cita\":\n{\"output\": \"Hola 👋 Vamos a agendar tu demo personalizada. 🚀...\", \"tipoPregunta\": \"CITA_DIRECTA\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario escribe \"resultados\":\n{\"output\": \"Hola 👋 Para ayudarte con los resultados, por favor indica el tipo de estudio:\n\n🔬 Si es un examen de LABORATORIO (sangre, orina, heces, etc.) responde 'Laboratorio'.\n📷 Si es un estudio de IMÁGENES (radiografía, ecografía, mamografía, etc.) responde 'Imágenes'.\n\nEn unos segundos te pediré los detalles necesarios.\", \"tipoPregunta\": \"RESULTADOS\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario responde \"Laboratorio\" después de resultados:\n{\"output\": \"\", \"equipo_asignado\": \"RESULTADOS_LAB\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\nEjemplo REAL cuando el usuario responde \"Imágenes\" después de resultados:\n{\"output\": \"\", \"equipo_asignado\": \"RESULTADOS_IMAGENES\", \"session_id\": \"584142711347\", \"conversation_id\": \"1\", \"account_id\": \"1\", \"platform\": \"whatsapp\", \"timestamp_actividad\": \"2026-05-29T12:26:36.332-04:00\"}\n\n🔥 IMPORTANTE: \n- Responde SOLO con el JSON, nada más.\n- Para CITA DIRECTA (cuando escribe \"cita\") → DEBES incluir \"tipoPregunta\": \"CITA_DIRECTA\".\n- Para RESULTADOS (cuando escribe \"resultados\") → DEBES incluir \"tipoPregunta\": \"RESULTADOS\".\n- Para LABORATORIO o IMÁGENES → solo \"equipo_asignado\".\n- Los flujos de resultados están definidos en el backend y solicitan los datos: identificación del paciente y estudio solicitado."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        9376,
-        26768
+        20928,
+        4800
       ],
-      "id": "44f5ad1d-b9b6-4046-87cd-c5db01b3a47d",
+      "id": "03f3ce24-f82f-4b46-8c9e-916a02c7540b",
       "name": "Agente_Informacion_basica"
     },
     {
@@ -696,10 +711,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        10448,
-        26720
+        22000,
+        4752
       ],
-      "id": "0590cb2c-2bd3-4a20-afb7-daa39d6c0201",
+      "id": "bc6cc8e5-6b89-4270-bef7-5763cbb04551",
       "name": "Unificar_salida"
     },
     {
@@ -730,10 +745,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        10144,
-        26608
+        21696,
+        4640
       ],
-      "id": "ac0d55cf-1a43-40b7-a59f-7ecdcecbf180",
+      "id": "c376c3bb-bc20-4cbe-95b8-af5d99142854",
       "name": "Cita_con_Equipo_asignado"
     },
     {
@@ -744,27 +759,12 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        9200,
-        26624
+        20752,
+        4656
       ],
       "typeVersion": 1,
-      "id": "9957d1c9-3a91-4c74-993a-64af8c709f7a",
+      "id": "d2dd397b-7788-41a0-8509-a4f633154c15",
       "name": "Sticky Note"
-    },
-    {
-      "parameters": {
-        "content": "## Procesa la data de entrada, y si es agendar cita con el primer paso chequea el telefono para buscar ya variables en bd y el suuario tipeee menos",
-        "height": 480,
-        "width": 560
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        7648,
-        27440
-      ],
-      "typeVersion": 1,
-      "id": "f7e1622c-5c28-43ec-b7ab-9c3c930e6abe",
-      "name": "Sticky Note2"
     },
     {
       "parameters": {
@@ -772,20 +772,20 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        8608,
-        27440
+        20160,
+        5472
       ],
       "typeVersion": 1,
-      "id": "ec590455-6743-448c-b4fc-bb5732e10a20",
+      "id": "88bf231f-28db-4414-a93f-2ca81cc85781",
       "name": "Sticky Note3"
     },
     {
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "zg-VijB4F9ZE4KyUiChne",
+          "value": "Er44fSL1mNP20oKt",
           "mode": "list",
-          "cachedResultUrl": "/workflow/zg-VijB4F9ZE4KyUiChne",
+          "cachedResultUrl": "/workflow/Er44fSL1mNP20oKt",
           "cachedResultName": "chatbot-simple_1_subflow"
         },
         "workflowInputs": {
@@ -965,16 +965,16 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        7840,
-        27584
+        19392,
+        5616
       ],
-      "id": "46646393-964e-4c7f-a41c-b59e9b33f224",
+      "id": "89a584fe-521d-4984-932f-a0ec69c1224b",
       "name": "Call 'chatbot-simple_1_subflow'"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://integraiadev.unisasalud.com/ai_chatbot_1_portal/inicioagendar",
+        "url": "https://integraia.lat/ai_chatbot_1_portal/inicioagendar",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"session_id\": \"{{ $json.session_id }}\",\n  \"conversation_id\":\"{{ $json.conversation_id }}\",\n  \"account_id\":\"{{ $json.account_id }}\",\n   \"name_flow\": \"{{$json.flow_name || 'flujo_agendamiento_default'}}\",\n   \"equipo_asignado\": \"{{$json.equipo_asignado|| \"\"}}\"\n}\n",
@@ -983,10 +983,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        10528,
-        26272
+        22064,
+        4032
       ],
-      "id": "0350cb09-f5d0-4c7b-b5f8-6e56182f300d",
+      "id": "61b09d11-069a-4c98-9843-b26f0339675b",
       "name": "paso_0_inicio_agendar",
       "alwaysOutputData": true
     },
@@ -997,10 +997,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        9712,
-        26768
+        21264,
+        4800
       ],
-      "id": "ea01b124-0e3e-44d4-9b32-55cbfd3f43fd",
+      "id": "ed22d98f-2673-4644-aa66-248e1a5db622",
       "name": "Separar_variables_en_json"
     },
     {
@@ -1056,16 +1056,16 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        10720,
-        26272
+        22320,
+        4016
       ],
-      "id": "b56a8c27-549e-410c-9602-008f4257b770",
+      "id": "0c3c8404-7ced-4359-baec-5bc3f21ebd7e",
       "name": "Agendar_cita"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://chatwoot.unisasalud.com/api/v1/accounts/{{$json.account_id}}/conversations/{{ $json.conversation_id }}/messages",
+        "url": "=https://chatwoot.integraia.lat/api/v1/accounts/{{$json.account_id}}/conversations/{{ $json.conversation_id }}/messages",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1075,7 +1075,7 @@
             },
             {
               "name": "api_access_token",
-              "value": "bKYDrpmQjhS8yn8pFKEsMkCw"
+              "value": "kdNeLrJ5boGw3k3nMUgKeBMi"
             }
           ]
         },
@@ -1093,16 +1093,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        10976,
-        26960
+        22528,
+        4992
       ],
-      "id": "6a8a5ae7-f512-41ef-8b7e-6a2ff5faa611",
+      "id": "7c779921-2d81-4c5c-8fd2-cd6b83d05c1d",
       "name": "Enviar_mensaje_de_IA1"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://chatwoot.unisasalud.com/api/v1/accounts/{{$json.account_id}}/conversations/{{ $json.conversation_id }}/messages",
+        "url": "=https://chatwoot.integraia.lat/api/v1/accounts/{{$json.account_id}}/conversations/{{ $json.conversation_id }}/messages",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1112,7 +1112,7 @@
             },
             {
               "name": "api_access_token",
-              "value": "bKYDrpmQjhS8yn8pFKEsMkCw"
+              "value": "kdNeLrJ5boGw3k3nMUgKeBMi"
             }
           ]
         },
@@ -1130,10 +1130,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        11008,
-        26272
+        22576,
+        4032
       ],
-      "id": "cf368430-3a76-415d-bcf5-f1662bb41cdc",
+      "id": "c06ededd-6a8f-4890-a952-1a6a31b9375e",
       "name": "Enviar_mensaje_de_IA2"
     },
     {
@@ -1177,16 +1177,16 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        9104,
-        27664
+        20656,
+        5696
       ],
-      "id": "b1c1fb48-42ab-4a8f-abbf-17c6ffa00644",
+      "id": "d7d3f125-9784-4191-88fc-e289288ac035",
       "name": "tomar_parametros"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://chatwoot.unisasalud.com/api/v1/accounts/{{$json.account_id}}/conversations/{{ $json.conversation_id }}/messages",
+        "url": "=https://chatwoot.integraia.lat/api/v1/accounts/{{$json.account_id}}/conversations/{{ $json.conversation_id }}/messages",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1196,7 +1196,7 @@
             },
             {
               "name": "api_access_token",
-              "value": "bKYDrpmQjhS8yn8pFKEsMkCw"
+              "value": "kdNeLrJ5boGw3k3nMUgKeBMi"
             }
           ]
         },
@@ -1214,10 +1214,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        9408,
-        27536
+        20960,
+        5568
       ],
-      "id": "108ba51e-e52b-4653-a75f-bdba56cc684d",
+      "id": "b7a36417-1c9a-4ee6-a28b-d9d82504e419",
       "name": "Enviar_mensaje_de_IA3"
     },
     {
@@ -1247,10 +1247,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        9888,
-        26784
+        21440,
+        4816
       ],
-      "id": "005d8354-a517-4f7b-b734-e426c4ff5671",
+      "id": "68a40314-4375-4b69-b740-40af21652645",
       "name": "¿Enviar menú interactivo?"
     },
     {
@@ -1260,22 +1260,22 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        10208,
-        26928
+        21760,
+        4960
       ],
-      "id": "b5a83f29-a9b6-4862-9801-c9e4a63ec372",
+      "id": "76bb6e57-dd9f-423a-9b2a-0f0410462846",
       "name": "Formatear número de teléfono"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://graph.facebook.com/v20.0/1136369756228609/messages",
+        "url": "https://graph.facebook.com/v20.0/902885109570961/messages",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer EAANzQtUGy6UBRlUI4ZBmMYkU05xaWXsIXT5KVVyOMXQHzXDmZAZAufwzijvSJRWAa2Ryx2ZCdHrHLiQwbEZCAZCieFH0MXiMZBR9TrkdLZCVLWVNdC3p1JoGd7wIjtVzimGmUWcFKJP7tc6FBBDnDnHP2UQmSOagYAClwhhaXEbnHxgFMQ8JagYgrTsGklOVeAZDZD"
+              "value": "Bearer EAAUQgN2MLxIBRTyZCJuo2KoseoO1lpeTkSP1jqnsFLLcFEBZBZBbHut1XVZBCI3VknTF0txxDfI7b0sM2qMutBL2KdI4rCUFMzufCufruousYfeR9WQwAT3nFCs6KPV7W3w7v1YGzpyyZAV1AME3BHl7ryl7anc7hoODi1BOdpglIFrDYTD1vj9souhp6cwZDZD"
             },
             {
               "name": "Content-Type",
@@ -1285,27 +1285,64 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $json.phone_number_formatted }}\",\n  \"type\": \"interactive\",\n  \"interactive\": {\n    \"type\": \"list\",\n    \"header\": {\n      \"type\": \"text\",\n      \"text\": \"🏥 UNISA - Unidad de Salud Integral\"\n    },\n    \"body\": {\n      \"text\": \"Hola! 😊 Bienvenido/a. ¿Qué necesitas hoy? Selecciona una opción:\"\n    },\n    \"footer\": {\n      \"text\": \"Elige una opción del menú\"\n    },\n    \"action\": {\n      \"button\": \"📋 Ver opciones\",\n      \"sections\": [\n        {\n          \"title\": \"Servicios e información\",\n          \"rows\": [\n            { \"id\": \"precios\", \"title\": \"💰 Precios\", \"description\": \"Conoce nuestros precios básicos 2026\" },\n            { \"id\": \"servicios\", \"title\": \"🩺 Servicios médicos\", \"description\": \"Descubre todos nuestros servicios\" },\n            { \"id\": \"agendar_cita\", \"title\": \"📅 Agendar cita\", \"description\": \"Consulta, laboratorio o estudios\" }\n          ]\n        },\n        {\n          \"title\": \"Trámites\",\n          \"rows\": [\n            { \"id\": \"tarjeta_salud\", \"title\": \"💙 Tarjeta de la Salud\", \"description\": \"Información sobre la tarjeta o CREDIUNISA\" },\n            { \"id\": \"otra_consulta\", \"title\": \"❓ Otra consulta\", \"description\": \"Cualquier otra pregunta\" }\n          ]\n        },\n        {\n          \"title\": \"Información útil\",\n          \"rows\": [\n            { \"id\": \"horario\", \"title\": \"🕒 Horario y ubicación\", \"description\": \"Dirección y horarios de atención\" },\n            { \"id\": \"promociones\", \"title\": \"🎉 Promociones\", \"description\": \"Ofertas y descuentos vigentes\" },\n            { \"id\": \"resultados\", \"title\": \"🧪 Resultados de estudios\", \"description\": \"Cómo recibir tus exámenes\" }\n          ]\n        }\n      ]\n    }\n  }\n}",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $json.phone_number_formatted }}\",\n  \"type\": \"interactive\",\n  \"interactive\": {\n    \"type\": \"list\",\n    \"header\": {\n      \"type\": \"text\",\n      \"text\": \"🚀 IntegraIA - Automatización con Odoo CE 19\"\n    },\n    \"body\": {\n      \"text\": \"Hola! 😊 Bienvenido/a a IntegraIA (https://integraia.lat). ¿Qué necesitas hoy?\"\n    },\n    \"footer\": {\n      \"text\": \"https://integraia.lat\"\n    },\n    \"action\": {\n      \"button\": \"📋 Ver opciones\",\n      \"sections\": [\n        {\n          \"title\": \"Nuestros Servicios\",\n          \"rows\": [\n            { \"id\": \"precios\", \"title\": \"💰 Tienda Virtual\", \"description\": \"Tienda online profesional con Odoo CE 19 → https://integraia.lat\" },\n            { \"id\": \"servicios\", \"title\": \"🤖 Agentes de IA\", \"description\": \"Chatbots WhatsApp, FB, Instagram 24/7\" },\n            { \"id\": \"agendar_cita\", \"title\": \"📅 Agendar Demo\", \"description\": \"Demo interactiva o asesoría Odoo\" }\n          ]\n        },\n        {\n          \"title\": \"Infraestructura\",\n          \"rows\": [\n            { \"id\": \"tarjeta_salud\", \"title\": \"🖥️ Hosting Dedicado\", \"description\": \"Servidor, SSL, dominio y mantenimiento → https://integraia.lat\" },\n            { \"id\": \"otra_consulta\", \"title\": \"🔧 Desarrollo\", \"description\": \"Módulos, migraciones, APIs\" }\n          ]\n        },\n        {\n          \"title\": \"Información\",\n          \"rows\": [\n            { \"id\": \"horario\", \"title\": \"🕒 Soporte\", \"description\": \"Horarios y contacto\" },\n            { \"id\": \"promociones\", \"title\": \"🎉 Promociones\", \"description\": \"Ofertas y descuentos vigentes\" },\n            { \"id\": \"resultados\", \"title\": \"🧪 Resultados\", \"description\": \"Consultar resultados de estudios\" }\n          ]\n        }\n      ]\n    }\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        10528,
-        27488
+        22080,
+        5520
       ],
-      "id": "cf863184-c9ed-46a5-829e-9402b1874fca",
+      "id": "d3c99b76-f110-42af-9fd9-99b34e790ad5",
       "name": "Enviar menú interactivo a WhatsApp"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://chatwoot.integraia.lat/api/v1/accounts/{{$json.account_id}}/conversations/{{ $json.conversation_id }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "api_access_token",
+              "value": "kdNeLrJ5boGw3k3nMUgKeBMi"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "🌐 Conoce más en https://integraia.lat"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        22320,
+        5696
+      ],
+      "id": "ec3afb26-e3be-4c99-82ca-8409d50c86ca",
+      "name": "Enviar texto despues del menu"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        10912,
-        27504
+        22464,
+        5536
       ],
-      "id": "b6363f0c-fd58-4c9d-8ba4-b84fdeaaba02",
+      "id": "d1a40242-e5cf-4d4d-89be-6fb0bd5503be",
       "name": "Fin menú WhatsApp"
     },
     {
@@ -1335,35 +1372,35 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        10656,
-        26736
+        22208,
+        4768
       ],
-      "id": "572d0ec7-dee8-49bc-bea0-9d2b0b7bb02c",
+      "id": "ec92c870-2c42-4bd5-9f29-01449f7cfa3e",
       "name": "¿Enviar menú interactivo?1"
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfor (const item of items) {\n  const tipo = item.json.tipoPregunta;\n  const outputText = item.json.output;\n  let phone = item.json.user_number || item.json.phone_number || item.json.session_id;\n\n  if (phone && !phone.startsWith('+')) {\n    phone = '+' + phone;\n  }\n\n  let botones = [];\n\n  // PRECIOS - botones Sí/No\n  if (tipo === 'PRECIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_PRECIOS\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  }\n  // SERVICIOS - botones Sí/No\n  else if (tipo === 'SERVICIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_SERVICIOS\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  }\n  // TARJETA - botones Sí/No\n  else if (tipo === 'TARJETA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_TARJETA\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No\" } }\n    ];\n  }\n  // CITA_DIRECTA - botones para elegir Medio de pago o Seguro\n  else if (tipo === 'CITA_DIRECTA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MEDIOS_PROPIOS\", title: \"💰 Medios propios\" } },\n      { type: \"reply\", reply: { id: \"SEGURO_MEDICO\", title: \"🩺 Seguro médico\" } }\n    ];\n  }\n  else if (tipo === 'RESULTADOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"LABORATORIO\", title: \"🔬 Laboratorio\" } },\n      { type: \"reply\", reply: { id: \"IMAGENES\", title: \"📷 Imágenes\" } }\n    ];\n  }\n  // ESTATICO - horario, promociones, resultados (botones: Menú y Salir)\n  else if (tipo === 'ESTATICO') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MENU_PRINCIPAL\", title: \"🔙 Menú\" } },\n      { type: \"reply\", reply: { id: \"SALIR\", title: \"👋 Salir\" } }\n    ];\n  }\n  // ✅ NUEVO: Si es pregunta Sí/No genérica sin tipo específico\n  else if (item.json.esPreguntaSiNo === true) {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_SI\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CONFIRMAR_NO\", title: \"❌ No\" } }\n    ];\n  }\n  // Si no hay tipoPregunta, no enviamos botones (se envía como texto normal)\n  else {\n    nuevosItems.push(item);\n    continue;\n  }\n\n  // Construir el payload de WhatsApp\n  const whatsappPayload = {\n    messaging_product: \"whatsapp\",\n    recipient_type: \"individual\",\n    to: phone,\n    type: \"interactive\",\n    interactive: {\n      type: \"button\",\n      body: { text: outputText },\n      action: { buttons: botones }\n    }\n  };\n\n  nuevosItems.push({\n    json: {\n      ...item.json,\n      whatsappPayload: whatsappPayload,\n      phone_number_formatted: phone\n    }\n  });\n}\n\nreturn nuevosItems;"
+        "jsCode": "const items = $input.all();\nconst nuevosItems = [];\n\nfor (const item of items) {\n  const tipo = item.json.tipoPregunta;\n  const outputText = item.json.output;\n  let phone = item.json.user_number || item.json.phone_number || item.json.session_id;\n\n  if (phone && !phone.startsWith('+')) {\n    phone = '+' + phone;\n  }\n\n  let botones = [];\n\n  // PRECIOS - botones Sí/No\n  if (tipo === 'PRECIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_PRECIOS\", title: \"✅ Quiero cotización\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No, gracias\" } }\n    ];\n  }\n  // SERVICIOS - botones Sí/No\n  else if (tipo === 'SERVICIOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_CITA_SERVICIOS\", title: \"✅ Sí, quiero demo\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No, gracias\" } }\n    ];\n  }\n  // TARJETA - botones Sí/No\n  else if (tipo === 'TARJETA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_TARJETA\", title: \"✅ Sí, contratar\" } },\n      { type: \"reply\", reply: { id: \"CANCELAR\", title: \"❌ No, gracias\" } }\n    ];\n  }\n  // CITA_DIRECTA - botones para elegir Demo o Asesoría\n  else if (tipo === 'CITA_DIRECTA') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MEDIOS_PROPIOS\", title: \"💰 Demo Chatbot\" } },\n      { type: \"reply\", reply: { id: \"SEGURO_MEDICO\", title: \"🩺 Asesoría Odoo\" } }\n    ];\n  }\n  else if (tipo === 'RESULTADOS') {\n    botones = [\n      { type: \"reply\", reply: { id: \"LABORATORIO\", title: \"🔬 Laboratorio\" } },\n      { type: \"reply\", reply: { id: \"IMAGENES\", title: \"📷 Imágenes\" } }\n    ];\n  }\n  // ESTATICO - horario, promociones, resultados (botones: Menú y Salir)\n  else if (tipo === 'ESTATICO') {\n    botones = [\n      { type: \"reply\", reply: { id: \"MENU_PRINCIPAL\", title: \"🔙 Menú\" } },\n      { type: \"reply\", reply: { id: \"SALIR\", title: \"👋 Salir\" } }\n    ];\n  }\n  // ✅ NUEVO: Si es pregunta Sí/No genérica sin tipo específico\n  else if (item.json.esPreguntaSiNo === true) {\n    botones = [\n      { type: \"reply\", reply: { id: \"CONFIRMAR_SI\", title: \"✅ Sí\" } },\n      { type: \"reply\", reply: { id: \"CONFIRMAR_NO\", title: \"❌ No\" } }\n    ];\n  }\n  // Si no hay tipoPregunta, no enviamos botones (se envía como texto normal)\n  else {\n    nuevosItems.push(item);\n    continue;\n  }\n\n  // Construir el payload de WhatsApp\n  const whatsappPayload = {\n    messaging_product: \"whatsapp\",\n    recipient_type: \"individual\",\n    to: phone,\n    type: \"interactive\",\n    interactive: {\n      type: \"button\",\n      body: { text: outputText },\n      action: { buttons: botones }\n    }\n  };\n\n  nuevosItems.push({\n    json: {\n      ...item.json,\n      whatsappPayload: whatsappPayload,\n      phone_number_formatted: phone\n    }\n  });\n}\n\nreturn nuevosItems;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        10784,
-        26544
+        22336,
+        4576
       ],
-      "id": "bb0b2ad1-7e63-425b-b219-5a0cf8b96144",
+      "id": "522b148a-9f01-4d1e-92e5-b404f2508fb1",
       "name": "Construir_botones_WhatsApp"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://graph.facebook.com/v20.0/1136369756228609/messages",
+        "url": "https://graph.facebook.com/v20.0/902885109570961/messages",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer EAANzQtUGy6UBRlUI4ZBmMYkU05xaWXsIXT5KVVyOMXQHzXDmZAZAufwzijvSJRWAa2Ryx2ZCdHrHLiQwbEZCAZCieFH0MXiMZBR9TrkdLZCVLWVNdC3p1JoGd7wIjtVzimGmUWcFKJP7tc6FBBDnDnHP2UQmSOagYAClwhhaXEbnHxgFMQ8JagYgrTsGklOVeAZDZD"
+              "value": "Bearer EAAUQgN2MLxIBRTyZCJuo2KoseoO1lpeTkSP1jqnsFLLcFEBZBZBbHut1XVZBCI3VknTF0txxDfI7b0sM2qMutBL2KdI4rCUFMzufCufruousYfeR9WQwAT3nFCs6KPV7W3w7v1YGzpyyZAV1AME3BHl7ryl7anc7hoODi1BOdpglIFrDYTD1vj9souhp6cwZDZD"
             },
             {
               "name": "Content-Type",
@@ -1379,10 +1416,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        11008,
-        26544
+        22560,
+        4576
       ],
-      "id": "76931f89-c3e2-429a-9385-764454ec5b02",
+      "id": "805e6323-ef87-45f5-9d53-6dfc65c8c570",
       "name": "Enviar menú interactivo a WhatsApp1"
     },
     {
@@ -1390,84 +1427,99 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        11472,
-        26560
+        23024,
+        4592
       ],
-      "id": "686885ac-65d0-40c7-a53a-d6eade8e1053",
+      "id": "ca926bea-0c5b-44a8-91fe-fe2891ed6fbd",
       "name": "Fin menú WhatsApp1"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        8624,
-        27168
+        20176,
+        5200
       ],
       "typeVersion": 1,
-      "id": "9c482e42-6c00-4c0d-99ab-351a9a8081b6",
+      "id": "5c6496c1-807b-4344-b36d-0ad813a9a0c5",
       "name": "Sticky Note1"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        8624,
-        27168
+        20176,
+        5200
       ],
       "typeVersion": 1,
-      "id": "6021f8db-f234-4fd0-a506-e1ea78dcfc15",
+      "id": "8f38b980-c138-4994-aef3-cd6bd8486ed4",
       "name": "Sticky Note4"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        8624,
-        27168
+        20176,
+        5200
       ],
       "typeVersion": 1,
-      "id": "c6359822-d254-4eb9-bd7e-b1da0444ea0c",
+      "id": "9f9417dc-9ece-4f1b-b51a-1c2eb66f6cc0",
       "name": "Sticky Note5"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        8704,
-        27248
+        20256,
+        5280
       ],
       "typeVersion": 1,
-      "id": "7708aee7-832b-41d6-81aa-e0ea5cdc254a",
+      "id": "80b17cbe-5876-4424-b3f1-480891e666cd",
       "name": "Sticky Note6"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        8704,
-        27248
+        20256,
+        5280
       ],
       "typeVersion": 1,
-      "id": "d0b65034-63d3-4fe5-a4ae-2b5fb43926d0",
+      "id": "36b5c823-eb23-4119-b443-7894964b4298",
       "name": "Sticky Note7"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        8704,
-        27248
+        20256,
+        5280
       ],
       "typeVersion": 1,
-      "id": "2644896a-4d82-43d8-a25b-2d0100ad093e",
+      "id": "3cd163c3-f67f-4085-aa0b-b9c0e05377ba",
       "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## Procesa la data de entrada, y si es agendar cita con el primer paso chequea el telefono para buscar ya variables en bd y el suuario tipeee menos",
+        "height": 480,
+        "width": 560
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        19200,
+        5472
+      ],
+      "typeVersion": 1,
+      "id": "635b483c-e5fd-4c0c-ac93-99405d6f5972",
+      "name": "Sticky Note9"
     }
   ],
   "pinData": {
     "When clicking ‘Execute workflow’": [
       {
         "json": {
-          "output": "¡Excelente decisión! Con la TARJETA DE LA SALUD obtienes:\n\n• Hasta 30% de descuento\n• 1 consulta gratuita al año\n• Vigencia de 12 meses\n• Costo total: 80 USD → pagas 20 USD al afiliarte + 6 cuotas de 10 USD\n\n¿Deseas que un ejecutivo se comunique contigo? Responde Sí o No.",
+          "output": "¡Excelente decisión! Con la HOSTING DEDICADO incluye:\n\n• Hasta Servidor optimizado, SSL, dominio\n• Copias de seguridad automáticas\n• Mantenimiento mensual\n• Sin tiempo de inactividad ni rendimiento lento\n\n¿Quieres contratar hosting para tu instancia Odoo? Responde Sí o No.",
           "session_id": "584123586929",
           "conversation_id": "17",
           "account_id": "1",
@@ -1477,8 +1529,8 @@
           "isMenu": false,
           "esPreguntaSiNo": true,
           "flow_name": "flujo_agendamiento_default",
-          "text": "¡Excelente decisión! Con la TARJETA DE LA SALUD obtienes:\n\n• Hasta 30% de descuento\n• 1 consulta gratuita al año\n• Vigencia de 12 meses\n• Costo total: 80 USD → pagas 20 USD al afiliarte + 6 cuotas de 10 USD\n\n¿Deseas que un ejecutivo se comunique contigo? Responde Sí o No.",
-          "content": "¡Excelente decisión! Con la TARJETA DE LA SALUD obtienes:\n\n• Hasta 30% de descuento\n• 1 consulta gratuita al año\n• Vigencia de 12 meses\n• Costo total: 80 USD → pagas 20 USD al afiliarte + 6 cuotas de 10 USD\n\n¿Deseas que un ejecutivo se comunique contigo? Responde Sí o No."
+          "text": "¡Excelente decisión! Con la HOSTING DEDICADO incluye:\n\n• Hasta Servidor optimizado, SSL, dominio\n• Copias de seguridad automáticas\n• Mantenimiento mensual\n• Sin tiempo de inactividad ni rendimiento lento\n\n¿Quieres contratar hosting para tu instancia Odoo? Responde Sí o No.",
+          "content": "¡Excelente decisión! Con la HOSTING DEDICADO incluye:\n\n• Hasta Servidor optimizado, SSL, dominio\n• Copias de seguridad automáticas\n• Mantenimiento mensual\n• Sin tiempo de inactividad ni rendimiento lento\n\n¿Quieres contratar hosting para tu instancia Odoo? Responde Sí o No."
         }
       }
     ]
@@ -1778,6 +1830,11 @@
         ]
       ]
     },
+    "Enviar texto despues del menu": {
+      "main": [
+        []
+      ]
+    },
     "When clicking ‘Execute workflow’": {
       "main": [
         [
@@ -1828,6 +1885,11 @@
           }
         ]
       ]
+    },
+    "Enviar_mensaje_de_IA2": {
+      "main": [
+        []
+      ]
     }
   },
   "active": true,
@@ -1835,11 +1897,11 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "df28492a-39f1-4873-898f-4df639be7171",
+  "versionId": "7c72ab0d-87a4-4a93-90d5-d1e0507036a4",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "27f2fbd44aea77cdc4ee5b60d7a4eb1783a710ad686d97e24edf8a6f5832f241"
+    "instanceId": "ac8b8e9b824b3711008329bf41bf68736c3261debaa6dcb0eaceede9a0a7edac"
   },
-  "id": "NI0K9YTDblrmhUrSpfFtR",
+  "id": "rawHArcQkOt5uVmz",
   "tags": []
 }
