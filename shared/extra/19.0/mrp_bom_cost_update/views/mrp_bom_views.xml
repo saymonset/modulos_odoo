@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_update_bom_cost" model="ir.actions.server">
+        <field name="name">Actualizar Costo de LdM</field>
+        <field name="model_id" ref="mrp.model_mrp_bom"/>
+        <field name="binding_model_id" ref="mrp.model_mrp_bom"/>
+        <field name="binding_type">action</field>
+        <field name="state">code</field>
+        <field name="code">
+            if records:
+                records.action_update_bom_cost()
+                action = {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': 'Costo Actualizado',
+                        'message': 'El costo de los productos seleccionados ha sido actualizado correctamente.',
+                        'type': 'success',
+                        'sticky': False,
+                    }
+                }
+        </field>
+    </record>
+</odoo>
