@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Archivo: unisa_chatbot_utils.py
+# Archivo: chatbot_utils.py
 from datetime import datetime
 import json
 import logging
@@ -338,11 +338,11 @@ class ChatBotUtils:
         medium = env['utm.medium'].search([('name', '=ilike', platform_display)], limit=1)
         if not medium:
             medium = env['utm.medium'].create({'name': platform_display})
-        source_name = f"{platform_display} Bot UNISA"
+        source_name = f"{platform_display} Bot IntegraIA"
         source = env['utm.source'].search([('name', '=ilike', source_name)], limit=1)
         if not source:
             source = env['utm.source'].create({'name': source_name})
-        campaign_name = f"Campaña {platform_display} UNISA"
+        campaign_name = f"Campaña {platform_display} IntegraIA"
         campaign = env['utm.campaign'].search([('name', '=ilike', campaign_name)], limit=1)
         if not campaign:
             campaign = env['utm.campaign'].create({'name': campaign_name})
@@ -547,7 +547,7 @@ class ChatBotUtils:
         }
 
         fields_order = [
-            (('solicitar_name', 'name'), 'Paciente'),
+            (('solicitar_name', 'name'), 'Cliente'),
             (('solicitar_vat', 'vat'), 'Cédula'),
             (('solicitar_birthdate', 'birthdate'), 'Fecha de nacimiento'),
             (('solicitar_phone', 'phone'), 'Teléfono'),
@@ -559,7 +559,7 @@ class ChatBotUtils:
             (('solicitar_fecha_preferida', 'fecha_preferida'), 'Fecha preferida'),
             (('hora_preferida', ), 'Horario'),
             (('solicitar_medio_pago', 'medio_pago'), 'Medio de pago'),
-            (('solicitar_es_paciente_nuevo', 'es_paciente_nuevo'), 'Paciente nuevo'),
+            (('solicitar_es_paciente_nuevo', 'es_paciente_nuevo'), 'Cliente nuevo'),
             (('solicitar_membresia_interes', 'membresia_interes'), 'Interés Tarjeta Salud'),
         ]
 
@@ -645,9 +645,9 @@ class ChatBotUtils:
             servicio = lead.name.split(' - ')[0] if ' - ' in lead.name else lead.name
             body = (
                 f"<p>Hola {user.name},</p>"
-                f"<p>Se te ha asignado un nuevo lead generado desde el chatbot de UNISA.</p>"
+                f"<p>Se te ha asignado un nuevo lead generado desde el chatbot de IntegraIA.</p>"
                 f"<br/>"
-                f"<p><strong>Datos del paciente:</strong></p>"
+                f"<p><strong>Datos del cliente:</strong></p>"
                 f"<ul>"
                 f"<li><strong>Nombre:</strong> {lead.contact_name or ''}</li>"
                 f"<li><strong>Teléfono:</strong> {lead.phone or ''}</li>"
@@ -655,10 +655,10 @@ class ChatBotUtils:
                 f"<li><strong>Servicio:</strong> {servicio}</li>"
                 f"<li><strong>Equipo:</strong> {lead.team_id.name or 'Sin equipo'}</li>"
                 f"</ul>"
-                f"<p>Por favor, contacta al paciente a la brevedad para dar seguimiento a su solicitud.</p>"
-                f"<p>Saludos,<br/><strong>Sistema UNISA Salud</strong></p>"
+                f"<p>Por favor, contacta al cliente a la brevedad para dar seguimiento a su solicitud.</p>"
+                f"<p>Saludos,<br/><strong>Sistema IntegraIA</strong></p>"
             )
-            email_from = env['ir.config_parameter'].sudo().get_param('mail.default.from', 'admin@unisasalud.com')
+            email_from = env['ir.config_parameter'].sudo().get_param('mail.default.from', 'admin@integraiaconodoo.com')
             env['mail.mail'].sudo().create({
                 'subject': subject,
                 'body_html': body,
@@ -751,7 +751,7 @@ class ChatBotUtils:
             pie.append(f"👥 **Central de citas:** {grupo_texto.capitalize()}")
         pie.append("🔒 **Tus datos están protegidos bajo nuestra política de privacidad.**")
         pie.append("📞 **En breve uno de nuestros ejecutivos se comunicará contigo.**")
-        pie.append("🙏 **¡Gracias por confiar en UNISA!**")
+        pie.append("🙏 **¡Gracias por confiar en IntegraIA!**")
         return "\n".join(pie)
 
     @staticmethod

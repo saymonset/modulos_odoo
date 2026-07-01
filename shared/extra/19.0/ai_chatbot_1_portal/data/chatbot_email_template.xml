@@ -2,16 +2,16 @@
 <odoo>
     <data noupdate="1">
         <record id="email_template_lead_asignado" model="mail.template">
-            <field name="name">Nuevo Lead Asignado - Chatbot UNISA</field>
+            <field name="name">Nuevo Lead Asignado - Chatbot IntegraIA</field>
             <field name="model_id" ref="crm.model_crm_lead"/>
             <field name="email_from">{{object.user_id.email or ''}}</field>
             <field name="partner_to">{{object.user_id.partner_id.id}}</field>
             <field name="subject">Nuevo lead asignado: {{object.name}}</field>
             <field name="body_html"><![CDATA[
 <p>Hola <t-esc="object.user_id.partner_id.name"/>,</p>
-<p>Se te ha asignado un nuevo lead generado desde el chatbot de UNISA.</p>
+<p>Se te ha asignado un nuevo lead generado desde el chatbot de IntegraIA.</p>
 <br/>
-<p><strong>Datos del paciente:</strong></p>
+<p><strong>Datos del cliente:</strong></p>
 <ul>
     <li><strong>Nombre:</strong> <t-esc="object.contact_name"/></li>
     <li><strong>Teléfono:</strong> <t-esc="object.phone"/></li>
@@ -23,9 +23,9 @@
 <p><strong>Descripción:</strong></p>
 <p t-esc="object.description"/>
 <br/>
-<p>Por favor, contacta al paciente a la brevedad para dar seguimiento a su solicitud.</p>
+<p>Por favor, contacta al cliente a la brevedad para dar seguimiento a su solicitud.</p>
 <p>Saludos,</p>
-<p><strong>Sistema UNISA Salud</strong></p>
+<p><strong>Sistema IntegraIA</strong></p>
             ]]></field>
         </record>
     </data>

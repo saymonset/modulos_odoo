@@ -39,7 +39,7 @@ class InicioAgendarController(http.Controller):
                         'nombre_interno': 'informar_precios',
                         'nombre_mostrar': 'Información de precios',
                         'tipo_dato': 'text',
-                        'mensaje_prompt': 'Conoce nuestros precios básicos 2026. ¿Deseas que te ayudemos a agendar una cita? Responde "Sí" para continuar.',
+                        'mensaje_prompt': '💰 Conoce nuestros planes de tienda virtual con Odoo CE 19. ¿Deseas que te enviemos una cotización? Responde "Sí" para continuar.',
                         'mensaje_error': '',
                         'es_requerido': False,
                         'campo_destino': 'informacion_precios',

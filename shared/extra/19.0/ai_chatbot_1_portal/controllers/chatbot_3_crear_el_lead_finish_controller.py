@@ -88,7 +88,7 @@ class ChatBotController(http.Controller):
                     'existe': True,
                     'iniciales': self._get_iniciales(partner.name),
                     'mensaje': f"✅ **INFORMACIÓN ENCONTRADA**\n\n"
-                               f"👤 **Datos del paciente:**\n"
+                               f"👤 **Datos del cliente:**\n"
                                f"• Nombre: {partner.name}\n"
                                f"• Cédula: {partner.vat or 'No registrada'}\n"
                                f"• Teléfono: {partner.phone}\n",
@@ -392,7 +392,7 @@ class ChatBotController(http.Controller):
                 'text': respuesta_bot,
                 'content': respuesta_bot,
                 'output': respuesta_bot,
-                'mensaje': 'Cita registrada exitosamente. Un ejecutivo se contactará pronto.',
+                'mensaje': 'Solicitud registrada exitosamente. Un ejecutivo se contactará pronto.',
                 'session_eliminada': session_id if session_id else None,
                 'equipo_asignado': equipo_asignado,
                 'grupo_asignado': nombre_grupo
@@ -408,7 +408,7 @@ class ChatBotController(http.Controller):
         except Exception as e:
             _logger.error("ERROR CREANDO CITA: %s", str(e), exc_info=True)
             return Response(
-                json.dumps({'existe': False, 'error': True, 'mensaje': 'Error al crear la cita', 'detalle': str(e)}),
+                json.dumps({'existe': False, 'error': True, 'mensaje': 'Error al registrar la solicitud', 'detalle': str(e)}),
                 status=500,
                 content_type='application/json; charset=utf-8',
                 headers=[('Access-Control-Allow-Origin', '*')]

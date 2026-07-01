@@ -1823,6 +1823,17 @@
       "main": [
         [
           {
+            "node": "Enviar texto despues del menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar texto despues del menu": {
+      "main": [
+        [
+          {
             "node": "Fin menú WhatsApp",
             "type": "main",
             "index": 0
@@ -1904,4 +1915,4 @@
   },
   "id": "rawHArcQkOt5uVmz",
   "tags": []
-}
+} 
