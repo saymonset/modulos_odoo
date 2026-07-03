@@ -45,6 +45,7 @@
         # 'views/invoice_report_templates.xml',
         'views/payment_templates_inherit.xml',
         'views/product_views.xml',
+        'views/stock_quant_views.xml',
         'data/ir_cron_data.xml',
     ],
     

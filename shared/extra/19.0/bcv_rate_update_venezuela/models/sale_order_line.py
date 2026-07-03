@@ -25,6 +25,14 @@ class SaleOrderLine(models.Model):
         store=True
     )
 
+    def _prepare_invoice_line(self, **optional_values):
+        res = super()._prepare_invoice_line(**optional_values)
+        res.update({
+            'price_usd_bcv': self.price_usd_bcv,
+            'bcv_rate_value': self.rate_value,
+        })
+        return res
+
     @api.depends('price_unit', 'product_uom_qty')
     def _compute_usd_bcv(self):
         for line in self:

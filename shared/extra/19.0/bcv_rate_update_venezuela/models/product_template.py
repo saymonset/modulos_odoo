@@ -19,6 +19,23 @@ class ProductTemplate(models.Model):
         digits=(12, 2)
     )
 
+    standard_price_usd = fields.Float(
+        string='Costo USD',
+        compute='_compute_standard_price_usd',
+        inverse='_set_standard_price_usd',
+        digits=(12, 2)
+    )
+
+    def _compute_standard_price_usd(self):
+        for template in self:
+            variant = template.product_variant_id
+            template.standard_price_usd = variant.standard_price_usd if variant else 0.0
+
+    def _set_standard_price_usd(self):
+        for template in self:
+            if len(template.product_variant_ids) == 1:
+                template.product_variant_ids.standard_price_usd = template.standard_price_usd
+
     def _compute_currency_usd_id(self):
         usd = self.env.ref('base.USD', raise_if_not_found=False)
         for template in self:
@@ -37,6 +54,20 @@ class ProductTemplate(models.Model):
             rate = self._get_bcv_rate(template.company_id)
             if rate:
                 template.list_price = float_round(template.list_price_usd * rate, precision_digits=2)
+
+    @api.onchange('standard_price')
+    def _onchange_standard_price(self):
+        for template in self:
+            rate = self._get_bcv_rate(template.company_id)
+            if rate:
+                template.standard_price_usd = float_round(template.standard_price / rate, precision_digits=2)
+
+    @api.onchange('standard_price_usd')
+    def _onchange_standard_price_usd(self):
+        for template in self:
+            rate = self._get_bcv_rate(template.company_id)
+            if rate:
+                template.standard_price = float_round(template.standard_price_usd * rate, precision_digits=2)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -68,6 +99,22 @@ class ProductTemplate(models.Model):
                     template.with_context(_skip_bcv_sync=True).write({
                         'list_price_usd': float_round(template.list_price / rate, precision_digits=2),
                     })
+
+        if 'standard_price_usd' in vals:
+            for template in self:
+                rate = self._get_bcv_rate(template.company_id)
+                if rate:
+                    template.with_context(_skip_bcv_sync=True).write({
+                        'standard_price': float_round(template.standard_price_usd * rate, precision_digits=2),
+                    })
+        elif 'standard_price' in vals:
+            for template in self:
+                rate = self._get_bcv_rate(template.company_id)
+                if rate:
+                    for variant in template.product_variant_ids:
+                        variant.with_context(_skip_bcv_sync=True).write({
+                            'standard_price_usd': float_round(template.standard_price / rate, precision_digits=2),
+                        })
 
     @api.model
     def _get_bcv_rate(self, company):
@@ -113,6 +160,15 @@ class ProductTemplate(models.Model):
                 a.with_context(_skip_bcv_sync=True).write({
                     'price_extra': a.price_extra_usd * rate,
                 })
+            # Recalcular costos desde standard_price_usd
+            products = self.env['product.product'].search([
+                ('standard_price_usd', '>', 0),
+                ('company_id', '=', company.id),
+            ])
+            for p in products:
+                p.with_context(_skip_bcv_sync=True).write({
+                    'standard_price': float_round(p.standard_price_usd * rate, precision_digits=2),
+                })
         _logger.info("Precios VES recalculados desde USD para todas las compañías.")
 
 
@@ -127,6 +183,11 @@ class ProductProduct(models.Model):
 
     lst_price_usd = fields.Float(
         string='Precio de Venta USD',
+        digits=(12, 2)
+    )
+
+    standard_price_usd = fields.Float(
+        string='Costo USD',
         digits=(12, 2)
     )
 
@@ -149,6 +210,20 @@ class ProductProduct(models.Model):
             if rate:
                 rec.lst_price = float_round(rec.lst_price_usd * rate, precision_digits=2)
 
+    @api.onchange('standard_price')
+    def _onchange_standard_price(self):
+        for rec in self:
+            rate = self.env['product.template']._get_bcv_rate(rec.company_id)
+            if rate:
+                rec.standard_price_usd = float_round(rec.standard_price / rate, precision_digits=2)
+
+    @api.onchange('standard_price_usd')
+    def _onchange_standard_price_usd(self):
+        for rec in self:
+            rate = self.env['product.template']._get_bcv_rate(rec.company_id)
+            if rate:
+                rec.standard_price = float_round(rec.standard_price_usd * rate, precision_digits=2)
+
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
@@ -165,19 +240,24 @@ class ProductProduct(models.Model):
         return res
 
     def _sync_usd_ves_values(self, vals):
-        if 'lst_price_usd' in vals:
-            for rec in self:
-                rate = self.env['product.template']._get_bcv_rate(rec.company_id)
-                if rate:
-                    rec.with_context(_skip_bcv_sync=True).write({
-                        'lst_price': float_round(rec.lst_price_usd * rate, precision_digits=2),
-                    })
-        elif 'lst_price' in vals or 'list_price' in vals or 'price_extra' in vals:
+        # Solo sincronizamos VES -> USD en ProductProduct.
+        # La direccion USD -> VES la maneja ProductTemplate._sync_usd_ves_values
+        # de forma segura, evitando recursion que crashea al usar
+        # product_variant_id (campo no almacenado) en triggers SQL del ORM.
+        if 'lst_price' in vals:
             for rec in self:
                 rate = self.env['product.template']._get_bcv_rate(rec.company_id)
                 if rate:
                     rec.with_context(_skip_bcv_sync=True).write({
                         'lst_price_usd': float_round(rec.lst_price / rate, precision_digits=2),
+                    })
+
+        if 'standard_price' in vals:
+            for rec in self:
+                rate = self.env['product.template']._get_bcv_rate(rec.company_id)
+                if rate:
+                    rec.with_context(_skip_bcv_sync=True).write({
+                        'standard_price_usd': float_round(rec.standard_price / rate, precision_digits=2),
                     })
 
 

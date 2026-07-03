@@ -18,6 +18,14 @@
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"/>
             </xpath>
+            <field name="standard_price" position="after">
+                <field name="currency_usd_id" invisible="1"/>
+                <span class="mx-2" style="font-weight: bold;">o</span>
+                <field name="standard_price_usd"
+                       class="oe_inline"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_usd_id'}"/>
+            </field>
         </field>
     </record>
 
@@ -41,6 +49,14 @@
                 <div class="text-warning small mt-1" invisible="product_variant_count &lt;= 1">
                     Para precios distintos por variante, usa <strong>Precio Extra USD</strong> en <strong>Atributos y Variantes</strong>.
                 </div>
+            </field>
+            <field name="standard_price" position="after">
+                <field name="currency_usd_id" invisible="1"/>
+                <span class="mx-2" style="font-weight: bold;">o</span>
+                <field name="standard_price_usd"
+                       class="oe_inline"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_usd_id'}"/>
             </field>
         </field>
     </record>

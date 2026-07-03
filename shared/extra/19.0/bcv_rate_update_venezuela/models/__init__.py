@@ -8,3 +8,4 @@ from . import payment_provider
 from . import whatsapp_history_extension
 from . import res_company
 from . import product_template
+from . import stock_quant

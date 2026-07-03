@@ -1,80 +1,102 @@
-# AGENTS.md — Contexto del Proyecto
+Análisis Técnico: Módulo bcv_rate_update_venezuela
+He realizado una revisión exhaustiva del código del módulo 
+bcv_rate_update_venezuela
+. He identificado varios errores críticos que impiden el correcto funcionamiento del módulo o que pueden causar fallos en tiempo de ejecución (crashes).
 
-## Proyecto
-- **Módulos**: `ai_chatbot_1_portal` + `odoo_chatwoot_connector` (Odoo 19.0)
-- **Clínica**: UNISA Salud — Venezuela
-- **Chatbot**: WhatsApp (vía Chatwoot + n8n + OpenAI)
-- **Ruta base módulos**: `shared/extra/19.0/`
+A continuación se detallan los hallazgos y las soluciones propuestas para cada uno.
 
-## Estructura clave
+1. Bug Crítico en la Detección de Actualización de Tasa
+Archivo afectado: 
+res_currency_rate.py
+ y 
+L45
 
-| Archivo | Propósito |
-|---|---|
-| `ai_chatbot_1_portal/controllers/chatbot_utils.py` | Utilidades: crear leads, formatear mensajes, mapeo grupos, `get_team_unisa`, `assign_lead_round_robin` |
-| `ai_chatbot_1_portal/controllers/chatbot_3_crear_el_lead_finish_controller.py` | Endpoint HTTP `/ai_chatbot_1_portal/capturar_lead_http` — crear leads desde n8n |
-| `ai_chatbot_1_portal/controllers/chatbot_0_inicio_agendar_procesar_paso_conroller.py` | Endpoint `/inicioagendar` — inicia flujo |
-| `ai_chatbot_1_portal/models/chatbot_session.py` | Modelo `chatbot.session` — gestiona sesiones, flujos, pasos |
-| `ai_chatbot_1_portal/models/chatbot_flujo.py` | Modelo `chatbot.flujo` — define pasos por tipo de flujo |
-| `odoo_chatwoot_connector/models/chatwoot_mapping.py` | Modelo `chatwoot.mapping` + round-robin (`select_round_robin_mapping`) |
-| `odoo_chatwoot_connector/models/chatwoot_client.py` | Cliente API Chatwoot: asignación, labels, agent details, inbox members |
-| `odoo_chatwoot_connector/models/chatbot_session_inherit.py` | Hook `capturar_lead` en `chatbot.session` (RPC path) |
-| `odoo_chatwoot_connector/models/lead_inherit.py` | Campos extra en `crm.lead`: `chatwoot_processing_status`, `chatwoot_assigned_agent_name`, etc. |
-| `odoo_chatwoot_connector/views/crm_lead_views.xml` | Vista heredada de `crm.lead` con pestaña Chatwoot |
-| `odoo_chatwoot_connector/views/chatwoot_mapping_views.xml` | Vistas de mapping |
-| `ai_chatbot_1_portal/n8n/chatbot_create_lead_0.json` | Export JSON del workflow de n8n |
+El problema:
+El código actual verifica si el nombre de la moneda actualizada es 'VES':
 
-## Mapeo flujos → Grupo CRM
+python
 
-| `equipo_asignado` (n8n) | `name_flow` | Grupo CRM |
-|---|---|---|
-| `Agendamiento_Directo` | `flujo_agendamiento_directo` | *(sin agente)* |
-| `Agendamiento_Precios` | `flujo_agendamiento_precios` | *(sin agente)* |
-| `Agendamiento_Servicios` | `flujo_agendamiento_servicios` | *(sin agente)* |
-| `Agendamiento_Otra_Consulta` | `flujo_agendamiento_otra_consulta` | Grupo Citas |
-| `Ventas_UNISA` | `flujo_ventas_unisa` | Grupo Ventas |
-| `CITAS_MP` | `flujo_citas_medios_propios` | Grupo Citas |
-| `CITAS_SEGUROS` | `flujo_citas_seguro` | Grupo Citas |
-| `RESULTADOS_LAB` | `flujo_resultados_laboratorio` | Grupo Laboratorio |
-| `RESULTADOS_IMAGENES` | `flujo_resultados_imagenes` | Grupo Imagenología |
+if rate.currency_id.name == 'VES':
+    self.env['product.template']._recalculate_ves_prices_from_usd()
+Sin embargo, dado que la moneda base de la compañía en la base de datos es VES, la única tasa de cambio que se crea y actualiza es la de USD (como moneda extranjera, con una tasa de $1/Rate$ Bolívares). Por lo tanto, rate.currency_id.name siempre será 'USD' y el recálculo automático de precios VES a partir del costo/precio USD nunca se ejecuta cuando se actualiza la tasa del BCV.
 
-## Integración con n8n
-- Webhook Chatwoot → n8n → OpenAI (gpt-4o-mini) → decide `equipo_asignado` y `tipoPregunta`
-- Si hay `equipo_asignado` → llama a `/inicioagendar` → inicia flujo en Odoo
-- El `equipo_asignado` se envía tal cual a Odoo (sin mapear)
+Solución propuesta:
+Cambiar la validación para que verifique si la moneda es tanto 'USD' como 'VES', haciendo el módulo compatible con cualquier configuración de moneda base (VES o USD):
 
-## Reglas importantes
-- Actualizar módulos via: `-u ai_chatbot_1_portal -u odoo_chatwoot_connector`
-- Los cambios Python requieren `-u` y reinicio del server dev
-- Para leads de resultados (LAB/IMAGENES) se usa `create_resultados_lead`, para el resto `create_lead`
-- Todos los mapeos están duplicados en 3 lugares (controller, session_model, utils) — mantener sincronizados
-- En `auth='public'` routes, `request.env` es el user público. Usar `request.env(user=admin_uid)` para cambiar user. Para acceder a campos que referencian `res.users` (ej. `crm.team.member_ids`), usar `.sudo()` en el recordset: `team.sudo().member_ids`
-- **Servidor dev**: puerto 38069, arrancar desde: `clientes/integraiadev_19/`
-- **Log Odoo**: `clientes/integraiadev_19/log/odoo.log`
-- **Python/venv**: `.venv/bin/python3`
+python
 
-## Estado actual (Jun 08 2026)
+if rate.currency_id.name in ('USD', 'VES'):
+2. AttributeError en Historial de Inventario (Quants)
+Archivo afectado: 
+stock_quant.py
 
-### ✅ Completado
-- **Round-robin Chatwoot**: Rotación entre mappings del mismo `equipo_asignado`. Alterna entre IDs 3 y 9 para CITAS_MP (agent_id=14). Verificado via JSON-RPC. Funciona correctamente.
-- **Round-robin Odoo** (usuarios CRM): `assign_lead_round_robin` en `chatbot_utils.py` rota entre miembros del equipo. Equipo Grupo Citas tiene 4 miembros (IDs 5,6,7,8).
-- **HTTP endpoint reparado**: Error `"Failed to write field crm.team.member_ids. Public user (id=3) doesn't have read access to User (res.users)"` resuelto.
-  - **Causa raíz**: `team` era un recordset en el env del user público (uid=3). Acceder a `team.member_ids` (campo Many2many a `res.users`) requiere permisos que el user público no tiene.
-  - **Solución**: `chatbot_3_crear_el_lead_finish_controller.py:242`: usar `team_sudo = team.sudo()` y acceder `team_sudo.member_ids`. También se agregó `.sudo()` en la búsqueda fallback de equipos en `chatbot_utils.py:228-230`.
-  - **Endpoint verificado**: POST a `/ai_chatbot_1_portal/capturar_lead_http` retorna HTTP 200 con lead creado (ID 151).
-- **Logging `RR[...]`**: Agregado en `chatwoot_mapping.py`, `chatbot_3_crear_el_lead_finish_controller.py`, `chatbot_session_inherit.py`, `chatbot_utils.py`, `chatwoot_client.py`.
-- **Chatwoot Mappings activos**: 12 registros (IDs 3-14) con pares duplicados (ID 3 y 9 ambos con agent_id=14, etc.). Todos inbox 7.
-- **Preservación de assignee en Chatwoot**: Cuando una conversación ya tiene un agente asignado y está `open`/`pending`, Odoo **NO reasigna** — preserva el agente actual. Cuando está `resolved`, reasigna normalmente.
-  - `chatwoot_client.py:assign_conversation` → verifica `_get_conversation_details` al inicio; si hay assignee activo, retorna `assigned_to='preserved'` sin llamar al API de assignments.
-  - `chatbot_session_inherit.py` → maneja `assigned_to='preserved'` sin publicar chatter, guarda log.
-  - `chatbot_3_crear_el_lead_finish_controller.py` → mismo manejo.
+El problema:
+En el cálculo de unit_cost_usd se intenta acceder al atributo quant.cost:
 
-### 🔄 Pendiente
-- **Probar flujo completo con preservación**: n8n → Odoo → lead creado → conversación con assignee activo → preservación. Requiere prueba con conversación real de Chatwoot.
-- **Limpiar mappings duplicados**: IDs 9-14 son duplicados de IDs 3-8. Se pueden desactivar (archivar) para evitar confusión en la rotación.
+python
 
-### 📝 Notas técnicas
-- `get_team_unisa` en `chatbot_utils.py:293` usa `sudo().with_context(lang='en_US')` para buscar equipos por nombre traducido.
-- Correo de notificación configurado: `email_from = admin@unisasalud.com`. Alias domain con `default_from = 'admin'`.
-- Chatwoot: inbox 7 (WhatsApp +58 424 8221683). Agents: 1 (admin), 9-18 (ejecutivos).
-- Admin UNISA: user 13, login `admin@unisasalud.com`, password `Unisa2024!`.
-- `conversation_id` en n8n: `body.conversation?.id` (corregido, antes usaba `messages[0].conversation_id`).
+quant.unit_cost_usd = float_round(
+    quant.cost / rate, precision_digits=2
+) if quant.cost else 0.0
+Sin embargo, en Odoo 19 (y versiones anteriores) el modelo stock.quant no posee ningún campo llamado cost. Esto provocará un error de tipo AttributeError inmediatamente al intentar abrir la vista de inventario donde se muestre esta columna.
+
+Solución propuesta:
+Utilizar el costo estándar del producto de la variante (standard_price), aplicando el contexto de compañía adecuado para ser consistentes con la contabilidad multi-compañía de Odoo:
+
+python
+
+cost_ves = quant.product_id.with_company(quant.company_id).standard_price
+quant.unit_cost_usd = float_round(
+    cost_ves / rate, precision_digits=2
+) if cost_ves else 0.0
+3. Pérdida de Sincronización en Creación/Escritura y Costo USD no editable
+Archivo afectado: 
+product_template.py
+
+El problema:
+En product.product (variantes) se eliminaron los métodos create, write y _sync_usd_ves_values, dejando únicamente los métodos @api.onchange. Esto significa que si un producto se crea o edita por backend (carga inicial, sincronizaciones, integraciones con otros módulos o POS), los precios en USD y VES no se sincronizarán, provocando inconsistencia de datos.
+El campo standard_price_usd (Costo USD) en product.template está definido como un campo puramente calculado (compute='_compute_standard_price_usd') sin un método inverso. Al no tener método inverse, Odoo renderiza el campo como sólo lectura en el formulario de la plantilla, impidiendo que el usuario pueda escribir el costo del producto en USD en la ficha general.
+Solución propuesta:
+Re-introducir los métodos create y write de sincronización en product.product.
+Agregar un método inverse (_set_standard_price_usd) a standard_price_usd en la plantilla para poder guardar el costo USD en la variante principal.
+Agregar el campo standard_price_usd al formulario de plantilla de producto en la vista XML.
+4. Riesgo de Caída al Facturar Ventas (Invoice Lines)
+Archivo afectado: 
+account_move_line.py
+
+El problema:
+El código intenta copiar la tasa y precio USD analizando los comandos del campo relacional de venta:
+
+python
+
+if 'sale_line_ids' in vals and vals['sale_line_ids']:
+    sale_line = self.env['sale.order.line'].browse(vals['sale_line_ids'][0][2][0])
+Esto es altamente inestable porque vals['sale_line_ids'] no siempre viene formateado como un comando de asignación (6, 0, [IDs]). Dependiendo de cómo se genere la factura (desde backend, botones o workflows automáticos), puede venir en formatos como [(4, ID)] o como objetos Command. Esto provocará un fallo de tipo IndexError o TypeError y bloqueará la facturación.
+
+Solución propuesta:
+Utilizar el hook estándar de Odoo para preparar líneas de factura heredando _prepare_invoice_line en sale.order.line, lo cual es 100% seguro y nativo de Odoo:
+
+python
+
+# En sale_order_line.py:
+def _prepare_invoice_line(self, **optional_values):
+    res = super()._prepare_invoice_line(**optional_values)
+    res.update({
+        'price_usd_bcv': self.price_usd_bcv,
+        'bcv_rate_value': self.rate_value,
+    })
+    return res
+5. Detalles en Vistas XML
+Archivos afectados: 
+stock_quant_views.xml
+ y 
+product_views.xml
+
+El problema:
+En stock_quant_views.xml, se declara la columna currency_usd_id dos veces redundantes bajo el mismo nodo xpath.
+En product_views.xml, el campo standard_price_usd (Costo USD) no se muestra en el formulario de la plantilla de producto (product.template), solo en variantes. La mayoría de los usuarios gestionan los costos desde la plantilla general.
+Solución propuesta:
+Eliminar la declaración duplicada de currency_usd_id en stock_quant_views.xml.
+Agregar standard_price_usd después de standard_price en la vista heredada de plantilla de producto product_template_form_view_usd.
+
+
