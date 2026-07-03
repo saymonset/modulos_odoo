@@ -2,7 +2,7 @@
 
 **Session ID:** ses_0dc823b98ffec4Lpl7plt735fH
 **Created:** 7/2/2026, 5:41:12 PM
-**Updated:** 7/2/2026, 5:41:56 PM
+**Updated:** 7/3/2026, 3:42:52 PM
 
 ---
 
@@ -2088,6 +2088,1849 @@ Es un módulo completo de comercio electrónico y gestión financiera adaptado a
 | `WebsiteSale` (controller) | `controllers/website_sale_attachment.py` | Rutas de comprobante, autocompletado, bancos |
 
 **Dependencias**: `base`, `web`, `sale_management`, `account`, `stock`, `point_of_sale`, `website_sale`, `contacts`, `payment`, `whatsapp_cloud_integration`, `currency_rate_update_base`, `currency_rate_update_venezuela`.
+
+---
+
+## User
+
+puedes recvisar porque esta vista /home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/views/stock_quant_views.xml no me permite ver la cantidad en dolares ?: Existencias
+Buscar…
+1-9 / 9
+Categoría
+Todos
+Goods
+5
+
+Producto
+Método de costo
+Costo unitario
+Valor total
+A la mano
+Disponible para uso
+Entrante
+Saliente
+[LAM-ALU-03] Lámina Aluminio 0.3mm	Precio estándar	8,50 Bs	255,00 Bs	30,00	30,00	0,00	0,00	
+m²	
+[LAM-ALU-05] Lámina Aluminio 0.5mm	Precio estándar	13,33 Bs	373,24 Bs	28,00	28,00	0,00	0,00	
+m²	
+[PLA-PARA] Planita Parabuirgue 122x44.6	Costo promedio (AVCO)	12,33 Bs	0,00 Bs	0,00	0,00	0,00	0,00	
+Unidades	
+[TAFD] TAFD 102x10	Costo promedio (AVCO)	1.958,92 Bs	19.589,20 Bs	10,00	10,00	0,00	0,00	
+Unidades	
+[TOR-COR] Torre Corazón Mezclado	Costo promedio (AVCO)	25,23 Bs	0,00 Bs	0,00	0,00	0,00	0,00	
+Unidades	
+Alambre para borde	Precio estándar	0,50 Bs	22,50 Bs	45,00	45,00	0,00	0,00	
+m	
+Lámina Aluminio 0.9mm	Precio estándar	5,00 Bs	3,00 Bs	0,60	0,60	0,00	0,00	
+m²	
+TAFD 103x10	Costo promedio (AVCO)	1.305,95 Bs	2.611,90 Bs	2,00	2,00	0,00	0,00	
+Unidades	
+TAFD 105x5	Costo promedio (AVCO)	0,00 Bs	0,00 Bs	0,00	0,00	0,00	0,00	
+Unidades	
+22.854,84 Bs	115,60	115,60	0,00	0,00	
+Etiqueta:Valor total
+Campo:total_value
+Modelo:product.product
+Tipo:monetary
+Widget:Monetario (stock_action_field)
+Contexto: { 'search_default_product_id': id, 'search_default_incoming': 1, 'search_default_remaining': 1, 'cost_method': cost_method, 'tracking': tracking, }
+Solo lectura:True
+Presione esc para salir de la pantalla completa  , en ubicaciones tambien lo necesito: Ubicaciones
+Ubicaciones internas
+Buscar…
+1-6 / 6
+
+Cantidad en inventario
+Cantidad disponible
+Valor
+WH/Stock		
+[LAM-ALU-05] Lámina Aluminio 0.5mm		28,00	0,00	28,00	
+m²	373,24 Bs	
+WH/Stock		
+[LAM-ALU-03] Lámina Aluminio 0.3mm		30,00	0,00	30,00	
+m²	255,00 Bs	
+WH/Stock		
+Alambre para borde		45,00	0,00	45,00	
+m	22,50 Bs	
+WH/Stock		
+[TAFD] TAFD 102x10	Goods	10,00	0,00	10,00	
+Unidades	19.589,20 Bs	
+WH/Stock		
+Lámina Aluminio 0.9mm		0,60	0,00	0,60	
+m²	3,00 Bs	
+WH/Stock		
+TAFD 103x10	Goods	2,00	0,00	2,00	
+Unidades	2.611,90 Bs	
+115,60	0,00	115,60		22.854,84 Bs	
+Presione esc para salir de la pantalla completa 
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 11.4s)
+
+_Thinking:_
+
+The user is asking me to review a stock quant view XML file that isn't showing USD amounts. They mentioned the file path `/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/views/stock_quant_views.xml` but this file isn't listed in the views directory. Let me check if it exists, and also look at the stock_quant model file they referenced in the AGENTS.md analysis.
+
+**Tool: glob**
+
+**Input:**
+```json
+{
+  "pattern": "**/stock_quant*.xml",
+  "path": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela"
+}
+```
+
+**Output:**
+```
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/views/stock_quant_views.xml
+```
+
+**Tool: glob**
+
+**Input:**
+```json
+{
+  "pattern": "**/stock_quant*.py",
+  "path": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela"
+}
+```
+
+**Output:**
+```
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/models/stock_quant.py
+```
+
+**Tool: grep**
+
+**Input:**
+```json
+{
+  "pattern": "stock.quant",
+  "include": "*.xml",
+  "path": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela"
+}
+```
+
+**Output:**
+```
+Found 4 matches
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/views/stock_quant_views.xml:
+  Line 4:     <record id="stock_quant_tree_view_usd" model="ir.ui.view">
+
+  Line 5:         <field name="name">stock.quant.tree.usd.inherit</field>
+
+  Line 6:         <field name="model">stock.quant</field>
+
+  Line 8:         <field name="inherit_id" ref="stock.view_stock_quant_tree_simple"/>
+
+```
+
+**Tool: grep**
+
+**Input:**
+```json
+{
+  "pattern": "stock_quant|unit_cost_usd|currency_usd_id",
+  "path": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela"
+}
+```
+
+**Output:**
+```
+Found 45 matches
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/views/stock_quant_views.xml:
+  Line 4:     <record id="stock_quant_tree_view_usd" model="ir.ui.view">
+
+  Line 8:         <field name="inherit_id" ref="stock.view_stock_quant_tree_simple"/>
+
+  Line 11:                 <field name="currency_usd_id" column_invisible="True"/>
+
+  Line 12:                 <field name="unit_cost_usd"
+
+  Line 14:                        options="{'currency_field': 'currency_usd_id'}"
+
+  Line 18:                        options="{'currency_field': 'currency_usd_id'}"
+
+
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/views/product_views.xml:
+  Line 14:                 <field name="currency_usd_id" invisible="1"/>
+
+  Line 19:                        options="{'currency_field': 'currency_usd_id'}"/>
+
+  Line 22:                 <field name="currency_usd_id" invisible="1"/>
+
+  Line 27:                        options="{'currency_field': 'currency_usd_id'}"/>
+
+  Line 42:                 <field name="currency_usd_id" invisible="1"/>
+
+  Line 47:                        options="{'currency_field': 'currency_usd_id'}"
+
+  Line 54:                 <field name="currency_usd_id" invisible="1"/>
+
+  Line 59:                        options="{'currency_field': 'currency_usd_id'}"/>
+
+  Line 74:                 <field name="currency_usd_id" invisible="1"/>
+
+  Line 79:                        options="{'currency_field': 'currency_usd_id'}"
+
+  Line 98:                 <field name="currency_usd_id" column_invisible="True"/>
+
+  Line 101:                        options="{'currency_field': 'currency_usd_id'}"/>
+
+  Line 116:                 <field name="currency_usd_id" column_invisible="True"/>
+
+  Line 119:                        options="{'currency_field': 'currency_usd_id'}"
+
+  Line 135:                 <field name="currency_usd_id" column_invisible="True"/>
+
+  Line 138:                        options="{'currency_field': 'currency_usd_id'}"
+
+  Line 154:                 <field name="currency_usd_id" invisible="1"/>
+
+  Line 157:                        options="{'currency_field': 'currency_usd_id'}"/>
+
+
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/models/product_template.py:
+  Line 11:     currency_usd_id = fields.Many2one(
+
+  Line 14:         compute='_compute_currency_usd_id'
+
+  Line 39:     def _compute_currency_usd_id(self):
+
+  Line 42:             template.currency_usd_id = usd
+
+  Line 178:     currency_usd_id = fields.Many2one(
+
+  Line 181:         compute='_compute_currency_usd_id'
+
+  Line 194:     def _compute_currency_usd_id(self):
+
+  Line 197:             rec.currency_usd_id = usd
+
+  Line 267:     currency_usd_id = fields.Many2one(
+
+  Line 270:         compute='_compute_currency_usd_id'
+
+  Line 278:     def _compute_currency_usd_id(self):
+
+  Line 281:             rec.currency_usd_id = usd
+
+
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/models/__init__.py:
+  Line 11: from . import stock_quant
+
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/models/stock_quant.py:
+  Line 11:     currency_usd_id = fields.Many2one(
+
+  Line 14:         compute='_compute_currency_usd_id'
+
+  Line 16:     unit_cost_usd = fields.Float(
+
+  Line 27:     def _compute_currency_usd_id(self):
+
+  Line 30:             rec.currency_usd_id = usd
+
+  Line 37:                 quant.unit_cost_usd = float_round(
+
+  Line 44:                 quant.unit_cost_usd = 0.0
+
+
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/__manifest__.py:
+  Line 48:         'views/stock_quant_views.xml',
+
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 4.2s)
+
+_Thinking:_
+
+Now I need to read the stock_quant_views.xml and the stock_quant.py files to understand the problem.
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/views/stock_quant_views.xml"
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/views/stock_quant_views.xml</path>
+<type>file</type>
+<content>
+1: <?xml version="1.0" encoding="utf-8"?>
+2: <odoo>
+3: 
+4:     <record id="stock_quant_tree_view_usd" model="ir.ui.view">
+5:         <field name="name">stock.quant.tree.usd.inherit</field>
+6:         <field name="model">stock.quant</field>
+7:         <field name="priority">99</field>
+8:         <field name="inherit_id" ref="stock.view_stock_quant_tree_simple"/>
+9:         <field name="arch" type="xml">
+10:             <xpath expr="//field[@name='product_uom_id']" position="after">
+11:                 <field name="currency_usd_id" column_invisible="True"/>
+12:                 <field name="unit_cost_usd"
+13:                        widget="monetary"
+14:                        options="{'currency_field': 'currency_usd_id'}"
+15:                        optional="show"/>
+16:                 <field name="value_usd"
+17:                        widget="monetary"
+18:                        options="{'currency_field': 'currency_usd_id'}"
+19:                        optional="show"/>
+20:             </xpath>
+21:         </field>
+22:     </record>
+23: 
+24: </odoo>
+
+(End of file - total 24 lines)
+</content>
+```
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/models/stock_quant.py"
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/models/stock_quant.py</path>
+<type>file</type>
+<content>
+1: from odoo import models, fields
+2: from odoo.tools.float_utils import float_round
+3: import logging
+4: 
+5: _logger = logging.getLogger(__name__)
+6: 
+7: 
+8: class StockQuant(models.Model):
+9:     _inherit = 'stock.quant'
+10: 
+11:     currency_usd_id = fields.Many2one(
+12:         'res.currency',
+13:         string='USD Currency',
+14:         compute='_compute_currency_usd_id'
+15:     )
+16:     unit_cost_usd = fields.Float(
+17:         string='Costo unitario USD',
+18:         compute='_compute_cost_usd',
+19:         digits=(12, 2)
+20:     )
+21:     value_usd = fields.Float(
+22:         string='Valor total USD',
+23:         compute='_compute_cost_usd',
+24:         digits=(12, 2)
+25:     )
+26: 
+27:     def _compute_currency_usd_id(self):
+28:         usd = self.env.ref('base.USD', raise_if_not_found=False)
+29:         for rec in self:
+30:             rec.currency_usd_id = usd
+31: 
+32:     def _compute_cost_usd(self):
+33:         for quant in self:
+34:             rate = self.env['product.template']._get_bcv_rate(quant.company_id)
+35:             if rate:
+36:                 cost_ves = quant.product_id.with_company(quant.company_id).standard_price
+37:                 quant.unit_cost_usd = float_round(
+38:                     cost_ves / rate, precision_digits=2
+39:                 ) if cost_ves else 0.0
+40:                 quant.value_usd = float_round(
+41:                     quant.value / rate, precision_digits=2
+42:                 ) if quant.value else 0.0
+43:             else:
+44:                 quant.unit_cost_usd = 0.0
+45:                 quant.value_usd = 0.0
+
+(End of file - total 45 lines)
+</content>
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 17.2s)
+
+_Thinking:_
+
+Now I can see the problem clearly. Let me check the actual base view `stock.view_stock_quant_tree_simple` to understand what fields are available there. But first, let me also check what the manifest file currently includes for stock_quant views.
+
+The user says the stock quant view isn't showing USD amounts. Looking at the view:
+
+1. It inherits `stock.view_stock_quant_tree_simple` 
+2. Adds after `product_uom_id`: `currency_usd_id` (hidden), `unit_cost_usd`, `value_usd`
+3. These are stored only in this tree view
+
+But there are TWO issues:
+
+**Issue 1: The view is only added to `stock.view_stock_quant_tree_simple` (the simple tree), NOT to `stock.quant.tree` (the full tree in locations view)**
+
+The user says "en ubicaciones tambien lo necesito" (I also need it in locations). The locations view typically uses `stock.quant.tree` (the full quant tree view), not `stock.view_stock_quant_tree_simple`. Let me check what views exist in stock.
+
+Let me also check the actual Odoo stock module views to understand the view inheritance structure.
+
+**Issue 2: The view should be listed in the manifest**
+
+Actually, looking at the manifest again, I see the views list:
+```python
+'data': [
+    'security/ir.model.access.csv',
+    'data/res_bank_data.xml',
+    'views/res_currency_views.xml',
+    'views/sale_order_tree_debug.xml',
+    'views/sale_order_views.xml',
+    'views/website_cart_usd.xml',
+    'views/payment_attachment_templates.xml',
+    'views/payment_provider_views.xml',
+    'views/res_company_views.xml',
+    'views/payment_templates_inherit.xml',
+    'views/product_views.xml',
+    'data/ir_cron_data.xml',
+],
+```
+
+Wait! `views/stock_quant_views.xml` is NOT in the manifest's `data` list! That's one problem — the view XML is never loaded!
+
+Let me re-check... Actually let me look at the manifest again more carefully.
+
+Looking at the manifest:
+```python
+'data': [
+    'security/ir.model.access.csv',
+    'data/res_bank_data.xml',
+    'views/res_currency_views.xml',
+    'views/sale_order_tree_debug.xml',
+    'views/sale_order_views.xml',
+    'views/website_cart_usd.xml',
+    'views/payment_attachment_templates.xml',
+    'views/payment_provider_views.xml',
+    'views/res_company_views.xml',
+    # 'views/website_sale_templates.xml',
+    # 'views/invoice_report_templates.xml',
+    'views/payment_templates_inherit.xml',
+    'views/product_views.xml',
+    'data/ir_cron_data.xml',
+],
+```
+
+And from the grep output:
+```
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/__manifest__.py:
+  Line 48:         'views/stock_quant_views.xml',
+```
+
+Wait, the grep shows it IS in the manifest at line 48. Let me re-read the manifest file.
+
+Looking at the manifest file I read earlier:
+```
+34:     'data': [
+35:         'security/ir.model.access.csv',
+36:         'data/res_bank_data.xml',
+37:         'views/res_currency_views.xml',
+38:         'views/sale_order_tree_debug.xml',
+39:         'views/sale_order_views.xml',
+40:         'views/website_cart_usd.xml',
+41:         'views/payment_attachment_templates.xml',
+42:         'views/payment_provider_views.xml',
+43:         'views/res_company_views.xml',
+44:         # 'views/website_sale_templates.xml',
+45:         # 'views/invoice_report_templates.xml',
+46:         'views/payment_templates_inherit.xml',
+47:         'views/product_views.xml',
+48:         'data/ir_cron_data.xml',
+49:     ],
+```
+
+I see `views/product_views.xml` at line 47, but NOT `stock_quant_views.xml`. The grep found it at line 48 but that's actually `data/ir_cron_data.xml`. Let me look at the manifest more carefully — the grep was for `stock_quant_views.xml` and found line 48 in manifest. Wait, the grep result said:
+```
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/__manifest__.py:
+  Line 48:         'views/stock_quant_views.xml',
+```
+
+But when I read the manifest, line 48 has `'data/ir_cron_data.xml',` not `stock_quant_views.xml`. This is very strange. Let me re-read the file.
+
+Actually wait - looking at the original manifest content again:
+```
+48:         'data/ir_cron_data.xml',
+```
+
+But the grep says line 48 has `'views/stock_quant_views.xml',`. The grep was searching for the pattern `stock_quant|unit_cost_usd|currency_usd_id` across all files. Let me look more carefully.
+
+Oh wait, the grep pattern was `stock_quant|unit_cost_usd|currency_usd_id`, so it was searching for these terms. The match found in `__manifest__.py` at line 48 with `'views/stock_quant_views.xml'` — but this doesn't match the content I read... Let me re-read to make sure.
+
+Actually, looking again at the manifest lines 34-49:
+```
+34:     'data': [
+35:         'security/ir.model.access.csv',
+36:         'data/res_bank_data.xml',
+37:         'views/res_currency_views.xml',
+38:         'views/sale_order_tree_debug.xml',
+39:         'views/sale_order_views.xml',
+40:         'views/website_cart_usd.xml',
+41:         'views/payment_attachment_templates.xml',
+42:         'views/payment_provider_views.xml',
+43:         'views/res_company_views.xml',
+44:         # 'views/website_sale_templates.xml',
+45:         # 'views/invoice_report_templates.xml',
+46:         'views/payment_templates_inherit.xml',
+47:         'views/product_views.xml',
+48:         'data/ir_cron_data.xml',
+49:     ],
+```
+
+Line 48 is `'data/ir_cron_data.xml',`. There's no `stock_quant_views.xml` in the manifest data list! The grep must have found it somewhere else. Actually, now I'm doubting myself — let me re-read the manifest.
+
+Actually, I think the issue is that the manifest DOES include `stock_quant_views.xml` but perhaps at a line I'm not seeing, or it's been added since I read it. Let me just re-read.
+
+Actually, let me not re-read again and instead focus on the actual issues. The grep clearly shows:
+
+```
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/__manifest__.py:
+  Line 48:         'views/stock_quant_views.xml',
+```
+
+Wait, but line 48 in my original read was `'data/ir_cron_data.xml',`. The line numbers in my read started from the top of the file. The grep results also show line numbers from the top. So they should match. Unless the file was modified between readings... but no one modified it.
+
+Hmm, let me look at the grep more carefully:
+```
+/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/__manifest__.py:
+  Line 48:         'views/stock_quant_views.xml',
+```
+
+This is from a grep with pattern `stock_quant|unit_cost_usd|currency_usd_id`. The line contains `'views/stock_quant_views.xml'`. But in the original read, line 48 has `'data/ir_cron_data.xml'`. This seems contradictory.
+
+Oh wait, I misread! Let me look again at my original read of __manifest__.py:
+
+```
+48:         'data/ir_cron_data.xml',
+```
+
+Hmm, that's what I wrote down. But the grep found the stock_quant_views.xml at line 48. Maybe there's a discrepancy. Let me just read the manifest again to verify.
+
+Actually, I also notice the grep for `stock.quant` found:
+```
+Line 48:         'views/stock_quant_views.xml',
+```
+
+But I need to look at whether the line in the grep result is line 48 of the manifest file or not. Let me just re-read the manifest to confirm.
+
+You know what, let me just re-read the manifest to be sure.
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/__manifest__.py",
+  "offset": 30,
+  "limit": 25
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/lead/modulos_odoo/shared/extra/19.0/bcv_rate_update_venezuela/__manifest__.py</path>
+<type>file</type>
+<content>
+30:     'external_dependencies': {
+31:         'python': ['requests', 'beautifulsoup4'],
+32:     },
+33:     
+34:     'data': [
+35:         'security/ir.model.access.csv',
+36:         'data/res_bank_data.xml',
+37:         'views/res_currency_views.xml',
+38:         'views/sale_order_tree_debug.xml',
+39:         'views/sale_order_views.xml',
+40:         'views/website_cart_usd.xml',
+41:         'views/payment_attachment_templates.xml',
+42:         'views/payment_provider_views.xml',
+43:         'views/res_company_views.xml',
+44:         # 'views/website_sale_templates.xml',
+45:         # 'views/invoice_report_templates.xml',
+46:         'views/payment_templates_inherit.xml',
+47:         'views/product_views.xml',
+48:         'views/stock_quant_views.xml',
+49:         'data/ir_cron_data.xml',
+50:     ],
+51:     
+52:     'assets': {
+53:         'point_of_sale.assets': [
+54:             'bcv_rate_update_venezuela/static/src/css/payment_proof_component.css',
+
+(Showing lines 30-54 of 83. Use offset=55 to continue.)
+</content>
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 121.7s)
+
+_Thinking:_
+
+OK so the manifest DOES include `views/stock_quant_views.xml` at line 48. My original read was mistaken. Let me now focus on the actual problem.
+
+The issue is that the user says the stock quant view doesn't show USD amounts. Let me analyze the problems:
+
+1. **The view only inherits `stock.view_stock_quant_tree_simple`** — this is the simple tree view. But the user mentions "Ubicaciones" (locations) which likely uses a different view, probably `stock.quant.tree` (the full quant tree view). So the USD columns don't appear in the locations view because this inheritance only targets one specific view.
+
+2. **The `value_usd` field depends on `quant.value`** — let me check if `stock.quant` has a `value` field.
+
+3. **The `_compute_cost_usd` method doesn't have `@api.depends`** — this means the computed fields won't auto-recompute when the rate or cost changes.
+
+Let me check what the actual stock quant views are in the Odoo framework.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "python3 -c \"\nimport sys\nsys.path.insert(0, '/home/odoo/odoo19')\nimport odoo\nprint('done')\n\" 2>&1 || echo \"No Odoo in path, checking addons...\"\nls /home/odoo/odoo19/addons/stock/views/stock_quant_views.xml 2>/dev/null || find /home/odoo -name \"stock_quant_views.xml\" -path \"*/stock/*\" 2>/dev/null | head -3"
+}
+```
+
+**Output:**
+```
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+ModuleNotFoundError: No module named 'odoo'
+No Odoo in path, checking addons...
+/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/views/stock_quant_views.xml
+/home/odoo/prod/odoo-skeleton/legacy/debug-with-docker-instalacion/src/odoo-18/addons/stock/views/stock_quant_views.xml
+/home/odoo/prod/odoo-skeleton/legacy/odoo-18-empresarial/src/odoo-18/addons/stock/views/stock_quant_views.xml
+
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 12.2s)
+
+_Thinking:_
+
+Let me look at the actual stock quant views to understand the view hierarchy.
+
+**Tool: grep**
+
+**Input:**
+```json
+{
+  "pattern": "view_stock_quant_tree|stock.quant.tree|stock_quant_tree",
+  "path": "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/views/stock_quant_views.xml"
+}
+```
+
+**Output:**
+```
+Found 7 matches
+/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/views/stock_quant_views.xml:
+  Line 107:     <record model="ir.ui.view" id="view_stock_quant_tree_editable">
+
+  Line 153:     <record model="ir.ui.view" id="view_stock_quant_tree_simple">
+
+  Line 174:     <record model="ir.ui.view" id="view_stock_quant_tree">
+
+  Line 179:         <field name="inherit_id" ref="stock.view_stock_quant_tree_simple"/>
+
+  Line 273:     <record model="ir.ui.view" id="view_stock_quant_tree_inventory_editable">
+
+
+/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/views/stock_move_views.xml:
+  Line 184:                         context="{'default_location_id': location_id, 'default_product_id': product_id, 'search_view_ref': 'stock.quant_search_view', 'list_view_ref': 'stock.view_stock_quant_tree', 'form_view_ref': 'stock.view_stock_quant_form', 'readonly_form': True, 'show_src_package': 1}"
+
+  Line 237:                         context="{'default_location_id': location_id, 'default_product_id': product_id, 'search_view_ref': 'stock.quant_search_view', 'list_view_ref': 'stock.view_stock_quant_tree_simple', 'form_view_ref': 'stock.view_stock_quant_form', 'readonly_form': False, 'show_src_package': 1}"
+
+```
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/views/stock_quant_views.xml",
+  "limit": 100
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/views/stock_quant_views.xml</path>
+<type>file</type>
+<content>
+1: <?xml version="1.0" encoding="utf-8"?>
+2: <odoo>
+3: 
+4:     <record model="ir.actions.server" id="action_view_inventory_tree"> <!-- Menu + python -->
+5:         <field name="name">Inventory</field>
+6:         <field name="model_id" ref="model_stock_quant"/>
+7:         <field name="path">physical-inventory</field>
+8:         <field name="state">code</field>
+9:         <field name="group_ids" eval="[(4, ref('stock.group_stock_user'))]"/>
+10:         <field name="code">
+11:             action = model.action_view_inventory()
+12:         </field>
+13:     </record>
+14: 
+15:     <record id="quant_search_view" model="ir.ui.view">
+16:         <field name="name">stock.quant.search</field>
+17:         <field name="model">stock.quant</field>
+18:         <field eval="10" name="priority"/>
+19:         <field name="arch" type="xml">
+20:             <search string="Quants">
+21:                 <field name="product_id"/>
+22:                 <field name="location_id"/>
+23:                 <field name="warehouse_id"/>
+24:                 <field name="storage_category_id" groups="stock.group_stock_multi_locations" />
+25:                 <field name="user_id"/>
+26:                 <field name="inventory_date"/>
+27:                 <field name="product_categ_id"/>
+28:                 <field name="product_tmpl_id"/>
+29:                 <field name="package_id" groups="stock.group_tracking_lot"/>
+30:                 <field name="lot_id" groups="stock.group_production_lot"/>
+31:                 <field name="owner_id" groups="stock.group_tracking_owner"/>
+32:                 <field name="lot_properties"/>
+33:                 <group>
+34:                     <filter name="my_count" string="My Counts" domain="[('user_id', '=', uid)]"/>
+35:                     <separator/>
+36:                     <filter name='internal_loc' string="Internal Locations" domain="[('location_id.usage','=', 'internal'), ('location_id.warehouse_id', '!=', False)]"/>
+37:                     <filter name='transit_loc' string="Transit Locations" domain="[('location_id.usage' ,'=', 'transit')]"/>
+38:                     <separator/>
+39:                     <filter name="to_count" string="To Count" domain="[('inventory_date', '&lt;=', 'today')]"/>
+40:                     <filter name="to_apply" string="To Apply" domain="[('inventory_quantity_set', '=', True)]"/>
+41:                     <separator/>
+42:                     <filter name="conflicts" string="Conflicts" domain="[('is_outdated', '=', True)]"/>
+43:                     <separator/>
+44:                     <filter name="negative" string="Negative Stock" domain="[('quantity', '&lt;', 0.0)]"/>
+45:                     <separator/>
+46:                     <filter name="filter_in_date" date="in_date"/>
+47:                 </group>
+48:                 <group>
+49:                     <filter string='Product' name="productgroup" context="{'group_by': 'product_id'}"/>
+50:                     <filter string='Product Category' name="productcategorygroup" context="{'group_by': 'product_categ_id'}"/>
+51:                     <filter string='Location' name="locationgroup" domain="[]" context="{'group_by': 'location_id'}"/>
+52:                     <filter string='Storage Category' name="storagecategorygroup" domain="[]" context="{'group_by': 'storage_category_id'}"/>
+53:                     <filter string='Owner' name="owner" context="{'group_by': 'owner_id'}" groups="stock.group_tracking_owner"/>
+54:                     <filter string='Lot/Serial Number' name="Lot_Serial_number" context="{'group_by': 'lot_id'}" groups="stock.group_production_lot"/>
+55:                     <filter string='Package' name="package" domain="[]" context="{'group_by': 'package_id'}" groups="stock.group_tracking_lot"/>
+56:                     <filter string='Company' name="company" domain="[]" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+57:                </group>
+58:             </search>
+59:         </field>
+60:     </record>
+61: 
+62:     <record model="ir.ui.view" id="view_stock_quant_form_editable">
+63:         <field name="name">stock.quant.form.editable</field>
+64:         <field name="model">stock.quant</field>
+65:         <field eval="11" name="priority"/>
+66:         <field name="arch" type="xml">
+67:             <form string="Inventory Valuation" create="false" edit="false" delete="false">
+68:                 <sheet>
+69:                     <group>
+70:                         <group>
+71:                             <field name="tracking" invisible="1"/>
+72:                             <field name="company_id" invisible="1"/>
+73:                             <field name="product_id" readonly="0" options="{'no_create': True}"/>
+74:                             <field name="location_id" readonly="0" options="{'no_create': True}"/>
+75:                             <field name="lot_id" groups="stock.group_production_lot"
+76:                                 readonly="tracking not in ['serial', 'lot']"
+77:                                 required="tracking != 'none'"
+78:                                 context="{'default_product_id': product_id}"/>
+79:                             <field name="package_id" readonly="0" groups="stock.group_tracking_lot" context="{'show_src_package': 1}"/>
+80:                             <field name="owner_id" readonly="0" groups="stock.group_tracking_owner" options="{'no_create': True}"/>
+81:                             <field name='company_id' groups="base.group_multi_company"/>
+82:                         </group>
+83:                         <group>
+84:                             <label for="quantity" string="Quantity On Hand"/>
+85:                             <div class="o_row">
+86:                                 <field name="quantity"/>
+87:                                 <field name="product_uom_id" groups="uom.group_uom" options="{'no_open': True}"/>
+88:                             </div>
+89:                             <label for="available_quantity" string="Available Quantity"/>
+90:                             <div class="o_row">
+91:                                 <field name="available_quantity"/>
+92:                                 <field name="product_uom_id" groups="uom.group_uom" options="{'no_open': True}"/>
+93:                             </div>
+94:                             <label for="reserved_quantity" string="Quantity Reserved"/>
+95:                             <div class="o_row">
+96:                                 <field name="reserved_quantity"/>
+97:                                 <field name="product_uom_id" groups="uom.group_uom" options="{'no_open': True}"/>
+98:                             </div>
+99:                         </group>
+100:                     </group>
+
+(Showing lines 1-100 of 365. Use offset=101 to continue.)
+</content>
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 5.8s)
+
+_Thinking:_
+
+Let me see the rest of the stock quant views, especially the `view_stock_quant_tree_simple` and `view_stock_quant_tree` definitions.
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/views/stock_quant_views.xml",
+  "offset": 150,
+  "limit": 140
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/views/stock_quant_views.xml</path>
+<type>file</type>
+<content>
+150:         </field>
+151:     </record>
+152: 
+153:     <record model="ir.ui.view" id="view_stock_quant_tree_simple">
+154:         <field name="name">stock.quant.list</field>
+155:         <field name="model">stock.quant</field>
+156:         <field eval="10" name="priority"/>
+157:         <field name="arch" type="xml">
+158:             <list export_xlsx="0">
+159:                 <field name="product_id" column_invisible="context.get('single_product', False)"/>
+160:                 <field name="location_id" column_invisible="context.get('hide_location', False)"/>
+161:                 <field name="lot_id" groups="stock.group_production_lot"
+162:                        column_invisible="context.get('hide_lot', False)"/>
+163:                 <field name="lot_properties"/>
+164:                 <field name="package_id" groups="stock.group_tracking_lot" widget="package_m2o" context="{'show_src_package': 1}"/>
+165:                 <field name="owner_id" groups="stock.group_tracking_owner"/>
+166:                 <field name="quantity" string="On Hand"/>
+167:                 <field name="available_quantity" string="Available" column_invisible="context.get('hide_available', False)"/>
+168:                 <field name="product_uom_id" groups="uom.group_uom"/>
+169:                 <field name="company_id" groups="base.group_multi_company" optional="hidden"/>
+170:             </list>
+171:         </field>
+172:     </record>
+173: 
+174:     <record model="ir.ui.view" id="view_stock_quant_tree">
+175:         <field name="name">stock.quant.list</field>
+176:         <field name="model">stock.quant</field>
+177:         <field eval="10" name="priority"/>
+178:         <field name="mode">primary</field>
+179:         <field name="inherit_id" ref="stock.view_stock_quant_tree_simple"/>
+180:         <field name="arch" type="xml">
+181:             <xpath expr="//list" position="attributes">
+182:                 <attribute name="js_class">inventory_report_list</attribute>
+183:                 <attribute name="create">0</attribute>
+184:                 <attribute name="delete">0</attribute>
+185:                 <attribute name="export_xlsx">1</attribute>
+186:             </xpath>
+187:         </field>
+188:     </record>
+189: 
+190:     <record model="ir.ui.view" id="view_stock_quant_pivot">
+191:         <field name="name">stock.quant.pivot</field>
+192:         <field name="model">stock.quant</field>
+193:         <field name="arch" type="xml">
+194:             <pivot string="Inventory" sample="1">
+195:                 <field name="product_id" type="row"/>
+196:                 <field name="location_id" type="col"/>
+197:                 <field name="quantity" type="measure"/>
+198:             </pivot>
+199:         </field>
+200:     </record>
+201: 
+202:     <record id="stock_quant_view_graph" model="ir.ui.view">
+203:         <field name="name">stock.quant.graph</field>
+204:         <field name="model">stock.quant</field>
+205:         <field name="arch" type="xml">
+206:             <graph string="Stock Quant" sample="1">
+207:                 <field name="location_id"/>
+208:                 <field name="quantity" type="measure"/>
+209:             </graph>
+210:         </field>
+211:     </record>
+212: 
+213:     <record model="ir.actions.server" id="action_view_quants"> <!-- Menu + python -->
+214:         <field name="name">Inventory</field>
+215:         <field name="model_id" ref="model_stock_quant"/>
+216:         <field name="state">code</field>
+217:         <field name="path">stock-locations</field>
+218:         <field name="group_ids" eval="[(4, ref('stock.group_stock_user'))]"/>
+219:         <field name="code">
+220:             action = model.with_context(
+221:                 search_default_internal_loc=1,
+222:                 always_show_loc=1,
+223:             ).action_view_quants()
+224:         </field>
+225:     </record>
+226: 
+227:     <record model="ir.actions.act_window" id="stock_quant_action"> <!-- Used in dashboard -->
+228:         <field name="name">Locations</field>
+229:         <field name="context">
+230:         {
+231:             'search_default_internal_loc': 1,
+232:             'inventory_mode':True,
+233:         }
+234:         </field>
+235:         <field name="res_model">stock.quant</field>
+236:         <field name="view_mode">list,form</field>
+237:         <field name="help" type="html">
+238:             <p class="o_view_nocontent_empty_folder">
+239: No Stock On Hand. This analysis gives you an overview of the current stock level of your products.
+240:             </p>
+241:         </field>
+242:     </record>
+243: 
+244:     <record id="view_stock_quant_form" model="ir.ui.view">
+245:         <field name="name">view.stock.quant.form</field>
+246:         <field name="priority">100</field>
+247:         <field name="model">stock.quant</field>
+248:         <field name="arch" type="xml">
+249:             <form string="Create Stock">
+250:                 <div class="alert alert-warning" role="alert" invisible="context.get('readonly_form')">
+251:                 You are going to pick products that are not referenced
+252: in this location. That leads to a negative stock.
+253:                 </div>
+254:                 <group>
+255:                     <group>
+256:                         <field name="location_id" invisible="1"/>
+257:                         <field name="company_id" invisible="1"/>
+258:                         <field name="product_id" invisible="1"/>
+259:                         <field name="product_id" force_save="1" invisible="1"/>
+260:                         <field name="lot_id" domain="[('product_id', '=', product_id)]"
+261:                             groups="stock.group_production_lot" readonly="context.get('readonly_form')"
+262:                             context="{'default_product_id': product_id, 'active_picking_id': context.get('active_picking_id')}"/>
+263:                         <field name="location_id" groups="stock.group_stock_multi_locations" readonly="context.get('readonly_form')"/>
+264:                         <field name="package_id" groups="stock.group_tracking_lot" invisible="context.get('readonly_form')"/>
+265:                         <field name="owner_id" groups="stock.group_tracking_owner" invisible="context.get('readonly_form')"/>
+266:                     </group>
+267:                 </group>
+268:             </form>
+269:         </field>
+270:     </record>
+271: 
+272:     <!-- Inventory Adjustments + Update Quantity (via product) view -->
+273:     <record model="ir.ui.view" id="view_stock_quant_tree_inventory_editable">
+274:         <field name="name">stock.quant.inventory.list.editable</field>
+275:         <field name="model">stock.quant</field>
+276:         <field eval="10" name="priority"/>
+277:         <field name="arch" type="xml">
+278:             <list default_order="location_id, inventory_date, product_id, package_id, lot_id, owner_id" decoration-warning='is_outdated' multi_edit="1" editable="bottom" create="1" edit="1" import="1" js_class="inventory_report_list" sample="1">
+279:                 <header>
+280:                     <button name="action_apply_all" string="Apply All" type="object"
+281:                             class="btn btn-primary"
+282:                             invisible="not context.get('inventory_mode') or context.get('inventory_report_mode')"
+283:                             display="always"
+284:                         />
+285:                     <button name="stock.action_stock_inventory_adjustement_name" type="action" string="Apply"/>
+286:                     <button name="action_reset" type="object" string="Clear" groups="stock.group_stock_manager"/>
+287:                     <button name="stock.action_stock_request_count" groups="stock.group_stock_manager" type="action" string="Request a Count"/>
+288:                 </header>
+289:                 <field name="create_date" column_invisible="True"/>
+
+(Showing lines 150-289 of 365. Use offset=290 to continue.)
+</content>
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 103.9s)
+
+_Thinking:_
+
+Now I can see the issue clearly. Looking at the Odoo stock quant views:
+
+1. `view_stock_quant_tree_simple` (line 153) — the base simple tree with fields like `product_id`, `location_id`, `lot_id`, `package_id`, etc., `quantity`, `available_quantity`, `product_uom_id`, `company_id`. This is the list used in some contexts.
+
+2. `view_stock_quant_tree` (line 174) — inherits `view_stock_quant_tree_simple` and just adds attributes (js_class, create/delete, export_xlsx). It's a `mode="primary"` view.
+
+3. The action `stock_quant_action` (line 227) uses `list,form` view modes.
+
+Now, looking at the action context in the `action_view_quants` action server:
+- Line 220: `search_default_internal_loc=1, always_show_loc=1`
+- This action is used for "Ubicaciones" (Locations) view.
+
+Also line 237 of `stock_move_views.xml`:
+```
+'list_view_ref': 'stock.view_stock_quant_tree_simple'
+```
+
+And line 184:
+```
+'list_view_ref': 'stock.view_stock_quant_tree'
+```
+
+So the "Ubicaciones" (Locations) view uses the action `action_view_quants` which triggers the `stock_quant_action` act_window which uses `list` view mode. The `stock_quant_action` doesn't specify a particular view, so it would use the default `list` view. Since `view_stock_quant_tree` has `mode="primary"`, it would be the default list view for `stock.quant`.
+
+Wait, actually `view_stock_quant_tree` inherits `view_stock_quant_tree_simple` with `mode="primary"` — this makes it the primary (default) list view. The user's custom view inherits `view_stock_quant_tree_simple` directly with priority 99.
+
+Let me understand the view resolution:
+- `view_stock_quant_tree_simple` — priority 10, not primary
+- `view_stock_quant_tree` — priority 10, primary, inherits `view_stock_quant_tree_simple`
+- Custom view — priority 99, inherits `view_stock_quant_tree_simple`
+
+The custom view inherits `view_stock_quant_tree_simple` (not `view_stock_quant_tree`). Since `view_stock_quant_tree` is a primary view that inherits `view_stock_quant_tree_simple`, the inheritance should still propagate to `view_stock_quant_tree` as well, because the inheritance is on the base view.
+
+Wait, actually in Odoo, view inheritance works like this: when you inherit a view with `inherit_id`, Odoo applies all the inheritance to that specific view. But if `view_stock_quant_tree` inherits from `view_stock_quant_tree_simple`, then the inheritance chain is:
+- `view_stock_quant_tree_simple` (base)
+  - Our custom view inherits this (adds USD fields)
+  - `view_stock_quant_tree` inherits this (adds attributes)
+
+Odoo applies inheritance to the base view, and the result of applying all inheritance to the base view becomes the effective view. Then `view_stock_quant_tree` inherits from the *original* base view, not from the modified version.
+
+Actually wait, that's not right either. In Odoo, when you have:
+- View A (base)
+- View B inherits A
+- View C inherits A
+
+Both B and C inherit from the *original* A. If B adds a field and C adds attributes, when the system renders A (or a view that inherits A), it applies all inheriting views' modifications to A.
+
+But the key thing is: `view_stock_quant_tree` has `mode="primary"`, which means if a user doesn't specify a specific view to use, the system picks the primary view. In this case, when using the stock quant list, the system will use `view_stock_quant_tree` (because it's primary), and then apply all inheriting views' modifications to it.
+
+Actually, I think I'm overcomplicating this. The issue is:
+
+1. Our custom view inherits `view_stock_quant_tree_simple` with xpath `//field[@name='product_uom_id']` — this targets the base view. When the primary view `view_stock_quant_tree` is used, does the inheritance still apply?
+
+In Odoo, view inheritance works on the *actual view being rendered*, not on the base view. So if the system renders `view_stock_quant_tree`, it looks for all views that inherit `view_stock_quant_tree` and applies them. But our custom view inherits `view_stock_quant_tree_simple`, not `view_stock_quant_tree`.
+
+However, Odoo has a mechanism where if View C inherits View A, and the system is rendering View B (which inherits View A), View C's modifications do NOT automatically apply to View B. This is an important distinction.
+
+Wait, I need to verify this. In Odoo, when resolving a view:
+1. The system takes the base view (the one specified by `inherit_id` or the one itself)
+2. It finds all views that directly inherit this view
+3. It applies those inheriting views' modifications in priority order
+
+So if our custom view inherits `view_stock_quant_tree_simple`, it only gets applied when the system is rendering `view_stock_quant_tree_simple` directly (or a view that explicitly inherits it).
+
+When rendering `view_stock_quant_tree` (which inherits `view_stock_quant_tree_simple`), does Odoo also apply our custom view's modifications? Let me think...
+
+In Odoo's view resolution (in `ir.ui.view`), the `_inherit_id` creates a reference. When `view_stock_quant_tree` is rendered, Odoo:
+1. Loads `view_stock_quant_tree`'s arch
+2. Applies ALL views that inherit `view_stock_quant_tree` (there are none)
+3. Since `view_stock_quant_tree` declares `inherit_id` = `view_stock_quant_tree_simple`, Odoo needs to apply it to the *parent* view first
+
+Actually, this is the wrong mental model. Let me look at this from a different angle.
+
+In Odoo, `view_stock_quant_tree` has `inherit_id` = `view_stock_quant_tree_simple` and `mode` = `primary`. This means:
+- `view_stock_quant_tree` IS the effective list view for stock.quant (because it's primary)
+- It extends the base view `view_stock_quant_tree_simple` by adding attributes
+
+When Odoo renders a view with inheritance chain (`view_stock_quant_tree` inherits `view_stock_quant_tree_simple`), it:
+1. Starts with the root view's arch (the one with the inheritance chain)
+2. But actually, in Odoo, when a view has an inherit_id, it first gets the parent view (with all its inheritance applied) and then applies the child's modifications on top.
+
+So the order would be:
+1. Get `view_stock_quant_tree_simple`'s arch
+2. Apply all views that inherit `view_stock_quant_tree_simple` (including our custom view)
+3. Apply `view_stock_quant_tree`'s own modifications on top
+
+Wait, that would mean our custom view's changes DO show up in `view_stock_quant_tree`. Unless the priority ordering is wrong.
+
+Actually, I think the actual issue might be different. Let me look at the specific xpath:
+
+```xml
+<xpath expr="//field[@name='product_uom_id']" position="after">
+```
+
+This targets the field `product_uom_id` in the base view. But what if `product_uom_id` has `groups="uom.group_uom"` and the user doesn't have that group? Then the field wouldn't exist in the rendered view and the xpath would fail silently.
+
+But more likely, if the user can see the field `product_uom_id` in the screenshot (they can see "m²" which is the UOM), then the xpath should be matching.
+
+Hmm, let me re-think. The user says the USD columns don't appear. Let me consider the main potential issues:
+
+1. **The view inheritance chain issue** — If `view_stock_quant_tree` is the actual view being used, and our custom view inherits `view_stock_quant_tree_simple` (not `view_stock_quant_tree`), then the changes might not propagate. But in Odoo, inheritance is transitive through the chain. Let me check.
+
+2. **The value_usd field depends on `quant.value`** — Let me check if `stock.quant` has a `value` field in Odoo 19.
+
+3. **The `_compute_cost_usd` has no `@api.depends`** — So the fields won't auto-recompute.
+
+4. **The `value` field on stock.quant may not exist** — Let me check.
+
+Let me look at what fields stock.quant has.
+
+Actually, let me focus on the concrete problems that the user can see. They said the view doesn't show USD amounts. The view inherits `view_stock_quant_tree_simple`. Let me check:
+
+1. Is the view actually being loaded? (Yes, it's in the manifest)
+2. Is `product_uom_id` present in the base view? (Yes, line 168)
+3. Is the xpath correct? (Yes, it targets `//field[@name='product_uom_id']`)
+
+But the key issue is: the user sees the main inventory view (probably via the "Existencias" menu), which likely uses `view_stock_quant_tree` (primary view), NOT `view_stock_quant_tree_simple` directly.
+
+Now, since `view_stock_quant_tree` inherits `view_stock_quant_tree_simple`, does Odoo also apply our custom inheritance?
+
+In Odoo 19, view resolution works like this:
+- When a view has an `inherit_id`, its arch is applied on top of the parent view's *effective* arch (after all inherited views are applied).
+- So if:
+  - `view_stock_quant_tree_simple` is the base
+  - Our custom view inherits `view_stock_quant_tree_simple` (priority 99)
+  - `view_stock_quant_tree` inherits `view_stock_quant_tree_simple` (priority 10)
+  
+  When resolving `view_stock_quant_tree`:
+  1. First, resolve the effective arch of `view_stock_quant_tree_simple` by applying ALL views that inherit it (including our custom view)
+  2. Then apply `view_stock_quant_tree`'s modifications on top
+
+So our custom view SHOULD be applied to `view_stock_quant_tree` as well. The USD columns should appear.
+
+Hmm, but maybe the issue is something else entirely. Let me think about what could go wrong:
+
+1. **The `@api.depends` is missing** on `_compute_cost_usd` — this means the fields are computed once and never recomputed. But even on first render, the `_compute` should run because there's no `@api.depends`. Actually, without `@api.depends`, the compute method should run every time the field is accessed (stored computed fields without depends are computed once on creation and then depend on write/trigger).
+
+Wait, let me re-read the field definitions:
+```python
+unit_cost_usd = fields.Float(
+    string='Costo unitario USD',
+    compute='_compute_cost_usd',
+    digits=(12, 2)
+)
+value_usd = fields.Float(
+    string='Valor total USD',
+    compute='_compute_cost_usd',
+    digits=(12, 2)
+)
+```
+
+No `store=True`! So these are non-stored computed fields. Without `@api.depends`, they should be computed on-the-fly every time they're accessed. But `@api.depends` is required for computed fields to know when to recompute. Without it, the field should still work when accessed in a tree view — it would call the compute method for each record.
+
+Actually, in Odoo non-stored computed fields without `@api.depends` are valid and they'll be computed on read. So this shouldn't cause an issue for display.
+
+2. **The `value` field on stock.quant** — Let me check if this field exists.
+
+Looking at the stock.quant model, let me check if `value` is a field:
+
+In the standard Odoo 19 stock module, `stock.quant` has `value` and `value_usd` fields? Let me check. Actually, looking at the compute method:
+
+```python
+quant.value_usd = float_round(
+    quant.value / rate, precision_digits=2
+) if quant.value else 0.0
+```
+
+This depends on `quant.value`. If `stock.quant` doesn't have a `value` field, this would cause an error. But the user isn't showing an error, just saying the USD columns don't appear.
+
+Actually, in Odoo 19 stock module, `stock.quant` DOES have a `value` field (it's a stored monetary field representing the total inventory value). So that shouldn't be the issue.
+
+3. **`currency_usd_id` is a non-stored computed field without store=True** — In the tree view, it has `column_invisible="True"`, so it shouldn't be visible anyway. But for the widget `monetary` with `options="{'currency_field': 'currency_usd_id'}"` to work, the `currency_usd_id` field needs to be in the tree view, which it is (just invisible).
+
+4. **The computed fields are `Float` not `Monetary`** — They use `widget="monetary"` in the view, which should be fine as long as `currency_field` is set correctly.
+
+5. **View is not being applied because of missing `currency_usd_id` field on the model** — Wait, actually the `currency_usd_id` field is defined on the model. Now, let me think about whether the fields are actually being computed correctly.
+
+OK, I think I need to focus on the most likely issues. Let me consider:
+
+**Main Issues:**
+
+1. The custom view inherits `view_stock_quant_tree_simple`, but the "Ubicaciones" (Locations) view uses `view_stock_quant_tree` (or the default list view). While the inheritance SHOULD propagate, the user specifically says USD columns don't show. This could be because:
+   - The view used by "Ubicaciones" might not go through the same inheritance chain.
+   - Actually looking at `action_view_quants` (line 213-225), it calls `model.action_view_quants()` which creates a new window action. Let me check what view it uses.
+
+2. The `unit_cost_usd` and `value_usd` fields use `_get_bcv_rate()` which searches for an active BCV provider. If there's no active BCV provider configured, the rate would be 0 and the USD values would show as 0.0.
+
+3. The `currency_usd_id` is computed (non-stored), but it's used as the `currency_field` for the monetary widget. This should work but it adds an extra computation.
+
+4. Looking more carefully at the error in the AGENTS.md analysis — the original code tried `quant.cost` which doesn't exist on stock.quant. But the current code uses `quant.product_id.with_company(quant.company_id).standard_price` and `quant.value`. Let me check if `value` exists on stock.quant.
+
+Actually, I just realized something. Looking at the return for `_get_bcv_rate`:
+```python
+return rate_val or 1.0
+```
+
+If `rate_val` is 0 or None, it returns 1.0. So `rate` would never be falsy in the condition `if rate:` in `_compute_cost_usd`. That means the else branch (setting to 0.0) would rarely execute. Instead, it would divide by 1.0 (or the rate) and show incorrect values.
+
+But more importantly, if the user complains about not being able to SEE the USD columns at all (not that the values are wrong), then the issue is about view rendering/inheritance, not about computation.
+
+Let me consider: maybe the user literally cannot see the columns because:
+- The fields are marked as `optional="show"` which means they start hidden and the user needs to enable them via the column selector (the gear icon in list view)
+- Or the inheritance doesn't work for the specific view being used
+
+Let me look at the screenshots the user provided:
+- "Existencias" view shows: Producto, Método de costo, Costo unitario, Valor total, A la mano, etc. — no USD columns
+- "Ubicaciones" view shows: Cantidad en inventario, Cantidad disponible, Valor — no USD columns
+
+The "Existencias" view seems to be using some kind of product view that shows quants. This might be a different view entirely.
+
+Actually, the user's first screenshot with fields like "Método de costo", "Costo unitario", "Valor total" looks like it might be the inventory valuation report or product tree view, NOT the stock.quant tree view directly.
+
+Let me think about this differently. The user wants to see USD amounts in the stock quant views (both the main inventory view and the locations view). The module adds these fields, but they're not appearing.
+
+The key issues I can identify:
+
+### Issue 1: View inheritance only targets `view_stock_quant_tree_simple`
+The custom view inherits `view_stock_quant_tree_simple` but the user probably sees the primary `view_stock_quant_tree`. Although inheritance should propagate, it might not be working as expected. The safer approach is to also inherit `view_stock_quant_tree` directly, or better, use a general approach.
+
+### Issue 2: `currency_usd_id` is non-stored computed without `@api.depends`
+For the monetary widget to work in a tree view, the `currency_field` must be available. A non-stored computed field could cause issues in batch reads.
+
+### Issue 3: The fields have `optional="show"` 
+This means they start visible, but the user might not see them if the view isn't set up correctly.
+
+### Issue 4: The compute method has no `@api.depends`
+This means the fields won't recompute automatically when the rate or price changes. They'd compute once on read.
+
+### Issue 5: (According to AGENTS.md) `currency_usd_id` is declared twice redundantly
+The AGENTS.md mentioned this problem. Let me check the stock_quant_views.xml — I only see it declared once (line 11). Maybe the AGENTS.md was referring to a previous version of the file.
+
+Wait, let me re-read the stock_quant_views.xml. I see:
+- Line 11: `<field name="currency_usd_id" column_invisible="True"/>`
+- Line 12-15: `unit_cost_usd` field
+- Line 16-19: `value_usd` field
+
+I only see `currency_usd_id` once. The AGENTS.md said it was declared twice. Maybe this was fixed already or I'm missing something.
+
+OK let me now think about what the real plan should be. The user wants to know why USD amounts don't appear. Let me present my analysis.
+
+Actually, I think there might be a simpler explanation. Let me look at the "Existencias" view more carefully. The user's first screenshot shows fields like:
+- Producto
+- Método de costo
+- Costo unitario
+- Valor total
+- A la mano
+- etc.
+
+This looks like it could be a product.product tree view (not stock.quant), or possibly the `stock.quant` view but from a specific action. Let me check what `product.product` view might contain these fields.
+
+Actually, looking at the first screenshot more carefully, it shows product-specific data at the top ("[LAM-ALU-03] Lámina Aluminio 0.3mm", "[LAM-ALU-05] Lámina Aluminio 0.5mm", etc.), with unit cost, total value, quantities — this could be the stock valuation layer or a product view.
+
+Wait, the field "Campo: total_value" suggests this is a product view with field `total_value`. This is likely `product.product` view or a related stock view by product.
+
+OK, I'll just focus on what I can determine from the code and provide the user with an analysis of what's wrong and how to fix it.
+
+Let me now identify the specific problems:
+
+**Problem 1: Wrong view inheritance target for "Ubicaciones"**
+The locations view likely uses `view_stock_quant_tree` (primary), not `view_stock_quant_tree_simple` directly. Need to also inherit `view_stock_quant_tree`.
+
+**Problem 2: The "Existencias" view might be a different model entirely**
+The first screenshot with "Valor total" and "Campo:total_value" and "Modelo:product.product" suggests it's NOT a stock.quant view but a product.product view. The USD fields might need to be added to product.product views too.
+
+Wait, looking at the user's first screenshot tooltip: "Etiqueta:Valor total / Campo:total_value / Modelo:product.product" — this IS a product.product view, not stock.quant. The user might be looking at the product's tree view (e.g., "Existencias" menu > product view) and expecting USD amounts there.
+
+So the issue is that the module only adds USD columns to `stock.quant` views, but the user is looking at `product.product` views where USD columns are not added.
+
+Actually wait, let me re-read the user's message. They say:
+
+"puedes recvisar porque esta vista ... no me permite ver la cantidad en dolares" — they're asking about the stock_quant_views.xml specifically.
+
+But then they show two views:
+1. A view showing product lists with cost method, unit cost, total value — this appears to be a product view
+2. "Ubicaciones" view showing stock.quant data
+
+Both show values in Bs but not USD.
+
+So the issues are:
+1. For product.product views (first screenshot) — USD columns aren't added because the stock_quant view inheritance only targets stock.quant
+2. For stock.quant locations view (second screenshot) — the inheritance of `view_stock_quant_tree_simple` might not be propagating to `view_stock_quant_tree`
+
+Actually, now I realize I also need to check what `action_view_quants` returns and what view it uses for the "Ubicaciones" view.
+
+Let me re-focus. Here's my plan of analysis to present to the user:
+
+1. **For "Ubicaciones" (locations stock.quant tree)**: The view `stock_quant_tree_view_usd` inherits `view_stock_quant_tree_simple`. The "Ubicaciones" action uses `action_view_quants` which calls `model.action_view_quants()`. The resulting window action may use `view_stock_quant_tree` (the primary view) which inherits `view_stock_quant_tree_simple`. In theory, the inheritance should propagate, but there may be issues. Additionally, the `value` field used in `_compute_cost_usd` might not exist on stock.quant.
+
+2. **For product.product tree (first screenshot)**: The USD fields are only on stock.quant, not on product.product. The module adds `lst_price_usd` to product.product but doesn't add USD cost/value fields to product.product views.
+
+Wait actually, re-reading the code for stock_quant.py:
+
+```python
+def _compute_cost_usd(self):
+    for quant in self:
+        rate = self.env['product.template']._get_bcv_rate(quant.company_id)
+        if rate:
+            cost_ves = quant.product_id.with_company(quant.company_id).standard_price
+            ...
+```
+
+This reads `standard_price` from the product, not from the quant itself. And `quant.value` — let me check if this exists.
+
+Actually, I should just check if `value` exists on `stock.quant` in Odoo 19.
+
+Let me search for it.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "grep -n \"value\" /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py | head -30"
+}
+```
+
+**Output:**
+```
+158:        def _update_dict(date_by_quant, key, value):
+160:            if not current_date or value > current_date:
+161:                date_by_quant[key] = value
+204:    def _search_is_outdated(self, operator, value):
+239:    def _search_on_hand(self, operator, value):
+315:    def _load_records_create(self, values):
+319:        for value in values:
+320:            if 'location_id' not in value:
+321:                value['location_id'] = warehouse.lot_stock_id.id
+322:        return super(StockQuant, self.with_context(inventory_mode=True))._load_records_create(values)
+324:    def _load_records_write(self, values):
+326:        return super(StockQuant, self.with_context(inventory_mode=True))._load_records_write(values)
+802:            - when editing a move line, to check if the new value is forced or not
+803:            - when validating a move line with some forced values and have to potentially unlink an
+830:                return sum(availaible_quantities.values())
+832:                return sum(available_quantity for available_quantity in availaible_quantities.values() if product_id.uom_id.compare(available_quantity, 0) > 0)
+938:        # Once the new line is complete, fetch the new theoretical values.
+1017:                    quant._get_inventory_move_values(quant.inventory_diff_quantity,
+1022:                    quant._get_inventory_move_values(-quant.inventory_diff_quantity,
+1253:    def _get_inventory_move_values(self, qty, location_id, location_dest_id, package_id=False, package_dest_id=False):
+1261:        :return: dict with all values needed to create a new `stock.move` with its move line.
+1553:            move_vals.append(quant.with_context(inventory_name=message)._get_inventory_move_values(
+
+```
+
+**Tool: grep**
+
+**Input:**
+```json
+{
+  "pattern": "action_view_quants",
+  "path": "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py"
+}
+```
+
+**Output:**
+```
+Found 3 matches
+/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/product.py:
+  Line 684:         action = self.env['stock.quant'].action_view_quants()
+
+
+/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_lot.py:
+  Line 297:         return self.env['stock.quant'].action_view_quants()
+
+
+/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py:
+  Line 396:     def action_view_quants(self):
+
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 4.4s)
+
+_Thinking:_
+
+I don't see a `value` field in the search for `stock.quant`. Let me search more specifically.
+
+**Tool: grep**
+
+**Input:**
+```json
+{
+  "pattern": "value = |'value'|\"value\"|value_usd",
+  "path": "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py"
+}
+```
+
+**Output:**
+```
+Found 12 matches
+/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_picking.py:
+  Line 314:             value = [value]
+
+  Line 1038:         value = set(self._fields['products_availability_state'].get_values(self.env)) & value
+
+
+/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_package.py:
+  Line 236:                 value = self.env['stock.move.line']._search(value)
+
+
+/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_move.py:
+  Line 1231:             rounded_value = float_round(move[f_name], precision_digits=precision[f_name])
+
+  Line 1288:                 new_total_value = pos_move.product_qty * pos_move.price_unit + neg_move.product_qty * neg_move.price_unit
+
+
+/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/product.py:
+  Line 169:         original_value = to_date
+
+  Line 500:             value = {float(v) for v in value}
+
+  Line 502:             value = float(value)
+
+  Line 1182:             product_attribute_value = product.product_template_attribute_value_ids.product_attribute_value_id
+
+  Line 1186:             product_attribute_value = storage_category_capacity.product_id.product_template_attribute_value_ids.product_attribute_value_id
+
+
+/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_lot.py:
+  Line 242:             value = {float(v) for v in value}
+
+  Line 244:             value = float(value)
+
+```
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py",
+  "offset": 390,
+  "limit": 30
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py</path>
+<type>file</type>
+<content>
+390:     def action_view_orderpoints(self):
+391:         action = self.env['product.product'].action_view_orderpoints()
+392:         action['domain'] = [('product_id', '=', self.product_id.id)]
+393:         return action
+394: 
+395:     @api.model
+396:     def action_view_quants(self):
+397:         self = self.with_context(search_default_internal_loc=1)
+398:         self = self._set_view_context()
+399:         return self._get_quants_action(extend=True)
+400: 
+401:     @api.model
+402:     def action_view_inventory(self):
+403:         """ Similar to _get_quants_action except specific for inventory adjustments (i.e. inventory counts). """
+404:         self = self._set_view_context()
+405:         if not self.env['ir.config_parameter'].sudo().get_param('stock.skip_quant_tasks'):
+406:             self._quant_tasks()
+407: 
+408:         ctx = dict(self.env.context or {})
+409:         ctx['no_at_date'] = True
+410:         if self.env.user.has_group('stock.group_stock_user') and not self.env.user.has_group('stock.group_stock_manager'):
+411:             ctx['search_default_my_count'] = True
+412:         view_id = self.env.ref('stock.view_stock_quant_tree_inventory_editable').id
+413:         action = {
+414:             'name': _('Physical Inventory'),
+415:             'view_mode': 'list',
+416:             'res_model': 'stock.quant',
+417:             'type': 'ir.actions.act_window',
+418:             'context': ctx,
+419:             'domain': [('location_id.usage', 'in', ['internal', 'transit'])],
+
+(Showing lines 390-419 of 1563. Use offset=420 to continue.)
+</content>
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 5.0s)
+
+_Thinking:_
+
+I searched for `value` as a field on stock.quant but found nothing. Let me check more explicitly. In Odoo 19 stock module, `stock.quant` might not have a `value` field at all. The `value` field was present in older Odoo versions but may have been removed in Odoo 19.
+
+Let me search more specifically for the value field definition on stock.quant.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "grep -n \"value\\s*=\" /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py 2>/dev/null | grep -i \"field\\|monetary\\|float\""
+}
+```
+
+**Output:**
+```
+(no output)
+```
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "grep -n \"value\" /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py | grep -i \"field\\|monetary\\|float\\b\" | head -20"
+}
+```
+
+**Output:**
+```
+(no output)
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 6.8s)
+
+_Thinking:_
+
+So `stock.quant` in Odoo 19 does NOT have a `value` field! This means the code in `_compute_cost_usd` that references `quant.value` will raise an `AttributeError`. This would prevent the compute method from working at all, and could potentially break views that try to render these fields.
+
+But the user says the view doesn't SHOW USD amounts, not that it crashes. Maybe the error is silently caught? Or maybe the view just doesn't render because of the inheritance issue.
+
+Let me check if `value` field exists somewhere else on the model, maybe inherited from another module.
+
+Actually, let me search more broadly.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "grep -rn \"'value'\" /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py 2>/dev/null | head -20; echo \"---\"; grep -rn '\"value\"' /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py 2>/dev/null | head -20"
+}
+```
+
+**Output:**
+```
+---
+
+```
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "python3 -c \"\nimport sys, ast, re\nwith open('/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py') as f:\n    content = f.read()\n# find all field definitions\nfields = re.findall(r'(\\w+)\\s*=\\s*fields\\.\\w+\\(', content)\nfor f in sorted(set(fields)):\n    print(f)\n\" 2>/dev/null | grep -i value"
+}
+```
+
+**Output:**
+```
+(no output)
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 6.3s)
+
+_Thinking:_
+
+There's no `value` field on `stock.quant` in Odoo 19. The code in `_compute_cost_usd` references `quant.value` which doesn't exist. This will cause an `AttributeError`.
+
+However, the user's complaint is about not seeing USD columns, not about errors. Let me now think about all the issues:
+
+1. **`quant.value` doesn't exist on stock.quant** — This would crash the `_compute_cost_usd` method when it tries to compute `value_usd`.
+
+2. **The "Existencias" view is a product.product view** — The user's first screenshot shows a product.product tree view (`Modelo:product.product`), not a stock.quant view. The module doesn't add USD cost/value fields to product.product views.
+
+3. **For the "Ubicaciones" stock.quant view** — The inheritance of `view_stock_quant_tree_simple` should propagate to `view_stock_quant_tree` theoretically, but there might be issues.
+
+4. **Missing `@api.depends`** on the compute method means the fields may not compute properly.
+
+Actually, I should focus on presenting the analysis clearly. Let me also quickly check what fields stock.quant has for cost/value in Odoo 19.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "grep -oP '\\w+\\s*=\\s*fields\\.\\w+' /home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py | sort"
+}
+```
+
+**Output:**
+```
+available_quantity = fields.Float
+company_id = fields.Many2one
+cyclic_inventory_frequency = fields.Integer
+default=fields.Datetime
+in_date = fields.Datetime
+in_date = fields.Datetime
+inventory_date = fields.Date
+inventory_date = fields.Date
+inventory_diff_quantity = fields.Float
+inventory_quantity = fields.Float
+inventory_quantity_auto_apply = fields.Float
+inventory_quantity_set = fields.Boolean
+is_favorite = fields.Boolean
+is_outdated = fields.Boolean
+last_count_date = fields.Date
+location_id = fields.Many2one
+lot_id = fields.Many2one
+lot_properties = fields.Properties
+on_hand = fields.Boolean
+owner_id = fields.Many2one
+package_id = fields.Many2one
+product_categ_id = fields.Many2one
+product_id = fields.Many2one
+product_tmpl_id = fields.Many2one
+product_uom_id = fields.Many2one
+quantity = fields.Float
+reserved_quantity = fields.Float
+sn_duplicated = fields.Boolean
+storage_category_id = fields.Many2one
+tracking = fields.Selection
+user_id = fields.Many2one
+warehouse_id = fields.Many2one
+
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 4.6s)
+
+_Thinking:_
+
+Confirmed: there is NO `value` field on `stock.quant` in Odoo 19. The module's code references `quant.value` which doesn't exist. This would cause an `AttributeError` when the `_compute_cost_usd` method runs.
+
+Now let me present a clear analysis to the user.
+
+Let me also quickly look at the `_get_quants_action` to understand what views the locations action uses.
+
+**Tool: grep**
+
+**Input:**
+```json
+{
+  "pattern": "_get_quants_action",
+  "path": "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py"
+}
+```
+
+**Output:**
+```
+Found 4 matches
+/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py:
+  Line 399:         return self._get_quants_action(extend=True)
+
+  Line 403:         """ Similar to _get_quants_action except specific for inventory adjustments (i.e. inventory counts). """
+
+  Line 1308:     def _get_quants_action(self, extend=False):
+
+  Line 1345:         # It's mainly define in the server action in order to call _get_quants_action when using the url
+
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 3.4s)
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "offset": 1308,
+  "filePath": "/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py",
+  "limit": 60
+}
+```
+
+**Output:**
+```
+<path>/home/odoo/develop/odoo-from-13-to-18/arquitectura/odoo19/odoo/addons/stock/models/stock_quant.py</path>
+<type>file</type>
+<content>
+1308:     def _get_quants_action(self, extend=False):
+1309:         """ Returns an action to open (non-inventory adjustment) quant view.
+1310:         Depending of the context (user have right to be inventory mode or not),
+1311:         the list view will be editable or readonly.
+1312: 
+1313:         :param extend: If True, enables form, graph and pivot views. False by default.
+1314:         """
+1315:         if not self.env['ir.config_parameter'].sudo().get_param('stock.skip_quant_tasks'):
+1316:             self._quant_tasks()
+1317:         ctx = dict(self.env.context or {})
+1318:         ctx['inventory_report_mode'] = True
+1319:         ctx.pop('group_by', None)
+1320: 
+1321:         action = self.env['ir.actions.act_window']._for_xml_id('stock.stock_quant_action')
+1322:         action["domain"] = [('product_id.company_id', 'in', ctx.get('allowed_company_ids', []) + [False])]
+1323:         form_view = self.env.ref('stock.view_stock_quant_form_editable').id
+1324:         if self.env.context.get('inventory_mode') and self.env.user.has_group('stock.group_stock_manager'):
+1325:             action['view_id'] = self.env.ref('stock.view_stock_quant_tree_editable').id
+1326:         else:
+1327:             action['view_id'] = self.env.ref('stock.view_stock_quant_tree').id
+1328:         action.update({
+1329:             'views': [
+1330:                 (action['view_id'], 'list'),
+1331:                 (form_view, 'form'),
+1332:             ],
+1333:             'context': ctx,
+1334:         })
+1335:         if extend:
+1336:             action.update({
+1337:                 'view_mode': 'list,form,pivot,graph',
+1338:                 'views': [
+1339:                     (action['view_id'], 'list'),
+1340:                     (form_view, 'form'),
+1341:                     (self.env.ref('stock.view_stock_quant_pivot').id, 'pivot'),
+1342:                     (self.env.ref('stock.stock_quant_view_graph').id, 'graph'),
+1343:                 ],
+1344:             })
+1345:         # It's mainly define in the server action in order to call _get_quants_action when using the url
+1346:         action['path'] = "stock-locations"
+1347:         return action
+1348: 
+1349:     def _get_gs1_barcode(self, gs1_quantity_rules_ai_by_uom=False):
+1350:         """ Generates a GS1 barcode for the quant's properties (product, quantity and LN/SN.)
+1351: 
+1352:         :param gs1_quantity_rules_ai_by_uom: contains the products' GS1 AI paired with the UoM id
+1353:         :type gs1_quantity_rules_ai_by_uom: dict
+1354:         :return: str
+1355:         """
+1356:         self.ensure_one()
+1357:         gs1_quantity_rules_ai_by_uom = gs1_quantity_rules_ai_by_uom or {}
+1358:         barcode = ''
+1359: 
+1360:         # Product part.
+1361:         if self.product_id.valid_ean:
+1362:             barcode = self.product_id.barcode
+1363:             barcode = '01' + '0' * (14 - len(barcode)) + barcode
+1364:         elif self.tracking == 'none' or not self.lot_id:
+1365:             return ''  # Doesn't make sense to generate a GS1 barcode for qty with no other data.
+1366: 
+1367:         # Quantity part.
+
+(Showing lines 1308-1367 of 1563. Use offset=1368 to continue.)
+</content>
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 26.9s)
+
+_Thinking:_
+
+Now I have the full picture. Line 1327 shows that the locations action explicitly uses `stock.view_stock_quant_tree` (the primary view), not `view_stock_quant_tree_simple`. 
+
+So the issue is clear: the custom view inherits `view_stock_quant_tree_simple`, but the actual action uses `view_stock_quant_tree` explicitly via `action['view_id']`.
+
+In Odoo, when a view is explicitly set as `view_id` in an action, the view resolution still applies inheritance from the base view chain. So even though `action['view_id'] = self.env.ref('stock.view_stock_quant_tree').id`, since `view_stock_quant_tree` inherits `view_stock_quant_tree_simple`, views inheriting `view_stock_quant_tree_simple` should still be applied.
+
+However, let me check if this is truly the case. In Odoo's view inheritance, when you have:
+- View A (base, e.g., `view_stock_quant_tree_simple`)
+- View B (inherits A, e.g., our custom `stock_quant_tree_view_usd`)
+- View C (inherits A, primary, e.g., `view_stock_quant_tree`)
+
+When rendering View C, Odoo should:
+1. Load View C's arch (which is just attributes modifications)
+2. Resolve by first getting the effective arch of its parent (View A), which includes modifications from all views inheriting View A (including View B)
+3. Then apply View C's modifications
+
+So in theory, View B's modifications to View A should be visible when rendering View C. Let me verify this.
+
+Actually, I need to reconsider. In Odoo, when a view has `inherit_id`, its arch represents modifications to apply to the parent view. When the parent view is rendered, ALL views that inherit it are applied in priority order. But when `view_stock_quant_tree` (which has `inherit_id = view_stock_quant_tree_simple`) is rendered specifically:
+
+1. The system resolves `view_stock_quant_tree_simple` by applying all views that inherit it (including our custom view and `view_stock_quant_tree`)
+2. Then it applies `view_stock_quant_tree`'s own modifications
+
+Wait, this is a recursive process. Let me think again.
+
+Actually, I think the issue might be that `view_stock_quant_tree` is created with `mode="primary"` and `inherit_id`. In Odoo's view resolution:
+- When the system needs a list view for stock.quant, it looks for the primary list view
+- `view_stock_quant_tree` is the primary view (because it has `mode="primary"`)
+- This view inherits `view_stock_quant_tree_simple`
+- So Odoo renders `view_stock_quant_tree_simple` first (applying all its inheriting views, including our custom view), then applies `view_stock_quant_tree`'s modifications
+
+So our custom view's modifications SHOULD appear in `view_stock_quant_tree`. Unless there's a bug or the priority ordering causes issues.
+
+Hmm, but what if the priority is wrong? Let me check:
+- `view_stock_quant_tree_simple`: priority 10
+- `view_stock_quant_tree`: priority 10, inherits `view_stock_quant_tree_simple`
+- Our custom view `stock_quant_tree_view_usd`: priority 99, inherits `view_stock_quant_tree_simple`
+
+When resolving `view_stock_quant_tree`:
+1. Resolve `view_stock_quant_tree_simple`:
+   - Apply all inheriting views in priority order
+   - `view_stock_quant_tree` (priority 10) — adds attributes to the list
+   - `stock_quant_tree_view_usd` (priority 99) — adds fields after product_uom_id
+   
+   Higher priority means applied later (overrides earlier). So priority 99 is applied after priority 10. This seems fine.
+   
+2. Apply `view_stock_quant_tree`'s own modifications
+
+Wait, this doesn't work either, because `view_stock_quant_tree` is also one of the views inheriting `view_stock_quant_tree_simple`. It can't be applied as an inheriting view AND as the view being rendered at the same time.
+
+Let me look at how Odoo actually handles this. The `_get_combined_arch` or similar method in `ir.ui.view` handles the resolution. I think the approach is:
+
+1. When rendering view C (which inherits A):
+   - First, get A's effective arch by applying all views that inherit A EXCEPT those in the current inheritance chain (to avoid double application)
+   - Then apply C's modifications
+
+So the process would be:
+1. Get `view_stock_quant_tree_simple`'s arch
+2. Apply all views inheriting `view_stock_quant_tree_simple`, EXCLUDING `view_stock_quant_tree` (since we're rendering that view right now)
+3. Apply `view_stock_quant_tree`'s modifications on top
+
+If this is the case, then our custom view (priority 99) would be applied in step 2, and the USD fields would appear. This should work.
+
+OK so theoretically the inheritance should work. So what else could be wrong?
+
+Let me think about this differently. The user says they can't see USD amounts. Let me consider practical issues:
+
+1. **The view XML might not be loaded** — The manifest includes it at line 48, so this should be fine.
+
+2. **The `currency_usd_id` field isn't being computed** — It's a non-stored computed field without `@api.depends`. In a tree view with many records, Odoo might not compute it efficiently.
+
+3. **The `_compute_cost_usd` crashes** — Because `quant.value` doesn't exist on `stock.quant`. This would cause an `AttributeError` when the compute method runs, potentially preventing the fields from being displayed.
+
+4. **The "Existencias" view is NOT a stock.quant view** — Looking at the user's first screenshot, it shows a product.product tree view (the tooltip says `Modelo:product.product`). The module doesn't add USD fields to product.product tree views.
+
+5. **`optional="show"` might not show the columns by default** — Actually "show" means they ARE shown by default. But some themes or user settings might hide them.
+
+I think the most likely issue is **#3** (the `quant.value` crash). This would cause a server error when trying to compute the fields, and the view might silently fail to render those columns.
+
+And the second most important issue is **#4** — the user is looking at a product.product view, not a stock.quant view.
+
+Let me present this to the user.
+
+He revisado todo el código. Aquí están los problemas:
+
+---
+
+## Problemas encontrados
+
+### 1. ❌ `quant.value` no existe en `stock.quant` (Odoo 19)
+
+`stock_quant.py:41` usa `quant.value`, pero **`stock.quant` en Odoo 19 no tiene ningún campo `value`**. Esto provoca un `AttributeError` cada vez que la vista intenta calcular `unit_cost_usd` o `value_usd`, lo que probablemente impide que se rendericen las columnas.
+
+```python
+# stock_quant.py:40-42 — ESTO FALLA:
+quant.value_usd = float_round(
+    quant.value / rate, precision_digits=2  # ← quant.value NO EXISTE
+) if quant.value else 0.0
+```
+
+**Solución:** Reemplazar `quant.value` por `quant.quantity * cost_ves` (cantidad × costo unitario):
+
+```python
+quant.value_usd = float_round(
+    (quant.quantity * cost_ves) / rate, precision_digits=2
+) if cost_ves and quant.quantity else 0.0
+```
+
+### 2. ❌ La vista "Existencias" (1er screenshot) NO es `stock.quant`
+
+El tooltip dice `Modelo: product.product`. El módulo solo añade columnas USD a `stock.quant.views`, no a `product.product`. Además, el campo `total_value` es propio de `product.product`.
+
+### 3. ❌ `_compute_cost_usd` no tiene `@api.depends`
+
+Sin `@api.depends`, estos campos computados no se recalcularán automáticamente cuando cambien la tasa o el costo del producto.
+
+```python
+# Falta:
+@api.depends('product_id', 'quantity', 'company_id')
+def _compute_cost_usd(self):
+```
+
+### 4. ⚠️ La vista solo hereda `view_stock_quant_tree_simple`
+
+La acción de "Ubicaciones" (`action_view_quants`, línea 1327 de stock Odoo) usa **explícitamente** `stock.view_stock_quant_tree`. Aunque la herencia debería propagarse por la cadena (porque `view_stock_quant_tree` hereda de `view_stock_quant_tree_simple`), es más seguro heredar también `view_stock_quant_tree` directamente.
+
+---
+
+## Plan de corrección
+
+1. **`stock_quant.py`:** Reemplazar `quant.value` por `quant.quantity * cost_ves` y añadir `@api.depends`
+2. **`stock_quant_views.xml`:** Añadir una segunda herencia para `view_stock_quant_tree` o crear un segundo record que herede esa vista
+3. **`product_views.xml` (o nuevo):** Si también se necesita en la vista de productos ("Existencias"), añadir los campos USD al tree view de `product.product`
+
+¿Quieres que proceda con las correcciones?
 
 ---
 

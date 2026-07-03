@@ -191,10 +191,31 @@ class ProductProduct(models.Model):
         digits=(12, 2)
     )
 
+    total_value_usd = fields.Float(
+        string='Valor total USD',
+        compute='_compute_total_value_usd',
+        digits=(12, 2),
+    )
+
     def _compute_currency_usd_id(self):
         usd = self.env.ref('base.USD', raise_if_not_found=False)
         for rec in self:
             rec.currency_usd_id = usd
+
+    @api.depends('qty_available', 'standard_price', 'company_id')
+    def _compute_total_value_usd(self):
+        for rec in self:
+            rate = self.env['product.template']._get_bcv_rate(rec.company_id)
+            if rate:
+                if 'total_value' in self._fields:
+                    total_ves = rec.total_value
+                else:
+                    total_ves = rec.qty_available * rec.standard_price
+                rec.total_value_usd = float_round(
+                    total_ves / rate, precision_digits=2
+                ) if total_ves else 0.0
+            else:
+                rec.total_value_usd = 0.0
 
     @api.onchange('lst_price')
     def _onchange_lst_price(self):
