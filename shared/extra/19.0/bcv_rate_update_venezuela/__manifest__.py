@@ -16,6 +16,7 @@
         'base',
         'web',
         'sale_management',
+        'purchase',
         'account',          # Contabilidad base
         'stock',            # Inventario
         'point_of_sale',

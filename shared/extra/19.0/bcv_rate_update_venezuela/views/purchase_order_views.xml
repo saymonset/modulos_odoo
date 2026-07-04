@@ -1,14 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Vista tree (lista de compras) con Total USD -->
+    <!-- Vista tree base (lista simple) con Total USD -->
     <record id="purchase_order_tree_view_usd" model="ir.ui.view">
         <field name="name">purchase.order.tree.usd.total</field>
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_tree"/>
+        <field name="priority">99</field>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='amount_total']" position="after">
-                <field name="amount_total_usd" string="Total USD" sum="Total USD" optional="show" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
+                <field name="amount_total_usd" string="Total USD" sum="Total USD" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Vista tree KPIs (dashboard de solicitudes) con Total USD -->
+    <record id="purchase_order_kpis_tree_view_usd" model="ir.ui.view">
+        <field name="name">purchase.order.kpis.tree.usd.total</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='amount_total']" position="after">
+                <field name="amount_total_usd" string="Total USD" sum="Total USD" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
             </xpath>
         </field>
     </record>
@@ -18,6 +32,7 @@
         <field name="name">purchase.order.form.usd.total</field>
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="priority">99</field>
         <field name="arch" type="xml">
             <!-- Columnas en las líneas -->
             <xpath expr="//field[@name='order_line']/list/field[@name='price_subtotal']" position="before">
@@ -25,7 +40,7 @@
                 <field name="price_subtotal_usd_bcv" string="Subtotal USD" readonly="1"/>
             </xpath>
             <!-- Total USD en el footer -->
-            <xpath expr="//group[hasclass('oe_subtotal_footer')]//field[@name='tax_totals']" position="after">
+            <xpath expr="//group[hasclass('oe_subtotal_footer')]" position="inside">
                 <div style="display:flex; align-items:center; gap:5px;" class="mt-2">
                     <label for="amount_total_usd" string="Total USD (BCV)" style="font-weight:bold; color:green;"/>
                     <field name="amount_total_usd" readonly="1" style="font-weight:bold; color:green;" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
