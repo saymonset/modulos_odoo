@@ -30,6 +30,7 @@ class SaleOrderLine(models.Model):
         res.update({
             'price_usd_bcv': self.price_usd_bcv,
             'bcv_rate_value': self.rate_value,
+            'price_subtotal_usd_bcv': self.price_subtotal_usd_bcv,
         })
         return res
 
