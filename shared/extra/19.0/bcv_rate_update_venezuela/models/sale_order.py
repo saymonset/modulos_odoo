@@ -86,31 +86,15 @@ class SaleOrder(models.Model):
     def action_confirm(self):
         _logger.info(f"*** CONFIRMANDO: action_confirm llamado con órdenes {self.ids}")
         if not self:
-            tx = self.env['payment.transaction'].sudo().search([
-                ('reference', 'like', 'S%'),
-                ('state', 'in', ['pending', 'authorized']),
-            ], order='id desc', limit=1)
-            if tx and tx.sale_order_ids:
-                order = tx.sale_order_ids[0]
-                _logger.info(f"*** CONFIRMANDO: Orden recuperada desde transacción: {order.name}")
-                if request and hasattr(request, 'session') and 'payment_data' in request.session:
-                    payment_data = request.session.pop('payment_data')
-                    if payment_data.get('sale_order_id') == order.id:
-                        order.action_save_payment_data(payment_data)
-                res = super(SaleOrder, order).action_confirm()
-                self._process_order_post_confirm(order)
-                return res
-            else:
-                return self.env['sale.order']
-        else:
-            for order in self:
-                if request and hasattr(request, 'session') and 'payment_data' in request.session:
-                    payment_data = request.session.pop('payment_data')
-                    order.action_save_payment_data(payment_data)
-            res = super().action_confirm()
-            for order in self:
-                self._process_order_post_confirm(order)
-            return res
+            return self.env['sale.order']
+        for order in self:
+            if request and hasattr(request, 'session') and 'payment_data' in request.session:
+                payment_data = request.session.pop('payment_data')
+                order.action_save_payment_data(payment_data)
+        res = super().action_confirm()
+        for order in self:
+            self._process_order_post_confirm(order)
+        return res
 
     # ------------------------------------------------------------
     # PROCESAMIENTO POST-CONFIRMACIÓN (WhatsApp y otros)
