@@ -1,24 +1,29 @@
 <odoo>
-    <!-- Hereda la vista de líneas de factura - Versión alternativa -->
     <template id="report_invoice_document_inherit_bcv" inherit_id="account.report_invoice_document">
-        <!-- Busca cualquier tabla en el reporte -->
-        <xpath expr="//table[hasclass('table')]" position="before">
+        <xpath expr="//table[@name='invoice_line_table']/thead/tr/th[@name='th_subtotal']" position="after">
             <t t-set="usd_currency" t-value="env['res.currency'].search([('name','=','USD')], limit=1)"/>
+            <th name="th_price_usd" class="text-end text-nowrap">Precio USD</th>
+            <th name="th_rate" class="text-end text-nowrap">Tasa BCV</th>
+            <th name="th_subtotal_usd" class="text-end text-nowrap">Subtotal USD</th>
         </xpath>
-        <xpath expr="//table[hasclass('table')]/thead/tr" position="inside">
-            <th class="text-right">Precio USD (BCV)</th>
-        </xpath>
-        
-        <xpath expr="//table[hasclass('table')]/tbody/tr" position="inside">
-            <td class="text-right">
-                <span t-if="line.price_usd_bcv">
-                    <t t-esc="format_amount(line.price_usd_bcv, usd_currency)"/>
-                    <small class="text-muted d-block">
-                        Tasa BCV: <t t-esc="'{:,.2f}'.format(line.bcv_rate_value)"/>
-                    </small>
-                </span>
-                <span t-else="">-</span>
+
+        <xpath expr="//td[@name='td_subtotal']" position="after">
+            <td name="td_price_usd" class="text-end text-nowrap">
+                <span t-if="line.price_usd_bcv" t-esc="line.price_usd_bcv" t-options="{'widget': 'monetary', 'display_currency': usd_currency}"/>
             </td>
+            <td name="td_rate" class="text-end text-nowrap">
+                <span t-if="line.bcv_rate_value" t-esc="'{:,.2f}'.format(line.bcv_rate_value)"/>
+            </td>
+            <td name="td_subtotal_usd" class="text-end o_price_total">
+                <span t-if="line.price_subtotal_usd_bcv" t-esc="line.price_subtotal_usd_bcv" t-options="{'widget': 'monetary', 'display_currency': usd_currency}"/>
+            </td>
+        </xpath>
+
+        <xpath expr="//div[@id='right-elements']" position="inside">
+            <div class="text-end mt-2">
+                <strong style="color:green;">Total USD (BCV): </strong>
+                <span t-if="o.amount_total_usd" t-esc="o.amount_total_usd" t-options="{'widget': 'monetary', 'display_currency': usd_currency}" style="font-weight:bold; color:green;"/>
+            </div>
         </xpath>
     </template>
 </odoo>

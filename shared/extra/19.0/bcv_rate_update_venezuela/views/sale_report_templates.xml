@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_saleorder_inherit_bcv" inherit_id="sale.report_saleorder_document">
+        <xpath expr="//th[@name='th_subtotal']" position="before">
+            <t t-set="usd_currency" t-value="env['res.currency'].search([('name','=','USD')], limit=1)"/>
+            <th name="th_rate" class="text-end text-nowrap">Tasa BCV</th>
+            <th name="th_price_usd" class="text-end text-nowrap">Precio USD</th>
+        </xpath>
+        <xpath expr="//th[@name='th_subtotal']" position="after">
+            <th name="th_subtotal_usd" class="text-end text-nowrap">Subtotal USD</th>
+        </xpath>
+
+        <xpath expr="//td[@name='td_product_subtotal']" position="before">
+            <td name="td_product_rate" class="text-end text-nowrap">
+                <span t-if="not collapse_prices and line.rate_value" t-esc="'{:,.2f}'.format(line.rate_value)"/>
+            </td>
+            <td name="td_product_price_usd" class="text-end text-nowrap">
+                <span t-if="not collapse_prices and line.price_usd_bcv" t-esc="line.price_usd_bcv" t-options="{'widget': 'monetary', 'display_currency': usd_currency}"/>
+            </td>
+        </xpath>
+        <xpath expr="//td[@name='td_product_subtotal']" position="after">
+            <td name="td_product_subtotal_usd" class="text-end text-nowrap">
+                <span t-if="not collapse_prices" t-esc="line.price_subtotal_usd_bcv" t-options="{'widget': 'monetary', 'display_currency': usd_currency}"/>
+            </td>
+        </xpath>
+
+        <xpath expr="//div[@name='so_total_summary']" position="inside">
+            <div class="text-end mt-2">
+                <strong style="color:green;">Total USD (BCV): </strong>
+                <span t-if="doc.amount_total_usd" t-esc="doc.amount_total_usd" t-options="{'widget': 'monetary', 'display_currency': usd_currency}" style="font-weight:bold; color:green;"/>
+            </div>
+        </xpath>
+    </template>
+
+</odoo>
