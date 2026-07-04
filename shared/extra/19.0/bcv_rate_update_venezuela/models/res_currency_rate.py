@@ -33,18 +33,18 @@ class ResCurrencyRate(models.Model):
     @api.model
     def create(self, vals):
         rate = super().create(vals)
-        if rate.currency_id.name in ('VES', 'VEF', 'USD'):
-            _logger.info("Nueva tasa %s creada. Recalculando precios desde USD...", rate.currency_id.name)
-            self.env['product.template']._recalculate_ves_prices_from_usd(rate.company_id)
+        if rate.currency_id.name in ('USD', 'VES'):
+            _logger.info("Nueva tasa VES/USD creada o modificada. Recalculando precios desde USD...")
+            self.env['product.template']._recalculate_ves_prices_from_usd()
         return rate
 
     def write(self, vals):
         before_rates = {r.id: r.rate for r in self}
         res = super().write(vals)
         for rate in self:
-            if rate.currency_id.name in ('VES', 'VEF', 'USD') and before_rates.get(rate.id) != rate.rate:
+            if rate.currency_id.name in ('USD', 'VES') and before_rates.get(rate.id) != rate.rate:
                 if 'rate' in vals or 'original_value' in vals:
-                    _logger.info("Tasa %s modificada. Recalculando precios desde USD...", rate.currency_id.name)
-                    self.env['product.template']._recalculate_ves_prices_from_usd(rate.company_id)
+                    _logger.info("Tasa VES/USD modificada. Recalculando precios desde USD...")
+                    self.env['product.template']._recalculate_ves_prices_from_usd()
                     break
         return res

@@ -1,42 +1,46 @@
-. Instalar dependencias Python:
-```bash
-uv pip install requests beautifulsoup4
-```
-# Configuración de moneda en listas de precios (Pricelists) para Odoo 19
+Resumen del módulo bcv_rate_update_venezuela
 
-## Problema
-Los precios de los productos aparecen en la tienda web con valores extremadamente altos (ej: 1.001.842 Bs en lugar de 2.001 Bs). Esto ocurre cuando la **lista de precios (pricelist)** activa en el sitio web tiene una moneda diferente a la moneda base de la compañía.
+  Es un módulo de localización venezolana para Odoo 19.0 que resuelve el problema de precios duales (VES/USD) en e-commerce y POS, más un flujo completo
+  de pago por transferencia bancaria con comprobante + confirmación por WhatsApp.
 
-### Causa principal
-- La moneda base de la compañía está configurada en **VES** (Bolívar Soberano).
-- La lista de precios del sitio web estaba en **VEF** (Bolívar Fuerte, moneda obsoleta donde 1 VES = 100.000 VEF).
-- Odoo intenta convertir el precio del producto (en VES) a la moneda de la lista de precios (VEF), multiplicando por la tasa de conversión, generando valores desorbitados.
+  ¿Qué hace puntualmente?
 
-## Solución
-**Todas las listas de precios utilizadas en el comercio electrónico deben tener la misma moneda que la moneda base de la compañía (en este caso, VES).**
+  1. Tasa BCV automática — Dos cron jobs diarios: uno obtiene la tasa oficial del BCV, otro recalcula todos los precios en VES desde los precios en USD.
+  2. Precios duales VES/USD — Agrega list_price_usd a productos, variantes y atributos. Sincroniza bidireccionalmente VES ↔ USD usando la tasa BCV.
+  Cuando la tasa cambia, todo se recalcula automáticamente.
+  3. Totales en USD — Las órdenes de venta y líneas guardan price_usd_bcv, price_subtotal_usd_bcv y amount_total_usd. También se arrastra a las facturas.
+  4. Flujo de pago por transferencia — Un componente OWL en el checkout permite:
+    - Seleccionar banco origen/destino
+    - Subir imagen/PDF del comprobante
+    - Validar montos
+    - El pago queda como payment.transaction en estado pending → done tras confirmar la orden
+  5. Confirmación WhatsApp — Al confirmar la orden, envía un mensaje via WhatsApp Cloud API con el template pedido_confirmado_ubicacion (datos del
+  pedido, dirección, horario).
+  6. Address autofill — En el checkout, oculta todos los campos de dirección y solo muestra email/teléfono. Si encuentra un partner existente,
+  autocompleta los datos.
+  7. 25 bancos venezolanos precargados como datos semilla.
 
-### Pasos a seguir
-1. Ve a **Ventas → Productos → Listas de precios** (Sales → Products → Pricelists).
-2. Identifica la lista de precios activa para tu sitio web (normalmente "Public Pricelist" o "Default").
-3. Edita la lista de precios y cambia el campo **"Moneda"** (Currency) de **VEF** a **VES**.
-4. Guarda los cambios.
-5. Borra la caché del navegador y recarga la tienda online.
-6. (Opcional) Actualiza los assets web desde **Ajustes → Técnico → Parámetros del Sistema** → selecciona `web_assets_frontend` y ejecuta **"Actualizar Assets"**.
+  Archivos clave (17 archivos Python + 11 vistas + OWL components)
 
-## Verificación
-Después del cambio:
-- Los precios en la tienda mostrarán el valor real en **VES** (ej: 2.001,84 Bs).
-- Los precios en USD calculados con la tasa BCV se mostrarán correctamente debajo.
-- Los totales del carrito y la conversión a USD funcionarán sin errores.
+  ┌─────────────────────────┬─────────────────────────────────────────────────────────────────────────────────┐
+  │ Propósito               │ Archivo                                                                         │
+  ├─────────────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+  │ Tasa BCV + recálculo    │ models/res_currency_rate.py, models/product_template.py                         │
+  ├─────────────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+  │ USD en órdenes/facturas │ models/sale_order.py, models/sale_order_line.py, models/account_move_line.py    │
+  ├─────────────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+  │ Pago por transferencia  │ controllers/website_sale_attachment.py, controllers/payment_custom_override.py  │
+  ├─────────────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+  │ Componente OWL pago     │ static/src/js/payment_proof_component.js                                        │
+  ├─────────────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+  │ WhatsApp                │ services/whatsapp_service.py, uses_cases/send_whatsapp_confirmation_use_case.py │
+  ├─────────────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+  │ Address autofill        │ controllers/address_autofill.py, static/src/js/address_autofill.js              │
+  ├─────────────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+  │ Cron jobs               │ data/ir_cron_data.xml                                                           │
+  ├─────────────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+  │ Seguridad               │ tests/test_security_payment.py (previene inyección de montos)                   │
+  └─────────────────────────┴─────────────────────────────────────────────────────────────────────────────────┘
 
-## Nota importante
-> Si alguna lista de precios (incluso las no usadas directamente) tiene moneda VEF, cámbiala a VES o desactívala para evitar confusiones. La moneda base de la compañía debe ser VES, y todas las listas de precios del e-commerce deben coincidir con ella.
-
-## Resumen técnico
-- **Moneda base compañía:** VES (tasa 1.000000)
-- **Moneda USD:** tasa 500.4606 (ejemplo BCV)
-- **Moneda VEF:** no debe usarse. Si aparece, reemplazar por VES.
-
----
-
-Este documento explica por qué ocurría la multiplicación anómala y cómo corregirla.
+  En criollo: convierte Odoo en una tienda online venezolana funcional — con precios en USD que se actualizan solos según la tasa BCV, pagos por
+  transferencia con comprobante, y confirmación por WhatsApp.

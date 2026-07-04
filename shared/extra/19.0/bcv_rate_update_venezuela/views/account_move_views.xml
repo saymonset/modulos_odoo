@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista form: columnas USD en líneas + Total USD -->
+    <record id="view_move_form_inherit_bcv" model="ir.ui.view">
+        <field name="name">account.move.form.bcv.usd</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <!-- Columnas en las líneas de factura -->
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='price_subtotal']" position="before">
+                <field name="bcv_rate_value" string="Tasa BCV" readonly="1" optional="hide"/>
+                <field name="price_subtotal_usd_bcv" string="Subtotal USD" readonly="1"/>
+            </xpath>
+            <!-- Total USD debajo del tax_totals -->
+            <xpath expr="//group[hasclass('oe_subtotal_footer')]//field[@name='tax_totals']" position="after">
+                <div style="display:flex; align-items:center; gap:5px;" class="mt-2">
+                    <label for="amount_total_usd" string="Total USD (BCV)" style="font-weight:bold; color:green;"/>
+                    <field name="amount_total_usd" readonly="1" style="font-weight:bold; color:green;" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Vista tree (lista de facturas) -->
+    <record id="view_invoice_tree_inherit_bcv" model="ir.ui.view">
+        <field name="name">account.invoice.tree.bcv.usd</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='amount_total_in_currency_signed']" position="after">
+                <field name="amount_total_usd" string="Total USD" optional="show" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

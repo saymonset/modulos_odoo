@@ -60,6 +60,18 @@ def _populate_initial_usd_prices(env):
         a.with_context(_skip_bcv_sync=True).write({'price_extra_usd': float_round(a.price_extra / rate, precision_digits=2)})
         count_attr += 1
     _logger.info("Precios extra USD poblados para %s atributos.", count_attr)
+    # Poblar standard_price_usd desde standard_price
+    products = env['product.product'].search([
+        ('standard_price', '>', 0),
+        ('standard_price_usd', '=', 0),
+    ])
+    count_prod = 0
+    for p in products:
+        p.with_context(_skip_bcv_sync=True).write({
+            'standard_price_usd': float_round(p.standard_price / rate, precision_digits=2)
+        })
+        count_prod += 1
+    _logger.info("Costos USD poblados para %s productos.", count_prod)
 
 def _post_init_hook(env):
     _clean_orphan_views(env)

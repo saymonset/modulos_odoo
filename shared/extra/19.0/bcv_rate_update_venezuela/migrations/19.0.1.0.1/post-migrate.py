@@ -49,4 +49,30 @@ def migrate(cr, version):
         count_attr += 1
     _logger.info("Precios extra USD poblados para %s atributos.", count_attr)
 
+    # Poblar standard_price_usd (Costo USD) en templates con costo VES
+    templates_with_cost = env['product.template'].search([
+        ('standard_price', '>', 0),
+        ('standard_price_usd', '=', 0),
+    ])
+    count_tmpl = 0
+    for t in templates_with_cost:
+        t.with_context(_skip_bcv_sync=True).write({
+            'standard_price_usd': float_round(t.standard_price / rate, precision_digits=2)
+        })
+        count_tmpl += 1
+    _logger.info("Costo USD poblado para %s plantillas.", count_tmpl)
+
+    # Poblar standard_price_usd en variantes con costo VES
+    variants_with_cost = env['product.product'].search([
+        ('standard_price', '>', 0),
+        ('standard_price_usd', '=', 0),
+    ])
+    count_var_cost = 0
+    for v in variants_with_cost:
+        v.with_context(_skip_bcv_sync=True).write({
+            'standard_price_usd': float_round(v.standard_price / rate, precision_digits=2)
+        })
+        count_var_cost += 1
+    _logger.info("Costo USD poblado para %s variantes.", count_var_cost)
+
     _logger.info("Migración 19.0.1.0.1 completada.")
