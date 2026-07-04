@@ -11,37 +11,30 @@ class StockQuant(models.Model):
     currency_usd_id = fields.Many2one(
         'res.currency',
         string='USD Currency',
-        compute='_compute_currency_usd_id',
+        compute='_compute_currency_usd_id'
     )
+
     unit_cost_usd = fields.Float(
         string='Costo unitario USD',
-        compute='_compute_cost_usd',
+        related='product_id.standard_price_usd',
+        store=True,
         digits=(12, 2),
     )
     value_usd = fields.Float(
-        string='Valor total USD',
-        compute='_compute_cost_usd',
+        string='Valor USD',
+        compute='_compute_value_usd',
+        store=True,
         digits=(12, 2),
     )
 
-    @api.depends('company_id')
     def _compute_currency_usd_id(self):
         usd = self.env.ref('base.USD', raise_if_not_found=False)
-        for rec in self:
-            rec.currency_usd_id = usd
-
-    @api.depends('product_id', 'quantity', 'company_id')
-    def _compute_cost_usd(self):
         for quant in self:
-            rate = self.env['product.template']._get_bcv_rate(quant.company_id)
-            if rate:
-                cost_ves = quant.product_id.with_company(quant.company_id).standard_price
-                quant.unit_cost_usd = float_round(
-                    cost_ves / rate, precision_digits=2
-                ) if cost_ves else 0.0
-                quant.value_usd = float_round(
-                    (quant.quantity * cost_ves) / rate, precision_digits=2
-                ) if cost_ves and quant.quantity else 0.0
-            else:
-                quant.unit_cost_usd = 0.0
-                quant.value_usd = 0.0
+            quant.currency_usd_id = usd
+
+    @api.depends('quantity', 'unit_cost_usd')
+    def _compute_value_usd(self):
+        for quant in self:
+            quant.value_usd = float_round(
+                quant.quantity * quant.unit_cost_usd, precision_digits=2
+            ) if quant.unit_cost_usd else 0.0

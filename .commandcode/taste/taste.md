@@ -2,3 +2,6 @@
 
 [cmd]: https://commandcode.ai/
 
+# git
+- Never run `git commit` — the user does commits manually and tests first. Confidence: 0.85
+
