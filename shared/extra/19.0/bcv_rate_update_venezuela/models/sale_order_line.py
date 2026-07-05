@@ -34,7 +34,7 @@ class SaleOrderLine(models.Model):
         })
         return res
 
-    @api.depends('price_unit', 'product_uom_qty')
+    @api.depends('price_unit', 'product_uom_qty', 'discount')
     def _compute_usd_bcv(self):
         for line in self:
             main_provider = self.env['currency.rate.provider'].sudo().search([
@@ -63,4 +63,4 @@ class SaleOrderLine(models.Model):
 
             line.rate_value = rate_val
             line.price_usd_bcv = float_round(line.price_unit / rate_val, precision_digits=2)
-            line.price_subtotal_usd_bcv = float_round(line.price_usd_bcv * line.product_uom_qty, precision_digits=2)
+            line.price_subtotal_usd_bcv = float_round(line.price_subtotal / rate_val, precision_digits=2)
