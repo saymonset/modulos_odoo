@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="pos_venezuela_dual_currency.CustomPaymentStatus">
+        <div class="payment-status-usd d-flex justify-content-between px-3 py-2">
+            <span class="text-muted small">Total USD (Ref):</span>
+            <span class="fw-bold small">
+                <t t-esc="formatDecimal(state.usdTotal)"/>
+            </span>
+        </div>
+    </t>
+</templates>

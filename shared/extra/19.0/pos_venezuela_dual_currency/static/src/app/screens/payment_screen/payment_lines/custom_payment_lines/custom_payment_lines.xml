@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="pos_venezuela_dual_currency.CustomPaymentLines">
+        <div class="paymentlines d-flex flex-column overflow-y-auto gap-1">
+            <t t-if="state.hasData">
+                <div class="payment-infos d-flex align-items-center justify-content-between flex-grow-1 px-3 py-3 text-truncate cursor-pointer fs-2">
+                    <span class="payment-name">Bs. → USD</span>
+                    <div class="payment-amount px-3">
+                        <input type="number" id="bsInput" t-ref="bsInput"
+                               class="form-control border-0 border-bottom"
+                               style="border-bottom: 2px solid #000;"
+                               placeholder="Monto en Bs."
+                               t-on-input="onInputChange"
+                               t-on-blur="onBlur"/>
+                    </div>
+                </div>
+                <div class="payment-infos d-flex align-items-center justify-content-between flex-grow-1 px-3 py-3 text-truncate cursor-pointer fs-2">
+                    <span class="payment-name">USD</span>
+                    <div class="payment-amount px-3">
+                        <t t-esc="formatCurrency(state.result)"/>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>
