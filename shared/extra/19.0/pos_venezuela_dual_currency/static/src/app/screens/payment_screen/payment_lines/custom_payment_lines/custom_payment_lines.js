@@ -1,7 +1,7 @@
 /** @odoo-module **/
 
-import { Component, useState, onRendered, onWillUpdateProps, useRef } from "@odoo/owl";
-import { usePos } from "@point_of_sale/app/store/pos_hook";
+import { Component, useState, onMounted, onWillUpdateProps, useRef } from "@odoo/owl";
+import { usePos } from "@point_of_sale/app/hooks/pos_hook";
 import { useService } from "@web/core/utils/hooks";
 import { posState } from "../../../../shared_state";
 
@@ -22,9 +22,11 @@ export class CustomPaymentLines extends Component {
             rate: 1,
         });
 
-        this.loadRate().then(r => { this.state.rate = r || 1; });
+        this.loadRate().then(r => {
+            this.state.rate = r || 1;
+        });
 
-        onRendered(() => {
+        onMounted(() => {
             this.updateHasData();
         });
 
@@ -45,37 +47,23 @@ export class CustomPaymentLines extends Component {
 
     async onInputChange(event) {
         const val = parseFloat(event.target.value) || 0;
-        if (this.state.rate > 0) {
-            this.state.result = val / this.state.rate;
-        } else {
-            this.state.result = 0;
-        }
+        this.state.result = this.state.rate > 0 ? val / this.state.rate : 0;
         this.updateLastPaymentLine(this.state.result);
     }
 
     onBlur() {
         if (this.inputRef.el) {
-            this.inputRef.el.value = 0;
+            this.inputRef.el.value = '';
         }
         this.state.result = 0;
-        this.state.inputValue = 0;
-
-        // Auto-agregar primera línea de pago si no hay
-        const currentOrder = posState.getCurrentOrder();
-        const paymentMethods = this.pos.config.payment_method_ids.slice().sort((a, b) => a.sequence - b.sequence);
-        if (currentOrder && paymentMethods.length > 0 && (!this.props.paymentLines || this.props.paymentLines.length === 0)) {
-            currentOrder.add_paymentline(paymentMethods[0]);
-        }
     }
 
     updateLastPaymentLine(newValue) {
         const lines = this.props.paymentLines || [];
         if (lines.length > 0) {
             const lastLine = lines[lines.length - 1];
-            if (posState.is_igtf) {
-                // El IGTF se maneja desde la lógica en payment_screen.js
-            } else {
-                lastLine.amount = newValue;
+            if (!posState.is_igtf) {
+                lastLine.setAmount(newValue);
             }
         }
     }
@@ -93,11 +81,7 @@ export class CustomPaymentLines extends Component {
         }
     }
 
-    formatCurrency(value) {
-        // Usa el formateador del entorno POS si está disponible, o toFixed
-        if (this.env && this.env.utils && this.env.utils.formatCurrency) {
-            return this.env.utils.formatCurrency(value);
-        }
+    formatDecimal(value) {
         return Number(value).toFixed(2);
     }
 }

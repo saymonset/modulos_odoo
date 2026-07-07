@@ -6,10 +6,10 @@
                 <div class="payment-infos d-flex align-items-center justify-content-between flex-grow-1 px-3 py-3 text-truncate cursor-pointer fs-2">
                     <span class="payment-name">Bs. → USD</span>
                     <div class="payment-amount px-3">
-                        <input type="number" id="bsInput" t-ref="bsInput"
+                        <input type="number" t-ref="bsInput"
                                class="form-control border-0 border-bottom"
                                style="border-bottom: 2px solid #000;"
-                               placeholder="Monto en Bs."
+                               placeholder="Monto Bs."
                                t-on-input="onInputChange"
                                t-on-blur="onBlur"/>
                     </div>
@@ -17,7 +17,7 @@
                 <div class="payment-infos d-flex align-items-center justify-content-between flex-grow-1 px-3 py-3 text-truncate cursor-pointer fs-2">
                     <span class="payment-name">USD</span>
                     <div class="payment-amount px-3">
-                        <t t-esc="formatCurrency(state.result)"/>
+                        <t t-esc="formatDecimal(state.result)"/>
                     </div>
                 </div>
             </t>

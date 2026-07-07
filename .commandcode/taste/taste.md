@@ -8,4 +8,5 @@
 # odoo
 - Use declarative XML view inheritance (like sales views) over direct DB manipulation. Follow Odoo best practices. Confidence: 0.70
 - In QWeb templates, format monetary amounts using t-options="{'widget': 'monetary', 'display_currency': currency_var}" — never use format_amount() which doesn't exist in QWeb context. Confidence: 0.70
+- In Odoo 19 QWeb xpath expressions, use hasclass('class-name') instead of contains(@class, 'class-name') for class-based element selection — Odoo flags contains(@class) as error-prone. Confidence: 0.65
 

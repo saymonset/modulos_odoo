@@ -1,15 +1,7 @@
 {
     'name': 'POS Venezuela Dual Currency + IGTF',
     'summary': 'Referencias USD en POS, conversión Bs/USD e IGTF usando tasa BCV',
-    'description': """
-        Módulo POS para empresas venezolanas que trabajan con bolívares y dólares.
-        Reúsa la tasa BCV de bcv_rate_update_venezuela para:
-        - Mostrar referencia USD en cada línea del pedido
-        - Mostrar total en USD en el resumen del pedido
-        - Convertir montos Bs → USD en pantalla de pago
-        - Aplicar automáticamente el IGTF en métodos de pago marcados
-    """,
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.0.2',
     'category': 'Sales/Point of Sale',
     'author': 'Simon Alberto Rodriguez Pacheco',
     'website': 'https://github.com/simonrodriguezpacheco',
@@ -23,9 +15,23 @@
         'views/pos_payment_method_views.xml',
     ],
     'assets': {
-        'point_of_sale.assets': [
-            'pos_venezuela_dual_currency/static/src/**/*.js',
-            'pos_venezuela_dual_currency/static/src/**/*.xml',
+        'point_of_sale._assets_pos': [
+            'pos_venezuela_dual_currency/static/src/app/shared_state.js',
+            'pos_venezuela_dual_currency/static/src/app/screens/product_screen/control_buttons/control_buttons.js',
+            'pos_venezuela_dual_currency/static/src/app/screens/product_screen/control_buttons/control_buttons.xml',
+            'pos_venezuela_dual_currency/static/src/app/screens/product_screen/control_buttons/custom_button/custom_button.js',
+            'pos_venezuela_dual_currency/static/src/app/screens/product_screen/control_buttons/custom_button/custom_button.xml',
+            'pos_venezuela_dual_currency/static/src/app/screens/product_screen/order_widget/order_widget.js',
+            'pos_venezuela_dual_currency/static/src/app/screens/product_screen/order_widget/order_widget.xml',
+            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_screen/payment_screen.js',
+            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_lines/payment_lines.js',
+            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_lines/payment_lines.xml',
+            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_lines/custom_payment_lines/custom_payment_lines.js',
+            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_lines/custom_payment_lines/custom_payment_lines.xml',
+            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_status/payment_status.js',
+            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_status/payment_status.xml',
+            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_status/custom_payment_status/custom_payment_status.js',
+            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_status/custom_payment_status/custom_payment_status.xml',
         ],
     },
     'application': False,
