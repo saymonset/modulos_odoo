@@ -4,9 +4,15 @@ import { onWillStart, onWillUpdateProps } from "@odoo/owl";
 import { PaymentScreen } from "@point_of_sale/app/screens/payment_screen/payment_screen";
 import { posState } from "../../../shared_state";
 
+const _origSetup = PaymentScreen.prototype.setup;
+const _origAddNewPaymentLine = PaymentScreen.prototype.addNewPaymentLine;
+const _origDeletePaymentLine = PaymentScreen.prototype.deletePaymentLine;
+
 patch(PaymentScreen.prototype, {
     setup() {
-        this._super(...arguments);
+        if (_origSetup) {
+            _origSetup.call(this, ...arguments);
+        }
 
         onWillStart(() => {
             posState.setCurrentOrder(this.currentOrder);
@@ -20,7 +26,7 @@ patch(PaymentScreen.prototype, {
         posState.setPaymentMethodName(paymentMethod.name);
         posState.is_igtf = paymentMethod.is_igtf;
 
-        const result = await this._super(paymentMethod);
+        const result = await _origAddNewPaymentLine.call(this, paymentMethod);
 
         if (paymentMethod.is_igtf) {
             const lines = this.paymentLines;
@@ -38,6 +44,6 @@ patch(PaymentScreen.prototype, {
     async deletePaymentLine(uuid) {
         posState.setPaymentMethodName("");
         posState.is_igtf = false;
-        return this._super(uuid);
+        return _origDeletePaymentLine.call(this, uuid);
     },
 });

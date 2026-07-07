@@ -2,7 +2,8 @@
 
 import { OrderDisplay } from "@point_of_sale/app/components/order_display/order_display";
 import { patch } from "@web/core/utils/patch";
-import { useState, onWillUpdateProps } from "@odoo/owl";
+import { useState, onMounted, onWillUnmount } from "@odoo/owl";
+import { usePos } from "@point_of_sale/app/hooks/pos_hook";
 import { useService } from "@web/core/utils/hooks";
 
 const _origSetup = OrderDisplay.prototype.setup;
@@ -12,40 +13,45 @@ patch(OrderDisplay.prototype, {
         if (_origSetup) {
             _origSetup.call(this, ...arguments);
         }
+        this.pos = usePos();
         this.orm = useService("orm");
         this._usdState = useState({ rate: 1, orderTotal: 0 });
-        this._updateOrderTotal();
         this._loadRate();
 
-        onWillUpdateProps(() => {
-            this._updateOrderTotal();
+        onMounted(() => {
+            this._interval = setInterval(() => {
+                this._syncOrderTotal();
+            }, 500);
+        });
+
+        onWillUnmount(() => {
+            if (this._interval) {
+                clearInterval(this._interval);
+            }
         });
     },
 
-    _updateOrderTotal() {
-        const order = this.props.order;
+    _syncOrderTotal() {
+        const order = this.pos.getOrder();
         if (!order) return;
-        const total = order.total
-            || order.currencyDisplayPriceIncl
-            || (typeof order.getTotalDue === 'function' ? order.getTotalDue() : 0)
-            || 0;
-        this._usdState.orderTotal = total;
+        const total = order.getTotalDue
+            ? order.getTotalDue()
+            : (order.totalDue || order.total || 0);
+        if (total !== this._usdState.orderTotal) {
+            this._usdState.orderTotal = total;
+        }
     },
 
     _getRefTotal() {
         if (!this._usdState?.rate || this._usdState.rate <= 0) return 0;
-        const total = this._usdState.orderTotal || 0;
-        return total ? total / this._usdState.rate : 0;
+        return this._usdState.orderTotal / this._usdState.rate;
     },
 
     async _loadRate() {
         try {
-            const order = this.props.order;
-            if (!order) return;
-            const company = order.company_id || this.env.services?.pos?.company;
-            if (!company) return;
             const rate = await this.orm.call(
-                'product.template', 'get_bcv_rate_json', [company.id]
+                'product.template', 'get_bcv_rate_json',
+                [this.pos.company.id]
             );
             this._usdState.rate = rate || 1;
         } catch (e) {
