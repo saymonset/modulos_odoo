@@ -14,23 +14,27 @@ export class CustomButton extends Component {
         super.setup();
         this.pos = usePos();
         this.orm = useService("orm");
-        this.state = useState({ price: 0, rate: 1 });
+        this.state = useState({ rate: 1 });
 
         this.loadRate().then(rate => {
             this.state.rate = rate || 1;
-            this.updateRef();
         });
 
-        onWillUpdateProps((nextProps) => {
-            this.updateRef();
+        onWillUpdateProps(() => {
+            // force re-render to recompute getter
+            this.render();
         });
     }
 
-    updateRef() {
+    get priceInUSD() {
         const line = this.props.line;
-        if (!line) return;
-        const unitPrice = line.prices?.total_excluded_currency || line.price_unit || 0;
-        this.state.price = this.state.rate > 0 ? unitPrice / this.state.rate : 0;
+        if (!line || !this.state.rate) return 0;
+        try {
+            const unitPrice = line.prices?.total_excluded_currency || line.price_unit || 0;
+            return this.state.rate > 0 ? unitPrice / this.state.rate : 0;
+        } catch (_e) {
+            return 0;
+        }
     }
 
     async loadRate() {
@@ -47,6 +51,7 @@ export class CustomButton extends Component {
     }
 
     formatDecimal(value) {
+        if (value == null || isNaN(value)) return "0.00";
         return Number(value).toFixed(2);
     }
 }
