@@ -32,6 +32,8 @@
             'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_status/payment_status.xml',
             'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_status/custom_payment_status/custom_payment_status.js',
             'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_status/custom_payment_status/custom_payment_status.xml',
+            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/usd_total/usd_total.js',
+            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/usd_total/usd_total.xml',
         ],
     },
     'application': False,

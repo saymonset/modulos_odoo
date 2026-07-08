@@ -3,10 +3,18 @@ import { patch } from '@web/core/utils/patch';
 import { onWillStart, onWillUpdateProps } from "@odoo/owl";
 import { PaymentScreen } from "@point_of_sale/app/screens/payment_screen/payment_screen";
 import { posState } from "../../../shared_state";
+import { PaymentScreenDueUsd } from "../usd_total/usd_total";
 
 const _origSetup = PaymentScreen.prototype.setup;
 const _origAddNewPaymentLine = PaymentScreen.prototype.addNewPaymentLine;
 const _origDeletePaymentLine = PaymentScreen.prototype.deletePaymentLine;
+
+patch(PaymentScreen, {
+    components: {
+        ...PaymentScreen.components,
+        PaymentScreenDueUsd,
+    },
+});
 
 patch(PaymentScreen.prototype, {
     setup() {
