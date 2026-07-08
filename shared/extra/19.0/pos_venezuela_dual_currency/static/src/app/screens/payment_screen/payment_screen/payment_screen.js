@@ -5,10 +5,6 @@ import { PaymentScreen } from "@point_of_sale/app/screens/payment_screen/payment
 import { posState } from "../../../shared_state";
 import { PaymentScreenDueUsd } from "../usd_total/usd_total";
 
-const _origSetup = PaymentScreen.prototype.setup;
-const _origAddNewPaymentLine = PaymentScreen.prototype.addNewPaymentLine;
-const _origDeletePaymentLine = PaymentScreen.prototype.deletePaymentLine;
-
 patch(PaymentScreen, {
     components: {
         ...PaymentScreen.components,
@@ -18,9 +14,7 @@ patch(PaymentScreen, {
 
 patch(PaymentScreen.prototype, {
     setup() {
-        if (_origSetup) {
-            _origSetup.call(this, ...arguments);
-        }
+        super.setup(...arguments);
 
         onWillStart(() => {
             posState.setCurrentOrder(this.currentOrder);
@@ -34,15 +28,21 @@ patch(PaymentScreen.prototype, {
         posState.setPaymentMethodName(paymentMethod.name);
         posState.is_igtf = paymentMethod.is_igtf;
 
-        const result = await _origAddNewPaymentLine.call(this, paymentMethod);
+        const result = await super.addNewPaymentLine(paymentMethod);
 
         if (paymentMethod.is_igtf) {
             const lines = this.paymentLines;
             if (lines.length > 0) {
                 const lastLine = lines[lines.length - 1];
-                const totalDue = this.currentOrder?.remainingDue || 0;
-                const igtfAmount = ((paymentMethod.igtf_percentage / 100) * totalDue) * -1;
-                lastLine.setAmount(igtfAmount);
+                if (lastLine) {
+                    const totalDue = this.currentOrder?.remainingDue || 0;
+                    const igtfAmount = ((paymentMethod.igtf_percentage / 100) * totalDue) * -1;
+                    try {
+                        lastLine.setAmount(igtfAmount);
+                    } catch (_) {
+                        console.warn("pos_venezuela_dual_currency: IGTF setAmount failed", _);
+                    }
+                }
             }
         }
 
@@ -52,6 +52,6 @@ patch(PaymentScreen.prototype, {
     async deletePaymentLine(uuid) {
         posState.setPaymentMethodName("");
         posState.is_igtf = false;
-        return _origDeletePaymentLine.call(this, uuid);
+        return super.deletePaymentLine(uuid);
     },
 });

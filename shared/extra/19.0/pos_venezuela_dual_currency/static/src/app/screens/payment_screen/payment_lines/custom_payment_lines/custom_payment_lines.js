@@ -101,7 +101,14 @@ export class CustomPaymentLines extends Component {
         const target = selectedLine || lines[lines.length - 1];
 
         if (!posState.is_igtf) {
-            target.setAmount(bsAmount);
+            try {
+                target.setAmount(bsAmount);
+            } catch (_) {
+                console.warn("pos_venezuela_dual_currency: setAmount failed", _);
+            }
+            target.currency_type = this.state.selectedCurrency;
+            target.amount_foreign = parseFloat(this.state.inputAmount) || 0;
+            target.rate_applied = this.state.rate;
         }
 
         this.state.inputAmount = "";

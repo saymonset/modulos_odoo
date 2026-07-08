@@ -8,15 +8,18 @@
     'license': 'LGPL-3',
     'depends': [
         'point_of_sale',
+        'pos_online_payment',
         'bcv_rate_update_venezuela',
     ],
     'data': [
         'security/ir.model.access.csv',
         'views/pos_payment_method_views.xml',
+        'views/pos_payment_views.xml',
     ],
     'assets': {
         'point_of_sale._assets_pos': [
             'pos_venezuela_dual_currency/static/src/app/shared_state.js',
+            'pos_venezuela_dual_currency/static/src/app/models/pos_order.js',
             'pos_venezuela_dual_currency/static/src/app/screens/product_screen/control_buttons/control_buttons.js',
             'pos_venezuela_dual_currency/static/src/app/screens/product_screen/control_buttons/control_buttons.xml',
             'pos_venezuela_dual_currency/static/src/app/screens/product_screen/control_buttons/custom_button/custom_button.js',
