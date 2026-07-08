@@ -8,7 +8,8 @@
         <field name="arch" type="xml">
             <field name="amount" position="after">
                 <field name="currency_type" optional="show"/>
-                <field name="amount_foreign" optional="show" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                <field name="currency_usd_id" column_invisible="True"/>
+                <field name="amount_foreign" optional="show" widget="monetary" options="{'currency_field': 'currency_usd_id'}"/>
                 <field name="rate_applied" optional="show"/>
             </field>
         </field>
@@ -21,7 +22,8 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='payment_ids']/list/field[@name='amount']" position="after">
                 <field name="currency_type" optional="show"/>
-                <field name="amount_foreign" optional="show" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                <field name="currency_usd_id" column_invisible="True"/>
+                <field name="amount_foreign" optional="show" widget="monetary" options="{'currency_field': 'currency_usd_id'}"/>
                 <field name="rate_applied" optional="show"/>
             </xpath>
         </field>

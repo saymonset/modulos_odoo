@@ -21,9 +21,7 @@ export class PaymentScreenDueUsd extends Component {
             this._interval = setInterval(() => {
                 const order = this.pos.getOrder();
                 if (!order) return;
-                const total = order.getTotalDue
-                    ? order.getTotalDue()
-                    : (order.totalDue || 0);
+                const total = order.remainingDue || 0;
                 if (total !== this.state.orderTotalBs) {
                     this.state.orderTotalBs = total;
                 }

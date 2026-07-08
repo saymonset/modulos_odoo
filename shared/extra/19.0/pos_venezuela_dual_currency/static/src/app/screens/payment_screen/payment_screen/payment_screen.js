@@ -42,6 +42,21 @@ patch(PaymentScreen.prototype, {
                     } catch (_) {
                         console.warn("pos_venezuela_dual_currency: IGTF setAmount failed", _);
                     }
+
+                    let rate = 0;
+                    try {
+                        rate = await this.env.services.orm.call(
+                            "product.template",
+                            "get_bcv_rate_json",
+                            [this.pos.company.id]
+                        );
+                    } catch (_) {}
+
+                    lastLine.currency_type = 'bs';
+                    lastLine.rate_applied = rate || 0;
+                    lastLine.amount_foreign = rate > 0
+                        ? Math.round((igtfAmount / rate) * 100) / 100
+                        : 0;
                 }
             }
         }
