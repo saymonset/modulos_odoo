@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onMounted, onWillUnmount, useRef } from "@odoo/owl";
+import { Component, useState, onMounted, onWillUnmount } from "@odoo/owl";
 import { usePos } from "@point_of_sale/app/hooks/pos_hook";
 import { useService } from "@web/core/utils/hooks";
 import { posState } from "../../../../shared_state";
@@ -15,95 +15,122 @@ export class CustomPaymentLines extends Component {
         super.setup();
         this.pos = usePos();
         this.orm = useService("orm");
-        this.inputRef = useRef("bsInput");
-        this._userEdited = false;
+
         this.state = useState({
             rate: 1,
-            inputBs: 0,
-            resultUsd: 0,
-        });
-
-        this.loadRate().then(r => {
-            this.state.rate = r || 1;
-            this._autoFill();
+            rateLoaded: false,
+            selectedCurrency: "usd",
+            inputAmount: "",
+            inputFocused: false,
         });
 
         onMounted(() => {
-            this._autoFill();
-            this._interval = setInterval(() => {
-                this._syncRateAndUpdateResult();
-            }, 500);
+            this.loadRate();
+            this._rateInterval = setInterval(() => this.loadRate(), 60000);
         });
 
         onWillUnmount(() => {
-            if (this._interval) {
-                clearInterval(this._interval);
-            }
+            if (this._rateInterval) clearInterval(this._rateInterval);
         });
     }
 
-    _autoFill() {
-        if (this._userEdited) return;
-        const order = this.pos.getOrder();
-        if (!order) return;
-        const totalBs = order.getTotalDue
-            ? order.getTotalDue()
-            : (order.totalDue || 0);
-        this.state.inputBs = totalBs;
-        this.state.resultUsd = this.state.rate > 0 ? totalBs / this.state.rate : 0;
+    // ── Available currencies (extensible) ──
+    get currencies() {
+        return [
+            { id: "bs", symbol: "Bs.", label: "Bolívares", rate: 1 },
+            { id: "usd", symbol: "US$", label: "Dólares", rate: this.state.rate || 1 },
+        ];
     }
 
-    _syncRateAndUpdateResult() {
-        // If user hasn't edited, auto-fill with current total
-        if (!this._userEdited) {
-            const order = this.pos.getOrder();
-            if (!order) return;
-            const totalBs = order.getTotalDue
-                ? order.getTotalDue()
-                : (order.totalDue || 0);
-            if (Math.abs(this.state.inputBs - totalBs) > 0.001) {
-                this.state.inputBs = totalBs;
-            }
+    get activeCurrency() {
+        return this.currencies.find((c) => c.id === this.state.selectedCurrency)
+            || this.currencies[0];
+    }
+
+    get convertedBs() {
+        const val = parseFloat(this.state.inputAmount) || 0;
+        if (this.state.selectedCurrency === "bs") return val;
+        return val * (this.state.rate || 1);
+    }
+
+    get displayConversion() {
+        const val = parseFloat(this.state.inputAmount) || 0;
+        if (val === 0) return null;
+        if (this.state.selectedCurrency === "usd") {
+            return { label: "Bs.", value: this.convertedBs };
         }
-        this.state.resultUsd = this.state.rate > 0 ? this.state.inputBs / this.state.rate : 0;
+        return { label: "US$", value: this.state.rate > 0 ? val / this.state.rate : 0 };
     }
 
-    onInputChange(event) {
-        this._userEdited = true;
-        const val = parseFloat(event.target.value) || 0;
-        this.state.inputBs = val;
-        this.state.resultUsd = this.state.rate > 0 ? val / this.state.rate : 0;
-        this.updateLastPaymentLine(this.state.resultUsd);
+    get canApply() {
+        return parseFloat(this.state.inputAmount) > 0
+            && this.props.paymentLines
+            && this.props.paymentLines.length > 0;
     }
 
-    onBlur() {
-        if (this.inputRef.el) {
-            this.updateLastPaymentLine(this.state.resultUsd);
+    // ── Actions ──
+
+    selectCurrency(currencyId) {
+        if (currencyId === this.state.selectedCurrency) return;
+        this.state.selectedCurrency = currencyId;
+        this.state.inputAmount = "";
+    }
+
+    onInputChange(ev) {
+        const raw = ev.target.value;
+        if (raw === "") {
+            this.state.inputAmount = "";
+            return;
+        }
+        let sanitized = raw.replace(/,/g, "").replace(/^0+(\d)/, "$1");
+        if (sanitized === ".") sanitized = "0.";
+        if (sanitized.startsWith(".")) sanitized = "0" + sanitized;
+        if (/^-?\d*\.?\d*$/.test(sanitized)) {
+            this.state.inputAmount = sanitized;
         }
     }
 
-    updateLastPaymentLine(newValue) {
-        const lines = this.props.paymentLines || [];
-        if (lines.length > 0) {
-            const lastLine = lines[lines.length - 1];
-            if (!posState.is_igtf) {
-                lastLine.setAmount(newValue);
-            }
+    applyToPaymentLine() {
+        if (!this.canApply) return;
+        const bsAmount = Math.round(this.convertedBs * 100) / 100;
+        const lines = this.props.paymentLines;
+
+        if (lines.length === 0) return;
+
+        const selectedLine = lines.find((l) => l.isSelected());
+        const target = selectedLine || lines[lines.length - 1];
+
+        if (!posState.is_igtf) {
+            target.setAmount(bsAmount);
+        }
+
+        this.state.inputAmount = "";
+    }
+
+    onKeydown(ev) {
+        if (ev.key === "Enter") {
+            this.applyToPaymentLine();
         }
     }
+
+    // ── Rate ──
 
     async loadRate() {
         try {
             const rate = await this.orm.call(
-                'product.template', 'get_bcv_rate_json',
+                "product.template",
+                "get_bcv_rate_json",
                 [this.pos.company.id]
             );
-            return rate;
+            this.state.rate = rate || 1;
+            this.state.rateLoaded = true;
         } catch (e) {
             console.error("Error al obtener tasa BCV:", e);
-            return 1;
+            this.state.rateLoaded = true;
         }
     }
+
+    // ── Formatting ──
 
     formatDecimal(value) {
         if (value == null || isNaN(value)) return "0.00";
