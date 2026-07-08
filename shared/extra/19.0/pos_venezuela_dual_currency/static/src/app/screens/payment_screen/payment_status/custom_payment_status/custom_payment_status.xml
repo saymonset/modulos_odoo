@@ -4,7 +4,7 @@
         <div class="payment-status d-flex align-items-center justify-content-between px-3 py-2">
             <span class="fw-bold">Total USD:</span>
             <span class="fw-bold">
-                <t t-esc="formatDecimal(getRefTotal())"/>
+                <t t-esc="formatDecimal(usdTotal)"/>
             </span>
         </div>
     </t>

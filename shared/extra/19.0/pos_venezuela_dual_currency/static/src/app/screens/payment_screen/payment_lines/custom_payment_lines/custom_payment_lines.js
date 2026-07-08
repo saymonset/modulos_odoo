@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onMounted, onWillUpdateProps, useRef } from "@odoo/owl";
+import { Component, useState, onMounted, onWillUnmount, useRef } from "@odoo/owl";
 import { usePos } from "@point_of_sale/app/hooks/pos_hook";
 import { useService } from "@web/core/utils/hooks";
 import { posState } from "../../../../shared_state";
@@ -16,46 +16,70 @@ export class CustomPaymentLines extends Component {
         this.pos = usePos();
         this.orm = useService("orm");
         this.inputRef = useRef("bsInput");
+        this._userEdited = false;
         this.state = useState({
-            result: 0,
-            hasData: false,
             rate: 1,
+            inputBs: 0,
+            resultUsd: 0,
         });
 
         this.loadRate().then(r => {
             this.state.rate = r || 1;
+            this._autoFill();
         });
 
         onMounted(() => {
-            this.updateHasData();
+            this._autoFill();
+            this._interval = setInterval(() => {
+                this._syncRateAndUpdateResult();
+            }, 500);
         });
 
-        onWillUpdateProps((nextProps) => {
-            if (nextProps.paymentLines) {
-                this.updateHasData(nextProps.paymentLines);
+        onWillUnmount(() => {
+            if (this._interval) {
+                clearInterval(this._interval);
             }
         });
     }
 
-    updateHasData(paymentLines) {
-        const lines = paymentLines || this.props.paymentLines || [];
-        this.state.hasData = lines.length > 0;
-        if (!this.state.hasData) {
-            this.state.result = 0;
-        }
+    _autoFill() {
+        if (this._userEdited) return;
+        const order = this.pos.getOrder();
+        if (!order) return;
+        const totalBs = order.getTotalDue
+            ? order.getTotalDue()
+            : (order.totalDue || 0);
+        this.state.inputBs = totalBs;
+        this.state.resultUsd = this.state.rate > 0 ? totalBs / this.state.rate : 0;
     }
 
-    async onInputChange(event) {
+    _syncRateAndUpdateResult() {
+        // If user hasn't edited, auto-fill with current total
+        if (!this._userEdited) {
+            const order = this.pos.getOrder();
+            if (!order) return;
+            const totalBs = order.getTotalDue
+                ? order.getTotalDue()
+                : (order.totalDue || 0);
+            if (Math.abs(this.state.inputBs - totalBs) > 0.001) {
+                this.state.inputBs = totalBs;
+            }
+        }
+        this.state.resultUsd = this.state.rate > 0 ? this.state.inputBs / this.state.rate : 0;
+    }
+
+    onInputChange(event) {
+        this._userEdited = true;
         const val = parseFloat(event.target.value) || 0;
-        this.state.result = this.state.rate > 0 ? val / this.state.rate : 0;
-        this.updateLastPaymentLine(this.state.result);
+        this.state.inputBs = val;
+        this.state.resultUsd = this.state.rate > 0 ? val / this.state.rate : 0;
+        this.updateLastPaymentLine(this.state.resultUsd);
     }
 
     onBlur() {
         if (this.inputRef.el) {
-            this.inputRef.el.value = '';
+            this.updateLastPaymentLine(this.state.resultUsd);
         }
-        this.state.result = 0;
     }
 
     updateLastPaymentLine(newValue) {
@@ -82,6 +106,7 @@ export class CustomPaymentLines extends Component {
     }
 
     formatDecimal(value) {
+        if (value == null || isNaN(value)) return "0.00";
         return Number(value).toFixed(2);
     }
 }
