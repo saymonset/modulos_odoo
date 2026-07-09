@@ -63,6 +63,27 @@ patch(PaymentScreen.prototype, {
                         : 0;
                 }
             }
+        } else {
+            const lines = this.paymentLines;
+            if (lines.length > 0) {
+                const lastLine = lines[lines.length - 1];
+                if (lastLine && !lastLine.currency_type) {
+                    let rate = 0;
+                    try {
+                        rate = await this.env.services.orm.call(
+                            "product.template",
+                            "get_bcv_rate_json",
+                            [this.pos.company.id]
+                        );
+                    } catch (_) {}
+
+                    lastLine.currency_type = 'bs';
+                    lastLine.rate_applied = rate || 0;
+                    lastLine.amount_foreign = rate > 0
+                        ? Math.round((lastLine.amount / rate) * 100) / 100
+                        : 0;
+                }
+            }
         }
 
         return result;

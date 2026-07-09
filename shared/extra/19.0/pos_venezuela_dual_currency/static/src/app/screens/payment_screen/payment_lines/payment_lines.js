@@ -9,3 +9,9 @@ patch(PaymentScreenPaymentLines, {
         CustomPaymentLines,
     },
 });
+
+patch(PaymentScreenPaymentLines.prototype, {
+    get reversedLines() {
+        return [...(this.props.paymentLines || [])].reverse();
+    },
+});

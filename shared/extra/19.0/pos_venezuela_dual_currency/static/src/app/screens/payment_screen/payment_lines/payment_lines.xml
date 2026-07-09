@@ -6,5 +6,8 @@
                 paymentLines="props.paymentLines"
             />
         </xpath>
+        <xpath expr="//div[hasclass('paymentlines')]/t[@t-foreach]" position="attributes">
+            <attribute name="t-foreach">this.reversedLines</attribute>
+        </xpath>
     </t>
 </templates>

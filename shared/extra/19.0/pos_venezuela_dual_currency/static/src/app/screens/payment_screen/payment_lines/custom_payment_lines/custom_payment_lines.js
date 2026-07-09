@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onMounted, onWillUnmount } from "@odoo/owl";
+import { Component, useState, onMounted, onWillUnmount, onWillUpdateProps } from "@odoo/owl";
 import { usePos } from "@point_of_sale/app/hooks/pos_hook";
 import { useService } from "@web/core/utils/hooks";
 import { posState } from "../../../../shared_state";
@@ -19,7 +19,7 @@ export class CustomPaymentLines extends Component {
         this.state = useState({
             rate: 1,
             rateLoaded: false,
-            selectedCurrency: "usd",
+            selectedCurrency: "bs",
             inputAmount: "",
             inputFocused: false,
         });
@@ -31,6 +31,15 @@ export class CustomPaymentLines extends Component {
 
         onWillUnmount(() => {
             if (this._rateInterval) clearInterval(this._rateInterval);
+        });
+
+        onWillUpdateProps((nextProps) => {
+            const prevLen = (this.props.paymentLines || []).length;
+            const nextLen = (nextProps.paymentLines || []).length;
+            if (nextLen > prevLen) {
+                this.state.selectedCurrency = "bs";
+                this.state.inputAmount = "";
+            }
         });
     }
 
