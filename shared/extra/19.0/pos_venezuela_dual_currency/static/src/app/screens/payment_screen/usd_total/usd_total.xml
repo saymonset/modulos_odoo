@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="pos_venezuela_dual_currency.PaymentScreenDueUsd">
+        <div class="text-center text-muted fw-bold"
+            t-att-style="this.env.services.ui.isSmall ? '' : 'font-size: 50px; margin-top: -10px;'">
+            $<t t-esc="formatDecimal(usdTotal)"/>
+        </div>
+    </t>
+
+    <t t-inherit="point_of_sale.PaymentScreenDue" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('total')]" position="after">
+            <PaymentScreenDueUsd/>
+        </xpath>
+    </t>
+
+</templates>

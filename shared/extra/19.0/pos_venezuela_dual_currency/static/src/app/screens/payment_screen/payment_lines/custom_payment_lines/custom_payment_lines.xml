@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="pos_venezuela_dual_currency.CustomPaymentLines">
+        <div class="paymentlines currency-converter d-flex flex-column gap-2 mb-3">
+            <!-- Header -->
+            <div class="d-flex align-items-center justify-content-between px-1">
+                <span class="fw-bold text-muted small text-uppercase">Convertir y Aplicar</span>
+                <span t-if="state.rateLoaded" class="text-muted small">
+                    Tasa: <t t-esc="formatDecimal(state.rate)"/> Bs/US$
+                </span>
+            </div>
+
+            <!-- Currency Toggle -->
+            <div class="d-flex gap-1">
+                <t t-foreach="currencies" t-as="currency" t-key="currency.id">
+                    <button class="btn btn-sm flex-fill text-truncate"
+                        t-att-class="{
+                            'btn-primary fw-bold': state.selectedCurrency === currency.id,
+                            'btn-secondary': state.selectedCurrency !== currency.id,
+                        }"
+                        t-on-click="() => this.selectCurrency(currency.id)">
+                        <t t-esc="currency.symbol"/> <t t-esc="currency.label"/>
+                    </button>
+                </t>
+            </div>
+
+            <!-- Input Row -->
+            <div class="input-group">
+                <span class="input-group-text fw-bold bg-light">
+                    <t t-esc="activeCurrency.symbol"/>
+                </span>
+                <input type="text" class="form-control form-control-lg text-end fw-bold"
+                    inputmode="decimal"
+                    placeholder="0.00"
+                    t-att-value="state.inputAmount"
+                    t-on-input="(ev) => this.onInputChange(ev)"
+                    t-on-keydown="(ev) => this.onKeydown(ev)"
+                    t-on-focus="() => state.inputFocused = true"
+                    t-on-blur="() => state.inputFocused = false"/>
+                <button class="btn btn-primary px-3"
+                    t-att-disabled="!canApply"
+                    t-on-click="() => this.applyToPaymentLine()">
+                    <i class="fa fa-check"/>
+                </button>
+            </div>
+
+            <!-- Conversion Preview -->
+            <div t-if="displayConversion" class="d-flex justify-content-center align-items-center gap-2 py-1">
+                <i class="fa fa-exchange text-muted"/>
+                <span class="fw-bold fs-5"><t t-esc="displayConversion.label"/> <t t-esc="formatDecimal(displayConversion.value)"/></span>
+            </div>
+
+            <!-- Remaining Due Hint -->
+            <div t-if="state.inputFocused and props.paymentLines and props.paymentLines.length > 0"
+                class="text-center text-muted small">
+                Presiona <strong>Enter</strong> o <i class="fa fa-check"/> para aplicar al método de pago seleccionado
+            </div>
+        </div>
+    </t>
+
+</templates>

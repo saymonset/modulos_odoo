@@ -34,33 +34,21 @@ class SaleOrderLine(models.Model):
         })
         return res
 
-    @api.depends('price_unit', 'product_uom_qty')
+    @api.depends('price_unit', 'product_uom_qty', 'discount')
     def _compute_usd_bcv(self):
         for line in self:
-            main_provider = self.env['currency.rate.provider'].sudo().search([
-                ('company_id', '=', line.order_id.company_id.id),
-                ('provider_type', '=', 'bcv'),
-                ('active', '=', True),
-            ], limit=1)
-
-            rate_val = 0.0
-            if main_provider:
-                rate_val = main_provider.last_rate
-
-            if not rate_val:
-                rate = self.env['res.currency.rate'].search([
-                    ('currency_id.name', '=', 'USD'),
-                    ('company_id', '=', line.order_id.company_id.id),
-                ], order='name desc', limit=1)
-                if rate:
-                    rate_val = rate.original_value
-
-            if not rate_val:
-                line.price_usd_bcv = 0.0
-                line.price_subtotal_usd_bcv = 0.0
-                line.rate_value = 0.0
-                continue
-
+            rate_val = self.env['product.template']._get_bcv_rate(line.order_id.company_id)
             line.rate_value = rate_val
-            line.price_usd_bcv = float_round(line.price_unit / rate_val, precision_digits=2)
-            line.price_subtotal_usd_bcv = float_round(line.price_usd_bcv * line.product_uom_qty, precision_digits=2)
+
+            if line.product_id and line.product_id.list_price_usd and line.product_id.list_price:
+                ratio = line.price_unit / line.product_id.list_price
+                line.price_usd_bcv = float_round(line.product_id.list_price_usd * ratio, precision_digits=2)
+            elif rate_val:
+                line.price_usd_bcv = float_round(line.price_unit / rate_val, precision_digits=2)
+            else:
+                line.price_usd_bcv = 0.0
+
+            line.price_subtotal_usd_bcv = float_round(
+                line.price_usd_bcv * line.product_uom_qty * (1 - line.discount / 100),
+                precision_digits=2
+            )

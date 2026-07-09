@@ -5,11 +5,10 @@
     <template id="products_item_price_usd" inherit_id="website_sale.products_item" name="Product Grid Price with USD">
         <xpath expr="//div[hasclass('product_price')]" position="after">
             <div class="product_price_usd_container mt-1">
-                <t t-set="rate_info" t-value="website.get_bcv_rate_info()"/>
                 <t t-set="usd_currency" t-value="website.env['res.currency'].search([('name','=','USD')], limit=1)"/>
                 <div class="product_price_usd text-muted small">
-                    <t t-if="rate_info.get('rate') and rate_info.get('rate') != 1.0">
-                        <span t-out="product.list_price * website.get_conversion_factor_ves_to_usd()"
+                    <t t-if="product.list_price_usd">
+                        <span t-out="product.list_price_usd"
                               t-options="{'widget': 'monetary', 'display_currency': usd_currency}"/>
                     </t>
                     <t t-else="">
@@ -24,11 +23,10 @@
     <template id="product_price_usd" inherit_id="website_sale.product_price" name="Product Detail Price with USD">
         <xpath expr="//div[@name='product_price_container']" position="after">
             <div class="product_price_usd_detail_container mt-2">
-                <t t-set="rate_info" t-value="website.get_bcv_rate_info()"/>
                 <t t-set="usd_currency" t-value="website.env['res.currency'].search([('name','=','USD')], limit=1)"/>
                 <div class="text-muted mb-1">
-                    <t t-if="rate_info.get('rate') and rate_info.get('rate') != 1.0">
-                        <span class="h5" t-out="combination_info['price'] * website.get_conversion_factor_ves_to_usd()"
+                    <t t-if="product.list_price_usd">
+                        <span class="h5" t-out="product.list_price_usd"
                               t-options="{'widget': 'monetary', 'display_currency': usd_currency}"/>
                     </t>
                     <t t-else="">

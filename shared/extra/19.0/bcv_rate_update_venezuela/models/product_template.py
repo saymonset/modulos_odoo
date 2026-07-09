@@ -120,22 +120,23 @@ class ProductTemplate(models.Model):
     def _get_bcv_rate(self, company):
         if not company:
             company = self.env.company
+        # Read from res.currency.rate FIRST (has the latest value, updated
+        # before provider.last_rate in the update flow)
+        rate = self.env['res.currency.rate'].search([
+            ('currency_id.name', '=', 'USD'),
+            ('company_id', '=', company.id),
+        ], order='name desc', limit=1)
+        if rate and rate.original_value:
+            return rate.original_value
+        # Fallback to provider.last_rate
         main_provider = self.env['currency.rate.provider'].sudo().search([
             ('company_id', '=', company.id),
             ('provider_type', '=', 'bcv'),
             ('active', '=', True),
         ], limit=1)
-        rate_val = 0.0
-        if main_provider:
-            rate_val = main_provider.last_rate
-        if not rate_val:
-            rate = self.env['res.currency.rate'].search([
-                ('currency_id.name', '=', 'USD'),
-                ('company_id', '=', company.id),
-            ], order='name desc', limit=1)
-            if rate:
-                rate_val = rate.original_value
-        return rate_val or 1.0
+        if main_provider and main_provider.last_rate:
+            return main_provider.last_rate
+        return 1.0
 
     @api.model
     def _recalculate_ves_prices_from_usd(self):
@@ -146,7 +147,9 @@ class ProductTemplate(models.Model):
                 continue
             templates = self.env['product.template'].search([
                 ('list_price_usd', '>', 0),
+                '|',
                 ('company_id', '=', company.id),
+                ('company_id', '=', False),
             ])
             for t in templates:
                 t.with_context(_skip_bcv_sync=True).write({
@@ -154,7 +157,9 @@ class ProductTemplate(models.Model):
                 })
             attr_values = self.env['product.template.attribute.value'].search([
                 ('price_extra_usd', '!=', 0),
+                '|',
                 ('product_tmpl_id.company_id', '=', company.id),
+                ('product_tmpl_id.company_id', '=', False),
             ])
             for a in attr_values:
                 a.with_context(_skip_bcv_sync=True).write({
@@ -163,13 +168,15 @@ class ProductTemplate(models.Model):
             # Recalcular costos desde standard_price_usd
             products = self.env['product.product'].search([
                 ('standard_price_usd', '>', 0),
+                '|',
                 ('company_id', '=', company.id),
+                ('company_id', '=', False),
             ])
             for p in products:
                 p.with_context(_skip_bcv_sync=True).write({
                     'standard_price': float_round(p.standard_price_usd * rate, precision_digits=2),
                 })
-        _logger.info("Precios VES recalculados desde USD para todas las compañías.")
+        _logger.info("Precios VES recalculados desde USD para todas las compañías (incluyendo productos globales).")
 
 
 class ProductProduct(models.Model):
