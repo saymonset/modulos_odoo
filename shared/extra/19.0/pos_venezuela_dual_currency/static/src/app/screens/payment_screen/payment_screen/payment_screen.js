@@ -30,6 +30,12 @@ patch(PaymentScreen.prototype, {
 
         const result = await super.addNewPaymentLine(paymentMethod);
 
+        console.log("IGTF DEBUG", {
+            is_igtf: paymentMethod.is_igtf,
+            igtf_percentage: paymentMethod.igtf_percentage,
+            remainingDue: this.currentOrder?.remainingDue,
+        });
+
         if (paymentMethod.is_igtf) {
             const lines = this.paymentLines;
             if (lines.length > 0) {

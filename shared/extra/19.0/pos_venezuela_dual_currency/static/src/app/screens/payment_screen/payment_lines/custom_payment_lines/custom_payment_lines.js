@@ -107,8 +107,14 @@ export class CustomPaymentLines extends Component {
                 console.warn("pos_venezuela_dual_currency: setAmount failed", _);
             }
             target.currency_type = this.state.selectedCurrency;
-            target.amount_foreign = parseFloat(this.state.inputAmount) || 0;
             target.rate_applied = this.state.rate;
+            if (this.state.selectedCurrency === "usd") {
+                target.amount_foreign = parseFloat(this.state.inputAmount) || 0;
+            } else {
+                target.amount_foreign = this.state.rate > 0
+                    ? Math.round((bsAmount / this.state.rate) * 100) / 100
+                    : 0;
+            }
         }
 
         this.state.inputAmount = "";
