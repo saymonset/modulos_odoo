@@ -76,3 +76,5 @@ def _populate_initial_usd_prices(env):
 def _post_init_hook(env):
     _clean_orphan_views(env)
     _populate_initial_usd_prices(env)
+    # Recalculate Bs prices from USD with the current rate
+    env['product.template']._recalculate_ves_prices_from_usd()
