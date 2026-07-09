@@ -9,7 +9,7 @@
             <field name="amount" position="after">
                 <field name="currency_type" optional="show"/>
                 <field name="currency_usd_id" column_invisible="True"/>
-                <field name="amount_foreign" optio0nal="show" widget="monetary" options="{'currency_field': 'currency_usd_id'}"/>
+                <field name="amount_foreign" optional="show" widget="monetary" options="{'currency_field': 'currency_usd_id'}"/>
                 <field name="rate_applied" optional="show"/>
             </field>
         </field>
