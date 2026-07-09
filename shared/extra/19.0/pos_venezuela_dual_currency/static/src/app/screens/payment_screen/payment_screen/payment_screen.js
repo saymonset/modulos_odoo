@@ -28,21 +28,19 @@ patch(PaymentScreen.prototype, {
         posState.setPaymentMethodName(paymentMethod.name);
         posState.is_igtf = paymentMethod.is_igtf;
 
-        const result = await super.addNewPaymentLine(paymentMethod);
+        // Capture remainingDue BEFORE super creates the payment line,
+        // because addPaymentline() sets the line amount to remainingDue
+        // and then remainingDue becomes 0.
+        const dueBefore = this.currentOrder?.remainingDue || 0;
 
-        console.log("IGTF DEBUG", {
-            is_igtf: paymentMethod.is_igtf,
-            igtf_percentage: paymentMethod.igtf_percentage,
-            remainingDue: this.currentOrder?.remainingDue,
-        });
+        const result = await super.addNewPaymentLine(paymentMethod);
 
         if (paymentMethod.is_igtf) {
             const lines = this.paymentLines;
             if (lines.length > 0) {
                 const lastLine = lines[lines.length - 1];
                 if (lastLine) {
-                    const totalDue = this.currentOrder?.remainingDue || 0;
-                    const igtfAmount = ((paymentMethod.igtf_percentage / 100) * totalDue) * -1;
+                    const igtfAmount = ((paymentMethod.igtf_percentage / 100) * dueBefore) * -1;
                     try {
                         lastLine.setAmount(igtfAmount);
                     } catch (_) {
