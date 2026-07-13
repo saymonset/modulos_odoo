@@ -26,8 +26,8 @@ class PurchaseOrderLine(models.Model):
         store=True,
     )
 
-    def _prepare_account_move_line(self, move=False):
-        res = super()._prepare_account_move_line(move=move)
+    def _prepare_account_move_line(self, *args, **kwargs):
+        res = super()._prepare_account_move_line(*args, **kwargs)
         res.update({
             'price_usd_bcv': self.price_usd_bcv,
             'bcv_rate_value': self.rate_value,
