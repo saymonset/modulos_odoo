@@ -21,7 +21,7 @@ class AccountMove(models.Model):
     def _compute_currency_aux(self):
         usd = self.env.ref('base.USD', raise_if_not_found=False)
         for move in self:
-            move.currency_aux = usd
+            move.currency_aux = usd if usd else move.company_id.currency_id
 
     @api.depends('line_ids.price_subtotal_usd_bcv')
     def _compute_amount_total_usd(self):
