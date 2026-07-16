@@ -51,7 +51,10 @@ export class CustomButton extends Component {
     }
 
     formatDecimal(value) {
-        if (value == null || isNaN(value)) return "0.00";
-        return Number(value).toFixed(2);
+        if (value == null || isNaN(value)) return "0,00";
+        return Number(value).toLocaleString("es-VE", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
     }
 }

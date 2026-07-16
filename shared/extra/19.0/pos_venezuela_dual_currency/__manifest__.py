@@ -18,6 +18,7 @@
     ],
     'assets': {
         'point_of_sale._assets_pos': [
+            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_screen/payment_screen.css',
             'pos_venezuela_dual_currency/static/src/app/shared_state.js',
             'pos_venezuela_dual_currency/static/src/app/models/pos_order.js',
             'pos_venezuela_dual_currency/static/src/app/screens/product_screen/control_buttons/control_buttons.js',
@@ -31,10 +32,6 @@
             'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_lines/payment_lines.xml',
             'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_lines/custom_payment_lines/custom_payment_lines.js',
             'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_lines/custom_payment_lines/custom_payment_lines.xml',
-            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_status/payment_status.js',
-            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_status/payment_status.xml',
-            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_status/custom_payment_status/custom_payment_status.js',
-            'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_status/custom_payment_status/custom_payment_status.xml',
             'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/usd_total/usd_total.js',
             'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/usd_total/usd_total.xml',
         ],

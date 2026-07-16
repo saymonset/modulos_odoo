@@ -1,8 +1,11 @@
 /** @odoo-module **/
 
-import { Component, useState, onMounted, onWillUnmount } from "@odoo/owl";
+import { Component, onMounted } from "@odoo/owl";
 import { usePos } from "@point_of_sale/app/hooks/pos_hook";
 import { useService } from "@web/core/utils/hooks";
+
+let _rate = 1;
+let _rateLoaded = false;
 
 export class PaymentScreenDueUsd extends Component {
     static template = "pos_venezuela_dual_currency.PaymentScreenDueUsd";
@@ -11,56 +14,47 @@ export class PaymentScreenDueUsd extends Component {
     setup() {
         this.pos = usePos();
         this.orm = useService("orm");
-        this.state = useState({
-            rate: 1,
-            orderTotalBs: 0,
-        });
+        onMounted(() => this._ensureRate());
+    }
 
-        onMounted(() => {
-            this.loadRate();
-            this._interval = setInterval(() => {
-                const order = this.pos.getOrder();
-                if (!order) return;
-                const total = order.priceIncl || 0;
-                if (total !== this.state.orderTotalBs) {
-                    this.state.orderTotalBs = total;
-                }
-            }, 500);
-            this._rateInterval = setInterval(() => {
-                this.loadRate();
-            }, 60000);
-        });
+    get totalBs() {
+        const order = this.pos.getOrder();
+        return order ? (order.priceIncl || 0) : 0;
+    }
 
-        onWillUnmount(() => {
-            if (this._interval) {
-                clearInterval(this._interval);
-            }
-            if (this._rateInterval) {
-                clearInterval(this._rateInterval);
-            }
+    get remainingBs() {
+        const order = this.pos.getOrder();
+        return order ? (order.remainingDue || 0) : 0;
+    }
+
+    get totalUsd() {
+        return _rate > 0 ? this.totalBs / _rate : 0;
+    }
+
+    get remainingUsd() {
+        return _rate > 0 ? this.remainingBs / _rate : 0;
+    }
+
+    formatAmount(value) {
+        if (value == null || isNaN(value)) return "0,00";
+        return Number(value).toLocaleString("es-VE", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
         });
     }
 
-    get usdTotal() {
-        if (!this.state.rate || this.state.rate <= 0) return 0;
-        return this.state.orderTotalBs / this.state.rate;
-    }
-
-    formatDecimal(value) {
-        if (value == null || isNaN(value)) return "0.00";
-        return Number(value).toFixed(2);
-    }
-
-    async loadRate() {
+    async _ensureRate() {
+        if (_rateLoaded) return;
         try {
             const rate = await this.orm.call(
-                "product.template",
-                "get_bcv_rate_json",
+                "product.template", "get_bcv_rate_json",
                 [this.pos.company.id]
             );
-            this.state.rate = rate || 1;
+            _rate = rate || 1;
+            _rateLoaded = true;
+            this.render();
         } catch (e) {
-            console.error("Error al obtener tasa BCV:", e);
+            _rateLoaded = true;
         }
     }
 }

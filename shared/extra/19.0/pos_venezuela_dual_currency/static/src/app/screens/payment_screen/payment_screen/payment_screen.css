@@ -1,0 +1,24 @@
+/* ── Mobile fixes ── */
+
+.payment-screen .payment-content {
+    overflow-y: auto;
+    flex: 1 1 auto;
+    touch-action: manipulation;
+    -webkit-overflow-scrolling: touch;
+}
+
+.payment-screen .payment-screen-container {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.currency-converter {
+    flex-shrink: 0;
+}
+
+/* ── Métodos de pago: el más reciente arriba ── */
+.payment-screen .paymentlines {
+    display: flex !important;
+    flex-direction: column-reverse !important;
+}

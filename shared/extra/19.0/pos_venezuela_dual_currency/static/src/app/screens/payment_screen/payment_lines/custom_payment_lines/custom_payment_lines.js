@@ -106,8 +106,17 @@ export class CustomPaymentLines extends Component {
 
         if (lines.length === 0) return;
 
-        const selectedLine = lines.find((l) => l.isSelected());
-        const target = selectedLine || lines[lines.length - 1];
+        const target = lines.find((l) => l.isSelected())
+            || lines
+                .slice()
+                .reverse()
+                .find((l) => {
+                    const status = l.get_payment_status ? l.get_payment_status() : "";
+                    return status !== "waiting" && status !== "waitingCard";
+                })
+            || lines[lines.length - 1];
+
+        if (!target) return;
 
         if (!posState.is_igtf) {
             try {
@@ -155,7 +164,10 @@ export class CustomPaymentLines extends Component {
     // ── Formatting ──
 
     formatDecimal(value) {
-        if (value == null || isNaN(value)) return "0.00";
-        return Number(value).toFixed(2);
+        if (value == null || isNaN(value)) return "0,00";
+        return Number(value).toLocaleString("es-VE", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
     }
 }

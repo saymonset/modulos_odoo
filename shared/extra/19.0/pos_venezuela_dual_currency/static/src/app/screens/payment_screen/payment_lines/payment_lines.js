@@ -10,8 +10,4 @@ patch(PaymentScreenPaymentLines, {
     },
 });
 
-patch(PaymentScreenPaymentLines.prototype, {
-    get reversedLines() {
-        return [...(this.props.paymentLines || [])].reverse();
-    },
-});
+
