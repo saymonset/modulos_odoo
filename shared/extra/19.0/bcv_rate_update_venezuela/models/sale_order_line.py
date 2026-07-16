@@ -30,7 +30,6 @@ class SaleOrderLine(models.Model):
         res.update({
             'price_usd_bcv': self.price_usd_bcv,
             'bcv_rate_value': self.rate_value,
-            'price_subtotal_usd_bcv': self.price_subtotal_usd_bcv,
         })
         return res
 
@@ -40,15 +39,16 @@ class SaleOrderLine(models.Model):
             rate_val = self.env['product.template']._get_bcv_rate(line.order_id.company_id)
             line.rate_value = rate_val
 
-            if line.product_id and line.product_id.list_price_usd and line.product_id.list_price:
+            if (line.product_id and line.product_id.list_price_usd
+                    and line.product_id.list_price and line.price_unit):
                 ratio = line.price_unit / line.product_id.list_price
                 line.price_usd_bcv = float_round(line.product_id.list_price_usd * ratio, precision_digits=2)
-            elif rate_val:
+            elif rate_val and line.price_unit:
                 line.price_usd_bcv = float_round(line.price_unit / rate_val, precision_digits=2)
             else:
                 line.price_usd_bcv = 0.0
 
             line.price_subtotal_usd_bcv = float_round(
-                line.price_usd_bcv * line.product_uom_qty * (1 - line.discount / 100),
+                line.price_usd_bcv * line.product_uom_qty * (1 - line.discount / 100.0),
                 precision_digits=2
-            )
+            ) if line.price_usd_bcv and line.product_uom_qty else 0.0

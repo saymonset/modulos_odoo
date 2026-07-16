@@ -26,12 +26,11 @@ class PurchaseOrderLine(models.Model):
         store=True,
     )
 
-    def _prepare_account_move_line(self, account_move_line_values):
-        res = super()._prepare_account_move_line(account_move_line_values)
+    def _prepare_account_move_line(self, *args, **kwargs):
+        res = super()._prepare_account_move_line(*args, **kwargs)
         res.update({
             'price_usd_bcv': self.price_usd_bcv,
             'bcv_rate_value': self.rate_value,
-            'price_subtotal_usd_bcv': self.price_subtotal_usd_bcv,
         })
         return res
 
@@ -63,7 +62,9 @@ class PurchaseOrderLine(models.Model):
                 continue
 
             line.rate_value = rate_val
-            line.price_usd_bcv = float_round(line.price_unit / rate_val, precision_digits=2)
+            line.price_usd_bcv = float_round(
+                line.price_unit / rate_val, precision_digits=2
+            ) if rate_val and line.price_unit else 0.0
             line.price_subtotal_usd_bcv = float_round(
                 line.price_usd_bcv * line.product_qty, precision_digits=2
-            )
+            ) if line.price_usd_bcv and line.product_qty else 0.0

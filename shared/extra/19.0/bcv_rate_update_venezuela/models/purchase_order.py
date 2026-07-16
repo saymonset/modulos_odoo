@@ -21,7 +21,7 @@ class PurchaseOrder(models.Model):
     def _compute_currency_aux(self):
         usd = self.env.ref('base.USD', raise_if_not_found=False)
         for order in self:
-            order.currency_aux = usd
+            order.currency_aux = usd if usd else order.company_id.currency_id
 
     @api.depends('order_line.price_subtotal_usd_bcv')
     def _compute_amount_total_usd(self):
