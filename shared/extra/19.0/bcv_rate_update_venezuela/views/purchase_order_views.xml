@@ -10,6 +10,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='amount_total']" position="after">
                 <field name="amount_total_usd" string="Total USD" sum="Total USD" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
+                <field name="amount_total_cop" string="Total COP" optional="hide" widget="monetary" options="{'currency_field': 'currency_aux_cop'}"/>
             </xpath>
         </field>
     </record>
@@ -23,6 +24,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='amount_total']" position="after">
                 <field name="amount_total_usd" string="Total USD" sum="Total USD" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
+                <field name="amount_total_cop" string="Total COP" optional="hide" widget="monetary" options="{'currency_field': 'currency_aux_cop'}"/>
             </xpath>
         </field>
     </record>
@@ -37,13 +39,19 @@
             <!-- Columnas en las líneas -->
             <xpath expr="//field[@name='order_line']/list/field[@name='price_subtotal']" position="before">
                 <field name="rate_value" string="Tasa BCV" readonly="1" optional="hide"/>
+                <field name="rate_value_cop" string="Tasa COP" readonly="1" optional="hide"/>
                 <field name="price_subtotal_usd_bcv" string="Subtotal USD" readonly="1"/>
+                <field name="price_subtotal_cop" string="Subtotal COP" readonly="1" optional="hide"/>
             </xpath>
             <!-- Total USD en el footer -->
             <xpath expr="//group[hasclass('oe_subtotal_footer')]" position="inside">
                 <div style="display:flex; align-items:center; gap:5px;" class="mt-2">
                     <label for="amount_total_usd" string="Total USD (BCV)" style="font-weight:bold; color:green;"/>
                     <field name="amount_total_usd" readonly="1" style="font-weight:bold; color:green;" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
+                </div>
+                <div style="display:flex; align-items:center; gap:5px;" class="mt-1" invisible="not company_id.cop_show_fields">
+                    <label for="amount_total_cop" string="Total COP" style="font-weight:bold; color:blue;"/>
+                    <field name="amount_total_cop" readonly="1" style="font-weight:bold; color:blue;" widget="monetary" options="{'currency_field': 'currency_aux_cop'}"/>
                 </div>
             </xpath>
         </field>

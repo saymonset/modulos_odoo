@@ -5,7 +5,9 @@ class Website(models.Model):
 
     def get_bcv_rate(self):
         """Retorna la tasa USD/VES actual (cuántos bolívares por 1 USD)"""
-        # get_rate_info returns the 'rate' as display_val (original_value or rate)
+        company = self.company_id
+        if company.bcv_manual_rate_active and company.bcv_manual_rate > 0:
+            return company.bcv_manual_rate
         rate_info = self.get_rate_info(currency_name='USD')
         return rate_info.get('rate', 1.0)
 
@@ -13,26 +15,39 @@ class Website(models.Model):
         """
         Retorna el factor para convertir VES a USD (precio_VES * factor = precio_USD).
         """
-        # Si la moneda base ya es USD, no hay factor de conversión (es 1.0)
         if self.company_id.currency_id.name == 'USD':
             return 1.0
-            
+
         rate = self.get_bcv_rate()
-        # Si la tasa es 1.0 o 0.0 y la moneda base no es USD, la tasa no es válida
         if rate and rate > 1.0:
             return 1.0 / rate
         return 0.0
-    
+
     def get_bcv_rate_info(self):
         """
         Retorna un dict con la tasa BCV (1 USD = X VES).
         Mantenido por compatibilidad con plantillas existentes.
         """
-        # Priorizar el proveedor marcado como "Main" o buscar USD
         info = self.get_rate_info(currency_name='USD')
-        
-        # Si no hay tasa de USD específica, intentamos obtener cualquier tasa activa (para otros países)
         if info.get('rate') == 1.0 and info.get('date') is None:
              info = self.get_rate_info()
-
         return info
+
+    def get_cop_rate(self):
+        """Retorna la tasa COP actual (cuántos pesos colombianos por 1 USD)"""
+        company = self.company_id
+        if company.cop_manual_rate_active and company.cop_manual_rate > 0:
+            return company.cop_manual_rate
+        rate_info = self.get_rate_info(currency_name='COP')
+        return rate_info.get('rate', 1.0)
+
+    def get_cop_rate_info(self):
+        """
+        Retorna un dict con la tasa COP (1 USD = X COP).
+        """
+        company = self.company_id
+        rate_val = self.get_cop_rate()
+        return {
+            'rate': rate_val,
+            'currency_name': 'COP',
+        }

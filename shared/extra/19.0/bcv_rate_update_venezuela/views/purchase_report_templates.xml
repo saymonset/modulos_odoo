@@ -4,11 +4,16 @@
     <template id="report_purchaseorder_inherit_bcv" inherit_id="purchase.report_purchaseorder_document">
         <xpath expr="//th[@name='th_subtotal']" position="before">
             <t t-set="usd_currency" t-value="env['res.currency'].search([('name','=','USD')], limit=1)"/>
+            <t t-set="cop_currency" t-value="env['res.currency'].sudo().search([('name','=','COP')], limit=1)"/>
             <th name="th_rate" class="text-end"><strong>Tasa BCV</strong></th>
             <th name="th_price_usd" class="text-end"><strong>Precio USD</strong></th>
         </xpath>
         <xpath expr="//th[@name='th_subtotal']" position="after">
             <th name="th_subtotal_usd" class="text-end"><strong>Subtotal USD</strong></th>
+            <t t-if="o.company_id.cop_show_fields">
+                <th name="th_rate_cop" class="text-end"><strong>Tasa COP</strong></th>
+                <th name="th_subtotal_cop" class="text-end"><strong>Subtotal COP</strong></th>
+            </t>
         </xpath>
 
         <xpath expr="//td[@id='product']" position="before">
@@ -23,6 +28,14 @@
             <td class="text-end">
                 <span t-esc="line.price_subtotal_usd_bcv" t-options="{'widget': 'monetary', 'display_currency': usd_currency}"/>
             </td>
+            <t t-if="o.company_id.cop_show_fields">
+                <td class="text-end">
+                    <span t-if="line.rate_value_cop" t-esc="'{:,.2f}'.format(line.rate_value_cop)"/>
+                </td>
+                <td class="text-end">
+                    <span t-esc="line.price_subtotal_cop" t-options="{'widget': 'monetary', 'display_currency': cop_currency}"/>
+                </td>
+            </t>
         </xpath>
 
         <xpath expr="//div[@id='total']" position="inside">
@@ -30,6 +43,12 @@
                 <strong style="color:green;">Total USD (BCV): </strong>
                 <span t-if="o.amount_total_usd" t-esc="o.amount_total_usd" t-options="{'widget': 'monetary', 'display_currency': usd_currency}" style="font-weight:bold; color:green;"/>
             </div>
+            <t t-if="o.company_id.cop_show_fields">
+                <div class="text-end mt-2">
+                    <strong style="color:blue;">Total COP: </strong>
+                    <span t-if="o.amount_total_cop" t-esc="o.amount_total_cop" t-options="{'widget': 'monetary', 'display_currency': cop_currency}" style="font-weight:bold; color:blue;"/>
+                </div>
+            </t>
         </xpath>
     </template>
 

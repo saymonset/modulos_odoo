@@ -17,6 +17,13 @@
                        class="oe_inline"
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"/>
+                <field name="currency_cop_id" invisible="1"/>
+                <span class="mx-2" style="font-weight: bold;" invisible="not company_id.cop_show_fields">o</span>
+                <field name="list_price_cop"
+                       class="oe_inline"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       invisible="not company_id.cop_show_fields"/>
             </xpath>
             <field name="standard_price" position="after">
                 <field name="currency_usd_id" invisible="1"/>
@@ -25,6 +32,13 @@
                        class="oe_inline"
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"/>
+                <field name="currency_cop_id" invisible="1"/>
+                <span class="mx-2" style="font-weight: bold;" invisible="not company_id.cop_show_fields">o</span>
+                <field name="standard_price_cop"
+                       class="oe_inline"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       invisible="not company_id.cop_show_fields"/>
             </field>
         </field>
     </record>
@@ -46,6 +60,14 @@
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"
                        readonly="product_variant_count &gt; 1"/>
+                <field name="currency_cop_id" invisible="1"/>
+                <span class="mx-2" style="font-weight: bold;" invisible="product_variant_count &gt; 1 or not company_id.cop_show_fields">o</span>
+                <field name="lst_price_cop"
+                       class="oe_inline"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       invisible="not company_id.cop_show_fields"
+                       readonly="product_variant_count &gt; 1"/>
                 <div class="text-warning small mt-1" invisible="product_variant_count &lt;= 1">
                     Para precios distintos por variante, usa <strong>Precio Extra USD</strong> en <strong>Atributos y Variantes</strong>.
                 </div>
@@ -57,6 +79,13 @@
                        class="oe_inline"
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"/>
+                <field name="currency_cop_id" invisible="1"/>
+                <span class="mx-2" style="font-weight: bold;" invisible="not company_id.cop_show_fields">o</span>
+                <field name="standard_price_cop"
+                       class="oe_inline"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       invisible="not company_id.cop_show_fields"/>
             </field>
         </field>
     </record>
@@ -77,6 +106,14 @@
                        class="oe_inline"
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"
+                       readonly="product_variant_count &gt; 1"/>
+                <field name="currency_cop_id" invisible="1"/>
+                <span class="mx-2" style="font-weight: bold;" invisible="product_variant_count &gt; 1 or not company_id.cop_show_fields">o</span>
+                <field name="lst_price_cop"
+                       class="oe_inline"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       invisible="not company_id.cop_show_fields"
                        readonly="product_variant_count &gt; 1"/>
                 <div class="text-warning small mt-1" invisible="product_variant_count &lt;= 1">
                     Para precios distintos por variante, usa <strong>Precio Extra USD</strong> en <strong>Atributos y Variantes</strong>.
@@ -99,6 +136,11 @@
                 <field name="price_extra_usd"
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"/>
+                <field name="currency_cop_id" column_invisible="True"/>
+                <field name="price_extra_cop"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       optional="hide"/>
             </field>
         </field>
     </record>
@@ -118,6 +160,11 @@
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"
                        optional="show"/>
+                <field name="currency_cop_id" column_invisible="True"/>
+                <field name="list_price_cop"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       optional="hide"/>
             </field>
         </field>
     </record>
@@ -137,6 +184,11 @@
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"
                        optional="show"/>
+                <field name="currency_cop_id" column_invisible="True"/>
+                <field name="lst_price_cop"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       optional="hide"/>
             </field>
         </field>
     </record>
@@ -155,6 +207,11 @@
                 <field name="price_extra_usd"
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"/>
+                <field name="currency_cop_id" invisible="1"/>
+                <field name="price_extra_cop"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       invisible="not product_tmpl_id.company_id.cop_show_fields"/>
                 <div class="text-warning small mt-1">
                     Para precios distintos por variante, edita <strong>Precio Extra USD</strong> aquí.
                 </div>
@@ -178,6 +235,15 @@
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"
                        optional="show" sum="Total Value USD"/>
+                <field name="currency_cop_id" column_invisible="True"/>
+                <field name="standard_price_cop"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       optional="hide"/>
+                <field name="total_value_cop"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       optional="hide" sum="Total Value COP"/>
             </field>
         </field>
     </record>
@@ -198,6 +264,15 @@
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"
                        optional="show" sum="Total Value USD"/>
+                <field name="currency_cop_id" column_invisible="True"/>
+                <field name="standard_price_cop"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       optional="hide"/>
+                <field name="total_value_cop"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       optional="hide" sum="Total Value COP"/>
             </field>
         </field>
     </record>

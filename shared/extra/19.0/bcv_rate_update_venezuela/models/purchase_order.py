@@ -16,6 +16,18 @@ class PurchaseOrder(models.Model):
         compute='_compute_amount_total_usd',
         store=True,
     )
+    currency_aux_cop = fields.Many2one(
+        'res.currency',
+        string='Moneda Auxiliar COP',
+        compute='_compute_currency_aux_cop',
+        store=True,
+    )
+    amount_total_cop = fields.Monetary(
+        string='Total COP',
+        currency_field='currency_aux_cop',
+        compute='_compute_amount_total_usd',
+        store=True,
+    )
 
     @api.depends('currency_id')
     def _compute_currency_aux(self):
@@ -23,9 +35,18 @@ class PurchaseOrder(models.Model):
         for order in self:
             order.currency_aux = usd if usd else order.company_id.currency_id
 
-    @api.depends('order_line.price_subtotal_usd_bcv')
+    @api.depends('currency_id')
+    def _compute_currency_aux_cop(self):
+        cop = self.env.ref('base.COP', raise_if_not_found=False)
+        for order in self:
+            order.currency_aux_cop = cop if cop else order.company_id.currency_id
+
+    @api.depends('order_line.price_subtotal_usd_bcv', 'order_line.price_subtotal_cop')
     def _compute_amount_total_usd(self):
         for order in self:
             order.amount_total_usd = sum(
                 line.price_subtotal_usd_bcv for line in order.order_line
+            )
+            order.amount_total_cop = sum(
+                line.price_subtotal_cop for line in order.order_line
             )

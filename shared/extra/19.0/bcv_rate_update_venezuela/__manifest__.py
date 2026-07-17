@@ -26,6 +26,7 @@
         'whatsapp_cloud_integration',
         'currency_rate_update_base',
         'currency_rate_update_venezuela',
+        'currency_rate_update_colombia',
     ],
 
     'external_dependencies': {

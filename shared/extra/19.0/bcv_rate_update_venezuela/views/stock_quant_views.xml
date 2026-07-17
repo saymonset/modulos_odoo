@@ -12,6 +12,11 @@
                 <field name="value_usd"
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"/>
+                <field name="currency_cop_id" column_invisible="True"/>
+                <field name="value_cop"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       optional="hide"/>
             </xpath>
         </field>
     </record>

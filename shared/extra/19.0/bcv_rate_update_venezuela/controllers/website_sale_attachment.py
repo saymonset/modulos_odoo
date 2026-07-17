@@ -71,15 +71,27 @@ class WebsiteSaleAttachment(WebsiteSale):
             if not order:
                 return {'error': 'No se encontró la orden'}
             amount_vef = order.amount_total
-            rate_info = request.website.get_rate_info()
-            exchange_rate = rate_info.get('rate', 0.0)
+            company = request.website.company_id
+            if company.bcv_manual_rate_active and company.bcv_manual_rate > 0:
+                exchange_rate = company.bcv_manual_rate
+                rate_date = 'Tasa manual'
+            else:
+                rate_info = request.website.get_rate_info()
+                exchange_rate = rate_info.get('rate', 0.0)
+                rate_date = rate_info.get('date_formatted', '')
+            cop_rate = request.env['product.template']._get_cop_rate(company)
+            amount_cop = 0.0
             if exchange_rate and exchange_rate > 1.0:
                 amount_usd = amount_vef / exchange_rate
+                if cop_rate and cop_rate > 1.0:
+                    amount_cop = amount_usd * cop_rate
                 return {
                     'amount_vef': amount_vef,
                     'exchange_rate': exchange_rate,
-                    'rate_date': rate_info.get('date_formatted', ''),
+                    'rate_date': rate_date,
                     'amount_usd': amount_usd,
+                    'amount_cop': amount_cop,
+                    'cop_rate': cop_rate,
                 }
             else:
                 return {

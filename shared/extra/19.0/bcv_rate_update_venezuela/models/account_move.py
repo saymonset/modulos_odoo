@@ -17,6 +17,18 @@ class AccountMove(models.Model):
         compute='_compute_amount_total_usd',
         store=True,
     )
+    currency_aux_cop = fields.Many2one(
+        'res.currency',
+        string='Moneda Auxiliar COP',
+        compute='_compute_currency_aux_cop',
+        store=True,
+    )
+    amount_total_cop = fields.Monetary(
+        string='Total COP',
+        currency_field='currency_aux_cop',
+        compute='_compute_amount_total_usd',
+        store=True,
+    )
 
     @api.depends('currency_id')
     def _compute_currency_aux(self):
@@ -24,11 +36,21 @@ class AccountMove(models.Model):
         for move in self:
             move.currency_aux = usd if usd else move.company_id.currency_id
 
-    @api.depends('line_ids.price_subtotal_usd_bcv')
+    @api.depends('currency_id')
+    def _compute_currency_aux_cop(self):
+        cop = self.env.ref('base.COP', raise_if_not_found=False)
+        for move in self:
+            move.currency_aux_cop = cop if cop else move.company_id.currency_id
+
+    @api.depends('line_ids.price_subtotal_usd_bcv', 'line_ids.price_subtotal_cop')
     def _compute_amount_total_usd(self):
         for move in self:
             move.amount_total_usd = float_round(
                 sum(move.line_ids.mapped('price_subtotal_usd_bcv')),
+                precision_digits=2,
+            )
+            move.amount_total_cop = float_round(
+                sum(move.line_ids.mapped('price_subtotal_cop')),
                 precision_digits=2,
             )
 

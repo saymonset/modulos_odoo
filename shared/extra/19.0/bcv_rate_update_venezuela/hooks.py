@@ -73,8 +73,55 @@ def _populate_initial_usd_prices(env):
         count_prod += 1
     _logger.info("Costos USD poblados para %s productos.", count_prod)
 
+def _populate_initial_cop_prices(env):
+    rate = env['product.template']._get_cop_rate(env.company)
+    if not rate or rate == 1.0:
+        _logger.warning("No se pudo obtener tasa COP para poblar precios COP iniciales.")
+        return
+    templates = env['product.template'].search([
+        ('list_price_usd', '>', 0),
+        ('list_price_cop', '=', 0),
+    ])
+    count = 0
+    for t in templates:
+        t.with_context(_skip_bcv_sync=True).write({'list_price_cop': float_round(t.list_price_usd * rate, precision_digits=2)})
+        count += 1
+    _logger.info("Precios COP poblados para %s plantillas.", count)
+    variants = env['product.product'].search([
+        ('lst_price_usd', '>', 0),
+        ('lst_price_cop', '=', 0),
+    ])
+    count_var = 0
+    for v in variants:
+        v.with_context(_skip_bcv_sync=True).write({'lst_price_cop': float_round(v.lst_price_usd * rate, precision_digits=2)})
+        count_var += 1
+    _logger.info("Precios COP poblados para %s variantes.", count_var)
+    attr_values = env['product.template.attribute.value'].search([
+        ('price_extra_usd', '!=', 0),
+        ('price_extra_cop', '=', 0),
+    ])
+    count_attr = 0
+    for a in attr_values:
+        a.with_context(_skip_bcv_sync=True).write({'price_extra_cop': float_round(a.price_extra_usd * rate, precision_digits=2)})
+        count_attr += 1
+    _logger.info("Precios extra COP poblados para %s atributos.", count_attr)
+    products = env['product.product'].search([
+        ('standard_price_usd', '>', 0),
+        ('standard_price_cop', '=', 0),
+    ])
+    count_prod = 0
+    for p in products:
+        p.with_context(_skip_bcv_sync=True).write({
+            'standard_price_cop': float_round(p.standard_price_usd * rate, precision_digits=2)
+        })
+        count_prod += 1
+    _logger.info("Costos COP poblados para %s productos.", count_prod)
+
 def _post_init_hook(env):
     _clean_orphan_views(env)
     _populate_initial_usd_prices(env)
+    _populate_initial_cop_prices(env)
     # Recalculate Bs prices from USD with the current rate
     env['product.template']._recalculate_ves_prices_from_usd()
+    # Recalculate COP prices from USD
+    env['product.template']._recalculate_cop_prices_from_usd()
