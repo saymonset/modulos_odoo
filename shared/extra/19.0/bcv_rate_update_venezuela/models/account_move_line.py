@@ -14,7 +14,7 @@ class AccountMoveLine(models.Model):
     )
 
     bcv_rate_value = fields.Float(
-        string='Tasa BCV',
+        string='Tasa BCV (USD/VES)',
         digits=(12, 4),
         compute='_compute_price_usd_bcv',
         store=True,

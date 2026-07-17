@@ -4,7 +4,7 @@
             <t t-set="usd_currency" t-value="env['res.currency'].search([('name','=','USD')], limit=1)"/>
             <t t-set="cop_currency" t-value="env['res.currency'].sudo().search([('name','=','COP')], limit=1)"/>
             <th name="th_price_usd" class="text-end text-nowrap">Precio USD</th>
-            <th name="th_rate" class="text-end text-nowrap">Tasa BCV</th>
+            <th name="th_rate" class="text-end text-nowrap">Tasa BCV (USD/VES)</th>
             <th name="th_subtotal_usd" class="text-end text-nowrap">Subtotal USD</th>
             <t t-if="o.company_id.cop_show_fields">
                 <th name="th_rate_cop" class="text-end text-nowrap">Tasa COP</th>

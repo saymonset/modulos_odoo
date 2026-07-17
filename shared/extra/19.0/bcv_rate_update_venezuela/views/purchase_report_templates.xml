@@ -5,7 +5,7 @@
         <xpath expr="//th[@name='th_subtotal']" position="before">
             <t t-set="usd_currency" t-value="env['res.currency'].search([('name','=','USD')], limit=1)"/>
             <t t-set="cop_currency" t-value="env['res.currency'].sudo().search([('name','=','COP')], limit=1)"/>
-            <th name="th_rate" class="text-end"><strong>Tasa BCV</strong></th>
+            <th name="th_rate" class="text-end"><strong>Tasa BCV (USD/VES)</strong></th>
             <th name="th_price_usd" class="text-end"><strong>Precio USD</strong></th>
         </xpath>
         <xpath expr="//th[@name='th_subtotal']" position="after">

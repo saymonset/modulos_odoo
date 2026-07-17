@@ -21,7 +21,7 @@ class SaleOrder(models.Model):
     bank_destination = fields.Char('Banco destino', default='N/A')
     reference = fields.Char('Referencia')
     amount_vef = fields.Float('Monto en bolívares', digits=(12, 2))
-    exchange_rate = fields.Float('Tasa de cambio', digits=(12, 2))
+    exchange_rate = fields.Float('Tasa VES/USD', digits=(12, 2))
     amount_usd = fields.Float('Monto USD', digits=(12, 2))
     amount_cop = fields.Float('Monto COP', digits=(12, 2))
 

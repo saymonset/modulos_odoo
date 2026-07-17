@@ -19,7 +19,7 @@ class SaleOrderLine(models.Model):
     )
 
     rate_value = fields.Float(
-        string='Tasa de Cambio (BCV)',
+        string='Tasa BCV (USD/VES)',
         digits=(12, 2),
         compute='_compute_usd_bcv',
         store=True
