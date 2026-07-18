@@ -19,10 +19,14 @@
     min-height: 0;
 }
 
-/* ══ Métodos de pago: el más reciente arriba ══ */
+/* ══ Métodos de pago: el más reciente arriba (solo desktop) ══ */
+@media (min-width: 577px) {
+    .payment-screen .paymentlines {
+        flex-direction: column-reverse !important;
+    }
+}
 .payment-screen .paymentlines {
     display: flex !important;
-    flex-direction: column-reverse !important;
     flex-shrink: 1;
     min-height: 0;
 }
@@ -50,15 +54,15 @@
     .payment-screen .paymentmethods-container .button {
         flex: 0 0 auto;
         min-width: 45%;
-        font-size: 0.8rem;
-        padding: 0.35rem 0.5rem;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.3rem;
         white-space: normal;
         line-height: 1.1;
     }
     .payment-screen .paymentmethods-container .paymentmethod {
-        font-size: 0.75rem !important;
-        padding: 0.3rem 0.4rem !important;
-        line-height: 1.2 !important;
+        font-size: 0.65rem !important;
+        padding: 0.2rem 0.3rem !important;
+        line-height: 1.1 !important;
     }
     .currency-converter {
         padding: 0.25rem 0.5rem !important;
@@ -81,7 +85,7 @@
     }
     /* Compactar montos USD/COP */
     .payment-due-usd {
-        padding: 0.1rem 0.4rem !important;
+        padding: 0.05rem 0.25rem !important;
     }
     .payment-due-usd .border-bottom {
         border-bottom: none !important;
@@ -93,7 +97,7 @@
     }
     .payment-due-usd span {
         font-size: 0.65rem !important;
-        line-height: 1.1 !important;
+        line-height: 1 !important;
     }
     .payment-due-usd .fw-bold.fs-6 {
         font-size: 0.7rem !important;
