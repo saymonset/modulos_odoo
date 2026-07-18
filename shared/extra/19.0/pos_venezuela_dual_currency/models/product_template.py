@@ -11,3 +11,13 @@ class ProductTemplate(models.Model):
     def get_bcv_rate_json(self, company_id):
         company = self.env['res.company'].browse(company_id)
         return self._get_bcv_rate(company)
+
+    @api.model
+    def get_cop_rate_json(self, company_id):
+        company = self.env['res.company'].browse(company_id)
+        return self._get_cop_rate(company)
+
+    @api.model
+    def get_cop_enabled_json(self, company_id):
+        company = self.env['res.company'].browse(company_id)
+        return company.cop_show_fields

@@ -218,6 +218,14 @@
                         </t>
                     </td>
                 </tr>
+
+                <!-- Spans ocultos para compatibilidad con JS de pago -->
+                <tr style="display:none;">
+                    <td colspan="3">
+                        <span id="original_amount_cop" t-esc="'{:.2f}'.format(website_sale_order.amount_total_cop)"/>
+                        <span id="cop_exchange_rate" t-esc="'{:.2f}'.format(cop_info.get('rate', 0))"/>
+                    </td>
+                </tr>
             </t>
         </xpath>
     </template>

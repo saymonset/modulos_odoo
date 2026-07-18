@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-inherit="point_of_sale.TicketScreen" t-inherit-mode="extension">
+
+        <!-- Desktop: insertar nueva celda USD/COP antes del botón eliminar -->
+        <xpath expr="//table//td[@name='delete-column']" position="before">
+            <td class="align-middle text-end px-1">
+                <div class="small text-muted fw-bold">$ <t t-esc="getTotalUsd(order)"/></div>
+                <div t-if="showTicketCop()" class="small text-success fw-bold">COP$ <t t-esc="getTotalCop(order)"/></div>
+            </td>
+        </xpath>
+
+        <!-- Mobile: insertar USD/COP en el div de total -->
+        <xpath expr="//div[hasclass('mobileOrderList')]//div[contains(@class,'align-items-end')]/div[hasclass('fw-bolder')]" position="after">
+            <div class="small text-muted">$ <t t-esc="getTotalUsd(order)"/></div>
+            <div t-if="showTicketCop()" class="small text-success">COP$ <t t-esc="getTotalCop(order)"/></div>
+        </xpath>
+
+    </t>
+
+</templates>

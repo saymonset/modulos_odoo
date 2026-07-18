@@ -47,7 +47,9 @@ class Website(models.Model):
         """
         company = self.company_id
         rate_val = self.get_cop_rate()
+        info = self.get_rate_info(currency_name='COP')
         return {
             'rate': rate_val,
             'currency_name': 'COP',
+            'date_formatted': info.get('date_formatted', ''),
         }

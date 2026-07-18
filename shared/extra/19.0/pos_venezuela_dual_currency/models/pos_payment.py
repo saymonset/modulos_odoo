@@ -6,6 +6,7 @@ class PosPayment(models.Model):
     currency_type = fields.Selection([
         ('bs', 'Bolívares'),
         ('usd', 'Dólares'),
+        ('cop', 'Pesos Colombianos'),
     ], string='Moneda de pago', default='bs')
 
     amount_foreign = fields.Float('Monto moneda extranjera', digits=(12, 2))

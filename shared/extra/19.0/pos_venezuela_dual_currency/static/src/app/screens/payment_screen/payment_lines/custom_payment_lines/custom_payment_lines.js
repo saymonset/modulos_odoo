@@ -18,6 +18,8 @@ export class CustomPaymentLines extends Component {
 
         this.state = useState({
             rate: 1,
+            copRate: 1,
+            copEnabled: false,
             rateLoaded: false,
             selectedCurrency: "bs",
             inputAmount: "",
@@ -45,10 +47,14 @@ export class CustomPaymentLines extends Component {
 
     // ── Available currencies (extensible) ──
     get currencies() {
-        return [
+        const list = [
             { id: "bs", symbol: "Bs.", label: "Bolívares", rate: 1 },
             { id: "usd", symbol: "US$", label: "Dólares", rate: this.state.rate || 1 },
         ];
+        if (this.state.copEnabled) {
+            list.push({ id: "cop", symbol: "COP$", label: "Pesos", rate: this.state.copRate || 1 });
+        }
+        return list;
     }
 
     get activeCurrency() {
@@ -59,16 +65,45 @@ export class CustomPaymentLines extends Component {
     get convertedBs() {
         const val = parseFloat(this.state.inputAmount) || 0;
         if (this.state.selectedCurrency === "bs") return val;
+        if (this.state.selectedCurrency === "cop") {
+            const usdVal = this.state.copRate > 0 ? val / this.state.copRate : 0;
+            return usdVal * (this.state.rate || 1);
+        }
         return val * (this.state.rate || 1);
     }
 
     get displayConversion() {
         const val = parseFloat(this.state.inputAmount) || 0;
         if (val === 0) return null;
+        const rate = this.state.rate || 1;
+        const copRate = this.state.copRate || 1;
         if (this.state.selectedCurrency === "usd") {
-            return { label: "Bs.", value: this.convertedBs };
+            const copVal = copRate > 0 ? val * copRate : 0;
+            if (this.state.copEnabled) {
+                return [
+                    { label: "Bs.", value: val * rate },
+                    { label: "COP$", value: copVal },
+                ];
+            }
+            return [{ label: "Bs.", value: val * rate }];
         }
-        return { label: "US$", value: this.state.rate > 0 ? val / this.state.rate : 0 };
+        if (this.state.selectedCurrency === "cop") {
+            const usdVal = copRate > 0 ? val / copRate : 0;
+            return [
+                { label: "US$", value: usdVal },
+                { label: "Bs.", value: usdVal * rate },
+            ];
+        }
+        // bs selected
+        const usdVal = rate > 0 ? val / rate : 0;
+        const copVal = copRate > 0 ? usdVal * copRate : 0;
+        if (this.state.copEnabled) {
+            return [
+                { label: "US$", value: usdVal },
+                { label: "COP$", value: copVal },
+            ];
+        }
+        return [{ label: "US$", value: usdVal }];
     }
 
     get canApply() {
@@ -125,9 +160,12 @@ export class CustomPaymentLines extends Component {
                 console.warn("pos_venezuela_dual_currency: setAmount failed", _);
             }
             target.currency_type = this.state.selectedCurrency;
-            target.rate_applied = this.state.rate;
+            target.rate_applied = this.state.selectedCurrency === "cop" ? this.state.copRate : this.state.rate;
             if (this.state.selectedCurrency === "usd") {
                 target.amount_foreign = parseFloat(this.state.inputAmount) || 0;
+            } else if (this.state.selectedCurrency === "cop") {
+                const usdVal = this.state.copRate > 0 ? (parseFloat(this.state.inputAmount) || 0) / this.state.copRate : 0;
+                target.amount_foreign = Math.round(usdVal * 100) / 100;
             } else {
                 target.amount_foreign = this.state.rate > 0
                     ? Math.round((bsAmount / this.state.rate) * 100) / 100
@@ -159,6 +197,14 @@ export class CustomPaymentLines extends Component {
             console.error("Error al obtener tasa BCV:", e);
             this.state.rateLoaded = true;
         }
+        try {
+            const [copRate, copEnabled] = await Promise.all([
+                this.orm.call('product.template', 'get_cop_rate_json', [this.pos.company.id]),
+                this.orm.call('product.template', 'get_cop_enabled_json', [this.pos.company.id]),
+            ]);
+            this.state.copRate = copRate || 1;
+            this.state.copEnabled = !!copEnabled;
+        } catch (_) {}
     }
 
     // ── Formatting ──

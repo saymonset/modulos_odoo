@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates id="template" xml:space="preserve">
     <t t-name="pos_venezuela_dual_currency.CustomButton">
-        <div class="d-flex justify-content-end pe-2 small text-muted">
+        <div class="d-flex flex-column align-items-end pe-2 small text-muted">
             <span>Ref USD: <t t-esc="formatDecimal(priceInUSD)"/></span>
+            <span t-if="state.copEnabled" class="text-success">COP: <t t-esc="formatDecimal(priceInCOP)"/></span>
         </div>
     </t>
 </templates>

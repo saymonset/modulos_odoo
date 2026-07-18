@@ -46,9 +46,11 @@
             </div>
 
             <!-- Conversion Preview compacta -->
-            <div t-if="displayConversion" class="d-flex justify-content-center align-items-center gap-1">
-                <i class="fa fa-exchange text-muted small"/>
-                <span class="fw-bold"><t t-esc="displayConversion.label"/> <t t-esc="formatDecimal(displayConversion.value)"/></span>
+            <div t-if="displayConversion" class="d-flex justify-content-center align-items-center gap-1 flex-wrap">
+                <t t-foreach="displayConversion" t-as="conv" t-key="conv.label">
+                    <span t-if="conv_index > 0" class="text-muted small mx-1">=</span>
+                    <span class="fw-bold small"><t t-esc="conv.label"/> <t t-esc="formatDecimal(conv.value)"/></span>
+                </t>
             </div>
 
             <!-- Remaining Due Hint -->

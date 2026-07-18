@@ -15,7 +15,7 @@ patch(OrderDisplay.prototype, {
         }
         this.pos = usePos();
         this.orm = useService("orm");
-        this._usdState = useState({ rate: 1, orderTotal: 0 });
+        this._usdState = useState({ rate: 1, orderTotal: 0, copRate: 1, copEnabled: false });
         this._loadRate();
 
         onMounted(() => {
@@ -47,6 +47,11 @@ patch(OrderDisplay.prototype, {
         return this._usdState.orderTotal / this._usdState.rate;
     },
 
+    _getRefCopTotal() {
+        if (!this._usdState?.copEnabled || !this._usdState?.copRate) return 0;
+        return this._getRefTotal() * this._usdState.copRate;
+    },
+
     async _loadRate() {
         try {
             const rate = await this.orm.call(
@@ -57,6 +62,14 @@ patch(OrderDisplay.prototype, {
         } catch (e) {
             console.error("Error al obtener tasa BCV:", e);
         }
+        try {
+            const [copRate, copEnabled] = await Promise.all([
+                this.orm.call('product.template', 'get_cop_rate_json', [this.pos.company.id]),
+                this.orm.call('product.template', 'get_cop_enabled_json', [this.pos.company.id]),
+            ]);
+            this._usdState.copRate = copRate || 1;
+            this._usdState.copEnabled = !!copEnabled;
+        } catch (_) {}
     },
 
     formatDecimal(value) {

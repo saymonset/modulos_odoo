@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="pos_session_kanban_view_usd_cop" model="ir.ui.view">
+        <field name="name">pos.session.kanban.usd.cop</field>
+        <field name="model">pos.session</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_session_kanban"/>
+        <field name="arch" type="xml">
+
+            <!-- Agregar USD después del nombre -->
+            <xpath expr="//field[@name='name']" position="after">
+                <div class="row" t-if="record.total_sold_usd.raw_value">
+                    <div class="col-5"><span>$ USD</span></div>
+                    <span class="col-7" t-out="record.total_sold_usd.value"/>
+                </div>
+            </xpath>
+
+            <!-- Agregar COP después del footer -->
+            <xpath expr="//footer" position="after">
+                <div class="row" t-if="record.total_sold_cop.raw_value">
+                    <div class="col-5"><span class="text-success">$ COP</span></div>
+                    <span class="col-7 text-success" t-out="record.total_sold_cop.value"/>
+                </div>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

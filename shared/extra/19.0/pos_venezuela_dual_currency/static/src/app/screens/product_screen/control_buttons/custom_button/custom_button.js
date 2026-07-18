@@ -14,14 +14,19 @@ export class CustomButton extends Component {
         super.setup();
         this.pos = usePos();
         this.orm = useService("orm");
-        this.state = useState({ rate: 1 });
+        this.state = useState({
+            rate: 1,
+            copRate: 1,
+            copEnabled: false,
+            copLoaded: false,
+        });
 
         this.loadRate().then(rate => {
             this.state.rate = rate || 1;
         });
+        this.loadCopData();
 
         onWillUpdateProps(() => {
-            // force re-render to recompute getter
             this.render();
         });
     }
@@ -37,6 +42,11 @@ export class CustomButton extends Component {
         }
     }
 
+    get priceInCOP() {
+        if (!this.state.copEnabled || !this.state.copRate) return 0;
+        return this.priceInUSD * this.state.copRate;
+    }
+
     async loadRate() {
         try {
             const rate = await this.orm.call(
@@ -47,6 +57,21 @@ export class CustomButton extends Component {
         } catch (e) {
             console.error("Error al obtener tasa BCV:", e);
             return 1;
+        }
+    }
+
+    async loadCopData() {
+        try {
+            const [copRate, copEnabled] = await Promise.all([
+                this.orm.call('product.template', 'get_cop_rate_json', [this.pos.company.id]),
+                this.orm.call('product.template', 'get_cop_enabled_json', [this.pos.company.id]),
+            ]);
+            this.state.copRate = copRate || 1;
+            this.state.copEnabled = !!copEnabled;
+            this.state.copLoaded = true;
+            this.render();
+        } catch (e) {
+            this.state.copLoaded = true;
         }
     }
 

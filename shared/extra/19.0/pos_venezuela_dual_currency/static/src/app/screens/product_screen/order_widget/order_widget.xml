@@ -6,6 +6,12 @@
             <span class="text-muted small">
                 Ref USD: <t t-esc="formatDecimal(_getRefTotal())"/>
             </span>
+            <t t-if="_usdState.copEnabled">
+                <br/>
+                <span class="text-success small">
+                    COP: <t t-esc="formatDecimal(_getRefCopTotal())"/>
+                </span>
+            </t>
         </xpath>
     </t>
 </templates>

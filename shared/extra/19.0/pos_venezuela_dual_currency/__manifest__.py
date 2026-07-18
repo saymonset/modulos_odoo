@@ -15,6 +15,7 @@
         'security/ir.model.access.csv',
         'views/pos_payment_method_views.xml',
         'views/pos_payment_views.xml',
+        'views/pos_session_views.xml',
     ],
     'assets': {
         'point_of_sale._assets_pos': [
@@ -34,6 +35,8 @@
             'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/payment_lines/custom_payment_lines/custom_payment_lines.xml',
             'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/usd_total/usd_total.js',
             'pos_venezuela_dual_currency/static/src/app/screens/payment_screen/usd_total/usd_total.xml',
+            'pos_venezuela_dual_currency/static/src/app/screens/ticket_screen/ticket_screen.js',
+            'pos_venezuela_dual_currency/static/src/app/screens/ticket_screen/ticket_screen.xml',
         ],
     },
     'application': False,

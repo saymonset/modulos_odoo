@@ -146,6 +146,7 @@ class WebsiteSaleAttachment(WebsiteSale):
             'amount_vef': float(post.get('amount_vef', 0)),
             'exchange_rate': float(post.get('exchange_rate', 0)),
             'amount_usd': float(post.get('amount_usd', 0)) if post.get('amount_usd') and post.get('amount_usd') != 'undefined' else 0.0,
+            'amount_cop': float(post.get('amount_cop', 0)) if post.get('amount_cop') and post.get('amount_cop') != 'undefined' else 0.0,
         }
         _logger.info(f"📝 Datos de pago recibidos: {payment_data}")
 
@@ -176,6 +177,7 @@ class WebsiteSaleAttachment(WebsiteSale):
                     'amount_vef': payment_data['amount_vef'],
                     'exchange_rate': payment_data['exchange_rate'],
                     'amount_usd': payment_data['amount_usd'],
+                    'amount_cop': payment_data['amount_cop'],
                 })
                 timestamp = int(attachment.write_date.timestamp()) if attachment.write_date else ''
                 attachment_url = f"/web/image/{attachment.id}" + (f"?unique={timestamp}" if timestamp else "")
@@ -192,6 +194,7 @@ class WebsiteSaleAttachment(WebsiteSale):
                     <li>₿ Monto Bs: {payment_data.get('amount_vef', 0):,.2f}</li>
                     <li>💱 Tasa BCV: {payment_data.get('exchange_rate', 0):,.2f}</li>
                     <li>💵 Monto USD: {payment_data.get('amount_usd', 0):,.2f}</li>
+                    <li>🪙 Monto COP: {payment_data.get('amount_cop', 0):,.0f}</li>
                 </ul>
                 {img_tag}
                 <p><em>Adjunto: {filename}</em></p>
@@ -351,6 +354,7 @@ class WebsiteSaleAttachment(WebsiteSale):
                     'amount_vef': payment_data.get('amount_vef', 0),
                     'exchange_rate': payment_data.get('exchange_rate', 0),
                     'amount_usd': payment_data.get('amount_usd', 0),
+                    'amount_cop': payment_data.get('amount_cop', 0),
                 })
                 _logger.info(f"✅ Datos de pago adicionales guardados en orden {order.name}")
             except Exception as e:

@@ -26,6 +26,9 @@ export class PaymentProofComponent extends Component {
             exchange_rate: 0,
             amount_vef: 0,
             amount_usd: 0,
+            amount_cop: 0,
+            cop_rate: 0,
+            show_cop: false,
             is_valid_amount: false,
             rate_date: '',
             payment_date: new Date().toISOString().slice(0, 10),
@@ -52,6 +55,8 @@ export class PaymentProofComponent extends Component {
                 const origVefSpan = document.getElementById('original_amount_vef');
                 const rateSpan = document.getElementById('bcv_exchange_rate');
                 const rateDateSpan = document.getElementById('bcv_rate_date');
+                const origCopSpan = document.getElementById('original_amount_cop');
+                const copRateSpan = document.getElementById('cop_exchange_rate');
                 if (origVefSpan && rateSpan) {
                     this.state.original_amount_vef = this._normalizeNumber(origVefSpan.innerText);
                     this.state.exchange_rate = this._normalizeNumber(rateSpan.innerText);
@@ -59,6 +64,11 @@ export class PaymentProofComponent extends Component {
                     this.state.amount_vef = this.state.original_amount_vef;
                     this.state.amount_usd = this._round(this.state.amount_vef / this.state.exchange_rate);
                     this._validateAmounts();
+                }
+                if (origCopSpan && copRateSpan) {
+                    this.state.show_cop = true;
+                    this.state.cop_rate = this._normalizeNumber(copRateSpan.innerText);
+                    this.state.amount_cop = this._round(this.state.amount_usd * this.state.cop_rate);
                 }
             } catch (err) {
                 console.error(err);
@@ -137,8 +147,12 @@ export class PaymentProofComponent extends Component {
         this.state.amount_vef = value;
         if (this.state.exchange_rate > 0) {
             this.state.amount_usd = this._round(value / this.state.exchange_rate);
+            if (this.state.show_cop && this.state.cop_rate > 0) {
+                this.state.amount_cop = this._round(this.state.amount_usd * this.state.cop_rate);
+            }
         } else {
             this.state.amount_usd = 0;
+            this.state.amount_cop = 0;
         }
         this._validateAmounts();
         this._syncPaymentButtonState();
@@ -150,7 +164,28 @@ export class PaymentProofComponent extends Component {
         this.state.amount_usd = value;
         if (this.state.exchange_rate > 0) {
             this.state.amount_vef = this._round(value * this.state.exchange_rate);
+            if (this.state.show_cop && this.state.cop_rate > 0) {
+                this.state.amount_cop = this._round(value * this.state.cop_rate);
+            }
         } else {
+            this.state.amount_vef = 0;
+            this.state.amount_cop = 0;
+        }
+        this._validateAmounts();
+        this._syncPaymentButtonState();
+    }
+
+    _onAmountCopInput(e) {
+        let rawValue = e.target.value;
+        let value = this._normalizeNumber(rawValue);
+        this.state.amount_cop = value;
+        if (this.state.cop_rate > 0) {
+            this.state.amount_usd = this._round(value / this.state.cop_rate);
+            if (this.state.exchange_rate > 0) {
+                this.state.amount_vef = this._round(this.state.amount_usd * this.state.exchange_rate);
+            }
+        } else {
+            this.state.amount_usd = 0;
             this.state.amount_vef = 0;
         }
         this._validateAmounts();
@@ -176,6 +211,7 @@ export class PaymentProofComponent extends Component {
             formData.append("amount_vef", this.state.amount_vef);
             formData.append("exchange_rate", this.state.exchange_rate);
             formData.append("amount_usd", this.state.amount_usd || 0);
+            formData.append("amount_cop", this.state.amount_cop || 0);
             const response = await fetch("/shop/upload_payment_proof", {
                 method: "POST",
                 body: formData,

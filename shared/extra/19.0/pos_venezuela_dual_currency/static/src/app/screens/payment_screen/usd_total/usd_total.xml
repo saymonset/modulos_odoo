@@ -23,6 +23,11 @@
                 <span class="text-primary fw-bold">Resta Bs.</span>
                 <span class="text-primary fw-bold">Bs. <t t-esc="formatAmount(remainingBs)"/></span>
             </div>
+            <!-- Restante COP: verde, compacto -->
+            <div t-if="showCop" class="d-flex justify-content-between align-items-center border-top pt-1 mt-1 small">
+                <span class="text-success fw-bold">Resta COP</span>
+                <span class="text-success fw-bold">$ <t t-esc="formatAmount(remainingCop)"/></span>
+            </div>
         </div>
     </t>
 
