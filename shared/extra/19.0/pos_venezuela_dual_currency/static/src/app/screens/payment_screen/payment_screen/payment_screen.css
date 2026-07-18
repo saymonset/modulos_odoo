@@ -35,14 +35,17 @@
 
 /* ══ Métodos de pago siempre visibles en móvil ══ */
 @media (max-width: 576px) {
+    .payment-screen.screen {
+        gap: 0.25rem !important;
+    }
     .payment-screen .paymentmethods-container {
-        flex-shrink: 0;
+        flex: 1 1 auto;
         display: flex !important;
         flex-wrap: wrap;
         gap: 4px;
         padding: 4px;
-        max-height: 42vh;
-        overflow-y: auto;
+        max-height: none;
+        overflow-y: visible;
     }
     .payment-screen .paymentmethods-container .button {
         flex: 0 0 auto;
@@ -51,5 +54,93 @@
         padding: 0.35rem 0.5rem;
         white-space: normal;
         line-height: 1.1;
+    }
+    .payment-screen .paymentmethods-container .paymentmethod {
+        font-size: 0.75rem !important;
+        padding: 0.3rem 0.4rem !important;
+        line-height: 1.2 !important;
+    }
+    .currency-converter {
+        padding: 0.25rem 0.5rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    .currency-converter .btn {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.3rem;
+    }
+    .currency-converter .input-group {
+        margin-bottom: 0 !important;
+    }
+    /* Compactar "Seleccione un método de pago" */
+    .payment-screen.screen > .text-bg-light.border.text-center {
+        font-size: 0.65rem !important;
+        padding-top: 0.1rem !important;
+        padding-bottom: 0.1rem !important;
+        margin: 0 !important;
+        line-height: 1.2 !important;
+    }
+    /* Compactar montos USD/COP */
+    .payment-due-usd {
+        padding: 0.1rem 0.4rem !important;
+    }
+    .payment-due-usd .border-bottom {
+        border-bottom: none !important;
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    .payment-due-usd div {
+        margin-bottom: 0 !important;
+    }
+    .payment-due-usd span {
+        font-size: 0.65rem !important;
+        line-height: 1.1 !important;
+    }
+    .payment-due-usd .fw-bold.fs-6 {
+        font-size: 0.7rem !important;
+    }
+    .payment-due-usd .border-top {
+        border-top: none !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    /* Compactar botón Validar + Atrás */
+    .validation-button {
+        font-size: 0.8rem !important;
+        padding: 0.4rem 0.5rem !important;
+        line-height: 1.2 !important;
+    }
+    /* Compactar PaymentScreenButtons (Customer, Invoice) */
+    .payment-buttons .btn-lg {
+        font-size: 0.75rem !important;
+        padding: 0.3rem 0.4rem !important;
+        line-height: 1.2 !important;
+    }
+    /* Compactar "Cambio" / "Restante" */
+    .payment-status-container {
+        font-size: 0.7rem !important;
+    }
+    .payment-status-container .label,
+    .payment-status-container .amount {
+        font-size: 0.7rem !important;
+    }
+    .payment-status-container .payment-status-amount {
+        font-size: 0.7rem !important;
+    }
+    /* Compactar línea de pago (seleccionada y no seleccionada) */
+    .paymentline .payment-infos {
+        font-size: 0.7rem !important;
+        padding-top: 0.3rem !important;
+        padding-bottom: 0.3rem !important;
+    }
+    .paymentline .payment-infos .payment-amount {
+        font-size: 0.7rem !important;
+    }
+    .paymentline .payment-infos .payment-name {
+        font-size: 0.7rem !important;
+    }
+    /* Reducir gap en switchpane */
+    .switchpane {
+        gap: 0.25rem !important;
+        margin-top: 0.25rem !important;
     }
 }

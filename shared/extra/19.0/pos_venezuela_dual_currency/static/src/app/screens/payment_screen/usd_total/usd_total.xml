@@ -2,7 +2,7 @@
 <templates id="template" xml:space="preserve">
 
     <t t-name="pos_venezuela_dual_currency.PaymentScreenDueUsd">
-        <div class="px-2 py-1">
+        <div class="payment-due-usd px-2 py-1">
             <!-- Total en Bs arriba -->
             <div class="d-flex justify-content-between align-items-center small text-muted">
                 <span>Total</span>
