@@ -1,57 +1,47 @@
-## Debes actualizar la bd
-```bash
-          # 1. Conéctate a PostgreSQL
-          docker exec -it odoo-db18-n8n bash
-          psql -U integraiadev -d dbintegraiadev
-          # deprecated , solo para local : sudo -u postgres psql
+# ai_chatbot_1_portal
 
+Módulo de portal para Chatbot de IA. Proporciona la interfaz y componentes de portal para el chatbot de Inteligencia Artificial (visualizar y gestionar mensajes, transcripción y análisis de textos).
 
-          # 3. Agrega la columna birthdate (ESTO ES CRÍTICO)
-          ALTER TABLE res_partner ADD COLUMN birthdate DATE;
+## 🚀 Instalación y Despliegue en Odoo 19
 
-          # 4. Verifica que se creó
-          \d res_partner | grep birthdate
+Este módulo está desarrollado para **Odoo 19.0**. A diferencia de versiones anteriores, no requiere modificaciones manuales en la base de datos de PostgreSQL ni copiar directorios manualmente si está montado como volumen en docker.
 
-          # 5. Salir
-          \q
-```
-## Arquitectura y Componentes
- 
-ai_chatbot_1_portal (Módulo de IA): Interfaz web para visualizar y gestionar mensajes, incorpora IA para transcripción y análisis de textos.
- 
- # Primero debex instalar 
-```bash
-     Intalar el modulo  ai_chatbot_1_portal en odoo 
-```
+> [!NOTE]
+> El campo `birthdate` (Fecha de Nacimiento) y otros campos requeridos se definen nativamente en el modelo `ResPartner` (`models/partner.py`) y Odoo los creará automáticamente al instalar o actualizar el módulo. No es necesario ejecutar sentencias `ALTER TABLE` manuales.
 
- 0-) Copiar modulo a test
-```
-1-)
+### 1. Copiar o Asegurar el Módulo en la Central
+Si se utiliza el entorno centralizado de Odoo 19:
+El módulo debe estar ubicado en `/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal` (que se monta automáticamente en el contenedor Odoo en la ruta `/opt/odoo/custom-addons/extra`).
 
+### 2. Actualizar la Lista de Aplicaciones e Instalar
+1. Inicia sesión en Odoo como Administrador con el Modo Desarrollador activo.
+2. Ve a **Aplicaciones**.
+3. Haz clic en **Actualizar lista de aplicaciones**.
+4. Busca `ai_chatbot_1_portal` e instálalo.
 
+---
 
-# En el webhook de n8n en la herramienta httprequest:  capturar_lead_odoo1
-# Cambiar a https://integraia.lat/ai_chatbot_1_portal/capturar_lead
+## 🔗 Configuración de Integración con n8n (Webhooks)
 
-2-)
-cp -r /home/odoo/odoo-from-13-to-18/arquitectura/odoo18/clientes/cliente1/extra-addons/extra/ai_chatbot_1_portal /home/odoo/odoo-skeleton/n8n-evolution-api-odoo-18/v18/addons/extra
-```
+Para integrar las peticiones de entrada desde n8n al chatbot en Odoo:
 
-###################   PRODUCCION      ##############
-0-) Copiar modulo a prodccion
+### Configurar Webhook en n8n
+En el flujo de n8n, dentro del nodo HTTP Request `capturar_lead_odoo1`, actualiza la URL según corresponda:
 
-```
-1-) 
-# En el webhook de n8n en la herramienta httprequest:  capturar_lead_odoo1
-# Cambiar a https://lead.integraia.lat/ai_chatbot_1_portal/capturar_lead
+*   **URL de Producción / Staging:**
+    `https://<tu-dominio>/ai_chatbot_1_portal/capturar_lead_http`
 
-2-)
-cp -r /home/odoo/odoo-from-13-to-18/arquitectura/odoo18/clientes/cliente1/extra-addons/extra/ai_chatbot_1_portal //home/odoo/odoo-skeleton/leads/odoo_instancia_2/v18_2/addons/extra
-```
+> [!IMPORTANT]
+> Asegúrate de usar la ruta final `/ai_chatbot_1_portal/capturar_lead_http` (con el sufijo `_http`), que es la ruta registrada por el controlador en `chatbot_3_crear_el_lead_finish_controller.py`.
 
-Opción 1: Regla por Etiqueta
-yaml
-Ir a: CRM → Configuración → Automatización → Reglas de Automatización
-Nombre: "Procesar Leads WhatsApp Bot"
-Condición: Etiquetas → contiene → WhatsApp Bot
-Acciones: [Las que necesites]
+---
+
+## ⚙️ Reglas de Automatización en CRM
+
+Para procesar de manera automática los leads entrantes creados desde WhatsApp:
+
+1.  Ve a: **CRM** ➔ **Configuración** ➔ **Automatización** ➔ **Reglas de Automatización**.
+2.  Crea una nueva regla:
+    *   **Nombre:** "Procesar Leads WhatsApp Bot"
+    *   **Condición:** Etiquetas ➔ contiene ➔ `WhatsApp Bot`
+    *   **Acciones:** [Configura las acciones necesarias para tu flujo de ventas o asignación]
