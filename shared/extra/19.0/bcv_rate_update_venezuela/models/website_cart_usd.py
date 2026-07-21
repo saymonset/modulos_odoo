@@ -38,8 +38,23 @@ class Website(models.Model):
         company = self.company_id
         if company.cop_manual_rate_active and company.cop_manual_rate > 0:
             return company.cop_manual_rate
-        rate_info = self.get_rate_info(currency_name='COP')
-        return rate_info.get('rate', 1.0)
+        # Buscar directamente por provider_type='bogota' ya que el provider
+        # tiene currency_id=USD (1 USD = X COP), no COP.
+        rate = self.env['res.currency.rate'].search([
+            ('currency_id.name', '=', 'USD'),
+            ('company_id', '=', company.id),
+            ('provider_id.provider_type', '=', 'bogota'),
+        ], order='name desc', limit=1)
+        if rate and rate.original_value:
+            return rate.original_value
+        provider = self.env['currency.rate.provider'].sudo().search([
+            ('company_id', '=', company.id),
+            ('provider_type', '=', 'bogota'),
+            ('active', '=', True),
+        ], limit=1)
+        if provider and provider.last_rate:
+            return provider.last_rate
+        return 1.0
 
     def get_cop_rate_info(self):
         """
@@ -47,9 +62,16 @@ class Website(models.Model):
         """
         company = self.company_id
         rate_val = self.get_cop_rate()
-        info = self.get_rate_info(currency_name='COP')
+        provider = self.env['currency.rate.provider'].sudo().search([
+            ('company_id', '=', company.id),
+            ('provider_type', '=', 'bogota'),
+            ('active', '=', True),
+        ], limit=1)
+        date_formatted = ''
+        if provider and provider.last_update:
+            date_formatted = provider.last_update.strftime('%d/%m/%Y')
         return {
             'rate': rate_val,
             'currency_name': 'COP',
-            'date_formatted': info.get('date_formatted', ''),
+            'date_formatted': date_formatted,
         }

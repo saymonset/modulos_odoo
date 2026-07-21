@@ -88,8 +88,15 @@
                 <!-- Campos de monto -->
                 <div class="row g-2">
                     <div class="col-12 col-md-4 mb-2">
-                        <label for="amount_vef" class="form-label small">Monto en bolívares</label>
-                        <input type="text" class="form-control form-control-sm" id="amount_vef" t-att-value="state.amount_vef" t-on-input="_onAmountVefInput"/>
+                        <label for="amount_vef" class="form-label small">
+                            Monto en bolívares
+                            <t t-if="state.is_valid_amount">
+                                <i class="fa fa-check-circle text-success ms-1" title="Monto correcto"></i>
+                            </t>
+                        </label>
+                        <input type="text" class="form-control form-control-sm"
+                               t-att-class="'form-control form-control-sm' + (state.is_valid_amount ? ' border-success' : '')"
+                               id="amount_vef" t-att-value="state.amount_vef" t-on-input="_onAmountVefInput"/>
                     </div>
                     <div class="col-12 col-md-4 mb-2">
                         <label for="exchange_rate" class="form-label small">Tasa de cambio (BCV)</label>
@@ -107,8 +114,18 @@
                 <!-- Campo COP (opcional, según compañía) -->
                 <div class="row g-2" t-if="state.show_cop">
                     <div class="col-12 col-md-4 offset-md-4 mb-2">
-                        <label for="amount_cop" class="form-label small">Monto COP</label>
-                        <input type="text" class="form-control form-control-sm" id="amount_cop" t-att-value="state.amount_cop" t-on-input="_onAmountCopInput"/>
+                        <label for="amount_cop" class="form-label small">
+                            Monto COP
+                            <t t-if="state.is_valid_amount">
+                                <i class="fa fa-check-circle text-success ms-1" title="Monto correcto"></i>
+                            </t>
+                        </label>
+                        <input type="text" class="form-control form-control-sm"
+                               t-att-class="'form-control form-control-sm' + (state.is_valid_amount ? ' border-success' : '')"
+                               id="amount_cop" t-att-value="state.amount_cop" t-on-input="_onAmountCopInput"/>
+                        <div class="text-muted small" t-if="state.cop_rate and state.cop_rate > 1.0">
+                            <i class="fa fa-exchange-alt"></i> 1 USD = <t t-esc="state.cop_rate.toFixed(2)"/> COP
+                        </div>
                     </div>
                 </div>
 
@@ -121,6 +138,10 @@
                     <t t-else="">
                         El monto debe ser igual o mayor al total de la orden (<t t-esc="state.original_amount_vef"/> Bs.).
                     </t>
+                </div>
+                <div t-if="state.is_valid_amount" class="alert alert-success mt-2 py-2">
+                    <i class="fa fa-check-circle"></i>
+                    Monto correcto — <strong><t t-esc="state.amount_vef"/> Bs.</strong> coincide con el total de la orden.
                 </div>
 
                 <!-- Campo de archivo (obligatorio) -->

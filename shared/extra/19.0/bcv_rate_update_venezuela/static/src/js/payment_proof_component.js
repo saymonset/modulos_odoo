@@ -121,6 +121,50 @@ export class PaymentProofComponent extends Component {
         return Math.round(v * 100) / 100;
     }
 
+    /**
+     * Comprime imagen en cliente usando Canvas.
+     * Reduce a max 1920px, calidad 0.7, formato JPEG.
+     * Soluciona subida de fotos grandes desde cámara móvil.
+     */
+    _compressImage(file) {
+        return new Promise((resolve, reject) => {
+            if (!file.type.startsWith('image/')) {
+                resolve(file);
+                return;
+            }
+            const img = new Image();
+            img.onload = () => {
+                const MAX_SIZE = 1920;
+                let { width, height } = img;
+                if (width <= MAX_SIZE && height <= MAX_SIZE && file.size < 1 * 1024 * 1024) {
+                    resolve(file);
+                    return;
+                }
+                if (width > height && width > MAX_SIZE) {
+                    height = Math.round(height * MAX_SIZE / width);
+                    width = MAX_SIZE;
+                } else if (height > MAX_SIZE) {
+                    width = Math.round(width * MAX_SIZE / height);
+                    height = MAX_SIZE;
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                    const name = file.name || 'comprobante.jpg';
+                    resolve(new File([blob], name, { type: 'image/jpeg', lastModified: Date.now() }));
+                }, 'image/jpeg', 0.7);
+            };
+            img.onerror = () => reject(new Error('No se pudo leer la imagen'));
+            const reader = new FileReader();
+            reader.onload = (e) => { img.src = e.target.result; };
+            reader.onerror = () => reject(new Error('Error al leer el archivo'));
+            reader.readAsDataURL(file);
+        });
+    }
+
     async _loadBankDetails(journalId) {
         if (!journalId) {
             this.state.bank_details = { loading: false, error: null, bank_name: '', account_number: '' };
@@ -200,16 +244,21 @@ export class PaymentProofComponent extends Component {
     async uploadFile(file) {
         this.state.fileUploading = true;
         this.state.proof_valid = false;
+        this.state.uploadError = null;
         try {
+            if (file.size > 10 * 1024 * 1024) {
+                throw new Error('La imagen es demasiado grande. Máximo 10MB.');
+            }
+            const compressedFile = await this._compressImage(file);
             const formData = new FormData();
-            formData.append("payment_proof_file", file);
+            formData.append("payment_proof_file", compressedFile);
             formData.append("payment_date", this.state.payment_date);
             formData.append("payment_method", this.state.payment_method);
             formData.append("bank_origin", this.state.bank_origin);
             formData.append("bank_destination", this.state.bank_destination);
             formData.append("reference", this.state.reference);
-            formData.append("amount_vef", this.state.amount_vef);
-            formData.append("exchange_rate", this.state.exchange_rate);
+            formData.append("amount_vef", this.state.amount_vef || 0);
+            formData.append("exchange_rate", this.state.exchange_rate || 0);
             formData.append("amount_usd", this.state.amount_usd || 0);
             formData.append("amount_cop", this.state.amount_cop || 0);
             const response = await fetch("/shop/upload_payment_proof", {
@@ -222,7 +271,7 @@ export class PaymentProofComponent extends Component {
                 if (text === 'MONTO_INSUFICIENTE') {
                     throw new Error('El monto pagado es menor al total de la orden');
                 }
-                throw new Error('Error del servidor');
+                throw new Error('Error al subir. Intenta con una imagen más pequeña o verifica tu conexión.');
             }
             this.notification.add("Comprobante subido correctamente", { type: "success" });
             this.state.uploadSuccess = true;
@@ -240,7 +289,7 @@ export class PaymentProofComponent extends Component {
     _handleFileChange(e) {
         const file = e.target.files[0];
         if (file) {
-            this.state.selectedFileName = file.name;
+            this.state.selectedFileName = file.name || 'comprobante.jpg';
             this.state.proof_valid = false;
             this.uploadFile(file);
         } else {
