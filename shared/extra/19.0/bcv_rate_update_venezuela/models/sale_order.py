@@ -41,6 +41,7 @@ class SaleOrder(models.Model):
         compute='_compute_bcv_rate_value',
         store=True,
     )
+    partner_phone = fields.Char(string='Teléfono', related='partner_id.phone', readonly=True)
     whatsapp_sent = fields.Boolean(string="WhatsApp enviado", default=False)
 
     @api.depends('order_line.price_subtotal_usd_bcv', 'order_line.price_subtotal_cop')
