@@ -29,6 +29,18 @@ class SaleOrder(models.Model):
     amount_total_usd = fields.Monetary(string='Total USD (BCV)', currency_field='currency_aux', compute='_compute_amount_total_usd', store=True)
     currency_aux_cop = fields.Many2one('res.currency', string='Moneda Auxiliar COP', compute='_compute_currency_aux_cop', store=True)
     amount_total_cop = fields.Monetary(string='Total COP', currency_field='currency_aux_cop', compute='_compute_amount_total_usd', store=True)
+    bcv_rate_value = fields.Float(
+        string='Tasa BCV (USD/VES)',
+        digits=(12, 2),
+        compute='_compute_bcv_rate_value',
+        store=True,
+    )
+    amount_total_ves_from_usd = fields.Monetary(
+        string='Total Bolívares (VES)',
+        currency_field='currency_id',
+        compute='_compute_bcv_rate_value',
+        store=True,
+    )
     whatsapp_sent = fields.Boolean(string="WhatsApp enviado", default=False)
 
     @api.depends('order_line.price_subtotal_usd_bcv', 'order_line.price_subtotal_cop')
@@ -36,6 +48,13 @@ class SaleOrder(models.Model):
         for order in self:
             order.amount_total_usd = sum(line.price_subtotal_usd_bcv for line in order.order_line)
             order.amount_total_cop = sum(line.price_subtotal_cop for line in order.order_line)
+
+    @api.depends('company_id', 'amount_total_usd')
+    def _compute_bcv_rate_value(self):
+        for order in self:
+            rate = self.env['product.template']._get_bcv_rate(order.company_id)
+            order.bcv_rate_value = rate if rate else 1.0
+            order.amount_total_ves_from_usd = order.amount_total_usd * order.bcv_rate_value if order.amount_total_usd else 0.0
 
     @api.depends('currency_id')
     def _compute_currency_aux(self):

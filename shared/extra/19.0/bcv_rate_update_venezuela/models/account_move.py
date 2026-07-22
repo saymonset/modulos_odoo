@@ -29,6 +29,18 @@ class AccountMove(models.Model):
         compute='_compute_amount_total_usd',
         store=True,
     )
+    bcv_rate_value = fields.Float(
+        string='Tasa BCV (USD/VES)',
+        digits=(12, 2),
+        compute='_compute_bcv_rate_value',
+        store=True,
+    )
+    amount_total_ves_from_usd = fields.Monetary(
+        string='Total Bolívares (VES)',
+        currency_field='currency_id',
+        compute='_compute_bcv_rate_value',
+        store=True,
+    )
 
     @api.depends('currency_id')
     def _compute_currency_aux(self):
@@ -41,6 +53,13 @@ class AccountMove(models.Model):
         cop = self.env.ref('base.COP', raise_if_not_found=False)
         for move in self:
             move.currency_aux_cop = cop if cop else move.company_id.currency_id
+
+    @api.depends('company_id', 'amount_total_usd')
+    def _compute_bcv_rate_value(self):
+        for move in self:
+            rate = self.env['product.template']._get_bcv_rate(move.company_id)
+            move.bcv_rate_value = rate if rate else 1.0
+            move.amount_total_ves_from_usd = move.amount_total_usd * move.bcv_rate_value if move.amount_total_usd else 0.0
 
     @api.depends('line_ids.price_subtotal_usd_bcv', 'line_ids.price_subtotal_cop')
     def _compute_amount_total_usd(self):

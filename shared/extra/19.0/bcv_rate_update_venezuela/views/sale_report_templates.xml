@@ -40,8 +40,16 @@
 
         <xpath expr="//div[@name='so_total_summary']" position="inside">
             <div class="text-end mt-2">
-                <strong style="color:green;">Total USD (BCV): </strong>
+                <strong style="color:green;">Total USD ($): </strong>
                 <span t-if="doc.amount_total_usd" t-esc="doc.amount_total_usd" t-options="{'widget': 'monetary', 'display_currency': usd_currency}" style="font-weight:bold; color:green;"/>
+            </div>
+            <div class="text-end mt-2">
+                <strong>Tasa de Cambio (Bs.): </strong>
+                <span t-if="doc.bcv_rate_value" t-esc="'%s Bs.' % '{:,.2f}'.format(doc.bcv_rate_value)" style="font-weight:bold;"/>
+            </div>
+            <div class="text-end mt-2">
+                <strong style="color:green;">Total Bolívares (VES): </strong>
+                <span t-if="doc.amount_total_ves_from_usd" t-esc="doc.amount_total_ves_from_usd" t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" style="font-weight:bold; color:green;"/>
             </div>
             <t t-if="doc.company_id.cop_show_fields">
                 <div class="text-end mt-2">

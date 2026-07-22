@@ -54,8 +54,17 @@
             </xpath>
           <xpath expr="//group[@name='sale_total']" position="inside">
                 <div style="display:flex; align-items:center; gap:5px;">
-                    <label for="amount_total_usd" string="Total USD (BCV)" style="font-weight:bold; color:green;"/>
+                    <label for="amount_total_usd" string="Total USD ($)" style="font-weight:bold; color:green;"/>
                     <field name="amount_total_usd" readonly="1" style="font-weight:bold; color:green;" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
+                </div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <label for="bcv_rate_value" string="Tasa de Cambio (Bs.)" style="font-weight:bold;"/>
+                    <field name="bcv_rate_value" readonly="1" style="font-weight:bold;"/>
+                    <span class="text-muted small">Bs.</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <label for="amount_total_ves_from_usd" string="Total Bolívares (VES)" style="font-weight:bold; color:green;"/>
+                    <field name="amount_total_ves_from_usd" readonly="1" style="font-weight:bold; color:green;" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                 </div>
                 <div style="display:flex; align-items:center; gap:5px;" invisible="not company_id.cop_show_fields">
                     <label for="amount_total_cop" string="Total COP" style="font-weight:bold; color:blue;"/>
