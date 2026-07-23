@@ -42,6 +42,12 @@ class AccountMove(models.Model):
         store=True,
     )
 
+    price_tier_type = fields.Selection([
+        ('retail', 'Menudeo'),
+        ('wholesale', 'Mayoreo'),
+        ('mercadolibre', 'MercadoLibre'),
+    ], string='Nivel de precio', readonly=True)
+
     @api.depends('currency_id')
     def _compute_currency_aux(self):
         usd = self.env.ref('base.USD', raise_if_not_found=False)

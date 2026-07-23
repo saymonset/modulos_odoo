@@ -57,6 +57,15 @@ class PurchaseOrderLine(models.Model):
         })
         return res
 
+    @api.onchange('product_id')
+    def _onchange_product_id_tier(self):
+        if self.product_id and self.order_id.price_tier_type:
+            tmpl = self.product_id.product_tmpl_id
+            tier = tmpl.price_tier_ids.filtered(
+                lambda t: t.tier_type == self.order_id.price_tier_type)
+            if tier and tier.price_ves:
+                self.price_unit = tier.price_ves
+
     @api.depends('price_unit', 'product_qty')
     def _compute_usd_bcv(self):
         for line in self:

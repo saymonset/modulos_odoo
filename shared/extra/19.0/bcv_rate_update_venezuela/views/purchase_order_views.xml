@@ -36,6 +36,9 @@
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="priority">99</field>
         <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="price_tier_type"/>
+            </xpath>
             <!-- Columnas en las líneas -->
             <xpath expr="//field[@name='order_line']/list/field[@name='price_subtotal']" position="before">
                 <field name="rate_value" string="Tasa BCV (USD/VES)" readonly="1" optional="hide"/>

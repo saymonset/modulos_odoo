@@ -117,10 +117,30 @@ def _populate_initial_cop_prices(env):
         count_prod += 1
     _logger.info("Costos COP poblados para %s productos.", count_prod)
 
+def _populate_initial_tiers(env):
+    tmpls = env['product.template'].search([('list_price_usd', '>', 0)])
+    count = 0
+    for tmpl in tmpls:
+        existing = tmpl.price_tier_ids.filtered(lambda t: t.tier_type == 'retail')
+        if not existing:
+            rate = env['product.template']._get_bcv_rate(tmpl.company_id)
+            cop_rate = env['product.template']._get_cop_rate(tmpl.company_id)
+            vals = {
+                'tier_type': 'retail',
+                'price_usd': tmpl.list_price_usd,
+                'price_ves': float_round(tmpl.list_price_usd * rate, precision_digits=2) if rate else 0.0,
+            }
+            if cop_rate:
+                vals['price_cop'] = float_round(tmpl.list_price_usd * cop_rate, precision_digits=2)
+            tmpl.price_tier_ids = [(0, 0, vals)]
+            count += 1
+    _logger.info("Precios retail poblados para %s plantillas.", count)
+
 def _post_init_hook(env):
     _clean_orphan_views(env)
     _populate_initial_usd_prices(env)
     _populate_initial_cop_prices(env)
+    _populate_initial_tiers(env)
     # Recalculate Bs prices from USD with the current rate
     env['product.template']._recalculate_ves_prices_from_usd()
     # Recalculate COP prices from USD

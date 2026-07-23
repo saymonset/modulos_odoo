@@ -45,6 +45,36 @@
         </field>
     </record>
 
+    <record id="product_price_tier_tree_view" model="ir.ui.view">
+        <field name="name">product.price.tier.tree</field>
+        <field name="model">product.price.tier</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" delete="1">
+                <field name="sequence" widget="handle"/>
+                <field name="product_tmpl_id"/>
+                <field name="tier_type"/>
+                <field name="price_usd"/>
+                <field name="price_ves" readonly="1"/>
+                <field name="price_cop" readonly="1" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="product_template_price_tiers_view" model="ir.ui.view">
+        <field name="name">product.template.price.tiers.inherit</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='sales']" position="after">
+                <page string="Precios por nivel" name="price_tiers">
+                    <group>
+                        <field name="price_tier_ids"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
     <!-- 2. Formulario de Variante de Producto (Product Product) -->
     <record id="product_product_form_view_usd" model="ir.ui.view">
         <field name="name">product.product.form.usd.inherit</field>
@@ -282,5 +312,18 @@
             </field>
         </field>
     </record>
+
+    <!-- 11. Ventana de acción y menú para Precios por nivel -->
+    <record id="product_price_tier_action" model="ir.actions.act_window">
+        <field name="name">Precios por nivel</field>
+        <field name="res_model">product.price.tier</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <menuitem id="product_price_tier_menu"
+              name="Precios por nivel"
+              parent="sale.product_menu_catalog"
+              action="product_price_tier_action"
+              sequence="50"/>
 
 </odoo>
