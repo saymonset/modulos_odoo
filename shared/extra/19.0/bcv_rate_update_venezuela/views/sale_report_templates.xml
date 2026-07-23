@@ -3,8 +3,6 @@
 
     <template id="report_saleorder_inherit_bcv" inherit_id="sale.report_saleorder_document">
         <xpath expr="//th[@name='th_subtotal']" position="before">
-            <t t-set="usd_currency" t-value="env['res.currency'].search([('name','=','USD')], limit=1)"/>
-            <t t-set="cop_currency" t-value="env['res.currency'].sudo().search([('name','=','COP')], limit=1)"/>
             <th name="th_rate" class="text-end text-nowrap">Tasa BCV (USD/VES)</th>
             <th name="th_price_usd" class="text-end text-nowrap">Precio USD</th>
         </xpath>
@@ -21,19 +19,19 @@
                 <span t-if="not collapse_prices and line.rate_value" t-esc="'{:,.2f}'.format(line.rate_value)"/>
             </td>
             <td name="td_product_price_usd" class="text-end text-nowrap">
-                <span t-if="not collapse_prices and line.price_usd_bcv" t-esc="line.price_usd_bcv" t-options="{'widget': 'monetary', 'display_currency': usd_currency}"/>
+                <span t-if="not collapse_prices and line.price_usd_bcv" t-esc="line.price_usd_bcv" t-options="{'widget': 'monetary', 'display_currency': env.ref('base.USD', raise_if_not_found=False)}"/>
             </td>
         </xpath>
         <xpath expr="//td[@name='td_product_subtotal']" position="after">
             <td name="td_product_subtotal_usd" class="text-end text-nowrap">
-                <span t-if="not collapse_prices" t-esc="line.price_subtotal_usd_bcv" t-options="{'widget': 'monetary', 'display_currency': usd_currency}"/>
+                <span t-if="not collapse_prices" t-esc="line.price_subtotal_usd_bcv" t-options="{'widget': 'monetary', 'display_currency': env.ref('base.USD', raise_if_not_found=False)}"/>
             </td>
             <t t-if="doc.company_id.cop_show_fields">
                 <td name="td_product_rate_cop" class="text-end text-nowrap">
                     <span t-if="not collapse_prices and line.rate_value_cop" t-esc="'{:,.2f}'.format(line.rate_value_cop)"/>
                 </td>
                 <td name="td_product_subtotal_cop" class="text-end text-nowrap">
-                    <span t-if="not collapse_prices" t-esc="line.price_subtotal_cop" t-options="{'widget': 'monetary', 'display_currency': cop_currency}"/>
+                    <span t-if="not collapse_prices" t-esc="line.price_subtotal_cop" t-options="{'widget': 'monetary', 'display_currency': env.ref('base.COP', raise_if_not_found=False) or env['res.currency'].sudo().search([('name','=','COP')], limit=1)}"/>
                 </td>
             </t>
         </xpath>
@@ -41,7 +39,7 @@
         <xpath expr="//div[@name='so_total_summary']" position="inside">
             <div class="text-end mt-2">
                 <strong style="color:green;">Total USD ($): </strong>
-                <span t-if="doc.amount_total_usd" t-esc="doc.amount_total_usd" t-options="{'widget': 'monetary', 'display_currency': usd_currency}" style="font-weight:bold; color:green;"/>
+                <span t-if="doc.amount_total_usd" t-esc="doc.amount_total_usd" t-options="{'widget': 'monetary', 'display_currency': env.ref('base.USD', raise_if_not_found=False)}" style="font-weight:bold; color:green;"/>
             </div>
             <div class="text-end mt-2">
                 <strong>Tasa de Cambio (Bs.): </strong>
@@ -54,7 +52,7 @@
             <t t-if="doc.company_id.cop_show_fields">
                 <div class="text-end mt-2">
                     <strong style="color:blue;">Total COP: </strong>
-                    <span t-if="doc.amount_total_cop" t-esc="doc.amount_total_cop" t-options="{'widget': 'monetary', 'display_currency': cop_currency}" style="font-weight:bold; color:blue;"/>
+                    <span t-if="doc.amount_total_cop" t-esc="doc.amount_total_cop" t-options="{'widget': 'monetary', 'display_currency': env.ref('base.COP', raise_if_not_found=False) or env['res.currency'].sudo().search([('name','=','COP')], limit=1)}" style="font-weight:bold; color:blue;"/>
                 </div>
             </t>
         </xpath>
