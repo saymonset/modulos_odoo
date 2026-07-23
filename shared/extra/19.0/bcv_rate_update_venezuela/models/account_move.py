@@ -54,12 +54,11 @@ class AccountMove(models.Model):
         for move in self:
             move.currency_aux_cop = cop if cop else move.company_id.currency_id
 
-    @api.depends('line_ids.bcv_rate_value', 'amount_total_usd')
+    @api.depends('company_id', 'amount_total_usd')
     def _compute_bcv_rate_value(self):
         for move in self:
-            rates = move.line_ids.mapped('bcv_rate_value')
-            rates = [r for r in rates if r]
-            move.bcv_rate_value = sum(rates) / len(rates) if rates else 1.0
+            rate = self.env['product.template']._get_bcv_rate(move.company_id)
+            move.bcv_rate_value = rate if rate else 1.0
             move.amount_total_ves_from_usd = move.amount_total_usd * move.bcv_rate_value if move.amount_total_usd else 0.0
 
     @api.depends('line_ids.price_subtotal_usd_bcv', 'line_ids.price_subtotal_cop')
