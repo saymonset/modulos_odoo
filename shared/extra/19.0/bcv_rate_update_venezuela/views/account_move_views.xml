@@ -16,7 +16,7 @@
             </xpath>
             <!-- Total USD debajo del tax_totals -->
             <xpath expr="//group[hasclass('oe_subtotal_footer')]//field[@name='tax_totals']" position="after">
-                <div style="max-width:55%;">
+                <div>
                     <div style="display:flex; align-items:center; gap:5px;" class="mt-2">
                         <label for="amount_total_usd" string="Total USD ($)" style="font-weight:bold; color:green;"/>
                         <field name="amount_total_usd" readonly="1" style="font-weight:bold; color:green;" widget="monetary" options="{'currency_field': 'currency_aux'}"/>

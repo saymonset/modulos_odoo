@@ -64,7 +64,7 @@
                 <field name="price_subtotal_cop" string="Subtotal COP" readonly="1" optional="hide"/>
             </xpath>
           <xpath expr="//group[@name='sale_total']" position="inside">
-                <div style="max-width:55%;">
+                <div>
                     <div style="display:flex; align-items:center; gap:5px;">
                         <label for="amount_total_usd" string="Total USD ($)" style="font-weight:bold; color:green;"/>
                         <field name="amount_total_usd" readonly="1" style="font-weight:bold; color:green;" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
