@@ -50,11 +50,12 @@ class SaleOrder(models.Model):
             order.amount_total_usd = sum(line.price_subtotal_usd_bcv for line in order.order_line)
             order.amount_total_cop = sum(line.price_subtotal_cop for line in order.order_line)
 
-    @api.depends('company_id', 'amount_total_usd')
+    @api.depends('order_line.rate_value', 'amount_total_usd')
     def _compute_bcv_rate_value(self):
         for order in self:
-            rate = self.env['product.template']._get_bcv_rate(order.company_id)
-            order.bcv_rate_value = rate if rate else 1.0
+            rates = order.order_line.mapped('rate_value')
+            rates = [r for r in rates if r]
+            order.bcv_rate_value = sum(rates) / len(rates) if rates else 1.0
             order.amount_total_ves_from_usd = order.amount_total_usd * order.bcv_rate_value if order.amount_total_usd else 0.0
 
     @api.depends('currency_id')
