@@ -13,3 +13,4 @@ from . import res_company
 from . import product_template
 from . import product_price_tier
 from . import stock_quant
+
