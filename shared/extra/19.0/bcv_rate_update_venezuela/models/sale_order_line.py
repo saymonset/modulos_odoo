@@ -51,7 +51,7 @@ class SaleOrderLine(models.Model):
         if self.product_id and self.order_id.price_tier_type:
             tmpl = self.product_id.product_tmpl_id
             tier = tmpl.price_tier_ids.filtered(
-                lambda t: t.tier_type == self.order_id.price_tier_type)
+                lambda t: t.tier_type == self.order_id.price_tier_type)[:1]
             if tier and tier.price_ves:
                 self.price_unit = tier.price_ves
 
@@ -77,8 +77,7 @@ class SaleOrderLine(models.Model):
             if line.order_id.price_tier_type and line.product_id:
                 tmpl = line.product_id.product_tmpl_id
                 tier = tmpl.price_tier_ids.filtered(
-                    lambda t: t.tier_type == line.order_id.price_tier_type)
-
+                    lambda t: t.tier_type == line.order_id.price_tier_type)[:1]
             if tier and tier.price_usd and tier.price_ves and line.price_unit:
                 ratio = line.price_unit / tier.price_ves
                 line.price_usd_bcv = float_round(tier.price_usd * ratio, precision_digits=2)
