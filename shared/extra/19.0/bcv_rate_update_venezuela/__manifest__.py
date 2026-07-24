@@ -49,6 +49,7 @@
         'views/purchase_report_templates.xml',
         'views/payment_templates_inherit.xml',
         'views/product_views.xml',
+        'wizards/price_tier_import_wizard.xml',
         'views/stock_quant_views.xml',
         'views/account_move_views.xml',
         'views/purchase_order_views.xml',
