@@ -250,4 +250,76 @@
         </xpath>
     </template>
 
+    <!-- ======================== 7. PORTAL: TASA Y TOTALES EN USD/VES/COP ======================== -->
+    <template id="sale_order_portal_total_usd" inherit_id="sale.sale_order_portal_content" name="Sale Order Portal Total with USD/VES/COP">
+        <xpath expr="//div[@name='total']" position="inside">
+            <div class="col-xs-7 col-md-5 ms-auto mt-2">
+                <table class="table table-sm" name="sale_order_usd_table">
+                    <tr name="o_portal_total_usd">
+                        <td class="ps-0 border-0">
+                            <strong>Total en USD</strong>
+                        </td>
+                        <td class="text-end pe-0 border-0">
+                            <strong>
+                                <t t-esc="'{:,.2f}'.format(sale_order.amount_total_usd)"/> USD
+                            </strong>
+                        </td>
+                    </tr>
+                    <tr name="o_portal_bcv_rate" class="small bg-light">
+                        <td class="ps-0 border-0">
+                            <i class="fa fa-info-circle text-primary me-1"></i>
+                            <strong>Tasa BCV (1 USD)</strong>
+                        </td>
+                        <td class="text-end pe-0 border-0">
+                            <strong>
+                                <t t-esc="'{:,.2f}'.format(sale_order.bcv_rate_value)"/> VES
+                            </strong>
+                            <t t-if="sale_order.bcv_rate_value &gt; 1.0">
+                                <br/>
+                                <span class="text-muted">Tasa oficial del día</span>
+                            </t>
+                        </td>
+                    </tr>
+                    <tr name="o_portal_total_ves">
+                        <td class="ps-0 border-0">
+                            <strong style="color: green;">Total Bolívares (VES)</strong>
+                        </td>
+                        <td class="text-end pe-0 border-0">
+                            <strong style="color: green;">
+                                <t t-esc="'{:,.2f}'.format(sale_order.amount_total_ves_from_usd)"/> VES
+                            </strong>
+                        </td>
+                    </tr>
+                    <t t-if="sale_order.company_id.cop_show_fields">
+                        <tr name="o_portal_total_cop">
+                            <td class="ps-0 border-0 pt-1">
+                                <strong style="color: blue;">Total COP</strong>
+                            </td>
+                            <td class="text-end pe-0 border-0 pt-1">
+                                <strong style="color: blue;">
+                                    <t t-esc="'$ {:,.0f} COP'.format(sale_order.amount_total_cop)"/>
+                                </strong>
+                            </td>
+                        </tr>
+                        <tr name="o_portal_cop_rate" class="small bg-light">
+                            <td class="ps-0 border-0">
+                                <i class="fa fa-info-circle text-primary me-1"></i>
+                                <strong>Tasa COP</strong>
+                            </td>
+                            <td class="text-end pe-0 border-0">
+                                <t t-set="cop_info" t-value="website.get_cop_rate_info()"/>
+                                <t t-if="cop_info.get('rate') and cop_info.get('rate') != 1.0">
+                                    <strong>1 USD = <t t-esc="'{:,.2f}'.format(cop_info['rate'])"/> COP</strong>
+                                </t>
+                                <t t-else="">
+                                    <span class="text-danger">No disponible</span>
+                                </t>
+                            </td>
+                        </tr>
+                    </t>
+                </table>
+            </div>
+        </xpath>
+    </template>
+
 </odoo>
