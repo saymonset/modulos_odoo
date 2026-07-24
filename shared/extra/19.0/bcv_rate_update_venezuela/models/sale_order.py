@@ -44,6 +44,12 @@ class SaleOrder(models.Model):
     partner_phone = fields.Char(string='Teléfono', related='partner_id.phone', readonly=True)
     whatsapp_sent = fields.Boolean(string="WhatsApp enviado", default=False)
 
+    price_tier_type = fields.Selection([
+        ('retail', 'Menudeo'),
+        ('wholesale', 'Mayoreo'),
+        ('mercadolibre', 'MercadoLibre'),
+    ], string='Nivel de precio', default='retail')
+
     @api.depends('order_line.price_subtotal_usd_bcv', 'order_line.price_subtotal_cop')
     def _compute_amount_total_usd(self):
         for order in self:
@@ -56,6 +62,18 @@ class SaleOrder(models.Model):
             rate = self.env['product.template']._get_bcv_rate(order.company_id)
             order.bcv_rate_value = rate if rate else 1.0
             order.amount_total_ves_from_usd = order.amount_total_usd * order.bcv_rate_value if order.amount_total_usd else 0.0
+
+    @api.onchange('price_tier_type')
+    def _onchange_price_tier_type(self):
+        for order in self:
+            if order.price_tier_type and order.order_line:
+                for line in order.order_line:
+                    if line.product_id:
+                        tmpl = line.product_id.product_tmpl_id
+                        tier = tmpl.price_tier_ids.filtered(
+                            lambda t: t.tier_type == order.price_tier_type)
+                        if tier and tier.price_ves:
+                            line.price_unit = tier.price_ves
 
     @api.depends('currency_id')
     def _compute_currency_aux(self):

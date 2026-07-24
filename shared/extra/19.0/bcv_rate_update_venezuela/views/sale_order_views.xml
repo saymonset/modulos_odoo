@@ -8,6 +8,7 @@
         <field name="arch" type="xml">
             <field name="partner_id" position="after">
                 <field name="partner_phone" readonly="1" string="Teléfono"/>
+                <field name="price_tier_type"/>
             </field>
         </field>
     </record>

@@ -46,6 +46,15 @@ class SaleOrderLine(models.Model):
         store=True
     )
 
+    @api.onchange('product_id')
+    def _onchange_product_id_tier(self):
+        if self.product_id and self.order_id.price_tier_type:
+            tmpl = self.product_id.product_tmpl_id
+            tier = tmpl.price_tier_ids.filtered(
+                lambda t: t.tier_type == self.order_id.price_tier_type)[:1]
+            if tier and tier.price_ves:
+                self.price_unit = tier.price_ves
+
     def _prepare_invoice_line(self, **optional_values):
         res = super()._prepare_invoice_line(**optional_values)
         res.update({
@@ -64,7 +73,16 @@ class SaleOrderLine(models.Model):
             line.rate_value = rate_val
             line.rate_value_cop = cop_rate
 
-            if (line.product_id and line.product_id.list_price_usd
+            tier = False
+            if line.order_id.price_tier_type and line.product_id:
+                tmpl = line.product_id.product_tmpl_id
+                tier = tmpl.price_tier_ids.filtered(
+                    lambda t: t.tier_type == line.order_id.price_tier_type)[:1]
+            if tier and tier.price_usd and tier.price_ves and line.price_unit:
+                ratio = line.price_unit / tier.price_ves
+                line.price_usd_bcv = float_round(tier.price_usd * ratio, precision_digits=2)
+                line.price_cop = float_round(line.price_usd_bcv * cop_rate, precision_digits=2) if cop_rate else 0.0
+            elif (line.product_id and line.product_id.list_price_usd
                     and line.product_id.list_price and line.price_unit):
                 ratio = line.price_unit / line.product_id.list_price
                 line.price_usd_bcv = float_round(line.product_id.list_price_usd * ratio, precision_digits=2)

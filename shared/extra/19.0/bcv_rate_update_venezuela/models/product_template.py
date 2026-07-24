@@ -28,6 +28,22 @@ class ProductTemplate(models.Model):
         digits=(12, 2)
     )
 
+    price_tier_ids = fields.One2many(
+        'product.price.tier',
+        'product_tmpl_id',
+        string='Precios por nivel',
+    )
+
+    def _get_tier_price_ves(self, tier_type):
+        self.ensure_one()
+        tier = self.price_tier_ids.filtered(lambda t: t.tier_type == tier_type)
+        return tier.price_ves if tier else 0.0
+
+    def _get_tier_price_usd(self, tier_type):
+        self.ensure_one()
+        tier = self.price_tier_ids.filtered(lambda t: t.tier_type == tier_type)
+        return tier.price_usd if tier else 0.0
+
     standard_price_usd = fields.Float(
         string='Costo USD',
         compute='_compute_standard_price_usd',
@@ -285,6 +301,16 @@ class ProductTemplate(models.Model):
                 p.with_context(_skip_bcv_sync=True).write({
                     'standard_price': float_round(p.standard_price_usd * rate, precision_digits=2),
                 })
+            tiers = self.env['product.price.tier'].search([
+                ('price_usd', '>', 0),
+                '|',
+                ('company_id', '=', company.id),
+                ('company_id', '=', False),
+            ])
+            for t in tiers:
+                t.with_context(_skip_bcv_sync=True).write({
+                    'price_ves': float_round(t.price_usd * rate, precision_digits=2),
+                })
         _logger.info("Precios VES recalculados desde USD para todas las compañías (incluyendo productos globales).")
 
     @api.model
@@ -323,6 +349,16 @@ class ProductTemplate(models.Model):
             for p in products:
                 p.with_context(_skip_bcv_sync=True).write({
                     'standard_price_cop': float_round(p.standard_price_usd * rate, precision_digits=2),
+                })
+            tiers = self.env['product.price.tier'].search([
+                ('price_usd', '>', 0),
+                '|',
+                ('company_id', '=', company.id),
+                ('company_id', '=', False),
+            ])
+            for t in tiers:
+                t.with_context(_skip_bcv_sync=True).write({
+                    'price_cop': float_round(t.price_usd * rate, precision_digits=2),
                 })
         _logger.info("Precios COP recalculados desde USD para todas las compañías.")
 
