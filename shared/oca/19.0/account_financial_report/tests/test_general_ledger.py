@@ -7,6 +7,7 @@ import time
 from datetime import date
 
 from odoo import api, fields
+from odoo.fields import Command
 from odoo.tests import tagged
 
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
@@ -704,6 +705,96 @@ class TestGeneralLedgerReport(AccountTestInvoicingCommon):
         wizard = self.env["general.ledger.report.wizard"].with_context(**context)
         self.assertEqual(wizard._default_partners(), expected_list)
 
+    def test_analytic_distribution_xlsx(self):
+        """
+        Render the XLSX report when a journal item is distributed among
+        several analytic accounts.
+
+        In that case ``analytic_distribution`` keys are several analytic
+        account ids joined by commas (e.g. ``"337,357"``), so the report must
+        not try to cast the whole key with ``int()``.
+        """
+        company = self.env.user.company_id
+        # Two analytic accounts in different plans so they can be combined in a
+        # single distribution key.
+        plan_1 = self.env["account.analytic.plan"].create({"name": "Plan 1"})
+        plan_2 = self.env["account.analytic.plan"].create({"name": "Plan 2"})
+        analytic_account_1 = self.env["account.analytic.account"].create(
+            {"name": "Analytic 1", "plan_id": plan_1.id}
+        )
+        analytic_account_2 = self.env["account.analytic.account"].create(
+            {"name": "Analytic 2", "plan_id": plan_2.id}
+        )
+        journal = self.env["account.journal"].search(
+            [("company_id", "=", company.id)], limit=1
+        )
+        move = self.env["account.move"].create(
+            {
+                "journal_id": journal.id,
+                "date": self.fy_date_start,
+                "line_ids": [
+                    (
+                        0,
+                        0,
+                        {
+                            "debit": 1000,
+                            "credit": 0,
+                            "account_id": self.receivable_account.id,
+                            "partner_id": self.partner.id,
+                            # The receivable account is grouped by partner, so
+                            # this line exercises the buggy report branch.
+                            "analytic_distribution": {
+                                f"{analytic_account_1.id},{analytic_account_2.id}": 100,
+                            },
+                        },
+                    ),
+                    (
+                        0,
+                        0,
+                        {
+                            "debit": 0,
+                            "credit": 1000,
+                            "account_id": self.income_account.id,
+                            "partner_id": self.partner.id,
+                        },
+                    ),
+                ],
+            }
+        )
+        move.action_post()
+        wizard = self.env["general.ledger.report.wizard"].create(
+            {
+                "date_from": self.fy_date_start,
+                "date_to": self.fy_date_end,
+                "target_move": "posted",
+                "hide_account_at_0": False,
+                "company_id": company.id,
+                "fy_start_date": self.fy_date_start,
+                # Lines must not be centralized so the analytic distribution is
+                # rendered per move line.
+                "centralize": False,
+                "show_cost_center": True,
+            }
+        )
+        data = wizard._prepare_report_data()
+        # Mimic the context the wizard's report action provides at render time,
+        # so the report can resolve the company currency from the active wizard.
+        content, content_type = (
+            self.env["ir.actions.report"]
+            .with_context(
+                active_model=wizard._name,
+                active_id=wizard.id,
+                active_ids=wizard.ids,
+            )
+            ._render_xlsx(
+                "account_financial_report.action_report_general_ledger_xlsx",
+                wizard.ids,
+                data,
+            )
+        )
+        self.assertTrue(content)
+        self.assertEqual(content_type, "xlsx")
+
     def test_validate_date(self):
         company_id = self.env.user.company_id
         company_id.write({"fiscalyear_last_day": 31, "fiscalyear_last_month": "12"})
@@ -731,3 +822,102 @@ class TestGeneralLedgerReport(AccountTestInvoicingCommon):
         wizard.onchange_date_range_id()
         self.assertEqual(wizard.date_from, date(2018, 1, 1))
         self.assertEqual(wizard.date_to, date(2018, 12, 31))
+
+    def test_05_onchange_account_range_no_typeerror(self):
+        company_id = self.env.user.company_id.id
+        acc_from = self.env["account.account"].create(
+            {
+                "code": "TEST43000",
+                "name": "Test From",
+                "account_type": "asset_receivable",
+                "company_ids": [(6, 0, [company_id])],
+            }
+        )
+        acc_to = self.env["account.account"].create(
+            {
+                "code": "TEST43005",
+                "name": "Test To",
+                "account_type": "asset_receivable",
+                "company_ids": [(6, 0, [company_id])],
+            }
+        )
+        acc_out = self.env["account.account"].create(
+            {
+                "code": "TEST44000",
+                "name": "Test Out",
+                "account_type": "asset_receivable",
+                "company_ids": [(6, 0, [company_id])],
+            }
+        )
+        wizard = (
+            self.env["general.ledger.report.wizard"]
+            .with_context(company_id=company_id)
+            .create(
+                {
+                    "company_id": company_id,
+                    "account_code_from": acc_from.id,
+                    "account_code_to": acc_to.id,
+                }
+            )
+        )
+        wizard.on_change_account_range()
+        self.assertIn(
+            acc_from,
+            wizard.account_ids,
+            "The starting account should be in the filter.",
+        )
+        self.assertIn(
+            acc_to, wizard.account_ids, "The ending account should be in the filter."
+        )
+        self.assertNotIn(
+            acc_out,
+            wizard.account_ids,
+            "Accounts out of the range should NOT be in the filter.",
+        )
+
+    def test_06_line_subsection_excluded(self):
+        """A posted move with a `line_subsection` row must not break the
+        General Ledger. See the Trial Balance counterpart for the root cause.
+        """
+        journal = self.env["account.journal"].search(
+            [("company_id", "=", self.env.user.company_id.id)], limit=1
+        )
+        move = self.env["account.move"].create(
+            {
+                "journal_id": journal.id,
+                "date": self.fy_date_start,
+                "line_ids": [
+                    Command.create(
+                        {
+                            "debit": 50.0,
+                            "credit": 0.0,
+                            "account_id": self.receivable_account.id,
+                            "partner_id": self.partner.id,
+                        }
+                    ),
+                    Command.create(
+                        {
+                            "debit": 0.0,
+                            "credit": 50.0,
+                            "account_id": self.income_account.id,
+                            "partner_id": self.partner.id,
+                        }
+                    ),
+                    Command.create(
+                        {
+                            "display_type": "line_subsection",
+                            "name": "Subsection label",
+                        }
+                    ),
+                ],
+            }
+        )
+        move.action_post()
+        self.assertIn("line_subsection", move.line_ids.mapped("display_type"))
+        res_data = self._get_report_lines()
+        self.assertIn("general_ledger", res_data)
+        for entry in res_data["general_ledger"]:
+            self.assertTrue(
+                entry.get("id"),
+                f"Report contains a line with falsy id: {entry}",
+            )

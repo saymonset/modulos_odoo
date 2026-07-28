@@ -8,12 +8,8 @@
         <field name="model">ir.ui.menu</field>
         <field name="inherit_id" ref="base.edit_menu_access" />
         <field name="arch" type="xml">
-            <field name="group_ids" position="before">
-                <label for="group_ids" />
-            </field>
             <field name="group_ids" position="after">
-                <label for="excluded_group_ids" />
-                <field name="excluded_group_ids" />
+                <field name="excluded_group_ids" widget="many2many_tags" />
             </field>
         </field>
     </record>

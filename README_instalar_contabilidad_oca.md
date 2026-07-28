@@ -36,6 +36,7 @@ Es vital seguir este orden para evitar errores de dependencias:
 
 1.  **`account_usability`**: Base para mejoras contables.
 2.  **`report_xlsx`** y luego **`report_xlsx_helper`**: Necesarios para exportaciones Excel.
+2.1 **`account_asset_management`**
 3.  **`date_range`**: Manejo de periodos de fechas.
 4.  **`account_financial_report`**: Motor de informes financieros OCA.
 5.  **`partner_statement`**: Estados de cuenta de clientes/proveedores.
@@ -77,4 +78,4 @@ Una vez instalados los módulos, realiza los siguientes ajustes en la interfaz d
 ---
 
 *Desarrollado con ❤️ para el equipo de Odoo 19*
-*Última actualización: Mayo 2026*
+*Última actualización: Mayo 2026*git 
