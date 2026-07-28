@@ -13,9 +13,9 @@
             <!-- Columnas en las líneas de factura -->
             <xpath expr="//field[@name='invoice_line_ids']//field[@name='price_subtotal']" position="before">
                 <field name="bcv_rate_value" string="Tasa BCV (USD/VES)" readonly="1" optional="hide"/>
-                <field name="cop_rate_value" string="Tasa COP" readonly="1" optional="hide"/>
+                <field name="cop_rate_value" string="Tasa COP" readonly="1" optional="hide" invisible="not company_id.cop_show_fields"/>
                 <field name="price_subtotal_usd_bcv" string="Subtotal USD" readonly="1"/>
-                <field name="price_subtotal_cop" string="Subtotal COP" readonly="1" optional="hide"/>
+                <field name="price_subtotal_cop" string="Subtotal COP" readonly="1" optional="hide" invisible="not company_id.cop_show_fields"/>
             </xpath>
             <!-- Total USD debajo del tax_totals -->
             <xpath expr="//group[hasclass('oe_subtotal_footer')]//field[@name='tax_totals']" position="after">

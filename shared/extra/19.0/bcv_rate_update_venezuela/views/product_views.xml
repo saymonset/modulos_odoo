@@ -55,7 +55,7 @@
                 <field name="tier_type"/>
                 <field name="price_usd"/>
                 <field name="price_ves" readonly="1"/>
-                <field name="price_cop" readonly="1" optional="show"/>
+                <field name="price_cop" readonly="1" optional="show" invisible="not company_id.cop_show_fields"/>
             </list>
         </field>
     </record>
@@ -175,7 +175,8 @@
                 <field name="price_extra_cop"
                        widget="monetary"
                        options="{'currency_field': 'currency_cop_id'}"
-                       optional="hide"/>
+                       optional="hide"
+                       invisible="not product_tmpl_id.company_id.cop_show_fields"/>
             </field>
         </field>
     </record>
@@ -199,7 +200,8 @@
                 <field name="list_price_cop"
                        widget="monetary"
                        options="{'currency_field': 'currency_cop_id'}"
-                       optional="hide"/>
+                       optional="hide"
+                       invisible="not company_id.cop_show_fields"/>
             </field>
         </field>
     </record>
@@ -223,7 +225,8 @@
                 <field name="lst_price_cop"
                        widget="monetary"
                        options="{'currency_field': 'currency_cop_id'}"
-                       optional="hide"/>
+                       optional="hide"
+                       invisible="not company_id.cop_show_fields"/>
             </field>
         </field>
     </record>
@@ -271,15 +274,17 @@
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"
                        optional="show" sum="Total Value USD"/>
-                <field name="currency_cop_id" column_invisible="True"/>
+                <field name="currency_cop_id" column_invisible="True" invisible="not company_id.cop_show_fields"/>
                 <field name="standard_price_cop"
                        widget="monetary"
                        options="{'currency_field': 'currency_cop_id'}"
-                       optional="hide"/>
+                       optional="hide"
+                       invisible="not company_id.cop_show_fields"/>
                 <field name="total_value_cop"
                        widget="monetary"
                        options="{'currency_field': 'currency_cop_id'}"
-                       optional="hide" sum="Total Value COP"/>
+                       optional="hide" sum="Total Value COP"
+                       invisible="not company_id.cop_show_fields"/>
             </field>
         </field>
     </record>
@@ -300,15 +305,17 @@
                        widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"
                        optional="show" sum="Total Value USD"/>
-                <field name="currency_cop_id" column_invisible="True"/>
+                <field name="currency_cop_id" column_invisible="True" invisible="not company_id.cop_show_fields"/>
                 <field name="standard_price_cop"
                        widget="monetary"
                        options="{'currency_field': 'currency_cop_id'}"
-                       optional="hide"/>
+                       optional="hide"
+                       invisible="not company_id.cop_show_fields"/>
                 <field name="total_value_cop"
                        widget="monetary"
                        options="{'currency_field': 'currency_cop_id'}"
-                       optional="hide" sum="Total Value COP"/>
+                       optional="hide" sum="Total Value COP"
+                       invisible="not company_id.cop_show_fields"/>
             </field>
         </field>
     </record>

@@ -48,7 +48,7 @@ class AccountMoveLine(models.Model):
     price_subtotal_cop = fields.Float(
         string='Subtotal COP',
         digits=(12, 2),
-        compute='_compute_price_subtotal_cop',
+        compute='_compute_price_subtotal_usd_bcv',
         store=True,
         precompute=True,
     )
