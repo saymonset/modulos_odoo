@@ -28,6 +28,7 @@ class PurchaseOrder(models.Model):
         compute='_compute_amount_total_usd',
         store=True,
     )
+    cop_show_fields = fields.Boolean(related='company_id.cop_show_fields', string='Mostrar COP', readonly=True)
 
     price_tier_type = fields.Selection([
         ('retail', 'Menudeo'),

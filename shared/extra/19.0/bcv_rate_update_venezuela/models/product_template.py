@@ -18,6 +18,7 @@ class ProductTemplate(models.Model):
         string='COP Currency',
         compute='_compute_currency_cop_id'
     )
+    cop_show_fields = fields.Boolean(related='company_id.cop_show_fields', string='Mostrar COP', readonly=True)
 
     list_price_usd = fields.Float(
         string='Precio de Venta USD',
@@ -563,6 +564,7 @@ class ProductTemplateAttributeValue(models.Model):
         string='COP Currency',
         compute='_compute_currency_cop_id'
     )
+    cop_show_fields = fields.Boolean(related='product_tmpl_id.company_id.cop_show_fields', string='Mostrar COP', readonly=True)
 
     price_extra_usd = fields.Float(
         string='Precio Extra USD',

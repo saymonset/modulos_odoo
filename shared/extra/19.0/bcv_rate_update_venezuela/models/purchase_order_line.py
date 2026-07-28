@@ -46,6 +46,7 @@ class PurchaseOrderLine(models.Model):
         compute='_compute_usd_bcv',
         store=True,
     )
+    cop_show_fields = fields.Boolean(related='company_id.cop_show_fields', string='Mostrar COP', readonly=True)
 
     def _prepare_account_move_line(self, *args, **kwargs):
         res = super()._prepare_account_move_line(*args, **kwargs)

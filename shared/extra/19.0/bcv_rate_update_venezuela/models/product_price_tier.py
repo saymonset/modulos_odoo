@@ -31,6 +31,7 @@ class ProductPriceTier(models.Model):
         related='product_tmpl_id.company_id',
         store=True,
     )
+    cop_show_fields = fields.Boolean(related='company_id.cop_show_fields', string='Mostrar COP', readonly=True)
 
     _sql_constraints = [
         ('tier_uniq', 'unique(product_tmpl_id, tier_type)',

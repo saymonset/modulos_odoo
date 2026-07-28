@@ -18,6 +18,7 @@ class StockQuant(models.Model):
         string='COP Currency',
         compute='_compute_currency_cop_id'
     )
+    cop_show_fields = fields.Boolean(related='company_id.cop_show_fields', string='Mostrar COP', readonly=True)
 
     unit_cost_usd = fields.Float(
         string='Costo unitario USD',

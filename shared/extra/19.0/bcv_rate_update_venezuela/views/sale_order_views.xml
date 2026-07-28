@@ -20,6 +20,7 @@
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
                 <page string="Comprobante de pago">
+                    <field name="cop_show_fields" invisible="1"/>
                     <group>
                         <field name="payment_proof" widget="binary" filename="payment_proof_filename"/>
                         <field name="payment_proof_filename" invisible="1"/>
@@ -33,7 +34,7 @@
                         <field name="amount_vef" digits="[12, 2]"/>
                         <field name="exchange_rate" digits="[12, 2]"/>
                         <field name="amount_usd" digits="[12, 2]"/>
-                        <field name="amount_cop" digits="[12, 2]" invisible="not company_id.cop_show_fields"/>
+                        <field name="amount_cop" digits="[12, 2]" invisible="not cop_show_fields"/>
                     </group>
                 </page>
             </xpath>
@@ -47,8 +48,9 @@
         <field name="inherit_id" ref="sale.sale_order_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='amount_total']" position="after">
+                <field name="cop_show_fields" column_invisible="True"/>
                 <field name="amount_total_usd" string="Total USD" sum="Total USD" optional="show" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
-                <field name="amount_total_cop" string="Total COP" optional="hide" widget="monetary" options="{'currency_field': 'currency_aux_cop'}" invisible="not company_id.cop_show_fields"/>
+                <field name="amount_total_cop" string="Total COP" optional="hide" widget="monetary" options="{'currency_field': 'currency_aux_cop'}" invisible="not cop_show_fields"/>
             </xpath>
         </field>
     </record>
@@ -59,12 +61,14 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
            <xpath expr="//field[@name='order_line']/list/field[@name='price_subtotal']" position="before">
+                <field name="cop_show_fields" column_invisible="True"/>
                 <field name="rate_value" string="Tasa BCV (USD/VES)" readonly="1" optional="show"/>
-                <field name="rate_value_cop" string="Tasa COP" readonly="1" optional="hide" invisible="not company_id.cop_show_fields"/>
+                <field name="rate_value_cop" string="Tasa COP" readonly="1" optional="hide" invisible="not cop_show_fields"/>
                 <field name="price_subtotal_usd_bcv" string="Subtotal USD" readonly="1" />
-                <field name="price_subtotal_cop" string="Subtotal COP" readonly="1" optional="hide" invisible="not company_id.cop_show_fields"/>
+                <field name="price_subtotal_cop" string="Subtotal COP" readonly="1" optional="hide" invisible="not cop_show_fields"/>
             </xpath>
           <xpath expr="//group[@name='sale_total']" position="inside">
+                <field name="cop_show_fields" invisible="1"/>
                 <div>
                     <div style="display:flex; align-items:center; gap:5px;">
                         <label for="amount_total_usd" string="Total USD ($)" style="font-weight:bold; color:green;"/>
@@ -79,7 +83,7 @@
                         <label for="amount_total_ves_from_usd" string="Total Bolívares (VES)" style="font-weight:bold; color:green;"/>
                         <field name="amount_total_ves_from_usd" readonly="1" style="font-weight:bold; color:green;" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                     </div>
-                    <div style="display:flex; align-items:center; gap:5px;" invisible="not company_id.cop_show_fields">
+                    <div style="display:flex; align-items:center; gap:5px;" invisible="not cop_show_fields">
                         <label for="amount_total_cop" string="Total COP" style="font-weight:bold; color:blue;"/>
                         <field name="amount_total_cop" readonly="1" style="font-weight:bold; color:blue;" widget="monetary" options="{'currency_field': 'currency_aux_cop'}"/>
                     </div>

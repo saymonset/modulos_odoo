@@ -29,6 +29,7 @@ class AccountMove(models.Model):
         compute='_compute_amount_total_usd',
         store=True,
     )
+    cop_show_fields = fields.Boolean(related='company_id.cop_show_fields', string='Mostrar COP', readonly=True)
     bcv_rate_value = fields.Float(
         string='Tasa BCV (USD/VES)',
         digits=(12, 2),

@@ -52,6 +52,7 @@ class AccountMoveLine(models.Model):
         store=True,
         precompute=True,
     )
+    cop_show_fields = fields.Boolean(related='company_id.cop_show_fields', string='Mostrar COP', readonly=True)
 
     @api.depends('price_unit', 'company_id')
     def _compute_price_usd_bcv(self):

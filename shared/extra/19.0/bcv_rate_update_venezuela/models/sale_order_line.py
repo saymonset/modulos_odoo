@@ -45,6 +45,7 @@ class SaleOrderLine(models.Model):
         compute='_compute_usd_bcv',
         store=True
     )
+    cop_show_fields = fields.Boolean(related='company_id.cop_show_fields', string='Mostrar COP', readonly=True)
 
     @api.onchange('product_id')
     def _onchange_product_id_tier(self):

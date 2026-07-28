@@ -24,6 +24,7 @@ class SaleOrder(models.Model):
     exchange_rate = fields.Float('Tasa VES/USD', digits=(12, 2))
     amount_usd = fields.Float('Monto USD', digits=(12, 2))
     amount_cop = fields.Float('Monto COP', digits=(12, 2))
+    cop_show_fields = fields.Boolean(related='company_id.cop_show_fields', string='Mostrar COP', readonly=True)
 
     currency_aux = fields.Many2one('res.currency', string='Moneda Auxiliar USD', compute='_compute_currency_aux', store=True)
     amount_total_usd = fields.Monetary(string='Total USD (BCV)', currency_field='currency_aux', compute='_compute_amount_total_usd', store=True)
