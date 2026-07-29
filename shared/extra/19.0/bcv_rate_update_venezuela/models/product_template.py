@@ -18,7 +18,17 @@ class ProductTemplate(models.Model):
         string='COP Currency',
         compute='_compute_currency_cop_id'
     )
-    cop_show_fields = fields.Boolean(related='company_id.cop_show_fields', string='Mostrar COP', readonly=True)
+    cop_show_fields = fields.Boolean(
+        compute='_compute_cop_show_fields',
+        string='Mostrar COP',
+        readonly=True,
+    )
+
+    def _compute_cop_show_fields(self):
+        current_company_cop = self.env.company.cop_show_fields
+        for record in self:
+            record.cop_show_fields = record.company_id.cop_show_fields \
+                if record.company_id else current_company_cop
 
     list_price_usd = fields.Float(
         string='Precio de Venta USD',
