@@ -142,7 +142,6 @@ class CurrencyRateProvider(models.Model):
             ('currency_id', '=', target_currency.id),
             ('name', '=', fields.Date.today()),
             ('company_id', '=', company.id),
-            ('provider_id', '=', self.id),
         ], limit=1)
         
         vals = {
