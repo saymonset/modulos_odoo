@@ -5,11 +5,7 @@ class Website(models.Model):
 
     def get_bcv_rate(self):
         """Retorna la tasa USD/VES actual (cuántos bolívares por 1 USD)"""
-        company = self.company_id
-        if company.bcv_manual_rate_active and company.bcv_manual_rate > 0:
-            return company.bcv_manual_rate
-        rate_info = self.get_rate_info(currency_name='USD')
-        return rate_info.get('rate', 1.0)
+        return self.env['product.template']._get_bcv_rate(self.company_id)
 
     def get_conversion_factor_ves_to_usd(self):
         """

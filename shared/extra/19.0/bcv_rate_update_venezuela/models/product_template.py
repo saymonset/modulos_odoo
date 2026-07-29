@@ -225,13 +225,6 @@ class ProductTemplate(models.Model):
             company = self.env.company
         if company.bcv_manual_rate_active and company.bcv_manual_rate > 0:
             return company.bcv_manual_rate
-        rate = self.env['res.currency.rate'].search([
-            ('currency_id.name', '=', 'USD'),
-            ('company_id', '=', company.id),
-            ('provider_id.provider_type', '=', 'bcv'),
-        ], order='name desc', limit=1)
-        if rate and rate.original_value:
-            return rate.original_value
         main_provider = self.env['currency.rate.provider'].sudo().search([
             ('company_id', '=', company.id),
             ('provider_type', '=', 'bcv'),
@@ -239,6 +232,13 @@ class ProductTemplate(models.Model):
         ], limit=1)
         if main_provider and main_provider.last_rate:
             return main_provider.last_rate
+        rate = self.env['res.currency.rate'].search([
+            ('currency_id.name', '=', 'USD'),
+            ('company_id', '=', company.id),
+            ('provider_id.provider_type', '=', 'bcv'),
+        ], order='name desc, id desc', limit=1)
+        if rate and rate.original_value:
+            return rate.original_value
         return 1.0
 
     @api.model
@@ -247,13 +247,6 @@ class ProductTemplate(models.Model):
             company = self.env.company
         if company.cop_manual_rate_active and company.cop_manual_rate > 0:
             return company.cop_manual_rate
-        rate = self.env['res.currency.rate'].search([
-            ('currency_id.name', '=', 'USD'),
-            ('company_id', '=', company.id),
-            ('provider_id.provider_type', '=', 'bogota'),
-        ], order='name desc', limit=1)
-        if rate and rate.original_value:
-            return rate.original_value
         main_provider = self.env['currency.rate.provider'].sudo().search([
             ('company_id', '=', company.id),
             ('provider_type', '=', 'bogota'),
@@ -261,6 +254,13 @@ class ProductTemplate(models.Model):
         ], limit=1)
         if main_provider and main_provider.last_rate:
             return main_provider.last_rate
+        rate = self.env['res.currency.rate'].search([
+            ('currency_id.name', '=', 'USD'),
+            ('company_id', '=', company.id),
+            ('provider_id.provider_type', '=', 'bogota'),
+        ], order='name desc, id desc', limit=1)
+        if rate and rate.original_value:
+            return rate.original_value
         return 1.0
 
     # ─── Batch recalculation ─────────────────────────────────────────
