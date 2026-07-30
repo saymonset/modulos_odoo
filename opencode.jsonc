@@ -2,5 +2,6 @@
   "$schema": "https://opencode.ai/config.json",
   "skills": {
     "paths": ["~/.agents/skills/odoo-19"]
-  }
+  },
+  "instructions":["/home/odoo/lead/modulos_odoo/instructions.md"]
 }
