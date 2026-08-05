@@ -429,7 +429,13 @@ class SessionState(models.Model):
                     }
                 else:
                     if not (es_palabra_salto or es_finalizar_carga):
-                        res_fin = self._get_gpt_service().detectar_intencion_finalizar_carga(valor)
+                        try:
+                            res_fin = self._get_gpt_service().detectar_intencion_finalizar_carga(valor)
+                        except Exception as e:
+                            _logger.error(f"Error detectando fin de carga con IA: {e}")
+                            res_fin = {'termino': False}
+                    else:
+                        res_fin = {'termino': False}
                     if es_palabra_salto or es_finalizar_carga or res_fin.get('termino'):
                         _logger.info("El usuario decidió finalizar carga de imágenes o saltar el paso.")
                         resultado = registro.estado.get('datos_paciente', {}).get(campo_destino, [])
@@ -918,9 +924,17 @@ class SessionState(models.Model):
         return msg + "\n\n" + pie
     
     def _generar_mensaje_expirado(self, texto_usuario):
-        res = self._get_gpt_service().generar_mensaje_personalizado('expirado', texto_usuario)
-        return res.get('mensaje', "Tu sesión ha expirado por inactividad. Por favor, inicia un nuevo proceso.")
+        try:
+            res = self._get_gpt_service().generar_mensaje_personalizado('expirado', texto_usuario)
+            return res.get('mensaje', "Tu sesión ha expirado por inactividad. Por favor, inicia un nuevo proceso.")
+        except Exception as e:
+            _logger.error(f"Error generando mensaje de expiración: {e}")
+            return "Tu sesión ha expirado por inactividad. Por favor, inicia un nuevo proceso."
 
     def _generar_mensaje_sin_pasos(self, texto_usuario):
-        res = self._get_gpt_service().generar_mensaje_personalizado('sin_pasos', texto_usuario)
-        return res.get('mensaje', "El proceso ya estaba completado. ¡Gracias!")
+        try:
+            res = self._get_gpt_service().generar_mensaje_personalizado('sin_pasos', texto_usuario)
+            return res.get('mensaje', "El proceso ya estaba completado. ¡Gracias!")
+        except Exception as e:
+            _logger.error(f"Error generando mensaje sin pasos: {e}")
+            return "El proceso ya estaba completado. ¡Gracias!"

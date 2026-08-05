@@ -16,7 +16,14 @@ _logger = logging.getLogger(__name__)
 class GptService(models.TransientModel):
     _name = 'gpt.service'
     _description = 'GPT Service Layer'
-    
+
+    @api.model
+    def _get_openai_client(self, config):
+        """Crea el cliente OpenAI o lanza un error claro si el paquete no está instalado."""
+        if OpenAI is None:
+            raise ValidationError(_('El paquete "openai" no está instalado en el servidor.'))
+        return OpenAI(api_key=config.api_key)
+
     @api.model
     def _get_openai_config(self):
         """Obtiene la configuración de OpenAI"""
@@ -29,7 +36,7 @@ class GptService(models.TransientModel):
     def orthography_check(self, prompt, max_tokens=None):
         """Verificación ortográfica usando el caso de uso"""
         config = self._get_openai_config()
-        openai_client = OpenAI(api_key=config.api_key)
+        openai_client = self._get_openai_client(config)
         use_case = self.env['orthography.use.case']
         options = {"prompt": prompt,
                    "max_tokens": max_tokens,
@@ -44,7 +51,7 @@ class GptService(models.TransientModel):
     @api.model
     def textToAudio(self, prompt, voice=None):
         config = self._get_openai_config()
-        openai_client = OpenAI(api_key=config.api_key)
+        openai_client = self._get_openai_client(config)
         use_case = self.env['text_to_audio.use.case']
         options = {"prompt": prompt,
                    "voice": voice,
@@ -71,7 +78,7 @@ class GptService(models.TransientModel):
     @api.model
     def audioToText(self, file_path, prompt=''):
             config = self._get_openai_config()
-            openai_client = OpenAI(api_key=config.api_key)
+            openai_client = self._get_openai_client(config)
             use_case = self.env['audio_to_text.use.case']
             options = {"prompt": prompt,
                     "file_path": file_path,
@@ -87,7 +94,7 @@ class GptService(models.TransientModel):
     def GenerarPreguntaIntegraia(self, prompt, max_tokens=None):
         """Verificación ortográfica usando el caso de uso"""
         config = self._get_openai_config()
-        openai_client = OpenAI(api_key=config.api_key)
+        openai_client = self._get_openai_client(config)
         use_case = self.env['generar_pregunta_integraia.use.case']
         options = {"prompt": prompt,
                    "max_tokens": max_tokens,
@@ -111,7 +118,7 @@ class GptService(models.TransientModel):
         :return: Diccionario con 'success', 'valor_transformado', 'mensaje', 'usando_ia'
         """
         config = self._get_openai_config()
-        openai_client = OpenAI(api_key=config.api_key)
+        openai_client = self._get_openai_client(config)
         use_case = self.env['validacion.amigable.use.case']
         options = {
             "valor": valor,
@@ -133,7 +140,7 @@ class GptService(models.TransientModel):
         :return: dict con 'es_salida' (bool) y 'mensaje' (despedida si aplica)
         """
         config = self._get_openai_config()
-        openai_client = OpenAI(api_key=config.api_key)
+        openai_client = self._get_openai_client(config)
         use_case = self.env['detectar.intencion.salida.use.case']
         options = {
             "texto_usuario": texto_usuario,
@@ -152,7 +159,7 @@ class GptService(models.TransientModel):
         :return: dict con 'mensaje_final' (string)
         """
         config = self._get_openai_config()
-        openai_client = OpenAI(api_key=config.api_key)
+        openai_client = self._get_openai_client(config)
         use_case = self.env['generar.mensaje.finalizacion.use.case']
         options = {
             "datos_paciente": datos_paciente,
@@ -173,7 +180,7 @@ class GptService(models.TransientModel):
         :return: dict con 'mensaje' (string)
         """
         config = self._get_openai_config()
-        openai_client = OpenAI(api_key=config.api_key)
+        openai_client = self._get_openai_client(config)
         use_case = self.env['generar.mensaje.contexto.use.case']
         options = {
             "contexto": contexto,
@@ -193,7 +200,7 @@ class GptService(models.TransientModel):
         :return: dict con 'termino' (bool)
         """
         config = self._get_openai_config()
-        openai_client = OpenAI(api_key=config.api_key)
+        openai_client = self._get_openai_client(config)
         use_case = self.env['detectar.fin.carga.use.case']
         options = {
             "texto_usuario": texto_usuario,

@@ -24,12 +24,19 @@ class DixonService(models.TransientModel):
         if not config:
             raise ValidationError(_('Configura la clave de API de OpenAI en Ajustes.'))
         return config
-    
+
+    @api.model
+    def _get_openai_client(self, config):
+        """Crea el cliente OpenAI o lanza un error claro si el paquete no está instalado."""
+        if OpenAI is None:
+            raise ValidationError(_('El paquete "openai" no está instalado en el servidor.'))
+        return OpenAI(api_key=config.api_key)
+
     @api.model
     def createThread(self, threadId):
         """threadId el caso de uso"""
         config = self._get_openai_config()
-        openai_client = OpenAI(api_key=config.api_key)
+        openai_client = self._get_openai_client(config)
         use_case = self.env['create_thread.use.case']
         options = { 
                    "threadId":threadId,
@@ -45,7 +52,7 @@ class DixonService(models.TransientModel):
     def createMessage(self, threadId,question):
         """Message el caso de uso"""
         config = self._get_openai_config()
-        openai_client = OpenAI(api_key=config.api_key)
+        openai_client = self._get_openai_client(config)
         use_case = self.env['create_message.use.case']
         options = { 
                    "threadId":threadId,
@@ -62,7 +69,7 @@ class DixonService(models.TransientModel):
     def createRun(self, threadId):
         """Message el caso de uso"""
         config = self._get_openai_config()
-        openai_client = OpenAI(api_key=config.api_key)
+        openai_client = self._get_openai_client(config)
         use_case = self.env['create_run.use.case']
         options = { 
                    "threadId":threadId,
@@ -77,7 +84,7 @@ class DixonService(models.TransientModel):
     def checkCompleteStatusRun(self, threadId, runId):
         """CheckCompleteStatus el caso de uso"""
         config = self._get_openai_config()
-        openai_client = OpenAI(api_key=config.api_key)
+        openai_client = self._get_openai_client(config)
         use_case = self.env['check_complete_status.use.case']
         options = { 
                    "threadId":threadId,
@@ -92,7 +99,7 @@ class DixonService(models.TransientModel):
     def checkCompleteStatusRun(self, threadId, runId):
         """CheckCompleteStatus el caso de uso"""
         config = self._get_openai_config()
-        openai_client = OpenAI(api_key=config.api_key)
+        openai_client = self._get_openai_client(config)
         use_case = self.env['check_complete_status.use.case']
         options = { 
                    "threadId":threadId,
@@ -108,7 +115,7 @@ class DixonService(models.TransientModel):
     def getMessageList(self, threadId):
         """GetMessageList el caso de uso"""
         config = self._get_openai_config()
-        openai_client = OpenAI(api_key=config.api_key)
+        openai_client = self._get_openai_client(config)
         use_case = self.env['get_message_list.use.case']
         options = { 
                    "threadId":threadId,

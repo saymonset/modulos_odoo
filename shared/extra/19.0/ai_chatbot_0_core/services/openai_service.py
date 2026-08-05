@@ -18,8 +18,9 @@ class OpenAIService(models.TransientModel):
     def _get_openai_client(self):
         api_key = self.env['openai.config'].sudo().search([('active', '=', True)], limit=1).api_key
         if not api_key:
-            None
             raise ValidationError(_('Configura la clave de API de OpenAI en Ajustes.'))
+        if OpenAI is None:
+            raise ValidationError(_('El paquete "openai" no está instalado en el servidor.'))
         return OpenAI(api_key=api_key)
 
     @api.model
