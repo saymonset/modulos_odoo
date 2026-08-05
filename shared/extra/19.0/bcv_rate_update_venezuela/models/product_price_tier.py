@@ -33,10 +33,10 @@ class ProductPriceTier(models.Model):
     )
     cop_show_fields = fields.Boolean(related='company_id.cop_show_fields', string='Mostrar COP', readonly=True)
 
-    _sql_constraints = [
-        ('tier_uniq', 'unique(product_tmpl_id, tier_type)',
-         'Ya existe este nivel de precio para este producto.'),
-    ]
+    _tier_uniq = models.Constraint(
+        'unique (product_tmpl_id, tier_type)',
+        'Ya existe un nivel de precio para este producto.',
+    )
 
     @api.onchange('price_usd')
     def _onchange_price_usd(self):

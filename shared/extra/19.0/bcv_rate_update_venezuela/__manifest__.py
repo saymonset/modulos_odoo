@@ -5,7 +5,7 @@
         Obtiene diariamente la tasa de cambio oficial del BCV y actualiza
         la moneda VES en Odoo.
     """,
-    'version': '19.0.1.0.5',
+    'version': '19.0.1.0.6',
     'category': 'Sales/Point of Sale',
     'author': 'Simon Alberto Rodriguez Pacheco',
     'website': 'https://github.com/simonrodriguezpacheco',
@@ -47,6 +47,9 @@
         'views/invoice_report_templates.xml',
         'views/sale_report_templates.xml',
         'views/purchase_report_templates.xml',
+        'views/sale_report_analysis_views.xml',
+        'views/purchase_report_analysis_views.xml',
+        'views/account_invoice_report_analysis_views.xml',
         'views/payment_templates_inherit.xml',
         'views/product_views.xml',
         'wizards/price_tier_import_wizard.xml',

@@ -44,7 +44,7 @@
             <!-- Columnas en las líneas -->
             <xpath expr="//field[@name='order_line']/list/field[@name='price_subtotal']" position="before">
                 <field name="cop_show_fields" column_invisible="True"/>
-                <field name="rate_value" string="Tasa BCV (USD/VES)" readonly="1" optional="hide"/>
+                <field name="rate_value" string="Tasa BCV (USD/VES)" readonly="1" optional="show"/>
                 <field name="rate_value_cop" string="Tasa COP" readonly="1" optional="hide" invisible="not cop_show_fields"/>
                 <field name="price_subtotal_usd_bcv" string="Subtotal USD" readonly="1"/>
                 <field name="price_subtotal_cop" string="Subtotal COP" readonly="1" optional="hide" invisible="not cop_show_fields"/>
@@ -55,6 +55,10 @@
                 <div style="display:flex; align-items:center; gap:5px;" class="mt-2">
                     <label for="amount_total_usd" string="Total USD (BCV)" style="font-weight:bold; color:green;"/>
                     <field name="amount_total_usd" readonly="1" style="font-weight:bold; color:green;" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
+                </div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <label for="bcv_rate_value" string="Tasa BCV (USD/VES)" style="font-weight:bold;"/>
+                    <field name="bcv_rate_value" readonly="1" style="font-weight:bold;"/>
                 </div>
                 <div style="display:flex; align-items:center; gap:5px;" class="mt-1" invisible="not cop_show_fields">
                     <label for="amount_total_cop" string="Total COP" style="font-weight:bold; color:blue;"/>
