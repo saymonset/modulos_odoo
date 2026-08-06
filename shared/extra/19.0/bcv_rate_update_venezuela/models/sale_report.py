@@ -39,3 +39,22 @@ class SaleReport(models.Model):
         usd = self.env.ref('base.USD', raise_if_not_found=False)
         res['currency_usd_id'] = usd.id if usd else False
         return res
+
+    def _available_additional_pos_fields(self):
+        res = super()._available_additional_pos_fields()
+        bcv_rate = 'MIN(%s)' % bcv_rate_sql('pos.company_id')
+        conv = '%s * %s' % (
+            self._case_value_or_one('pos.currency_rate'),
+            self._case_value_or_one('account_currency_table.rate'),
+        )
+        res['price_subtotal_usd'] = (
+            'SUM(SIGN(l.qty) * SIGN(l.price_unit) * ABS(l.price_subtotal))'
+            ' / %s / NULLIF(%s, 0.0)' % (conv, bcv_rate)
+        )
+        res['price_total_usd'] = (
+            'SUM(SIGN(l.qty) * SIGN(l.price_unit) * ABS(l.price_subtotal_incl))'
+            ' / %s / NULLIF(%s, 0.0)' % (conv, bcv_rate)
+        )
+        usd = self.env.ref('base.USD', raise_if_not_found=False)
+        res['currency_usd_id'] = usd.id if usd else False
+        return res
