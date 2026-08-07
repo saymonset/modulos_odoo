@@ -10,14 +10,14 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
       "position": [
-        -2176,
-        -80
+        -1312,
+        544
       ],
-      "id": "88aa517c-49e9-43ec-b1b3-be32530bcec3",
+      "id": "06027540-dcc2-4259-9956-35010975f6d3",
       "name": "Audio_a_Texto_whatsapp",
       "credentials": {
         "openAiApi": {
-          "id": "SynY9HmZH2SsZkWD",
+          "id": "B2glQAt5fkd6gON6",
           "name": "OpenAi account"
         }
       }
@@ -129,10 +129,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -544,
-        -48
+        320,
+        576
       ],
-      "id": "07e1b456-52d4-4b3e-8716-3d315845816a",
+      "id": "301ef1cc-5659-407a-aaf1-9c626fb1522c",
       "name": "Preparar_Input_AI"
     },
     {
@@ -221,10 +221,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -2576,
-        -96
+        -1712,
+        528
       ],
-      "id": "40c086a7-605a-4c89-9335-d0766f753a10",
+      "id": "8ac4d6be-41f1-4e49-8fa3-8e5cc3f4bb5e",
       "name": "Texto_o_Audio?"
     },
     {
@@ -274,10 +274,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2176,
-        80
+        -1312,
+        704
       ],
-      "id": "3a4d9ec0-c90d-41b2-b3c1-9141eb74aaca",
+      "id": "b018aa19-4c4f-4a50-8d63-ac7c86fce62f",
       "name": "Procesar_Imagen_whatsapp"
     },
     {
@@ -321,10 +321,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2016,
-        -80
+        -1152,
+        544
       ],
-      "id": "c53cb1dd-08fc-441d-8bb3-233aef504f57",
+      "id": "95e6b270-0328-4c01-a39d-abdd51434696",
       "name": "Extraer_Texto_Audio"
     },
     {
@@ -337,14 +337,14 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -1200,
-        -416
+        -336,
+        208
       ],
-      "id": "6a7b28fb-14c2-4879-9b6e-5d763b9cff6e",
+      "id": "27657490-f294-462e-bf77-1aee0e6b330e",
       "name": "Get_buffer_data",
       "credentials": {
         "redis": {
-          "id": "GsXqpDjFeodKzf4H",
+          "id": "2J949eQoD9p6oaR6",
           "name": "Redis account"
         }
       }
@@ -359,14 +359,14 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -1680,
-        -416
+        -816,
+        208
       ],
-      "id": "fb55b09b-7940-46f1-889f-b5ee886798ee",
+      "id": "faa919a6-80a9-4bf0-bad1-9d111d4f7ed4",
       "name": "Buffer",
       "credentials": {
         "redis": {
-          "id": "GsXqpDjFeodKzf4H",
+          "id": "2J949eQoD9p6oaR6",
           "name": "Redis account"
         }
       }
@@ -378,10 +378,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -1424,
-        -416
+        -560,
+        208
       ],
-      "id": "7bc253e0-c68f-4038-ab5d-0cb3d2c944f7",
+      "id": "5485b9b6-cf7b-403d-82dd-4a2b6f4263f6",
       "name": "Wait",
       "webhookId": "d7bd6fc5-bbb3-451a-bbb4-b01a45635946"
     },
@@ -412,10 +412,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -976,
-        -416
+        -112,
+        208
       ],
-      "id": "0b233aab-9246-4dfe-8033-bad2ebe82bef",
+      "id": "43d561fa-74d4-4269-b875-2729f9ae4e64",
       "name": "If"
     },
     {
@@ -423,10 +423,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -848,
-        -288
+        16,
+        336
       ],
-      "id": "9a321566-a5e7-4426-a867-3dd9c41fc1b8",
+      "id": "f7440e89-cfe6-4dd6-93bd-a10668be5bf5",
       "name": "No Operation, do nothing"
     },
     {
@@ -434,10 +434,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -1904,
-        -416
+        -1040,
+        208
       ],
-      "id": "352c0831-e2dc-43d8-b4f9-3793821a7a72",
+      "id": "2a5efad8-d9dd-4dd8-b73b-f12c61688ad7",
       "name": "Merge"
     },
     {
@@ -448,14 +448,14 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -640,
-        -624
+        224,
+        0
       ],
-      "id": "28bb4001-02b3-409b-9777-490094cd0b7c",
+      "id": "ff6dbff6-fb2a-4230-ad53-3f8efd8d61f9",
       "name": "Borrar_mensajes_buffer",
       "credentials": {
         "redis": {
-          "id": "GsXqpDjFeodKzf4H",
+          "id": "2J949eQoD9p6oaR6",
           "name": "Redis account"
         }
       }
@@ -519,16 +519,16 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -864,
-        -624
+        0,
+        0
       ],
-      "id": "e7a67b24-580e-436a-989d-5f4511fe03f2",
+      "id": "be5fd2ee-d57c-4bbc-9ed2-9269ee07bb6e",
       "name": "Agrupar_texto_acumulado_resto_variables_enviar"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://integraia.lat/ai_chatbot_1_portal/procesar_paso",
+        "url": "https://aristosoluciones.integraia.lat/ai_chatbot_1_portal/procesar_paso",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -559,10 +559,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -336,
-        -48
+        528,
+        576
       ],
-      "id": "088f57d3-17f4-44ee-a6e3-bd674ead8b9f",
+      "id": "c33b9354-2168-4712-a4b8-6ce1ad6219c6",
       "name": "Consultar_estado_Odoo",
       "alwaysOutputData": true,
       "onError": "continueErrorOutput"
@@ -572,10 +572,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -304,
-        -320
+        560,
+        304
       ],
-      "id": "0871e154-da75-41ee-b635-918cd3733292",
+      "id": "eec5260d-2fb1-4f02-b798-9e6557734f59",
       "name": "Combinar_entrada_session_odoo",
       "disabled": true
     },
@@ -584,10 +584,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -880,
-        -160
+        -16,
+        464
       ],
-      "id": "e745581c-e5ad-4c27-b007-120988690347",
+      "id": "b4d99cf7-bb85-4470-8728-ea40cf1df4fd",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -667,10 +667,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2464,
-        -432
+        -1600,
+        192
       ],
-      "id": "16188bbd-dc36-4aa5-96d2-8ee9d00d3584",
+      "id": "e8a3f74f-2065-4fe8-a6ce-0b7ae98d4a9e",
       "name": "Obtener_Info"
     },
     {
@@ -681,10 +681,10 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -2752,
-        -80
+        -1888,
+        544
       ],
-      "id": "7ce48587-3224-4fa0-8dfa-19bd502f5d68",
+      "id": "6f916123-b1d5-4687-b3bc-3e4236bdc002",
       "name": "answer_chatbot_sdimple_0"
     },
     {
@@ -694,10 +694,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -112,
-        -320
+        752,
+        304
       ],
-      "id": "3128d6e2-08eb-4afb-9d00-4f6f0f2c5edf",
+      "id": "c6b348a5-ad64-4e49-ac52-941fbbcccc43",
       "name": "Recuperar_paso",
       "disabled": true
     },
@@ -717,15 +717,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -2352,
-        -80
+        -1488,
+        544
       ],
-      "id": "ae245e3d-5267-4479-9572-42c545d0defe",
+      "id": "c0ed8a2e-6446-4684-bdea-5230978d2bc4",
       "name": "Obtenemos_imagen",
       "alwaysOutputData": true,
       "credentials": {
         "httpBearerAuth": {
-          "id": "SxSs5ggMU2LgbDMZ",
+          "id": "96YmiyjKhBtNH2vR",
           "name": "Bearer Auth account"
         }
       }
@@ -962,11 +962,11 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "39e863ee-a987-4a6b-828d-6b0bde201173",
+  "versionId": "36d13a97-4271-4f23-85df-8755921fd5a3",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "ac8b8e9b824b3711008329bf41bf68736c3261debaa6dcb0eaceede9a0a7edac"
+    "instanceId": "8e7596cc730d6c90157a0c769dff83c553a912055f1dd239814fe1703e14ce05"
   },
-  "id": "Er44fSL1mNP20oKt",
+  "id": "nyhS-AWWoXbFIj_MkYkuO",
   "tags": []
 }
