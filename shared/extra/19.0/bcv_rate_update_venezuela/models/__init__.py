@@ -13,4 +13,7 @@ from . import res_company
 from . import product_template
 from . import product_price_tier
 from . import stock_quant
+from . import sale_report
+from . import purchase_report
+from . import account_invoice_report
 

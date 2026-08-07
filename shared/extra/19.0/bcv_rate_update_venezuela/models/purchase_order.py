@@ -30,6 +30,13 @@ class PurchaseOrder(models.Model):
     )
     cop_show_fields = fields.Boolean(related='company_id.cop_show_fields', string='Mostrar COP', readonly=True)
 
+    bcv_rate_value = fields.Float(
+        string='Tasa BCV (USD/VES)',
+        digits=(12, 4),
+        compute='_compute_bcv_rate_value',
+        store=True,
+    )
+
     price_tier_type = fields.Selection([
         ('retail', 'Menudeo'),
         ('wholesale', 'Mayoreo'),
@@ -69,3 +76,9 @@ class PurchaseOrder(models.Model):
             order.amount_total_cop = sum(
                 line.price_subtotal_cop for line in order.order_line
             )
+
+    @api.depends('company_id', 'amount_total_usd')
+    def _compute_bcv_rate_value(self):
+        for order in self:
+            rate = self.env['product.template']._get_bcv_rate(order.company_id)
+            order.bcv_rate_value = rate if rate else 1.0
