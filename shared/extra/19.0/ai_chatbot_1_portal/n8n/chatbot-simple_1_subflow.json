@@ -71,7 +71,7 @@
             {
               "id": "4c7a2d7e-bf8d-4ee1-ae36-0d2f66ab9de0",
               "name": "message_type",
-              "value": "{{$json.message_type}}",
+              "value": "={{ $json.message_type }}",
               "type": "string"
             },
             {
@@ -89,13 +89,13 @@
             {
               "id": "0c7de2ed-9cd7-4b8a-b0a6-e659cebd24c0",
               "name": "channel",
-              "value": "={{$json.channel}}",
+              "value": "={{ $json.platform }}",
               "type": "string"
             },
             {
               "id": "b7a1ff32-7e75-4f0d-bff5-55205b1f931a",
               "name": "content",
-              "value": "={{$json.content}}",
+              "value": "={{ $json.text }}",
               "type": "string"
             },
             {
@@ -584,8 +584,8 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -576,
-        192
+        -880,
+        -160
       ],
       "id": "e745581c-e5ad-4c27-b007-120988690347",
       "name": "When clicking ‘Execute workflow’"
@@ -735,21 +735,14 @@
     "When clicking ‘Execute workflow’": [
       {
         "json": {
-          "text": "hola",
+          "text": "ghhd",
           "session_id": "584142711347",
-          "image_url": "",
-          "platform": "whatsapp",
           "account_id": "1",
-          "conversation_id": "1",
-          "message_type": "{{$json.message_type}}",
-          "user_name": "IntegraIA",
+          "conversation_id": "53",
+          "message_type": "incoming",
+          "user_name": "integraia",
           "user_number": "+584142711347",
-          "channel": null,
-          "content": null,
-          "file_type": null,
-          "phone_number": null,
-          "user_message": null,
-          "agente_desactivado": null
+          "platform": "whatsapp"
         }
       }
     ]
@@ -934,7 +927,7 @@
       "main": [
         [
           {
-            "node": "Consultar_estado_Odoo",
+            "node": "Preparar_Input_AI",
             "type": "main",
             "index": 0
           }
@@ -969,7 +962,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "b8f48598-7321-4bed-b8f6-88c78aaf963e",
+  "versionId": "39e863ee-a987-4a6b-828d-6b0bde201173",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "ac8b8e9b824b3711008329bf41bf68736c3261debaa6dcb0eaceede9a0a7edac"
