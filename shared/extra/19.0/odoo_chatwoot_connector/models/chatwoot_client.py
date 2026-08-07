@@ -283,6 +283,8 @@ class ChatwootClient(models.AbstractModel):
         assigned = None
 
         # Check if conversation already has an active agent (open/pending) — preserve it
+        # unless the current assignee is only the Agent Bot (non-human), which should be overridden
+        # by the agent configured in the chatwoot mapping.
         current_data = self._get_conversation_details(account_id, conversation_id)
         current_assignee = current_data.get('meta', {}).get('assignee', {}) if current_data else {}
         current_status = current_data.get('status') if current_data else None
@@ -291,22 +293,6 @@ class ChatwootClient(models.AbstractModel):
         current_assignee_email = current_assignee.get('email', '')
         _logger.info('assign_conversation[conv=%s]: current status=%s assignee_id=%s name=%s email=%s',
                      conversation_id, current_status, current_assignee_id, current_assignee_name, current_assignee_email)
-        preserve = bool(current_assignee_id and current_status in ('open', 'pending'))
-        if preserve:
-            _logger.info('assign_conversation[conv=%s]: preserving existing assignee id=%s name=%s email=%s',
-                         conversation_id, current_assignee_id, current_assignee_name, current_assignee_email)
-            assigned = 'preserved'
-            # Override notify_message with informative message about the new flow and current agent
-            if mapping.get('notify_message'):
-                mapping = dict(mapping)
-                equipo_legible = (mapping.get('equipo_asignado', '') or '').replace('_', ' ') or 'la misma'
-                msg = (
-                    f"Ya tienes una solicitud en curso.\n"
-                    f"Tu nueva consulta sobre {equipo_legible} ha sido registrada.\n"
-                )
-                if current_assignee_email:
-                    msg += f"👤 Ejecutivo asignado: {current_assignee_email}"
-                mapping['notify_message'] = msg
 
         def _get_agent_id_by_email(email):
             try:
@@ -337,6 +323,38 @@ class ChatwootClient(models.AbstractModel):
 
         _logger.info('assign_conversation[conv=%s]: resolved agent_id=%s, prefer_assign=%s, inbox_id=%s',
                      conversation_id, agent_id, mapping.get('prefer_assign_to_agent', True), mapping.get('inbox_id'))
+
+        current_assignee_is_human = bool(current_assignee_email)
+        if current_assignee_id and current_status in ('open', 'pending'):
+            if current_assignee_is_human or not agent_id or current_assignee_id == agent_id:
+                # keep the previous human agent, or no mapped agent, or already the mapped agent
+                preserve = True
+            else:
+                # the conversation is only held by the Agent Bot: reassign to the mapped agent
+                preserve = False
+                _logger.info('assign_conversation[conv=%s]: assignee is Agent Bot (id=%s, name=%s), '
+                             'overriding preserve to assign mapped agent=%s',
+                             conversation_id, current_assignee_id, current_assignee_name, agent_id)
+        else:
+            preserve = False
+            _logger.info('assign_conversation[conv=%s]: no active assignee to preserve (assignee_id=%s status=%s)',
+                         conversation_id, current_assignee_id, current_status)
+
+        if preserve:
+            _logger.info('assign_conversation[conv=%s]: preserving existing assignee id=%s name=%s email=%s',
+                         conversation_id, current_assignee_id, current_assignee_name, current_assignee_email)
+            assigned = 'preserved'
+            # Override notify_message with informative message about the new flow and current agent
+            if mapping.get('notify_message'):
+                mapping = dict(mapping)
+                equipo_legible = (mapping.get('equipo_asignado', '') or '').replace('_', ' ') or 'la misma'
+                msg = (
+                    f"Ya tienes una solicitud en curso.\n"
+                    f"Tu nueva consulta sobre {equipo_legible} ha sido registrada.\n"
+                )
+                if current_assignee_email:
+                    msg += f"👤 Ejecutivo asignado: {current_assignee_email}"
+                mapping['notify_message'] = msg
 
         if agent_id and mapping.get('inbox_id'):
             try:
