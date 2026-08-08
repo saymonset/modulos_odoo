@@ -209,3 +209,24 @@ class GptService(models.TransientModel):
             "max_tokens": max_tokens or 100,
         }
         return use_case.execute(options)
+
+    @api.model
+    def detectar_flujos_por_prompt(self, prompt_text, flujos_info, max_tokens=None):
+        """
+        La IA decide qué flujos del catálogo aplican al negocio descrito en el prompt.
+        :param prompt_text: string con el system_prompt del negocio
+        :param flujos_info: lista de dicts {name, descripcion_intencion, palabras_clave}
+        :param max_tokens: opcional
+        :return: lista de nombres de flujo a activar ([] si falla)
+        """
+        config = self._get_openai_config()
+        openai_client = self._get_openai_client(config)
+        use_case = self.env['detectar.flujos.prompt.use.case']
+        options = {
+            "prompt_text": prompt_text,
+            "flujos_info": flujos_info,
+            "openai_client": openai_client,
+            "model": config.default_model,
+            "max_tokens": max_tokens or 300,
+        }
+        return use_case.execute(options)

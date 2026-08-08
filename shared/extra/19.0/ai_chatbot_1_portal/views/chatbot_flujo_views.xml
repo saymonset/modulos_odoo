@@ -37,6 +37,7 @@
                         <group string="Instrucciones para el agente">
                             <field name="descripcion_intencion" widget="text"/>
                             <field name="condiciones_no_inicio" widget="text"/>
+                            <field name="palabras_clave" widget="text"/>
                         </group>
                         <notebook>
                             <page string="Pasos">

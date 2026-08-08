@@ -1,4 +1,23 @@
+import logging
+import re
+
 from odoo import api, fields, models
+
+_logger = logging.getLogger(__name__)
+
+_CHAR_ACCENT_MAP = {
+    'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
+    'ü': 'u', 'ñ': 'n', 'Á': 'a', 'É': 'e', 'Í': 'i',
+    'Ó': 'o', 'Ú': 'u', 'Ü': 'u', 'Ñ': 'n',
+}
+
+
+def _normalizar_texto(texto):
+    """Minúsculas y sin acentos para búsqueda robusta de keywords."""
+    if not texto:
+        return ''
+    texto = texto.lower()
+    return ''.join(_CHAR_ACCENT_MAP.get(c, c) for c in texto)
 
 
 class ChatbotFlujo(models.Model):
@@ -58,6 +77,13 @@ class ChatbotFlujo(models.Model):
         ('confirmation', 'Requiere confirmación del usuario'),
         ('manual', 'Solo por botón o comando'),
     ], string='Política de inicio', default='immediate')
+
+    palabras_clave = fields.Text(
+        string='Palabras clave para auto-detección',
+        help='Lista separada por coma. El detector automático busca estas '
+             'palabras en el system_prompt del cliente para decidir si este '
+             'flujo aplica a su negocio. Ej: clinica,hospital,salud,doctor',
+    )
 
     generar_pasos_automatico = fields.Boolean(
         string='Generar pasos automáticamente',
@@ -523,6 +549,151 @@ class ChatbotFlujo(models.Model):
     # MÉTODOS PRINCIPALES: CREATE, COPY
     # ============================================================
     
+    def write(self, vals):
+        """
+        Cascade del estado 'active' del flujo hacia sus Chatwoot Mappings.
+        Al archivar/desarchivar un flujo, se archiva/desarchiva el mapping
+        vinculado (flow_id) para que solo se asignen agentes a flujos activos.
+        """
+        res = super().write(vals)
+        if 'active' in vals:
+            try:
+                mapping_model = self.env['chatwoot.mapping']
+                mappings = mapping_model.sudo().search([('flow_id', 'in', self.ids)])
+                if mappings:
+                    mappings.write({'active': vals['active']})
+                    _logger.info(
+                        'cascade: flujos=%s active=%s -> mappings archivados/activados=%s',
+                        self.ids, vals['active'], mappings.ids)
+            except KeyError:
+                _logger.warning(
+                    'cascade: modelo chatwoot.mapping no disponible en registry '
+                    '(flujo=%s). El mapping NO se sincronizó.', self.ids)
+        return res
+
+    def _sincronizar_mappings(self, flujos, activo):
+        """Cascade explícito flujo -> chatwoot.mapping (independiente de write)."""
+        try:
+            mapping_model = self.env['chatwoot.mapping']
+        except KeyError:
+            _logger.warning('_sincronizar_mappings: chatwoot.mapping no disponible.')
+            return
+        mappings = mapping_model.sudo().search([('flow_id', 'in', flujos.ids)])
+        if mappings:
+            mappings.write({'active': activo})
+            _logger.info(
+                '_sincronizar_mappings: flujos=%s activo=%s -> mappings=%s',
+                flujos.ids, activo, mappings.ids)
+
+    @api.model
+    def aplicar_deteccion_automatica(self, prompt_text):
+        """
+        Detección híbrida de flujos relevantes según el system_prompt del cliente.
+
+        1. Normaliza el prompt (minúsculas, sin acentos).
+        2. Keyword matching: cada flujo expone palabras_clave; si alguna aparece
+           en el prompt, el flujo aplica.
+        3. Si hubo al menos un match: activa los matcheados y el flujo default,
+           archiviva los demás (el write() cascada a los Chatwoot Mappings).
+        4. Si NINGÚN flujo matcheó y el prompt no está vacío, llama a la IA
+           (gpt.service.detectar_flujos_por_prompt) como respaldo.
+        5. Si la IA falla o no hay otro criterio, NO archivar nada (comportamiento
+           conservador: se mantiene el estado actual).
+
+        El flujo 'flujo_agendamiento_default' siempre queda activo (fallback).
+        """
+        prompt_text = prompt_text or ''
+        prompt_norm = _normalizar_texto(prompt_text)
+
+        if not prompt_text.strip():
+            _logger.info(
+                'Detección de flujos: system_prompt vacío, sin cambios '
+                '(se mantienen todos los flujos actuales).')
+            return {'activados': [], 'archivados': [], 'metodo': 'ninguno',
+                    'mensaje': 'Prompt vacío: no se modificaron flujos.'}
+
+        flujos = self.sudo().with_context(active_test=False).search([])
+        default_flow = flujos.filtered(lambda f: f.name == 'flujo_agendamiento_default')
+
+        activados = []
+        archivados = []
+        sin_keywords = []
+        for flujo in flujos:
+            if flujo in default_flow:
+                continue
+            keywords = [k.strip() for k in (flujo.palabras_clave or '').split(',')]
+            keywords = [_normalizar_texto(k) for k in keywords if k]
+            if not keywords:
+                # Sin palabras clave no hay criterio de match: se conserva el
+                # estado actual para no tocar flujos personalizados.
+                sin_keywords.append(flujo.name)
+                continue
+            # Match de palabra completa (bordes \b) para evitar falsos
+            # positivos por subcadena (ej: "salud" dentro de "SALUDO").
+            pattern = '|'.join(r'\b' + re.escape(k) + r'\b' for k in keywords)
+            if re.search(pattern, prompt_norm):
+                activados.append(flujo.name)
+            else:
+                archivados.append(flujo.name)
+
+        if activados:
+            # Hubo al menos un match por keywords: aplicar resultado.
+            flujos_act = flujos.filtered(lambda f: f.name in activados) | default_flow
+            flujos_arch = flujos.filtered(lambda f: f.name in archivados)
+            flujos_act.write({'active': True})
+            flujos_arch.write({'active': False})
+            self._sincronizar_mappings(flujos_act, True)
+            self._sincronizar_mappings(flujos_arch, False)
+            _logger.info(
+                'auto_detección (keywords): activados=%s archivados=%s',
+                [f.name for f in flujos_act], [f.name for f in flujos_arch])
+            return {'activados': [f.name for f in flujos_act],
+                    'archivados': [f.name for f in flujos_arch],
+                    'metodo': 'keywords', 'mensaje': 'Detección por palabras clave.'}
+
+        # 0 matches con keywords -> respaldo IA (híbrido).
+        # Solo flujos con keywords participan en la decisión IA.
+        flujos_info = [{'name': f.name,
+                        'descripcion_intencion': f.descripcion_intencion or '',
+                        'palabras_clave': f.palabras_clave or ''}
+                       for f in flujos if f.name != 'flujo_agendamiento_default']
+        try:
+            gpt_service = self.env.get('gpt.service')
+            if not gpt_service:
+                raise Exception('Módulo ai_chatbot_0_core no disponible')
+            recomendados = gpt_service.sudo().detectar_flujos_por_prompt(
+                prompt_text, flujos_info)
+        except Exception as e:
+            _logger.warning(
+                'auto_detección: falló la IA de respaldo (%s). Sin cambios.',
+                e)
+            return {'activados': [], 'archivados': [],
+                    'metodo': 'ia_error',
+                    'mensaje': 'Falló la detección IA: sin cambios.'}
+
+        activados_ia = [r for r in (recomendados or [])
+                        if r and isinstance(r, str)]
+        if not activados_ia:
+            _logger.warning('auto_detección: la IA no recomendó ningún flujo. Sin cambios.')
+            return {'activados': [], 'archivados': [],
+                    'metodo': 'ia_sin_recomendaciones',
+                    'mensaje': 'La IA no recomendó flujos: se mantuvo la configuración actual.'}
+        flujos_act = flujos.filtered(lambda f: f.name in activados_ia) | default_flow
+        flujos_arch = flujos.filtered(
+            lambda f: f.name not in activados_ia
+            and f not in default_flow
+            and f.name not in sin_keywords)
+        flujos_act.write({'active': True})
+        flujos_arch.write({'active': False})
+        self._sincronizar_mappings(flujos_act, True)
+        self._sincronizar_mappings(flujos_arch, False)
+        _logger.info(
+            'auto_detección (IA): activados=%s archivados=%s',
+            [f.name for f in flujos_act], [f.name for f in flujos_arch])
+        return {'activados': [f.name for f in flujos_act],
+                'archivados': [f.name for f in flujos_arch],
+                'metodo': 'ia', 'mensaje': 'Detección por IA de respaldo.'}
+
     @api.model_create_multi
     def create(self, vals_list):
         """

@@ -14,6 +14,10 @@
                 </group>
                 <group string="Configuración del agente (n8n)">
                     <field name="chat_bot_system_prompt"/>
+                    <button name="action_detectar_flujos" type="object"
+                            string="Detectar flujos automáticamente"
+                            class="btn-primary"
+                            confirm="Se analizará el prompt y se activarán o archivarán los flujos (y sus Chatwoot Mappings) según las palabras clave del negocio. ¿Continuar?"/>
                     <field name="chat_bot_fallback_message"/>
                     <field name="chat_bot_api_token"/>
                     <field name="chat_bot_include_optional_steps"/>

@@ -11,6 +11,7 @@
         "views/chatwoot_settings_views.xml",
         "views/chatwoot_mapping_views.xml",
         "views/crm_lead_views.xml",
+        "data/chatwoot_mappings_data.xml",
     ],
     "post_init_hook": "post_init_setup_acl",
     "installable": True,

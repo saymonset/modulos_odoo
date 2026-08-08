@@ -6,6 +6,7 @@
       <field name="arch" type="xml">
       <list>
         <field name="name"/>
+        <field name="flow_id" optional="hide"/>
         <field name="routing_key"/>
         <field name="team_id"/>
         <field name="equipo_asignado"/>
@@ -14,6 +15,7 @@
         <field name="chatwoot_agent_email"/>
         <field name="prefer_assign_to_agent"/>
         <field name="chatwoot_tags"/>
+        <field name="active" widget="boolean_toggle" optional="show"/>
       </list>
     </field>
   </record>
