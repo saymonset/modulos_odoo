@@ -64,4 +64,8 @@ self.env['chatwoot.mapping'].sudo().select_round_robin_mapping(equipo_asignado='
 *   `views/`: Formularios, listas y vistas heredadas en Odoo.
 *   `__init__.py` / `__manifest__.py`: Metadata y ganchos de inicio.
 *   `PROMPT_ARISTOSOLUCIONES_UV.txt`: Prompt oficial que define el comportamiento del bot en n8n.
-*   `MANUAL_CONFIGURACION_PASO_A_PASO.md`: Manual funcional de configuración paso a paso para nuevos clientes.
+*   `MANUAL_FUNCIONAL_DOCKER.md`: Manual funcional paso a paso (tokens Chatwoot, mappings y comandos Docker) para personas sin experiencia.
+*   `README_ROUND_ROBIN.md`: Explicación sencilla de la rotación de agentes.
+
+> Para el token de n8n (clave `CHATBOT_API_TOKEN` / `x-chatbot-token`) y los detalles del contenedor de n8n,
+> consulta `ai_chatbot_1_portal/MANUAL_FUNCIONAL_DOCKER.md`.

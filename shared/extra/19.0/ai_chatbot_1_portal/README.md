@@ -2,6 +2,12 @@
 
 Módulo de portal para Chatbot de IA. Proporciona la interfaz y componentes de portal para el chatbot de Inteligencia Artificial (visualizar y gestionar mensajes, transcripción y análisis de textos).
 
+## 📚 Documentación
+
+*   **`MANUAL_FUNCIONAL_DOCKER.md`** — Manual paso a paso para personas sin experiencia: token de n8n (`CHATBOT_API_TOKEN`), endpoints, importación del workflow y comandos Docker.
+*   **`README_MENU.md`** — Mapa del menú de WhatsApp: qué clave envía n8n y a qué flujo, grupo CRM y Chatwoot llega cada opción.
+*   El token de **Chatwoot** (bandeja WhatsApp), los mappings y los comandos Docker de Chatwoot/Odoo están en `odoo_chatwoot_connector/MANUAL_FUNCIONAL_DOCKER.md`.
+
 ## 🚀 Instalación y Despliegue en Odoo 19
 
 Este módulo está desarrollado para **Odoo 19.0**. A diferencia de versiones anteriores, no requiere modificaciones manuales en la base de datos de PostgreSQL ni copiar directorios manualmente si está montado como volumen en docker.
@@ -11,7 +17,7 @@ Este módulo está desarrollado para **Odoo 19.0**. A diferencia de versiones an
 
 ### 1. Copiar o Asegurar el Módulo en la Central
 Si se utiliza el entorno centralizado de Odoo 19:
-El módulo debe estar ubicado en `/home/odoo/lead/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal` (que se monta automáticamente en el contenedor Odoo en la ruta `/opt/odoo/custom-addons/extra`).
+El módulo debe estar ubicado en `/home/odoo/prod/modulos_odoo/shared/extra/19.0/ai_chatbot_1_portal` (que se monta automáticamente en el contenedor Odoo en la ruta `/opt/odoo/custom-addons/extra`).
 
 ### 2. Actualizar la Lista de Aplicaciones e Instalar
 1. Inicia sesión en Odoo como Administrador con el Modo Desarrollador activo.
