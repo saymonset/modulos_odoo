@@ -76,9 +76,9 @@ class ChatbotSessionInherit(models.Model):
                             servicio = lead.name.split(' - ')[0] if ' - ' in lead.name else lead.name
                             body = (
                                 f"<p>Hola {user.name},</p>"
-                                f"<p>Se te ha asignado un nuevo lead generado desde el chatbot de UNISA.</p>"
+                                f"<p>Se te ha asignado un nuevo lead generado desde el chatbot.</p>"
                                 f"<br/>"
-                                f"<p><strong>Datos del paciente:</strong></p>"
+                                f"<p><strong>Datos del cliente:</strong></p>"
                                 f"<ul>"
                                 f"<li><strong>Nombre:</strong> {lead.contact_name or ''}</li>"
                                 f"<li><strong>Teléfono:</strong> {lead.phone or ''}</li>"
@@ -86,10 +86,10 @@ class ChatbotSessionInherit(models.Model):
                                 f"<li><strong>Servicio:</strong> {servicio}</li>"
                                 f"<li><strong>Equipo:</strong> {lead.team_id.name or 'Sin equipo'}</li>"
                                 f"</ul>"
-                                f"<p>Por favor, contacta al paciente a la brevedad para dar seguimiento a su solicitud.</p>"
-                                f"<p>Saludos,<br/><strong>Sistema UNISA Salud</strong></p>"
+                                f"<p>Por favor, contacta al cliente a la brevedad para dar seguimiento a su solicitud.</p>"
+                                f"<p>Saludos,<br/><strong>Sistema de Chatbot</strong></p>"
                             )
-                            email_from = self.env['ir.config_parameter'].sudo().get_param('mail.default.from', 'admin@unisasalud.com')
+                            email_from = self.env['ir.config_parameter'].sudo().get_param('mail.default.from', 'admin@empresa.com')
                             self.env['mail.mail'].sudo().create({
                                 'subject': subject,
                                 'body_html': body,

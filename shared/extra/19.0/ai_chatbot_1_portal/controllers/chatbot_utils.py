@@ -585,7 +585,104 @@ class ChatBotUtils:
 
         if len(lines) == 1:
             lines.append("• Sin información adicional")
+
+        # Campos personalizados del flujo: se agregan automáticamente.
+        # De este modo cualquier paso con campo_destino propio (producto,
+        # material, cantidad, dedicatoria, etc.) queda visible en el lead.
+        claves_conocidas = set()
+        for keys, _label in fields_order:
+            claves_conocidas.update(keys)
+        claves_internas = {
+            'account_id', 'conversation_id', 'session_id', 'equipo_asignado',
+            'flow_name', 'name_flow', 'consentimiento', 'plataforma',
+            'informacion_precios',
+        }
+        for clave, valor in data.items():
+            if clave in claves_conocidas or clave in claves_internas:
+                continue
+            if valor is None or valor == '' or valor is False:
+                continue
+            if isinstance(valor, (list, dict)):
+                if not valor:
+                    continue
+                valor = json.dumps(valor, ensure_ascii=False, default=str)
+            etiqueta = clave.replace('solicitar_', '').replace('_', ' ').strip()
+            etiqueta = etiqueta.capitalize()
+            lines.append(f"• {etiqueta}: {valor}")
+
         return "\n".join(lines)
+
+    @staticmethod
+    def build_agent_system_prompt(env):
+        """
+        Construye el system prompt que n8n inyecta al Agente_Informacion_basica.
+
+        Combina:
+        1. Mensaje de negocio configurado en Ajustes.
+        2. Catálogo de flujos activos (nombre, routing_key, política, reglas).
+        3. Reglas técnicas fijas de formato de salida.
+
+        No contiene información fija de ninguna industria: se genera
+        dinámicamente a partir de la configuración de Odoo.
+        """
+        params = env['ir.config_parameter'].sudo()
+        business_prompt = params.get_param('ai_chatbot_1_portal.system_prompt', '') or ''
+
+        flujos = env['chatbot.flujo'].sudo().search([('active', '=', True)], order='name')
+
+        lines = []
+        lines.append('=== INFORMACIÓN DEL NEGOCIO ===')
+        lines.append(business_prompt.strip() if business_prompt.strip() else
+                     '(Sin información comercial configurada)')
+        lines.append('')
+
+        if flujos:
+            lines.append('=== FLUJOS DISPONIBLES (usa EXACTAMENTE estos valores) ===')
+            for i, flujo in enumerate(flujos, 1):
+                routing_key = flujo.routing_key or flujo.name
+                politica_texto = dict(flujo._fields['politica_inicio'].selection).get(
+                    flujo.politica_inicio, flujo.politica_inicio)
+                lines.append(f"{i}. flow_name: {flujo.name}")
+                lines.append(f"   - equipo_asignado (código de enrutamiento): {routing_key}")
+                lines.append(f"   - Política de inicio: {politica_texto}")
+                if flujo.descripcion_intencion:
+                    lines.append(f"   - Activar cuando: {flujo.descripcion_intencion.strip()}")
+                if flujo.condiciones_no_inicio:
+                    lines.append(f"   - NO activar cuando: {flujo.condiciones_no_inicio.strip()}")
+            lines.append('')
+        else:
+            lines.append('(No hay flujos activos configurados.)')
+            lines.append('')
+
+        lines.append('=== FORMATO DE SALIDA OBLIGATORIO ===')
+        lines.append('Responde SIEMPRE y ÚNICAMENTE con un objeto JSON válido:')
+        lines.append('{')
+        lines.append('  "output": "",')
+        lines.append('  "tipoPregunta": "",')
+        lines.append('  "isMenu": false,')
+        lines.append('  "equipo_asignado": "",')
+        lines.append('  "flow_name": "",')
+        lines.append('  "session_id": "",')
+        lines.append('  "conversation_id": "",')
+        lines.append('  "account_id": "",')
+        lines.append('  "platform": "",')
+        lines.append('  "timestamp_actividad": ""')
+        lines.append('}')
+        lines.append('')
+        lines.append('REGLAS:')
+        lines.append('1. "flow_name" debe ser EXACTAMENTE el nombre de un flujo disponible de la lista.')
+        lines.append('   "equipo_asignado" debe ser el código de enrutamiento de ese mismo flujo.')
+        lines.append(f'2. Si el usuario hace una consulta informativa (precios, servicios, '
+                     f'horarios, promociones) NO inicies aún un flujo de captura: devuelve '
+                     f'equipo_asignado="" y flow_name="".')
+        lines.append(f'3. Solo activa un flujo cuando el usuario confirme que desea dejar sus '
+                     f'datos, realizar un pedido, agendar una cita o derivar al equipo humano.')
+        lines.append('4. Si no hay un flujo que corresponde, usa flow_name vacío.')
+        lines.append('5. Copia session_id, conversation_id, account_id, platform y timestamp_actividad del input.')
+        lines.append('6. Límite de caracteres: 4000 para WhatsApp, 900 para redes (instagram/facebook/messenger).')
+        lines.append('7. Envía el JSON sin markdown, sin texto adicional y sin comentarios.')
+        lines.append('')
+        return '\n'.join(lines)
 
     @staticmethod
     def get_default_stage(env):

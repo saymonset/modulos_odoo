@@ -19,6 +19,9 @@ class InicioAgendarController(http.Controller):
         Retorna un dict con la info del flujo y una lista de pasos,
         o None si no se encuentra.
         """
+        params = request.env['ir.config_parameter'].sudo()
+        incluir_opcionales = params.get_param('ai_chatbot_1_portal.include_optional_steps', '0') in ('1', 'True', 'true')
+
         flow = request.env['chatbot.flujo'].sudo().search([
             ('name', '=', flow_name),
             ('active', '=', True)
@@ -49,7 +52,7 @@ class InicioAgendarController(http.Controller):
             }
         steps = []
         for paso in flow.paso_ids.sorted('secuencia'):
-            if paso.es_requerido:
+            if paso.es_requerido or incluir_opcionales:
                 steps.append({
                     'id': paso.id,
                     'secuencia': paso.secuencia,
@@ -355,6 +358,67 @@ class InicioAgendarController(http.Controller):
 
         except Exception as e:
             _logger.error("Error en procesar_paso: %s", e, exc_info=True)
+            return Response(
+                json.dumps({'success': False, 'error': str(e)}),
+                status=500,
+                content_type='application/json',
+                headers=[('Access-Control-Allow-Origin', '*')]
+            )
+
+    @http.route('/ai_chatbot_1_portal/configuracion_agente',
+                auth='public',
+                type='http',
+                methods=['POST'],
+                csrf=False,
+                cors='*')
+    def configuracion_agente(self, **kw):
+        """
+        Provee al agente de n8n la configuración dinámica:
+        mensaje de negocio + catálogo de flujos activos + formato de salida.
+
+        Requiere el header 'x-chatbot-token' (o campo 'token') si se configuró
+        ai_chatbot_1_portal.api_token en Ajustes.
+        """
+        try:
+            http_request = request.httprequest
+            content_type = http_request.headers.get('Content-Type', '').lower()
+            data = {}
+            if 'application/json' in content_type:
+                raw_data = http_request.get_data(as_text=True)
+                if raw_data.strip():
+                    data = json.loads(raw_data)
+            else:
+                data = dict(http_request.form) or dict(http_request.args)
+
+            expected_token = request.env['ir.config_parameter'].sudo().get_param(
+                'ai_chatbot_1_portal.api_token', ''
+            )
+            if expected_token:
+                token_header = http_request.headers.get('x-chatbot-token', '')
+                token_body = data.get('token', '')
+                if token_header != expected_token and token_body != expected_token:
+                    return Response(
+                        json.dumps({'success': False, 'error': 'Token inválido'}),
+                        status=401,
+                        content_type='application/json; charset=utf-8',
+                        headers=[('Access-Control-Allow-Origin', '*')]
+                    )
+
+            system_prompt = ChatBotUtils.build_agent_system_prompt(request.env)
+            fallback_message = request.env['ir.config_parameter'].sudo().get_param(
+                'ai_chatbot_1_portal.fallback_message',
+                'No pudimos procesar tu solicitud en este momento. Por favor intenta más tarde.')
+
+            data['system_prompt'] = system_prompt or fallback_message
+            data['fallback_message'] = fallback_message
+            return Response(
+                json.dumps(data, default=str),
+                status=200,
+                content_type='application/json; charset=utf-8',
+                headers=[('Access-Control-Allow-Origin', '*')]
+            )
+        except Exception as e:
+            _logger.error("Error en configuracion_agente: %s", e, exc_info=True)
             return Response(
                 json.dumps({'success': False, 'error': str(e)}),
                 status=500,

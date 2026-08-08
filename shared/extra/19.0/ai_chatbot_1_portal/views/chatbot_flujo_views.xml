@@ -8,8 +8,9 @@
             <field name="arch" type="xml">
                 <list string="Flujos de Chatbot">
                     <field name="name"/>
-                    <!-- Mostrar el equipo (Many2one) en vez del selection antiguo -->
+                    <field name="routing_key"/>
                     <field name="team_id"/>
+                    <field name="politica_inicio"/>
                     <field name="company_id"/>
                     <field name="active"/>
                 </list>
@@ -25,9 +26,17 @@
                     <sheet>
                         <group>
                             <field name="name"/>
+                            <field name="routing_key"/>
+                            <field name="politica_inicio"/>
+                            <field name="generar_pasos_automatico"/>
                             <field name="grupo_asignado"/>
+                            <field name="team_id"/>
                             <field name="company_id"/>
                             <field name="active"/>
+                        </group>
+                        <group string="Instrucciones para el agente">
+                            <field name="descripcion_intencion" widget="text"/>
+                            <field name="condiciones_no_inicio" widget="text"/>
                         </group>
                         <notebook>
                             <page string="Pasos">

@@ -183,6 +183,7 @@ class SessionState(models.Model):
         # Inicializar datos del paciente con los precargados si existen
         datos_paciente = datos_precargados.copy() if datos_precargados else {}
         datos_paciente['equipo_asignado'] = equipo_asignado
+        datos_paciente['flow_name'] = flow_name
         if account_id:
             datos_paciente['account_id'] = account_id
         if conversation_id:
@@ -843,16 +844,26 @@ class SessionState(models.Model):
             teams = ChatBotUtils.get_team_unisa(env)
 
             equipo_asignado = datos.get('equipo_asignado', 'Agendamiento_Directo')
-            mapeo_grupos = self.env['chatbot.flujo']._get_mapeo_equipo_grupo()
-            nombre_grupo = mapeo_grupos.get(equipo_asignado)
+            nombre_grupo = None
             team = None
-            if nombre_grupo:
-                if teams and nombre_grupo in teams:
-                    team = teams[nombre_grupo]
-                else:
-                    team = env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
-                    if not team:
-                        team = env['crm.team'].search([], limit=1)
+            # 1) Team del flujo si se conoce el nombre (fuente de verdad configurable)
+            flow_name = datos.get('flow_name') or datos.get('name_flow')
+            if flow_name:
+                flujo = self.env['chatbot.flujo'].search([('name', '=', flow_name)], limit=1)
+                if flujo and flujo.team_id:
+                    team = flujo.team_id
+                    nombre_grupo = team.name
+            # 2) Fallback: mapeo centralizado legacy por equipo_asignado
+            if not team:
+                mapeo_grupos = self.env['chatbot.flujo']._get_mapeo_equipo_grupo()
+                nombre_grupo = mapeo_grupos.get(equipo_asignado)
+                if nombre_grupo:
+                    if teams and nombre_grupo in teams:
+                        team = teams[nombre_grupo]
+                    else:
+                        team = env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
+                        if not team:
+                            team = env['crm.team'].search([], limit=1)
             
             # Crear lead según el tipo de flujo
             if equipo_asignado in ['RESULTADOS_LAB', 'RESULTADOS_IMAGENES', 'flujo_resultados_laboratorio', 'flujo_resultados_imagenes']:

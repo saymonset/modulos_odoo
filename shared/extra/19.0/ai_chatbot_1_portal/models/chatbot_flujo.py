@@ -35,6 +35,37 @@ class ChatbotFlujo(models.Model):
         help='Enlace directo al equipo/grupo CRM responsable de este flujo',
     )
 
+    routing_key = fields.Char(
+        string='Código de enrutamiento',
+        help='Identificador que n8n envía como equipo_asignado cuando el agente '
+             'activa este flujo. Si se deja vacío, se usa el nombre del flujo.',
+    )
+
+    descripcion_intencion = fields.Text(
+        string='Descripción para el agente',
+        help='Instrucción que se inyecta al prompt del agente para explicarle '
+             'cuándo debe activar este flujo.',
+    )
+
+    condiciones_no_inicio = fields.Text(
+        string='Condiciones para NO iniciar',
+        help='Explica al agente en qué casos no debe activar este flujo '
+             '(por ejemplo: solo consultas informativas).',
+    )
+
+    politica_inicio = fields.Selection([
+        ('immediate', 'Inmediata (al detectar la intención)'),
+        ('confirmation', 'Requiere confirmación del usuario'),
+        ('manual', 'Solo por botón o comando'),
+    ], string='Política de inicio', default='immediate')
+
+    generar_pasos_automatico = fields.Boolean(
+        string='Generar pasos automáticamente',
+        default=True,
+        help='Al crear el flujo, genera la plantilla de pasos genéricos. '
+             'Desactívalo para crear los pasos manualmente según el cliente.',
+    )
+
     # ============================================================
     # MÉTODOS BASE PARA OBTENER LOS PASOS OBLIGATORIOS
     # ============================================================
@@ -494,6 +525,8 @@ class ChatbotFlujo(models.Model):
         mapeo = self._get_mapeo_equipo_grupo()
         for vals in vals_list:
             name = vals.get("name", "")
+            if not vals.get('routing_key'):
+                vals['routing_key'] = name or ''
             nombre_grupo = None
             if name in mapeo:
                 nombre_grupo = mapeo[name]
@@ -528,7 +561,7 @@ class ChatbotFlujo(models.Model):
         flujos = super().create(vals_list)
         
         for flujo in flujos:
-            if not flujo.paso_ids:
+            if not flujo.paso_ids and flujo.generar_pasos_automatico:
                 flujo._crear_pasos_para_flujo(incluir_opcionales=True)
         
         return flujos

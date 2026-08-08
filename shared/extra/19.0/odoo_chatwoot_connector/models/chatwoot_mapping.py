@@ -60,6 +60,12 @@ class ChatwootMapping(models.Model):
         string='Chatwoot agent email',
         help='Email del agente en Chatwoot. Úsalo si no quieres depender del ID.'
     )
+    routing_key = fields.Char(
+        string='Código de enrutamiento',
+        help='Código genérico que envía n8n (equipo_asignado) para clientes '
+             'nuevos. Se usa además de equipo_asignado para no depender de '
+             'códigos fijos. Si se deja vacío, se usa el valor de equipo_asignado.'
+    )
     prefer_assign_to_agent = fields.Boolean(
         string='Intentar asignar a agente primero',
         default=True,
@@ -86,32 +92,51 @@ class ChatwootMapping(models.Model):
         """
         _logger.info('RR[mapping] INICIO: team=%s equipo_asignado=%s flow_name=%s', team, equipo_asignado, flow_name)
 
-        candidates = self.sudo().search([('active', '=', True)]).sorted('id')
-        _logger.info('RR[mapping] candidates activos totales: %s', candidates.ids)
+        base_candidates = self.sudo().search([('active', '=', True)]).sorted('id')
+        _logger.info('RR[mapping] candidatos activos totales: %s', base_candidates.ids)
 
+        candidates = base_candidates
+
+        # 1) Prioridad: coincidencia exacta por equipo_asignado o routing_key.
+        #    Un criterio sin coincidencia NO debe caer en rotación global.
         if equipo_asignado:
-            filtered = candidates.filtered(lambda m: m.equipo_asignado == equipo_asignado)
-            _logger.info('RR[mapping] filtrados por equipo_asignado=%s: %s', equipo_asignado, filtered.ids)
-            if filtered:
-                candidates = filtered
+            filtered = base_candidates.filtered(
+                lambda m: m.equipo_asignado == equipo_asignado
+                or (m.routing_key and m.routing_key == equipo_asignado)
+            )
+            _logger.info('RR[mapping] filtrados por equipo_asignado=%s: %s',
+                         equipo_asignado, filtered.ids)
+            candidates = filtered if filtered else None
+            if not candidates and flow_name:
+                filtered = base_candidates.filtered(
+                    lambda m: m.flow_id and m.flow_id.name == flow_name
+                )
+                _logger.info('RR[mapping] filtrados por flow_name=%s: %s', flow_name, filtered.ids)
+                candidates = filtered or None
 
-        if not candidates and flow_name:
-            filtered = self.sudo().search([('active', '=', True)]).filtered(
+        # 2) Sin equipo_asignado: filtrar por flow_name.
+        if not candidates and not equipo_asignado and flow_name:
+            filtered = base_candidates.filtered(
                 lambda m: m.flow_id and m.flow_id.name == flow_name
             )
             _logger.info('RR[mapping] filtrados por flow_name=%s: %s', flow_name, filtered.ids)
-            if filtered:
-                candidates = filtered.sorted('id')
+            candidates = filtered or None
 
+        # 3) Fallback final: por team_id.
         if not candidates and team:
             team_id = team.id if hasattr(team, 'id') else int(team)
-            filtered = self.sudo().search([('active', '=', True), ('team_id', '=', team_id)]).sorted('id')
+            filtered = base_candidates.filtered(lambda m: m.team_id.id == team_id)
             _logger.info('RR[mapping] filtrados por team_id=%s: %s', team_id, filtered.ids)
-            if filtered:
-                candidates = filtered
+            candidates = filtered or None
+
+        # 4) Solo si no se indicó NINGÚN criterio se conserva la rotación
+        #    global legacy entre todos los mappings activos.
+        if not candidates and not equipo_asignado and not flow_name and not team:
+            candidates = base_candidates
 
         if not candidates:
-            _logger.warning('RR[mapping] SIN CANDIDATOS - team=%s equipo=%s flow=%s', team, equipo_asignado, flow_name)
+            _logger.warning('RR[mapping] SIN CANDIDATOS - team=%s equipo=%s flow=%s',
+                            team, equipo_asignado, flow_name)
             return self.browse()
 
         rr_key_parts = [

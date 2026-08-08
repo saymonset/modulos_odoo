@@ -9,6 +9,12 @@
                 <group string="Chat Bot Integra">
                     <field name="chat_bot_webhook_url"/>
                 </group>
+                <group string="Configuración del agente (n8n)">
+                    <field name="chat_bot_system_prompt"/>
+                    <field name="chat_bot_fallback_message"/>
+                    <field name="chat_bot_api_token"/>
+                    <field name="chat_bot_include_optional_steps"/>
+                </group>
             </xpath>
         </field>
     </record>

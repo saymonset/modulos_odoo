@@ -6,6 +6,7 @@
       <field name="arch" type="xml">
       <list>
         <field name="name"/>
+        <field name="routing_key"/>
         <field name="team_id"/>
         <field name="equipo_asignado"/>
         <field name="chatwoot_inbox_id"/>
@@ -31,6 +32,7 @@
             <group string="Identificación">
               <field name="name" placeholder="Ej: Citas Medios Propios"/>
               <field name="flow_id" options="{'no_create': True}"/>
+              <field name="routing_key" placeholder="Ej: Cotizacion_Personalizada"/>
               <field name="team_id" options="{'no_create': True}"/>
               <field name="equipo_asignado"/>
             </group>
