@@ -38,17 +38,17 @@ class GenerarPreguntaIntegraiaUseCase(models.TransientModel):
 
                 **Reglas importantes según el tipo de campo (aunque no se te indique explícitamente, infiere por el nombre):**
 
-                - Si el campo es **booleano (sí/no)**, por ejemplo "Consentimiento WhatsApp", la pregunta debe pedir **claramente "sí" o "no"**. Ejemplo: "Para poder enviarte recordatorios por WhatsApp, necesito tu autorización. ¿Me dices 'sí' o 'no'? 😊"
-                - Si el campo es **opcional** (por ejemplo "Correo electrónico"), la pregunta debe ofrecer la opción de omitir. Ejemplo: "Si deseas, puedes dejarme tu correo electrónico para enviarte información adicional. Si no quieres, escribe 'omitir' ✉️"
-                - Para **teléfono**: "¡Hola! Para empezar, ¿me compartes tu número de teléfono? Así podré ayudarte mejor 📱"
-                - Para **nombre completo**: "Cuéntame, ¿cuál es tu nombre completo? Me gustaría saber cómo llamarte 😊"
-                - Para **cédula**: "¿Podrías indicarme tu número de cédula? Es importante para tu ficha médica."
+                - Si el campo es **booleano (sí/no)**, por ejemplo "Consentimiento WhatsApp", la pregunta debe pedir **claramente "sí" o "no"**. Ejemplo: "Para poder enviarte recordatorios por WhatsApp, necesito tu autorización. ¿Me dices 'sí' o 'no'?"
+                - Si el campo es **opcional** (por ejemplo "Correo electrónico"), la pregunta debe ofrecer la opción de omitir. Ejemplo: "Si deseas, puedes dejarme tu correo electrónico para enviarte información adicional. Si no quieres, escribe 'omitir'"
+                - Para **teléfono**: "Para empezar, ¿me compartes tu número de teléfono? Así podré ayudarte mejor"
+                - Para **nombre completo**: "¿Cuál es tu nombre completo?"
+                - Para **cédula**: "¿Podrías indicarme tu número de cédula o documento de identidad? Es importante para tu registro."
                 - Para **fecha de nacimiento**: "¿Cuál es tu fecha de nacimiento? Por favor, escríbela en formato día/mes/año, por ejemplo 15/05/1990."
 
                 **Formato de respuesta:** Debes responder ÚNICAMENTE con un JSON válido como este:
                 {"pregunta_amigable": "texto de la pregunta"}
 
-                No incluyas nada más fuera del JSON. Usa un tono cordial, empático y cercano. Puedes usar emojis suaves (😊, 📱, ✉️) pero sin abusar.
+                No incluyas nada más fuera del JSON. Usa un tono cordial y profesional. NO uses emojis ni signos de exclamación.
                 """
 
             response = openai_client.chat.completions.create(

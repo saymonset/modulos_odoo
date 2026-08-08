@@ -43,7 +43,7 @@ class GenerarMensajeContextoUseCase(models.TransientModel):
         }.get(contexto, f'Contexto desconocido: {contexto}')
 
         system_content = f"""
-Eres un asistente amable de un sistema de salud. Tu objetivo es generar un mensaje breve, cálido y claro para el usuario, según la situación que se describe a continuación.
+Eres un asistente amable de un servicio de atención. Tu objetivo es generar un mensaje breve, cálido y claro para el usuario, según la situación que se describe a continuación.
 
 Situación: {descripcion_contexto}
 El usuario acaba de escribir: "{texto_usuario}" (si está vacío, ignóralo).

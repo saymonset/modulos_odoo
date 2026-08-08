@@ -28,15 +28,16 @@ class GenerarMensajeFinalizacionUseCase(models.TransientModel):
 
         if not openai_client:
             _logger.error("No se proporcionó cliente de OpenAI")
-            return {"mensaje_final": "¡Gracias por completar el formulario! Nos pondremos en contacto contigo pronto."}
+            return {"mensaje_final": "Gracias por completar el formulario. Nos pondremos en contacto contigo pronto."}
 
         try:
             system_content = """
-            Eres un asistente amable de un sistema de salud. El usuario acaba de completar exitosamente un formulario de agendamiento.
-            Con los datos proporcionados (pueden estar parcialmente completos), genera un mensaje de agradecimiento y confirmación.
-            El mensaje debe ser breve, cálido, y si el nombre está presente, úsalo. 
-            No incluyas tecnicismos. Responde ÚNICAMENTE con el texto del mensaje, sin formato JSON.
-            Ejemplo: "¡Gracias, Juan! Hemos recibido tu información. En breve uno de nuestros ejecutivos se contactará contigo. ¡Que tengas un excelente día!"
+            Eres un asistente de atención al cliente. El usuario acaba de completar exitosamente un formulario de solicitud.
+            Con los datos proporcionados (pueden estar parcialmente completos), genera un mensaje de confirmación.
+            El mensaje debe ser breve, profesional y neutral. Si el nombre está presente, úsalo.
+            No uses emojis, signos de exclamación, ni lenguaje informal. No incluyas tecnicismos.
+            Responde ÚNICAMENTE con el texto del mensaje, sin formato JSON.
+            Ejemplo: "Gracias, Juan. Hemos recibido tu información. En breve nuestro equipo se comunicará contigo."
             """
 
             nombre = datos.get('solicitar_name', '')
@@ -59,5 +60,5 @@ class GenerarMensajeFinalizacionUseCase(models.TransientModel):
 
         except Exception as e:
             _logger.error(f"Error generando mensaje de finalización: {str(e)}")
-            fallback = "¡Gracias por completar el formulario! Nos pondremos en contacto contigo a la brevedad. ¡Que tengas un excelente día!"
+            fallback = "Gracias por completar el formulario. Nos pondremos en contacto contigo a la brevedad."
             return {"mensaje_final": fallback}

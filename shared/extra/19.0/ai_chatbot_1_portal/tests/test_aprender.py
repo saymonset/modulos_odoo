@@ -10,6 +10,6 @@ class TestAprender(TransactionCase):
 
     def test_02_booleanos(self):
         """Strings y booleanos"""
-        nombre = "UNISA"
+        nombre = "BotIA"
         self.assertTrue(nombre)
         self.assertEqual(len(nombre), 5)

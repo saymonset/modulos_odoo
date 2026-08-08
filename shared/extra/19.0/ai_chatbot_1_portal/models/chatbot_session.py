@@ -59,7 +59,7 @@ class SessionState(models.Model):
     
     equipo_asignado = fields.Char(
         string='Equipo Asignado',
-        help='Equipo al que se asignará el lead (Agendamiento_Directo, Ventas_UNISA, etc.)'
+        help='Equipo al que se asignará el lead (Agendamiento_Directo, Ventas, etc.)'
     )
     
     timestamp_estado = fields.Datetime(
@@ -414,7 +414,7 @@ class SessionState(models.Model):
                     estado_actual['datos_paciente'] = datos_p
                     estado_actual['timestamp'] = fields.Datetime.now().isoformat()
                     registro.write({'estado': estado_actual})
-                    mensaje_recibido = f"¡Excelente! He recibido la imagen ✅. ¿Deseas agregar otra imagen? O si ya finalizastes, escribe *'listo'* para continuar."
+                    mensaje_recibido = "He recibido la imagen. ¿Deseas agregar otra imagen? Si ya finalizaste, escribe *'listo'* para continuar."
                     return {
                         'success': True,
                         'finalizado': False,
@@ -841,7 +841,7 @@ class SessionState(models.Model):
             plataforma = datos.get('plataforma', 'whatsapp')
             medium, source, campaign = ChatBotUtils.setup_utm(env, plataforma)
             tag = ChatBotUtils.get_or_create_bot_tag(env, plataforma)
-            teams = ChatBotUtils.get_team_unisa(env)
+            teams = ChatBotUtils.get_or_create_crm_teams(env)
 
             equipo_asignado = datos.get('equipo_asignado', 'Agendamiento_Directo')
             nombre_grupo = None
@@ -918,14 +918,17 @@ class SessionState(models.Model):
         if not msg:
             resumen = ChatBotUtils.format_patient_summary(datos_paciente)
             name = datos_paciente.get('solicitar_name') or datos_paciente.get('name', '')
-            lines = [f"✅ **¡GRACIAS POR TU SOLICITUD!**"]
+            lines = ["Confirmación: Hemos recibido tu información correctamente."]
             lines.append("")
-            lines.append(f"Hemos recibido toda tu información correctamente. {name + ', ' if name else ''}a continuación te compartimos un resumen de lo registrado:\n")
+            if name:
+                lines.append(f"{name}, a continuación un resumen de lo registrado:")
+            else:
+                lines.append("A continuación, un resumen de lo registrado:")
+            lines.append("")
             if resumen:
                 lines.append(resumen)
                 lines.append("")
-            lines.append("📋 **¿Qué sigue?**")
-            lines.append("Uno de nuestros ejecutivos revisará tu solicitud y se comunicará contigo en las próximas horas para brindarte la atención que necesitas.")
+            lines.append("Siguiente paso: Nuestro equipo revisará tu solicitud y se comunicará contigo en las próximas horas.")
             msg = "\n".join(lines)
         lead_id = None
         if lead_resultado and lead_resultado.get('success'):

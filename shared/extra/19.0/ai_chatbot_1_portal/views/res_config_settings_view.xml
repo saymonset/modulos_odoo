@@ -7,6 +7,9 @@
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
                 <group string="Chat Bot Integra">
+                    <field name="chat_bot_brand_name"/>
+                    <field name="chat_bot_platform_promotion_enabled"/>
+                    <field name="chat_bot_platform_promotion_text"/>
                     <field name="chat_bot_webhook_url"/>
                 </group>
                 <group string="Configuración del agente (n8n)">

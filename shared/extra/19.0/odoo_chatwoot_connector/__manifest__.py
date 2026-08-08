@@ -4,8 +4,8 @@
     "summary": "Integración Chatwoot: asignar conversaciones y tags desde Odoo",
     "description": "Asigna conversaciones, agrega tags y notifica agentes en Chatwoot desde Odoo.",
     "category": "Tools",
-    "author": "UNISA",
-    "website": "https://unisa.example",
+    "author": "Aristo Soluciones C.A.",
+    "website": "https://aristosoluciones.integraia.lat",
     "depends": ["base", "mail", "ai_chatbot_1_portal"],
     "data": [
         "views/chatwoot_settings_views.xml",

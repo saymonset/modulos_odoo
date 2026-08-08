@@ -27,9 +27,9 @@
             <field name="active">True</field>
         </record>
         
-        <!-- Flujo 4: Ventas UNISA (Tarjeta) -->
-        <record id="flujo_ventas_unisa" model="chatbot.flujo">
-            <field name="name">flujo_ventas_unisa</field>
+        <!-- Flujo 4: Ventas -->
+        <record id="flujo_ventas" model="chatbot.flujo">
+            <field name="name">flujo_ventas</field>
             <field name="company_id" ref="base.main_company"/>
             <field name="active">True</field>
         </record>

@@ -7,7 +7,7 @@
             <field name="active">True</field>
             <field name="use_leads">True</field>
             <field name="use_opportunities">True</field>
-            <field name="alias_name">informativo-unisa</field>
+            <field name="alias_name">informativo</field>
         </record>
     </data>
 </odoo>

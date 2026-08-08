@@ -22,7 +22,7 @@ Mapa principal
 | Precios | `Agendamiento_Precios` | `flujo_agendamiento_precios` | Grupo Informativo | Inbox / agente configurado |
 | Servicios | `Agendamiento_Servicios` | `flujo_agendamiento_servicios` | Grupo Ventas | Inbox / agente configurado |
 | Otra consulta | `Agendamiento_Otra_Consulta` | `flujo_agendamiento_otra_consulta` | Grupo Citas | Inbox / agente configurado |
-| Ventas | `Ventas_UNISA` | `flujo_ventas_unisa` | Grupo Ventas | Inbox / agente de ventas |
+| Ventas | `Ventas` | `flujo_ventas` | Grupo Ventas | Inbox / agente de ventas |
 | Resultados laboratorio | `RESULTADOS_LAB` | `flujo_resultados_laboratorio` | Grupo Laboratorio | Inbox / agente de laboratorio |
 | Resultados imagenes | `RESULTADOS_IMAGENES` | `flujo_resultados_imagenes` | Grupo Imagenologia | Inbox / agente de imagenologia |
 

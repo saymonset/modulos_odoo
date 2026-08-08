@@ -45,7 +45,7 @@ class OrthographyUseCase(models.TransientModel):
             {
             "userScore": 0.95,
             "errors": ["error -> solución"],
-            "message": "¡Felicidades! 🎉"
+            "message": "¡Felicidades, tu texto no tiene errores!"
             }
             """
             

@@ -126,7 +126,7 @@ class ChatbotSessionInherit(models.Model):
 
                 equipo_legible = (mapping_rec.equipo_asignado or '').replace('_', ' ')
                 if assigned_agent_email:
-                    notify_msg = f"Tu consulta sobre {equipo_legible} ha sido registrada.\n👤 Ejecutivo asignado: {assigned_agent_email}"
+                    notify_msg = f"Tu consulta sobre {equipo_legible} ha sido registrada.\nAgente asignado: {assigned_agent_email}"
                 else:
                     notify_msg = f"Tu consulta sobre {equipo_legible} ha sido registrada."
 
@@ -155,10 +155,10 @@ class ChatbotSessionInherit(models.Model):
                     if lead and lead.exists():
                         ejecutivo = assigned_agent_name or mapping_rec.chatwoot_agent_email or 'sin datos'
                         if result.get('assigned_to') in ('agent', 'preserved'):
-                            lead.message_post(body=f"Solicitud recibida. Ejecutivo asignado: {ejecutivo}")
+                            lead.message_post(body=f"Solicitud recibida. Agente asignado: {ejecutivo}")
                             _logger.info('RR[session] chatter message posted: ejecutivo=%s', ejecutivo)
                         elif result.get('assigned_to') != 'existing':
-                            lead.message_post(body=f"Solicitud recibida. Ejecutivo asignado: {ejecutivo}")
+                            lead.message_post(body=f"Solicitud recibida. Agente asignado: {ejecutivo}")
                             _logger.info('RR[session] chatter message posted: ejecutivo=%s', ejecutivo)
                         else:
                             _logger.info('RR[session][conv=%s]: assignee skipped, no chatter',

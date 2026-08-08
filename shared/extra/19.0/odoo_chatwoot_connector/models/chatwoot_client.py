@@ -353,7 +353,7 @@ class ChatwootClient(models.AbstractModel):
                     f"Tu nueva consulta sobre {equipo_legible} ha sido registrada.\n"
                 )
                 if current_assignee_email:
-                    msg += f"👤 Ejecutivo asignado: {current_assignee_email}"
+                    msg += f"Agente asignado: {current_assignee_email}"
                 mapping['notify_message'] = msg
 
         if agent_id and mapping.get('inbox_id'):
@@ -444,8 +444,17 @@ class ChatwootClient(models.AbstractModel):
         # Notify message whenever assignment is attempted successfully.
         if mapping.get('notify_message'):
             try:
+                content = mapping['notify_message']
+                try:
+                    params = self.env['ir.config_parameter'].sudo()
+                    enabled = params.get_param('ai_chatbot_1_portal.platform_promotion_enabled')
+                    if enabled and str(enabled).lower() in ('1', 'true', 'yes', 'on'):
+                        text = params.get_param('ai_chatbot_1_portal.platform_promotion_text') or '@integraiaconodoo'
+                        content += f"\n\n_Atención automatizada por {text}_"
+                except Exception:
+                    pass
                 url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}/messages"
-                r = requests.post(url, json={"content": mapping['notify_message']}, headers=headers, timeout=timeout)
+                r = requests.post(url, json={"content": content}, headers=headers, timeout=timeout)
                 if r.status_code not in (200, 201):
                     errors.append(f'notify_failed:{r.status_code}:{r.text}')
             except Exception as e:

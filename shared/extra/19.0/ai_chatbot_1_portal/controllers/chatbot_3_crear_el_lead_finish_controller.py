@@ -87,8 +87,7 @@ class ChatBotController(http.Controller):
                 response_data = {
                     'existe': True,
                     'iniciales': self._get_iniciales(partner.name),
-                    'mensaje': f"✅ **INFORMACIÓN ENCONTRADA**\n\n"
-                               f"👤 **Datos del cliente:**\n"
+                    'mensaje': f"Información encontrada\n\nDatos del cliente:\n"
                                f"• Nombre: {partner.name}\n"
                                f"• Cédula: {partner.vat or 'No registrada'}\n"
                                f"• Teléfono: {partner.phone}\n",
@@ -111,7 +110,7 @@ class ChatBotController(http.Controller):
                 )
             
             _logger.info("Cliente NO encontrado para teléfono: %s (normalizado: %s)", telefono, telefono_normalizado)
-            mensaje = "❌ **NO ENCONTRAMOS TU REGISTRO**\n\nNo encontramos información con ese número de teléfono.\n\n📋 **Por favor, ingresa tu cédula (solo números):**\n\nEjemplo: 12345678"
+            mensaje = "No encontramos información con ese número de teléfono.\n\nPor favor, ingresa tu cédula (solo números):\n\nEjemplo: 12345678"
             return Response(
                 json.dumps({'existe': False, 'mensaje': mensaje, 'telefono_buscado': telefono, 'sugerencia': 'Puede ser un nuevo cliente o el teléfono no está registrado'}),
                 content_type='application/json; charset=utf-8',
@@ -205,7 +204,7 @@ class ChatBotController(http.Controller):
             plataforma = data.get('plataforma', 'whatsapp')
             medium, source, campaign = ChatBotUtils.setup_utm(env, plataforma)
             tag = ChatBotUtils.get_or_create_bot_tag(env, plataforma)
-            teams = ChatBotUtils.get_team_unisa(env)
+            teams = ChatBotUtils.get_or_create_crm_teams(env)
             
             equipo_asignado = data.get('equipo_asignado', 'Agendamiento_Directo')
             # Intentar obtener el flujo por name_flow y usar su team_id si está configurado
@@ -308,7 +307,7 @@ class ChatBotController(http.Controller):
                             'tags': [t.strip() for t in (mapping_rec.chatwoot_tags or '').split(',') if t.strip()],
                             'notify_message': (
                                 f"Tu consulta sobre {(mapping_rec.equipo_asignado or '').replace('_', ' ')} ha sido registrada."
-                                + (f"\n👤 Ejecutivo asignado: {assigned_agent_email}" if assigned_agent_email else '')
+                                + (f"\nAgente asignado: {assigned_agent_email}" if assigned_agent_email else '')
                             ),
                             'equipo_asignado': mapping_rec.equipo_asignado or '',
                         }
@@ -325,10 +324,10 @@ class ChatBotController(http.Controller):
                         _logger.info('RR[HTTP] assign_conversation RESULTADO: %s', result)
                         ejecutivo = assigned_agent_name or mapping_rec.chatwoot_agent_email or 'sin datos'
                         if result.get('assigned_to') in ('agent', 'preserved'):
-                            lead.sudo().message_post(body=f"Solicitud recibida. Ejecutivo asignado: {ejecutivo}")
+                            lead.sudo().message_post(body=f"Solicitud recibida. Agente asignado: {ejecutivo}")
                             _logger.info('RR[HTTP] chatter message posted: ejecutivo=%s', ejecutivo)
                         elif result.get('assigned_to') != 'existing':
-                            lead.sudo().message_post(body=f"Solicitud recibida. Ejecutivo asignado: {ejecutivo}")
+                            lead.sudo().message_post(body=f"Solicitud recibida. Agente asignado: {ejecutivo}")
                             _logger.info('RR[HTTP] chatter message posted: ejecutivo=%s', ejecutivo)
                         else:
                             _logger.info('RR[HTTP][conv=%s]: assignee skipped, no chatter',
@@ -392,7 +391,7 @@ class ChatBotController(http.Controller):
                 'text': respuesta_bot,
                 'content': respuesta_bot,
                 'output': respuesta_bot,
-                'mensaje': 'Solicitud registrada exitosamente. Un ejecutivo se contactará pronto.',
+                'mensaje': 'Solicitud registrada exitosamente. Un agente se contactará pronto.',
                 'session_eliminada': session_id if session_id else None,
                 'equipo_asignado': equipo_asignado,
                 'grupo_asignado': nombre_grupo

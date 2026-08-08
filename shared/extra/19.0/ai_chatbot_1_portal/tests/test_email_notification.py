@@ -13,7 +13,7 @@ class TestEmailNotification(TransactionCase):
 
         cls.team = cls.env['crm.team'].create({
             'name': 'Test Grupo Citas',
-            'alias_name': 'test-citas-unisa',
+            'alias_name': 'test-citas',
         })
 
         cls.user = cls.env['res.users'].create({
@@ -39,10 +39,10 @@ class TestEmailNotification(TransactionCase):
         })
 
         cls.utm_medium = cls.env['utm.medium'].create({'name': 'Test WhatsApp'})
-        cls.utm_source = cls.env['utm.source'].create({'name': 'Test WhatsApp Bot UNISA'})
-        cls.utm_campaign = cls.env['utm.campaign'].create({'name': 'Test Campaña WhatsApp UNISA'})
+        cls.utm_source = cls.env['utm.source'].create({'name': 'Test WhatsApp Bot'})
+        cls.utm_campaign = cls.env['utm.campaign'].create({'name': 'Test Campaña WhatsApp'})
 
-        cls.env['ir.config_parameter'].sudo().set_param('unisa_bot_last_user_test', False)
+        cls.env['ir.config_parameter'].sudo().set_param('chatbot_last_user_test', False)
 
     def _create_test_lead(self):
         from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import ChatBotUtils

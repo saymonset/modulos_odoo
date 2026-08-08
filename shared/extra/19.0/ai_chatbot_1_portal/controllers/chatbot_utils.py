@@ -284,8 +284,8 @@ class ChatBotUtils:
         return None
 
     @staticmethod
-    def get_team_unisa(env):
-        """Obtener o crear equipos de UNISA (Grupo Citas, Grupo Ventas, Grupo Laboratorio, Grupo Imagenología)"""
+    def get_or_create_crm_teams(env):
+        """Obtener o crear equipos CRM (Grupo Citas, Grupo Ventas, Grupo Laboratorio, Grupo Imagenología, Grupo Informativo)"""
         teams = {}
         team_names = ['Grupo Citas', 'Grupo Ventas', 'Grupo Laboratorio', 'Grupo Imagenología', 'Grupo Informativo']
         for team_name in team_names:
@@ -298,17 +298,17 @@ class ChatBotUtils:
                         'active': True,
                     }
                     if team_name == 'Grupo Citas':
-                        team_data['alias_name'] = 'citas-unisa'
+                        team_data['alias_name'] = 'citas'
                     elif team_name == 'Grupo Ventas':
-                        team_data['alias_name'] = 'ventas-unisa'
+                        team_data['alias_name'] = 'ventas'
                     elif team_name == 'Grupo Laboratorio':
-                        team_data['alias_name'] = 'laboratorio-unisa'
+                        team_data['alias_name'] = 'laboratorio'
                     elif team_name == 'Grupo Imagenología':
-                        team_data['alias_name'] = 'imagenologia-unisa'
+                        team_data['alias_name'] = 'imagenologia'
                     elif team_name == 'Grupo Informativo':
-                        team_data['alias_name'] = 'informativo-unisa'
+                        team_data['alias_name'] = 'informativo'
                     team = env['crm.team'].create(team_data)
-                    _logger.info(f"✅ Equipo UNISA creado: {team.name} (ID: {team.id})")
+                    _logger.info(f"✅ Equipo CRM creado: {team.name} (ID: {team.id})")
                 except Exception as e:
                     _logger.error(f"❌ Error creando equipo {team_name}: {str(e)}")
                     # Posible condición de carrera: reintentar buscar si otro proceso creó el equipo
@@ -322,7 +322,7 @@ class ChatBotUtils:
                             _logger.error(f"❌ No se pudo crear equipo fallback para {team_name}: {e2}")
                             team = env['crm.team'].search([], limit=1)
             else:
-                _logger.info(f"✅ Equipo UNISA encontrado: {team.name} (ID: {team.id})")
+                _logger.info(f"✅ Equipo CRM encontrado: {team.name} (ID: {team.id})")
             teams[team_name] = team
         return teams
 
@@ -700,7 +700,7 @@ class ChatBotUtils:
             _logger.warning('RR[Odoo] SKIP: team=%s member_ids=%s', team.name if team else None, team.member_ids.ids if team and team.member_ids else 'vacio')
             return
         try:
-            param_name = f'unisa_bot_last_user_{team.id}'
+            param_name = f'chatbot_last_user_{team.id}'
             last_assigned_user_id = env['ir.config_parameter'].sudo().get_param(param_name)
             team_members = team.member_ids.sorted('id')
             _logger.info('RR[Odoo] team=%s members_count=%s members_ids=%s',
@@ -837,19 +837,46 @@ class ChatBotUtils:
         return validated_data
 
     @staticmethod
+    def _get_brand_name(env):
+        """Devuelve el nombre de marca configurado en Ajustes, o el de la compañía,
+        o un fallback genérico."""
+        if env:
+            params = env['ir.config_parameter'].sudo()
+            brand = params.get_param('ai_chatbot_1_portal.brand_name') or ''
+            if not brand:
+                brand = env.company.name or ''
+            if brand:
+                return brand
+        return 'IntegraIA'
+
+    @staticmethod
+    def _platform_attribution_line(env):
+        """Línea promocional de la plataforma (cursiva, sutil).
+
+        Solo aparece si el parámetro ai_chatbot_1_portal.platform_promotion_enabled
+        está activo. El texto se configura en ai_chatbot_1_portal.platform_promotion_text.
+        """
+        if not env:
+            return ""
+        params = env['ir.config_parameter'].sudo()
+        enabled = params.get_param('ai_chatbot_1_portal.platform_promotion_enabled')
+        if not enabled or str(enabled).lower() not in ('1', 'true', 'yes', 'on'):
+            return ""
+        text = params.get_param('ai_chatbot_1_portal.platform_promotion_text') or '@integraiaconodoo'
+        return f"\n\n_Atención automatizada por {text}_"
+
+    @staticmethod
     def _pie_mensaje(lead_id, equipo_asignado, env=None):
-        """Genera el pie del mensaje con datos de referencia."""
-        descripcion_grupos = env['chatbot.flujo']._get_mapeo_equipo_descripcion() if env else {}
-        grupo_texto = descripcion_grupos.get(equipo_asignado, 'atención al cliente')
+        """Genera el pie del mensaje con datos de referencia (formato neutro)."""
         pie = []
         if lead_id:
-            pie.append(f"📋 **Número de referencia:** {lead_id}")
-        if equipo_asignado and grupo_texto:
-            pie.append(f"👥 **Central de citas:** {grupo_texto.capitalize()}")
-        pie.append("🔒 **Tus datos están protegidos bajo nuestra política de privacidad.**")
-        pie.append("📞 **En breve uno de nuestros ejecutivos se comunicará contigo.**")
-        pie.append("🙏 **¡Gracias por confiar en IntegraIA!**")
-        return "\n".join(pie)
+            pie.append(f"Referencia: {lead_id}")
+        pie.append("Proceso: Asignación y seguimiento de solicitud.")
+        pie.append("Privacidad: Tus datos cuentan con total confidencialidad.")
+        pie.append("Siguiente paso: Nuestro equipo se comunicará en breve.")
+        pie.append(f"Agradecimiento: Gracias por elegir a {ChatBotUtils._get_brand_name(env)}.")
+        pie.append(ChatBotUtils._platform_attribution_line(env))
+        return "\n".join(line for line in pie if line)
 
     @staticmethod
     def generate_response(data, lead_id=None, equipo_asignado=None, env=None):
@@ -877,71 +904,74 @@ class ChatBotUtils:
             except Exception:
                 _logger.info("IA no disponible para generar respuesta, usando fallback manual")
 
-        # Fallback manual con formato enriquecido
+        # Fallback manual con formato neutro
         name = data.get('solicitar_name', '').strip()
         resumen = ChatBotUtils.format_patient_summary(data)
-        lines = [f"✅ **¡GRACIAS POR TU SOLICITUD!**"]
+        lines = ["Confirmación: Hemos recibido tu información correctamente."]
         lines.append("")
-        lines.append(f"Hemos recibido toda tu información correctamente. {name + ', ' if name else ''}a continuación te compartimos un resumen de lo registrado:\n")
+        if name:
+            lines.append(f"{name}, a continuación un resumen de lo registrado:")
+        else:
+            lines.append("A continuación, un resumen de lo registrado:")
+        lines.append("")
         if resumen:
             lines.append(resumen)
             lines.append("")
-        lines.append("📋 **¿Qué sigue?**")
-        lines.append("Uno de nuestros ejecutivos revisará tu solicitud y se comunicará contigo en las próximas horas para brindarte la atención que necesitas.")
+        lines.append("Siguiente paso: Nuestro equipo revisará tu solicitud y se comunicará contigo en las próximas horas.")
         lines.append("")
         lines.append(pie)
         return "\n".join(lines)
 
     @staticmethod
     def format_patient_summary(data):
-        """Devuelve un resumen amigable de todos los datos del paciente para mostrar al usuario."""
+        """Devuelve un resumen neutro de todos los datos del cliente para mostrar al usuario."""
         lines = []
         
         # Nombre
         name = data.get('solicitar_name') or data.get('name', '')
         if name:
-            lines.append(f"👤 **Nombre:** {name}")
+            lines.append(f"Nombre: {name}")
         
         # Cédula
         vat = data.get('solicitar_vat') or data.get('vat', '')
         if vat:
-            lines.append(f"🆔 **Cédula:** {vat}")
+            lines.append(f"Cédula: {vat}")
         
         # Teléfono
         phone = data.get('solicitar_phone') or data.get('phone', '')
         if phone:
-            lines.append(f"📞 **Teléfono:** {phone}")
+            lines.append(f"Teléfono: {phone}")
         
         # Email
         email = data.get('solicitar_email') or data.get('email', '')
         if email:
-            lines.append(f"📧 **Correo:** {email}")
+            lines.append(f"Correo: {email}")
         
         # Fecha de nacimiento
         birthdate = data.get('solicitar_birthdate') or data.get('birthdate', '')
         if birthdate:
-            lines.append(f"🎂 **Fecha de nacimiento:** {birthdate}")
+            lines.append(f"Fecha de nacimiento: {birthdate}")
         
         # Servicio solicitado
         servicio = data.get('solicitar_servicio') or data.get('servicio_solicitado', '')
         if servicio:
-            lines.append(f"🩺 **Servicio solicitado:** {servicio}")
+            lines.append(f"Servicio solicitado: {servicio}")
         
         # Consulta deseada
         consulta = data.get('solicitar_consulta_deseada') or data.get('consulta_deseada', '')
         if consulta:
-            lines.append(f"💬 **Consulta deseada:** {consulta}")
+            lines.append(f"Consulta: {consulta}")
         
         # Seguro
         seguro = data.get('solicitar_nombre_seguro') or data.get('nombre_seguro', '')
         if seguro:
-            lines.append(f"🏥 **Seguro:** {seguro}")
+            lines.append(f"Seguro: {seguro}")
         
         # Fecha y hora preferida
         fecha = data.get('solicitar_fecha_preferida') or data.get('fecha_preferida', '')
         hora = data.get('solicitar_hora_preferida') or data.get('hora_preferida', '')
         if fecha or hora:
-            pref = "📅 **Preferencia de cita:** "
+            pref = "Preferencia: "
             if fecha:
                 pref += f"{fecha}"
             else:
@@ -955,12 +985,12 @@ class ChatBotUtils:
         # Medio de pago
         medio_pago = data.get('solicitar_medio_pago') or data.get('medio_pago', '')
         if medio_pago:
-            lines.append(f"💳 **Medio de pago:** {medio_pago}")
+            lines.append(f"Medio de pago: {medio_pago}")
         
         # Estudio (para resultados)
         estudio = data.get('estudio_solicitado') or data.get('solicitar_estudio', '')
         if estudio:
-            lines.append(f"🔬 **Estudio solicitado:** {estudio}")
+            lines.append(f"Estudio solicitado: {estudio}")
         
         if not lines:
             return ""

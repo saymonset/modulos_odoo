@@ -166,14 +166,14 @@ class ValidacionAmigableUseCase(models.TransientModel):
                 - Sé cordial, empático y breve (máximo 2 frases).
 
                 **Ejemplos para campos booleanos / consentimiento:**
-                - "No entendí si quieres que te contactemos. ¿Podrías responder solo 'sí' o 'no'? 😊"
+- "No entendí si quieres que te contactemos. ¿Podrías responder solo 'sí' o 'no'?"
                 - "Para poder continuar, necesito que me digas claramente 'sí' o 'no'."
                 - "Parece que tu respuesta no fue clara. Escríbeme 'sí' si estás de acuerdo, o 'no' si no lo estás."
 
                 **Ejemplos para otros tipos de error (mantén el estilo):**
-                - Teléfono muy corto: "El número que ingresaste parece muy corto 😅. Por favor, escríbelo completo con el código de área, por ejemplo 0412 1234567."
+                - Teléfono muy corto: "El número que ingresaste parece muy corto. Por favor, escríbelo completo con el código de área, por ejemplo 0412 1234567."
                 - Fecha incorrecta: "No pude reconocer la fecha. ¿Podrías escribirla como día/mes/año? Ejemplo: 15/05/1990."
-                - Imagen no válida: "¡Ups! No pude abrir la imagen que enviaste 🖼️. ¿Podrías intentar enviarla de nuevo o asegurarte de que sea un enlace válido?"
+                - Imagen no válida: "No pudimos abrir la imagen que enviaste. ¿Podrías intentar enviarla de nuevo o asegurarte de que sea un enlace válido?"
 
                 Responde ÚNICAMENTE con un JSON en este formato: {{ "mensaje_amigable": "texto del mensaje" }}
                 """

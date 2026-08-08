@@ -201,7 +201,7 @@ class ChatbotFlujo(models.Model):
                 "campo_destino": "membresia_interes",
                 "es_requerido": False,
                 "es_paso_telefono": False,
-                "mensaje_prompt": "¿Te interesa la Tarjeta Salud? (sí/no)",
+                "mensaje_prompt": "¿Te interesa recibir información sobre nuestros planes? (sí/no)",
                 "mensaje_error": "Responde sí o no.",
             },
             {
@@ -257,7 +257,7 @@ class ChatbotFlujo(models.Model):
                 "campo_destino": "foto_vat",
                 "es_requerido": True,
                 "es_paso_telefono": False,
-                "mensaje_prompt": "🪪 Por favor, envíe una imagen o foto de su cédula o pasaporte.\n🔒 Tus datos están protegidos bajo nuestra política de privacidad.\n📌 Asegúrate de que la imagen sea clara.",
+                "mensaje_prompt": "Por favor, envíe una imagen o foto de su cédula o pasaporte.\nSus datos están protegidos bajo nuestra política de privacidad.\nAsegúrese de que la imagen sea clara.",
                 "mensaje_error": "Por favor envía una imagen clara de tu cédula o pasaporte.",
             },
             {
@@ -268,7 +268,7 @@ class ChatbotFlujo(models.Model):
                 "campo_destino": "consulta_deseada",
                 "es_requerido": True,
                 "es_paso_telefono": False,
-                "mensaje_prompt": "🔍 Indícanos la consulta o estudio que deseas realizarte.\n\nPuedes escribir algo como:\n✏️ 'Consulta de medicina general'\n✏️ 'Ecografía abdominal'\n✏️ 'Examen de sangre'\n✏️ 'Consulta con pediatra'",
+                "mensaje_prompt": "Indique la consulta o estudio que desea realizar.\n\nPuede describir brevemente el servicio que necesita.",
                 "mensaje_error": "Por favor indica qué consulta o estudio deseas.",
             },
         ])
@@ -278,6 +278,8 @@ class ChatbotFlujo(models.Model):
         """
         Pasos específicos para el flujo flujo_citas_seguro
         """
+        brand = self.env['ir.config_parameter'].sudo().get_param(
+            'ai_chatbot_1_portal.brand_name') or 'IntegraIA'
         pasos = self._get_pasos_obligatorios()
         pasos.extend([
             {
@@ -288,8 +290,8 @@ class ChatbotFlujo(models.Model):
                 "campo_destino": "nombre_seguro",
                 "es_requerido": True,
                 "es_paso_telefono": False,
-                "mensaje_prompt": "🩺 Has indicado que usarás un seguro médico.\nPor favor, escríbeme el nombre completo de tu seguro para poder validar la cobertura y agendar tu cita sin contratiempos. ✅\n\n✏️ Ejemplos:\n    • FASME\n    • FASDEM\n    • SENIAT\n    • ALCALDIA DE MANEIRO\n    • LA INTERNACIONAL\n\n📌 Si tu seguro no está en convenio con IntegraIA, nuestro equipo te informará las opciones de pago particular.",
-                "mensaje_error": "Por favor indica el nombre de tu seguro médico.",
+                "mensaje_prompt": f"Has indicado que usarás un seguro.\nPor favor, escribe el nombre completo de tu seguro para validar la cobertura y continuar con tu solicitud.\n\nEjemplos:\n    • FASME\n    • FASDEM\n    • SENIAT\n    • ALCALDIA DE MANEIRO\n    • LA INTERNACIONAL\n\nSi tu seguro no está en convenio con {brand}, nuestro equipo te informará las opciones de pago particular.",
+                "mensaje_error": "Por favor indica el nombre de tu seguro.",
             },
             {
                 "secuencia": 20,
@@ -299,7 +301,7 @@ class ChatbotFlujo(models.Model):
                 "campo_destino": "foto_vat",
                 "es_requerido": True,
                 "es_paso_telefono": False,
-                "mensaje_prompt": "🪪 Por favor, envíe una imagen o foto de su cédula o pasaporte.\n🔒 Tus datos están protegidos bajo nuestra política de privacidad.\n📌 Asegúrate de que la imagen sea clara.",
+                "mensaje_prompt": "Por favor, envíe una imagen o foto de su cédula o pasaporte.\nSus datos están protegidos bajo nuestra política de privacidad.\nAsegúrese de que la imagen sea clara.",
                 "mensaje_error": "Por favor envía una imagen clara de tu cédula o pasaporte.",
             },
             {
@@ -310,7 +312,7 @@ class ChatbotFlujo(models.Model):
                 "campo_destino": "consulta_deseada",
                 "es_requerido": True,
                 "es_paso_telefono": False,
-                "mensaje_prompt": "🔍 Indícanos la consulta o estudio que deseas realizarte.\n\nPuedes escribir algo como:\n✏️ 'Consulta de medicina general'\n✏️ 'Ecografía abdominal'\n✏️ 'Examen de sangre'\n✏️ 'Consulta con pediatra'",
+                "mensaje_prompt": "Indique la consulta o estudio que desea realizar.\n\nPuede describir brevemente el servicio que necesita.",
                 "mensaje_error": "Por favor indica qué consulta o estudio deseas.",
             },
         ])
@@ -329,7 +331,7 @@ class ChatbotFlujo(models.Model):
                 "campo_destino": "identificacion_paciente",
                 "es_requerido": True,
                 "es_paso_telefono": False,
-                "mensaje_prompt": "📄 Por favor, escribe el nombre completo y cédula del cliente:",
+                "mensaje_prompt": "Por favor, escribe el nombre completo y cédula del cliente:",
                 "mensaje_error": "Por favor proporciona nombre completo y cédula.",
             },
             {
@@ -340,7 +342,7 @@ class ChatbotFlujo(models.Model):
                 "campo_destino": "estudio_solicitado",
                 "es_requerido": True,
                 "es_paso_telefono": False,
-                "mensaje_prompt": "📄 ¿Qué estudio de laboratorio necesitas? (Ej: Hemoglobina, Glucosa, Colesterol, Examen de orina, etc.)",
+                "mensaje_prompt": "¿Qué estudio de laboratorio necesitas? Indica el nombre del estudio.",
                 "mensaje_error": "Por favor indica qué estudio necesitas.",
             },
         ]
@@ -358,7 +360,7 @@ class ChatbotFlujo(models.Model):
                 "campo_destino": "identificacion_paciente",
                 "es_requerido": True,
                 "es_paso_telefono": False,
-                "mensaje_prompt": "📄 Por favor, escribe el nombre completo y cédula del cliente:",
+                "mensaje_prompt": "Por favor, escribe el nombre completo y cédula del cliente:",
                 "mensaje_error": "Por favor proporciona nombre completo y cédula.",
             },
             {
@@ -369,7 +371,7 @@ class ChatbotFlujo(models.Model):
                 "campo_destino": "estudio_solicitado",
                 "es_requerido": True,
                 "es_paso_telefono": False,
-                "mensaje_prompt": "📄 ¿Qué estudio de imágenes necesitas? (Ej: Radiografía, Ecografía, Mamografía, Tomografía, etc.)",
+                "mensaje_prompt": "¿Qué estudio de imágenes necesitas? Indica el nombre del estudio.",
                 "mensaje_error": "Por favor indica qué estudio necesitas.",
             },
         ]
@@ -411,14 +413,14 @@ class ChatbotFlujo(models.Model):
                     "campo_destino": "informacion_precios",
                     "es_requerido": False,
                     "es_paso_telefono": False,
-                    "mensaje_prompt": "💰 Conoce nuestros planes de tienda virtual con Odoo CE 19. ¿Deseas que te enviemos una cotización? Responde 'Sí' para continuar.",
+                    "mensaje_prompt": "Conoce nuestros planes. ¿Deseas que te enviemos una cotización? Responde 'Sí' para continuar.",
                     "mensaje_error": "",
                 }
             ]
         else:
             # Flujos genéricos: flujo_agendamiento_directo, flujo_agendamiento_precios, 
             # flujo_agendamiento_servicios, flujo_agendamiento_otra_consulta, 
-            # flujo_ventas_unisa, flujo_agendamiento_default
+            # flujo_ventas, flujo_agendamiento_default
             if incluir_opcionales:
                 pasos_data = self._get_todos_los_pasos()
             else:
@@ -455,6 +457,9 @@ class ChatbotFlujo(models.Model):
             "Agendamiento_Otra_Consulta": "Grupo Citas",
             "flujo_agendamiento_otra_consulta": "Grupo Citas",
             "Agendamiento_Tarjeta": "Grupo Ventas",
+            "flujo_ventas": "Grupo Ventas",
+            "Ventas": "Grupo Ventas",
+            # Aliases de compatibilidad (nombres antiguos)
             "flujo_ventas_unisa": "Grupo Ventas",
             "Ventas_UNISA": "Grupo Ventas",
             "CITAS_MP": "Grupo Citas",
@@ -500,6 +505,8 @@ class ChatbotFlujo(models.Model):
             "Agendamiento_Otra_Consulta": "desarrollo y consultoría",
             "flujo_agendamiento_otra_consulta": "desarrollo y consultoría",
             "Agendamiento_Tarjeta": "ventas de hosting y dominio",
+            "flujo_ventas": "ventas de hosting y dominio",
+            "Ventas": "ventas de hosting y dominio",
             "flujo_ventas_unisa": "ventas de hosting y dominio",
             "Ventas_UNISA": "ventas de hosting y dominio",
             "CITAS_MP": "citas por medios propios",
@@ -535,7 +542,7 @@ class ChatbotFlujo(models.Model):
                 # buscar equipo existente
                 team = self.env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
                 if not team:
-                    # crear equipos UNISA si es necesario
+                    # crear equipos CRM si es necesario
                     try:
                         teams = self.env['ai_chatbot_1_portal.chatbot_flujo'] if False else None
                     except Exception:

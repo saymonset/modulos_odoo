@@ -4,6 +4,27 @@ from odoo import fields, models
 class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
 
+    chat_bot_brand_name = fields.Char(
+        string="Nombre de marca",
+        config_parameter="ai_chatbot_1_portal.brand_name",
+        help="Nombre que aparece en los mensajes al cliente (ej: 'Gracias por elegir a ...'). "
+             "Si está vacío, se usa el nombre de la compañía."
+    )
+
+    chat_bot_platform_promotion_enabled = fields.Boolean(
+        string="Atribución de plataforma",
+        config_parameter="ai_chatbot_1_portal.platform_promotion_enabled",
+        help="Si está activo, los mensajes al cliente incluyen una línea discreta en "
+             "cursiva promocionando la plataforma (ej: 'Atención automatizada por ...')."
+    )
+
+    chat_bot_platform_promotion_text = fields.Char(
+        string="Texto de atribución",
+        config_parameter="ai_chatbot_1_portal.platform_promotion_text",
+        default="@integraiaconodoo",
+        help="Handle o texto que aparece en la línea de atribución de la plataforma."
+    )
+
     chat_bot_webhook_url = fields.Char(
         string="ChatBot Webhook URL",
         config_parameter="ai_chatbot_1_portal.webhook_url",

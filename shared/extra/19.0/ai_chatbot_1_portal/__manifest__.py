@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'ai_chatbot_1_portal',
-    'version': '1.0.0',
+    'version': '1.0.2',
     'summary': """ ai_chatbot_1_portal Summary """,
     'description': """Módulo de portal para Chatbot de IA. Proporciona la interfaz y componentes de portal para el chatbot de Inteligencia Artificial.""",
     'author': 'Simon Alberto Rodriguez Pacheco',
@@ -12,6 +12,7 @@
         "security/ir.model.access.csv",
         "data/chatbot_flujos_data.xml",
         "data/chatbot_teams_data.xml",
+        "data/chatbot_pasos_data.xml",
         "data/chatbot_email_template.xml",
         "views/res_config_settings_view.xml",  # AÑADIDO: El XML debe ir aquí
         "views/login_templates.xml",  # AÑADIDO: El XML debe ir aquí
