@@ -33,10 +33,10 @@
           <group>
             <group string="Identificación">
               <field name="name" placeholder="Ej: Citas Medios Propios"/>
+              <field name="equipo_asignado"/>
+              <field name="team_id" options="{'no_create': True}"/>
               <field name="flow_id" options="{'no_create': True}"/>
               <field name="routing_key" placeholder="Ej: Cotizacion_Personalizada"/>
-              <field name="team_id" options="{'no_create': True}"/>
-              <field name="equipo_asignado"/>
             </group>
             <group string="Asignación en Chatwoot">
               <field name="chatwoot_inbox_id" placeholder="Ej: 7"/>
@@ -45,9 +45,9 @@
               <field name="prefer_assign_to_agent"/>
               <field name="chatwoot_tags" placeholder="Citas,WhatsApp"/>
             </group>
-            <group string="Estado">
-              <field name="active"/>
-            </group>
+          </group>
+          <group string="Estado">
+            <field name="active"/>
           </group>
         </sheet>
       </form>
