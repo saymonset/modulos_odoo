@@ -12,6 +12,16 @@ from odoo import api, SUPERUSER_ID
 
 _logger = logging.getLogger(__name__)
 
+
+def _column_exists(cr, table, column):
+    cr.execute(
+        "SELECT 1 FROM information_schema.columns "
+        "WHERE table_name = %s AND column_name = %s",
+        (table, column),
+    )
+    return cr.fetchone() is not None
+
+
 DATOS_FLUJOS = {
     'flujo_agendamiento_directo': (
         'El usuario quiere agendar directamente una cita, turno o reserva.',
@@ -57,6 +67,15 @@ DATOS_FLUJOS = {
 
 
 def migrate(cr, version):
+    if not version:
+        return
+
+    # En pre-migrate (u orden de fases alterado) la columna podría no existir
+    # aún; en ese caso no se puede rellenar datos y se omite.
+    if not _column_exists(cr, 'chatbot_flujo', 'palabras_clave'):
+        _logger.info('Migración 1.0.3 (post): columna palabras_clave ausente, se omite')
+        return
+
     for flujo_name, (descripcion, keywords) in DATOS_FLUJOS.items():
         cr.execute(
             "UPDATE chatbot_flujo "

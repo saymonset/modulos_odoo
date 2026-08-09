@@ -21,7 +21,19 @@ _logger = logging.getLogger(__name__)
 
 
 def migrate(cr, version):
+    if not version:
+        return
+
     env = api.Environment(cr, SUPERUSER_ID, {})
+
+    # 0) Asegurar routing_key del flujo de ventas. La columna se crea en esta
+    #    misma upgrade (por eso va en post y no en pre, donde aún no existe).
+    cr.execute(
+        "UPDATE chatbot_flujo SET routing_key = 'flujo_ventas' "
+        "WHERE name = 'flujo_ventas' AND COALESCE(routing_key, '') = ''"
+    )
+    if cr.rowcount:
+        _logger.info('Migración 1.0.1 (post): routing_key seteado en flujo_ventas (%s filas)', cr.rowcount)
 
     # 1) Mapeos de Chatwoot (si el modelo está instalado)
     if 'chatwoot.mapping' in env:

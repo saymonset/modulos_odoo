@@ -19,6 +19,9 @@ _logger = logging.getLogger(__name__)
 
 
 def migrate(cr, version):
+    if not version:
+        return
+
     env = api.Environment(cr, SUPERUSER_ID, {})
 
     # Comprobar qué entradas de ir.model_data existen
@@ -40,14 +43,8 @@ def migrate(cr, version):
             "AND name = 'flujo_ventas_unisa'"
         )
         cr.execute(
-            "UPDATE chatbot_flujo SET name = 'flujo_ventas', routing_key = 'flujo_ventas' "
+            "UPDATE chatbot_flujo SET name = 'flujo_ventas' "
             "WHERE name = 'flujo_ventas_unisa'"
-        )
-        # Si el nombre ya había sido renombrado en un intento previo pero el
-        # routing_key quedó vacío, completarlo para no romper el enrutamiento.
-        cr.execute(
-            "UPDATE chatbot_flujo SET routing_key = 'flujo_ventas' "
-            "WHERE name = 'flujo_ventas' AND COALESCE(routing_key, '') = ''"
         )
         _logger.info('Migración 1.0.1 (pre): flujo_ventas_unisa -> flujo_ventas (renombrado limpio)')
 
