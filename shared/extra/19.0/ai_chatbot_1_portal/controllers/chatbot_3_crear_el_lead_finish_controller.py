@@ -246,9 +246,11 @@ class ChatBotController(http.Controller):
             # Asignación Chatwoot (round-robin + notify)
             account_id_cw = data.get('account_id')
             conversation_id_cw = data.get('conversation_id')
-            _logger.info('RR[HTTP] INICIO bloque Chatwoot: account=%s conv=%s team=%s equipo=%s flow=%s',
+            audit_info = ChatBotUtils._build_flow_audit(env, name_flow, data)
+            _logger.info('RR[HTTP] INICIO bloque Chatwoot: account=%s conv=%s team=%s equipo=%s flow=%s audit_ok=%s',
                          account_id_cw, conversation_id_cw,
-                         team.name if team else None, equipo_asignado, name_flow)
+                         team.name if team else None, equipo_asignado, name_flow,
+                         audit_info.get('flow_ok'))
             if account_id_cw and conversation_id_cw:
                 try:
                     _logger.info('RR[HTTP] llamando select_round_robin_mapping con team=%s(%s) equipo=%s flow=%s',
@@ -305,9 +307,8 @@ class ChatBotController(http.Controller):
                             'inbox_id': mapping_rec.chatwoot_inbox_id or None,
                             'prefer_assign_to_agent': mapping_rec.prefer_assign_to_agent,
                             'tags': [t.strip() for t in (mapping_rec.chatwoot_tags or '').split(',') if t.strip()],
-                            'notify_message': (
-                                f"Tu consulta sobre {(mapping_rec.equipo_asignado or '').replace('_', ' ')} ha sido registrada."
-                                + (f"\nAgente asignado: {assigned_agent_email}" if assigned_agent_email else '')
+                            'notify_message': ChatBotUtils._build_notify_message_with_audit(
+                                mapping_rec, assigned_agent_email, audit_info
                             ),
                             'equipo_asignado': mapping_rec.equipo_asignado or '',
                         }
@@ -345,6 +346,11 @@ class ChatBotController(http.Controller):
                                     'assignee_id': result.get('assignee_id'),
                                     'mapping_id': mapping_rec.id,
                                     'agent_name': ejecutivo,
+                                    'flow_name': name_flow,
+                                    'flow_ok': audit_info.get('flow_ok'),
+                                    'steps_expected': audit_info.get('steps_expected', []),
+                                    'steps_completed': audit_info.get('steps_completed', []),
+                                    'steps_missing': audit_info.get('steps_missing', []),
                                     'errors': result.get('errors', []),
                                     'warnings': result.get('warnings', []),
                                 }),

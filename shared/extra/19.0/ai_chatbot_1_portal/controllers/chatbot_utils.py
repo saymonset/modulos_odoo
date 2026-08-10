@@ -918,12 +918,123 @@ class ChatBotUtils:
         pie = []
         if lead_id:
             pie.append(f"Referencia: {lead_id}")
+        if env and equipo_asignado:
+            desc = env['chatbot.flujo']._get_mapeo_equipo_descripcion()
+            tema = desc.get(equipo_asignado, '')
+            if tema:
+                pie.append(f"📌 {tema.capitalize()}")
         pie.append("Proceso: Asignación y seguimiento de solicitud.")
         pie.append("Privacidad: Tus datos cuentan con total confidencialidad.")
         pie.append("Siguiente paso: Nuestro equipo se comunicará en breve.")
         pie.append(f"Agradecimiento: Gracias por elegir a {ChatBotUtils._get_brand_name(env)}.")
         pie.append(ChatBotUtils._platform_attribution_line(env))
         return "\n".join(line for line in pie if line)
+
+    @staticmethod
+    def _build_flow_audit(env, name_flow, data):
+        """
+        Auditoría técnica de la ejecución del flujo para personal interno.
+
+        Compara los pasos preconfigurados del flujo (chatbot.paso) con los
+        datos realmente recolectados (data) y devuelve un dict JSON-serializable
+        con los pasos esperados vs completados y el estado general del flujo.
+
+        Si no se encuentra el flujo o no tiene pasos, devuelve un dict mínimo
+        sin falsear el resultado (flow_ok=None indica "sin información").
+        """
+        audit = {
+            'flow_name': name_flow,
+            'flow_ok': None,
+            'steps_expected': [],
+            'steps_completed': [],
+            'steps_missing': [],
+        }
+        flujo = None
+        if name_flow:
+            flujo = env['chatbot.flujo'].sudo().search([('name', '=', name_flow)], limit=1)
+        if not flujo or not flujo.paso_ids:
+            _logger.warning('audit: flujo %s no encontrado o sin pasos', name_flow)
+            return audit
+
+        data_values = data or {}
+        for paso in flujo.paso_ids.sorted('secuencia'):
+            if not paso.active:
+                continue
+            campo = paso.campo_destino
+            audit['steps_expected'].append({
+                'nombre': paso.nombre_mostrar or campo,
+                'campo_destino': campo,
+                'es_requerido': paso.es_requerido,
+            })
+            valor = ChatBotUtils._get_step_value(data_values, campo)
+            if valor is not None and valor != '':
+                audit['steps_completed'].append(campo)
+            else:
+                audit['steps_missing'].append({
+                    'nombre': paso.nombre_mostrar or campo,
+                    'campo_destino': campo,
+                    'es_requerido': paso.es_requerido,
+                })
+
+        requeridos_pendientes = [s for s in audit['steps_missing'] if s['es_requerido']]
+        audit['flow_ok'] = not requeridos_pendientes
+        return audit
+
+    @staticmethod
+    def _get_step_value(data_values, campo_destino):
+        """
+        Resuelve el valor de un campo_destino en el dict de datos.
+
+        n8n puede enviar el valor con o sin el prefijo 'solicitar_',
+        y existen alias por convención de cada flujo.
+        """
+        alias = {
+            'telefono': ['phone', 'solicitar_phone', 'telefono'],
+            'phone': ['phone', 'solicitar_phone', 'telefono'],
+            'nombre_completo': ['name', 'solicitar_name', 'nombre_completo'],
+            'name': ['name', 'solicitar_name', 'nombre_completo'],
+            'consentimiento_whatsapp': ['consentimiento', 'consentimiento_whatsapp'],
+            'identificacion_paciente': ['identificacion_paciente', 'solicitar_identificacion', 'solicitar_name', 'name'],
+            'estudio_solicitado': ['estudio_solicitado', 'solicitar_estudio', 'solicitar_servicio', 'servicio_solicitado'],
+        }
+        candidatos = alias.get(campo_destino) or (
+            [campo_destino]
+            + [f'solicitar_{campo_destino}']
+            + [f'solicitar_{campo_destino.replace("solicitar_", "")}']
+        )
+        for key in candidatos:
+            if key in data_values:
+                return data_values.get(key)
+        return None
+
+    @staticmethod
+    def _build_notify_message_with_audit(mapping_rec, assigned_agent_email, audit):
+        """
+        Mensaje de notificación interna para el agente Chatwoot.
+
+        Incluye la referencia del flujo y el estado de cumplimiento de pasos
+        (completados vs esperados) para que el personal técnico pueda auditar
+        si el flujo se comportó correctamente.
+        """
+        equipo = (mapping_rec.equipo_asignado or '').replace('_', ' ')
+        lines = [f"Tu consulta sobre {equipo} ha sido registrada."]
+        if assigned_agent_email:
+            lines.append(f"Agente asignado: {assigned_agent_email}")
+
+        if audit and audit.get('flow_name'):
+            lines.append("")
+            lines.append(f"Flujo: {audit.get('flow_name')}")
+            if audit.get('flow_ok') is not None:
+                estado = 'COMPLETADO' if audit['flow_ok'] else 'INCOMPLETO'
+                lines.append(f"Estado: {estado}")
+            completados = set(audit.get('steps_completed', []))
+            lineas_pasos = []
+            for paso in audit.get('steps_expected', []):
+                campo = paso.get('campo_destino')
+                marca = '✓' if campo in completados else '✗'
+                lineas_pasos.append(f"{marca} {paso.get('nombre')}")
+            lines.append("Pasos: " + " | ".join(lineas_pasos))
+        return "\n".join(lines)
 
     @staticmethod
     def generate_response(data, lead_id=None, equipo_asignado=None, env=None):

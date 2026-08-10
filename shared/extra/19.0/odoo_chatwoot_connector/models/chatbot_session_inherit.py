@@ -42,6 +42,9 @@ class ChatbotSessionInherit(models.Model):
             flow_name = datos.get('flow_name') or datos.get('name_flow')
             _logger.info('RR[session] datos: equipo=%s flow_name=%s team=%s', equipo, flow_name, team.name if team else None)
 
+            from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import ChatBotUtils
+            audit_info = ChatBotUtils._build_flow_audit(self.env, flow_name, datos)
+
             # Select mapping with round-robin across mappings that share the same flow/team
             _logger.info('RR[session] llamando select_round_robin_mapping team=%s equipo=%s flow=%s',
                          team.name if team else None, equipo, flow_name)
@@ -124,11 +127,9 @@ class ChatbotSessionInherit(models.Model):
                     _logger.warning('RR[session] NO se obtuvieron agent_details - agent_id=%s agent_email=%s',
                                     mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
 
-                equipo_legible = (mapping_rec.equipo_asignado or '').replace('_', ' ')
-                if assigned_agent_email:
-                    notify_msg = f"Tu consulta sobre {equipo_legible} ha sido registrada.\nAgente asignado: {assigned_agent_email}"
-                else:
-                    notify_msg = f"Tu consulta sobre {equipo_legible} ha sido registrada."
+                notify_msg = ChatBotUtils._build_notify_message_with_audit(
+                    mapping_rec, assigned_agent_email, audit_info
+                )
 
                 mapping = {
                     'agent_id': mapping_rec.chatwoot_agent_id or None,
@@ -177,6 +178,11 @@ class ChatbotSessionInherit(models.Model):
                                     'assignee_id': result.get('assignee_id'),
                                     'mapping_id': mapping_rec.id,
                                     'agent_name': ejecutivo,
+                                    'flow_name': flow_name,
+                                    'flow_ok': audit_info.get('flow_ok'),
+                                    'steps_expected': audit_info.get('steps_expected', []),
+                                    'steps_completed': audit_info.get('steps_completed', []),
+                                    'steps_missing': audit_info.get('steps_missing', []),
                                     'errors': result.get('errors', []),
                                     'warnings': result.get('warnings', []),
                                 }),
