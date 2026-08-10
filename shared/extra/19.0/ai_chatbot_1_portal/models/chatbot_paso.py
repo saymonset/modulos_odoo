@@ -6,6 +6,11 @@ class ChatbotPaso(models.Model):
 
     flujo_id = fields.Many2one('chatbot.flujo', string='Flujo', required=True, ondelete='cascade')
     secuencia = fields.Integer(string='Secuencia', default=10)
+    active = fields.Boolean(
+        string='Activo',
+        default=True,
+        help='Si está desactivado, este paso se omite del flujo sin eliminarlo.',
+    )
     nombre_interno = fields.Char(
         string='Nombre interno',
         required=True,

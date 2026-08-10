@@ -52,6 +52,8 @@ class InicioAgendarController(http.Controller):
             }
         steps = []
         for paso in flow.paso_ids.sorted('secuencia'):
+            if not paso.active:
+                continue
             if paso.es_requerido or incluir_opcionales:
                 steps.append({
                     'id': paso.id,

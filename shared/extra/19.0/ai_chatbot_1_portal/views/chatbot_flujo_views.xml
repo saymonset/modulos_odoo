@@ -43,6 +43,7 @@
                             <page string="Pasos">
                                 <field name="paso_ids">
                                     <list editable="bottom">
+                                        <field name="active"/>
                                         <field name="secuencia"/>
                                         <field name="nombre_interno"/>
                                         <field name="nombre_mostrar"/>

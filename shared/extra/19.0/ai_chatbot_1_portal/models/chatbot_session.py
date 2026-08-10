@@ -193,8 +193,9 @@ class SessionState(models.Model):
         steps_filtrados = []
         for step in steps:
             campo_destino = step.get('campo_destino')
-            # vat y birthdate siempre se piden aunque estén precargados
-            if campo_destino in ('vat', 'birthdate'):
+            # vat y birthdate solo se repreguntan si el paso es requisito;
+            # si son opcionales y ya hay dato precargado, se omiten.
+            if campo_destino in ('vat', 'birthdate') and step.get('es_requerido', True):
                 steps_filtrados.append(step)
                 continue
             if datos_precargados and campo_destino and datos_precargados.get(campo_destino):
@@ -374,7 +375,7 @@ class SessionState(models.Model):
                 'platform': platform
             }
 
-        es_paso_telefono = paso_actual.get('es_paso_telefono', False) or campo_destino == 'solicitar_phone'
+        es_paso_telefono = paso_actual.get('es_paso_telefono', False) or campo_destino in ('solicitar_phone', 'phone', 'telefono')
         nombre_mostrar = paso_actual.get('nombre_mostrar', '')
         
         es_palabra_salto = valor.strip().lower() in ['no', 'omitir', 'saltar', 'no tengo', 'no la tengo', 'después', 'luego', 'n', 'skip']
@@ -510,28 +511,36 @@ class SessionState(models.Model):
             partner = utils.find_partner_by_phone(self.env, valor)
             if partner:
                 _logger.info("Partner encontrado: %s (ID: %s)", partner.name, partner.id)
-                # CORREGIDO: Los nombres de los campos deben coincidir con campo_destino de los pasos
+                # Mapear campos del partner a TODAS las nomenclaturas de campo_destino
+                # (corta 'name' y 'solicitar_name') para saltar el paso correcto.
                 auto_map = {}
                 if partner.name:
-                    auto_map['name'] = partner.name  # CORREGIDO: antes era 'solicitar_name'
+                    auto_map['name'] = partner.name
+                    auto_map['solicitar_name'] = partner.name
+                    auto_map['nombre_completo'] = partner.name
                 if partner.vat:
-                    auto_map['vat'] = partner.vat  # CORREGIDO: antes era 'solicitar_vat'
+                    auto_map['vat'] = partner.vat
+                    auto_map['solicitar_vat'] = partner.vat
                 if partner.birthdate:
                     try:
-                        auto_map['birthdate'] = partner.birthdate.isoformat()  # CORREGIDO: antes era 'solicitar_birthdate'
+                        auto_map['birthdate'] = partner.birthdate.isoformat()
+                        auto_map['solicitar_birthdate'] = partner.birthdate.isoformat()
                     except Exception as e:
                         _logger.warning("Error al formatear fecha de nacimiento: %s", e)
                 if partner.email:
-                    auto_map['email'] = partner.email  # CORREGIDO: antes era 'solicitar_email'
+                    auto_map['email'] = partner.email
+                    auto_map['solicitar_email'] = partner.email
                 if partner.consentimiento_whatsapp:
-                    auto_map['consentimiento_whatsapp'] = True  # CORREGIDO: antes era 'consentimiento'
+                    auto_map['consentimiento_whatsapp'] = True
                 auto_map['solicitar_es_paciente_nuevo'] = 'no'
+                auto_map['es_paciente_nuevo'] = 'no'
                 
                 for campo_auto, valor_auto in auto_map.items():
                     estado_actual['datos_paciente'][campo_auto] = valor_auto
                 
                 # No auto-rellenar vat ni birthdate, siempre pedirlos
-                for campo in ('vat', 'birthdate'):
+                # (ambas nomenclaturas de campo_destino)
+                for campo in ('vat', 'birthdate', 'solicitar_vat', 'solicitar_birthdate'):
                     auto_map.pop(campo, None)
                 
                 viejos_pasos_count = len(nuevos_pasos)

@@ -9,6 +9,7 @@
                 <list string="Pasos de Chatbot" editable="top">
                     <field name="flujo_id"/>
                     <field name="flujo_team_id"/>
+                    <field name="active"/>
                     <field name="secuencia"/>
                     <field name="nombre_interno"/>
                     <field name="nombre_mostrar"/>
@@ -39,6 +40,7 @@
                                 help="Selecciona el tipo de dato que el usuario debe ingresar. Ej: Texto, Número, Fecha, etc."/>
                             <field name="campo_destino" readonly="es_paso_telefono == True"/>
                             <field name="es_requerido" readonly="es_paso_telefono == True"/>
+                            <field name="active"/>
                         </group>
                         <group string="Mensajes">
                             <field name="nombre_mostrar" 

@@ -42,7 +42,6 @@ class ResConfigSettings(models.TransientModel):
 
     chat_bot_system_prompt = fields.Text(
         string="Mensaje del sistema (negocio)",
-        config_parameter="ai_chatbot_1_portal.system_prompt",
         help="Información comercial del cliente y reglas conversacionales que "
              "Odoo inyectará al agente de n8n. Se combina automáticamente con el "
              "catálogo de flujos activos."
@@ -112,11 +111,23 @@ class ResConfigSettings(models.TransientModel):
                 },
             }
 
+    def default_get(self, fields_list):
+        """Carga el system_prompt desde ir.config_parameter (sin config_parameter)."""
+        res = super().default_get(fields_list)
+        if 'chat_bot_system_prompt' in fields_list:
+            res['chat_bot_system_prompt'] = self.env['ir.config_parameter'].sudo().get_param(
+                'ai_chatbot_1_portal.system_prompt', '')
+        return res
+
     def set_values(self):
-        """Al guardar el system_prompt, normaliza el formato y detecta flujos."""
+        """Al guardar el system_prompt, persiste, normaliza y detecta flujos."""
         res = super().set_values()
         try:
             params = self.env['ir.config_parameter'].sudo()
+            # Persistir manualmente el system_prompt (fields.Text no admite
+            # config_parameter en res.config.settings).
+            params.set_param(
+                'ai_chatbot_1_portal.system_prompt', self.chat_bot_system_prompt or '')
             prompt = params.get_param('ai_chatbot_1_portal.system_prompt', '') or ''
             if prompt.strip():
                 normalizado, cambios = normalizar_business_prompt(prompt)

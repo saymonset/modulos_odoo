@@ -1029,7 +1029,7 @@ class ChatBotUtils:
     @staticmethod   
     def validar_valor(valor, tipo_dato, paso=None):
         """Valida un valor según el tipo de dato del paso."""
-        if paso == 'solicitar_phone':
+        if paso in ('solicitar_phone', 'phone', 'telefono'):
             if not valor:
                 return False, "El teléfono no puede estar vacío"
             valor_str = str(valor).strip()
