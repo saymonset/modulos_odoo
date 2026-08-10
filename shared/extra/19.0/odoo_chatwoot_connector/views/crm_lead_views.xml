@@ -7,7 +7,18 @@
     <field name="arch" type="xml">
       <xpath expr="//sheet/notebook" position="inside">
         <page string="Chatwoot / Odoo">
+          <group string="Auditoría de Flujo">
+            <field name="chatwoot_flow_summary_html" readonly="1" nolabel="1" widget="html"/>
+          </group>
           <group>
+            <group string="Flujo">
+              <field name="chatwoot_flow_name" readonly="1"/>
+              <field name="chatwoot_flow_status" readonly="1"/>
+              <field name="chatwoot_flow_steps_required_ok" readonly="1" string="Requeridos cumplidos"/>
+              <field name="chatwoot_flow_steps_required_total" readonly="1" string="Requeridos totales"/>
+              <field name="chatwoot_flow_steps_completed" readonly="1" string="Pasos completados"/>
+              <field name="chatwoot_flow_steps_total" readonly="1" string="Pasos esperados"/>
+            </group>
             <group string="Estado Interno">
               <field name="chatwoot_processing_status" readonly="1"/>
               <field name="chatwoot_processed_at" readonly="1"/>
@@ -19,7 +30,7 @@
               <field name="chatwoot_conversation_id" readonly="1"/>
             </group>
           </group>
-          <group>
+          <group string="Log interno (técnico)">
             <field name="chatwoot_assign_log" readonly="1" nolabel="1" placeholder="Log interno de asignación..."/>
           </group>
         </page>
@@ -33,6 +44,7 @@
     <field name="inherit_id" ref="crm.crm_case_tree_view_leads"/>
     <field name="arch" type="xml">
       <xpath expr="//field[@name='team_id']" position="after">
+        <field name="chatwoot_flow_status" optional="show" widget="badge" decoration-success="chatwoot_flow_status == 'ok'" decoration-warning="chatwoot_flow_status == 'partial'" decoration-muted="chatwoot_flow_status == 'unknown'"/>
         <field name="chatwoot_processing_status" optional="show"/>
         <field name="chatwoot_assigned_agent_name" optional="show"/>
         <field name="chatwoot_processed_at" optional="hide"/>
@@ -47,11 +59,17 @@
     <field name="arch" type="xml">
       <xpath expr="//filter[@name='lost']" position="after">
         <separator/>
+        <filter string="Flujo Completado" name="chatwoot_flow_ok" domain="[('chatwoot_flow_status', '=', 'ok')]"/>
+        <filter string="Flujo Incompleto" name="chatwoot_flow_partial" domain="[('chatwoot_flow_status', '=', 'partial')]"/>
+        <filter string="Flujo Sin Auditoría" name="chatwoot_flow_unknown" domain="[('chatwoot_flow_status', '=', 'unknown')]"/>
+        <separator/>
         <filter string="Chatwoot Nuevo" name="chatwoot_new" domain="[('chatwoot_processing_status', '=', 'new')]"/>
         <filter string="Chatwoot Asignado" name="chatwoot_assigned" domain="[('chatwoot_processing_status', '=', 'assigned')]"/>
         <filter string="Chatwoot Error" name="chatwoot_error" domain="[('chatwoot_processing_status', '=', 'error')]"/>
       </xpath>
       <xpath expr="//group" position="inside">
+        <filter string="Flujo" name="chatwoot_flow_group" context="{'group_by':'chatwoot_flow_name'}"/>
+        <filter string="Estado del Flujo" name="chatwoot_flow_state_group" context="{'group_by':'chatwoot_flow_status'}"/>
         <filter string="Chatwoot Estado" name="chatwoot_state_group" context="{'group_by':'chatwoot_processing_status'}"/>
       </xpath>
     </field>

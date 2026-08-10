@@ -1,6 +1,6 @@
 {
     "name": "Odoo Chatwoot Connector",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "summary": "Integración Chatwoot: asignar conversaciones y tags desde Odoo",
     "description": "Asigna conversaciones, agrega tags y notifica agentes en Chatwoot desde Odoo.",
     "category": "Tools",
