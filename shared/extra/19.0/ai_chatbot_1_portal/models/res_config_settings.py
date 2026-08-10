@@ -40,7 +40,7 @@ class ResConfigSettings(models.TransientModel):
         help="Webhook URL used by the website chatbot."
     )
 
-    chat_bot_system_prompt = fields.Char(
+    chat_bot_system_prompt = fields.Text(
         string="Mensaje del sistema (negocio)",
         config_parameter="ai_chatbot_1_portal.system_prompt",
         help="Información comercial del cliente y reglas conversacionales que "
