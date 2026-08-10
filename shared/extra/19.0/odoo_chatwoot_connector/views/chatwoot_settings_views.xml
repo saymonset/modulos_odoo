@@ -11,6 +11,13 @@
           <field name="chatwoot_base_url"/>
           <field name="chatwoot_api_token"/>
           <field name="chatwoot_timeout"/>
+          <field name="chatwoot_account_id" readonly="1"/>
+          <button name="action_discover_default_admin" type="object"
+                  string="Descubrir agente admin de Chatwoot"
+                  class="oe_link"/>
+          <field name="chatwoot_default_agent_id"/>
+          <field name="chatwoot_default_agent_email"/>
+          <field name="chatwoot_default_inbox_id"/>
         </group>
       </xpath>
     </field>

@@ -23,6 +23,12 @@
             <field name="model">chatbot.flujo</field>
             <field name="arch" type="xml">
                 <form string="Flujo de Chatbot">
+                    <header>
+                        <button name="action_regenerar_pasos" type="object"
+                                string="Regenerar pasos"
+                                class="btn-primary"
+                                confirm="¿Regenerar los pasos faltantes desde la plantilla? Los pasos existentes no se modificarán."/>
+                    </header>
                     <sheet>
                         <group>
                             <field name="name"/>

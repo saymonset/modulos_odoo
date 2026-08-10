@@ -5,6 +5,12 @@
     <field name="model">chatwoot.mapping</field>
       <field name="arch" type="xml">
       <list>
+        <header>
+          <button name="action_regenerar_mappings" type="object"
+                  string="Regenerar mappings"
+                  class="btn-primary"
+                  confirm="¿Regenerar los mappings faltantes de los flujos activos? Los mappings existentes no se modificarán."/>
+        </header>
         <field name="name"/>
         <field name="flow_id" optional="hide"/>
         <field name="routing_key"/>

@@ -172,3 +172,101 @@ class ChatwootMapping(models.Model):
         _logger.info('RR[mapping] nuevo last_id guardado=%s', next_rec.id)
         _logger.info('RR[mapping] FIN')
         return next_rec
+
+    def _autodiscover_default_admin(self):
+        """Descubre el agente administrador de Chatwoot y lo guarda en config
+        como default. Devuelve True si quedaron defaults aplicables."""
+        params = self.env['ir.config_parameter'].sudo()
+        if params.get_param('chatwoot.default_agent_email') or params.get_param(
+                'chatwoot.default_agent_id'):
+            return True
+        try:
+            client = self.env['chatwoot.client']
+        except KeyError:
+            return False
+        data = client.sudo()._get_default_admin_from_chatwoot()
+        if not data:
+            return False
+        if data.get('account_id'):
+            params.set_param('chatwoot.account_id', str(int(data['account_id'])))
+        if data.get('id'):
+            params.set_param('chatwoot.default_agent_id', str(int(data['id'])))
+        params.set_param('chatwoot.default_agent_email', data['email'])
+        _logger.info(
+            '_autodiscover_default_admin: admin descubierto=%s id=%s account=%s',
+            data['email'], data.get('id'), data.get('account_id'))
+        return True
+
+    def _rellenar_defaults_vacios(self, mappings):
+        """
+        Rellena agent/inbox vacíos de mappings activos con los defaults de
+        Settings. Si no hay defaults configurados, autodescubre el agente
+        administrador de Chatwoot. Solo toca campos vacíos: nunca sobrescribe
+        personalizaciones.
+        """
+        if mappings:
+            self._autodiscover_default_admin()
+        params = self.env['ir.config_parameter'].sudo()
+        default_agent_id = params.get_param('chatwoot.default_agent_id', '') or ''
+        default_agent_email = params.get_param('chatwoot.default_agent_email', '') or ''
+        default_inbox_id = params.get_param('chatwoot.default_inbox_id', '') or ''
+        if not (default_agent_id or default_agent_email or default_inbox_id):
+            return 0
+        actualizados = 0
+        for m in mappings:
+            vals = {}
+            if default_agent_id and not m.chatwoot_agent_id:
+                try:
+                    vals['chatwoot_agent_id'] = int(default_agent_id)
+                except (TypeError, ValueError):
+                    pass
+            if default_agent_email and not m.chatwoot_agent_email:
+                vals['chatwoot_agent_email'] = default_agent_email
+            if default_inbox_id and not m.chatwoot_inbox_id:
+                try:
+                    vals['chatwoot_inbox_id'] = int(default_inbox_id)
+                except (TypeError, ValueError):
+                    pass
+            if vals:
+                m.sudo().write(vals)
+                actualizados += 1
+        return actualizados
+
+    def action_regenerar_mappings(self):
+        """
+        Recrea los Chatwoot Mappings faltantes de los flujos ACTIVOS y
+        rellena agent/inbox vacíos de los existentes con los defaults de
+        Settings.
+
+        No modifica mappings existentes que ya tengan agente (preserva
+        personalizaciones a mano) y no archiva nada.
+        """
+        flujos_activos = self.env['chatbot.flujo'].sudo().search(
+            [('active', '=', True)])
+        mapping_activos = self.sudo().search(
+            [('flow_id', 'in', flujos_activos.ids)])
+        antes = len(mapping_activos)
+        flujos_activos._ensure_mappings_for_flujos(flujos_activos)
+        despues = self.sudo().search_count([('flow_id', 'in', flujos_activos.ids)])
+        creados = despues - antes
+        rellenados = self._rellenar_defaults_vacios(mapping_activos)
+        partes = []
+        if creados:
+            partes.append(f"{creados} mapping(s) creado(s)")
+        if rellenados:
+            partes.append(f"{rellenados} mapping(s) actualizado(s) con el agente por defecto")
+        mensaje = (
+            '; '.join(partes) + " para los flujos activos."
+            if partes
+            else "Todos los flujos activos ya tienen mapping y agente: no hubo cambios."
+        )
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Regenerar mappings',
+                'message': mensaje,
+                'type': 'success',
+                'sticky': False,
+            },
+        }

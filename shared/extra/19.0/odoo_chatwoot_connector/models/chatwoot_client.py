@@ -48,6 +48,55 @@ class ChatwootClient(models.AbstractModel):
             _logger.warning('Error obteniendo detalles del agente: %s', e)
         return None
 
+    @api.model
+    def _get_default_admin_from_chatwoot(self):
+        """Discover the administrator agent of the Chatwoot account via API.
+
+        Returns dict with processable keys (email, id, account_id) or None.
+        1. GET /api/v1/profile with the token: account_id + role + email + id.
+        2. If the token owner is not administrator, fall back to listing
+           /accounts/<account_id>/agents and pick the first administrator.
+        """
+        base_url = self.env['ir.config_parameter'].sudo().get_param('chatwoot.base_url') or ''
+        api_token = self.env['ir.config_parameter'].sudo().get_param('chatwoot.api_access_token') or ''
+        timeout = int(self.env['ir.config_parameter'].sudo().get_param('chatwoot.timeout', 3))
+        if not base_url or not api_token:
+            return None
+        headers = self._headers(api_token)
+        account_id = None
+        try:
+            r = requests.get(f'{base_url}/api/v1/profile', headers=headers, timeout=timeout)
+            if r.status_code == 200:
+                profile = r.json() or {}
+                account_id = profile.get('account_id')
+                if profile.get('role') == 'administrator' and profile.get('email'):
+                    return {
+                        'email': profile['email'],
+                        'id': profile.get('id'),
+                        'account_id': account_id,
+                    }
+        except Exception as e:
+            _logger.warning('_get_default_admin_from_chatwoot: profile falló: %s', e)
+        if not account_id:
+            return None
+        try:
+            url = f'{base_url}/api/v1/accounts/{account_id}/agents'
+            r = requests.get(url, headers=headers, timeout=timeout)
+            if r.status_code == 200:
+                data = r.json()
+                agents = data if isinstance(data, list) else (
+                    data.get('payload') or data.get('data') or [])
+                for a in agents:
+                    if a.get('role') == 'administrator' and a.get('email'):
+                        return {
+                            'email': a['email'],
+                            'id': a.get('id'),
+                            'account_id': account_id,
+                        }
+        except Exception as e:
+            _logger.warning('_get_default_admin_from_chatwoot: agents falló: %s', e)
+        return None
+
     @staticmethod
     def _extract_payload_list(data):
         if isinstance(data, list):

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<odoo noupdate="1">
+<odoo>
+    <data noupdate="1">
 
     <!-- MAPEOS POR DEFECTO Chatwoot
          Un mapping por cada flujo de chatbot cargado por ai_chatbot_1_portal.
@@ -79,4 +80,5 @@
         <field name="equipo_asignado">RESULTADOS_IMAGENES</field>
         <field name="routing_key">flujo_resultados_imagenes</field>
     </record>
+    </data>
 </odoo>

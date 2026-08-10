@@ -130,7 +130,7 @@ class ChatbotFlujo(models.Model):
                 "nombre_mostrar": "Cédula",
                 "tipo_dato": "text",
                 "campo_destino": "vat",
-                "es_requerido": True,
+                "es_requerido": False,
                 "es_paso_telefono": False,
                 "mensaje_prompt": "Por favor, ingresa tu número de cédula:",
                 "mensaje_error": "Cédula inválida, intenta de nuevo.",
@@ -141,7 +141,7 @@ class ChatbotFlujo(models.Model):
                 "nombre_mostrar": "Fecha de nacimiento",
                 "tipo_dato": "date",
                 "campo_destino": "birthdate",
-                "es_requerido": True,
+                "es_requerido": False,
                 "es_paso_telefono": False,
                 "mensaje_prompt": "Por favor, ingresa tu fecha de nacimiento (DD/MM/YYYY):",
                 "mensaje_error": "Fecha inválida, intenta de nuevo con formato DD/MM/YYYY.",
@@ -281,7 +281,7 @@ class ChatbotFlujo(models.Model):
                 "nombre_mostrar": "Foto de cédula o pasaporte",
                 "tipo_dato": "image",
                 "campo_destino": "foto_vat",
-                "es_requerido": True,
+                "es_requerido": False,
                 "es_paso_telefono": False,
                 "mensaje_prompt": "Por favor, envíe una imagen o foto de su cédula o pasaporte.\nSus datos están protegidos bajo nuestra política de privacidad.\nAsegúrese de que la imagen sea clara.",
                 "mensaje_error": "Por favor envía una imagen clara de tu cédula o pasaporte.",
@@ -292,7 +292,7 @@ class ChatbotFlujo(models.Model):
                 "nombre_mostrar": "Consulta o estudio deseado",
                 "tipo_dato": "text",
                 "campo_destino": "consulta_deseada",
-                "es_requerido": True,
+                "es_requerido": False,
                 "es_paso_telefono": False,
                 "mensaje_prompt": "Indique la consulta o estudio que desea realizar.\n\nPuede describir brevemente el servicio que necesita.",
                 "mensaje_error": "Por favor indica qué consulta o estudio deseas.",
@@ -314,7 +314,7 @@ class ChatbotFlujo(models.Model):
                 "nombre_mostrar": "Nombre del seguro médico",
                 "tipo_dato": "text",
                 "campo_destino": "nombre_seguro",
-                "es_requerido": True,
+                "es_requerido": False,
                 "es_paso_telefono": False,
                 "mensaje_prompt": f"Has indicado que usarás un seguro.\nPor favor, escribe el nombre completo de tu seguro para validar la cobertura y continuar con tu solicitud.\n\nEjemplos:\n    • FASME\n    • FASDEM\n    • SENIAT\n    • ALCALDIA DE MANEIRO\n    • LA INTERNACIONAL\n\nSi tu seguro no está en convenio con {brand}, nuestro equipo te informará las opciones de pago particular.",
                 "mensaje_error": "Por favor indica el nombre de tu seguro.",
@@ -325,7 +325,7 @@ class ChatbotFlujo(models.Model):
                 "nombre_mostrar": "Foto de cédula o pasaporte",
                 "tipo_dato": "image",
                 "campo_destino": "foto_vat",
-                "es_requerido": True,
+                "es_requerido": False,
                 "es_paso_telefono": False,
                 "mensaje_prompt": "Por favor, envíe una imagen o foto de su cédula o pasaporte.\nSus datos están protegidos bajo nuestra política de privacidad.\nAsegúrese de que la imagen sea clara.",
                 "mensaje_error": "Por favor envía una imagen clara de tu cédula o pasaporte.",
@@ -336,7 +336,7 @@ class ChatbotFlujo(models.Model):
                 "nombre_mostrar": "Consulta o estudio deseado",
                 "tipo_dato": "text",
                 "campo_destino": "consulta_deseada",
-                "es_requerido": True,
+                "es_requerido": False,
                 "es_paso_telefono": False,
                 "mensaje_prompt": "Indique la consulta o estudio que desea realizar.\n\nPuede describir brevemente el servicio que necesita.",
                 "mensaje_error": "Por favor indica qué consulta o estudio deseas.",
@@ -350,12 +350,34 @@ class ChatbotFlujo(models.Model):
         """
         return [
             {
+                "secuencia": 5,
+                "nombre_interno": "solicitar_phone",
+                "nombre_mostrar": "Teléfono",
+                "tipo_dato": "text",
+                "campo_destino": "phone",
+                "es_requerido": True,
+                "es_paso_telefono": True,
+                "mensaje_prompt": "Por favor, ingresa tu número de teléfono:",
+                "mensaje_error": "Número inválido, intenta de nuevo.",
+            },
+            {
+                "secuencia": 6,
+                "nombre_interno": "solicitar_name",
+                "nombre_mostrar": "Nombre completo",
+                "tipo_dato": "text",
+                "campo_destino": "name",
+                "es_requerido": True,
+                "es_paso_telefono": False,
+                "mensaje_prompt": "Por favor, ingresa tu nombre completo:",
+                "mensaje_error": "Nombre inválido, intenta de nuevo.",
+            },
+            {
                 "secuencia": 10,
                 "nombre_interno": "solicitar_identificacion",
                 "nombre_mostrar": "Identificación del cliente",
                 "tipo_dato": "text",
                 "campo_destino": "identificacion_paciente",
-                "es_requerido": True,
+                "es_requerido": False,
                 "es_paso_telefono": False,
                 "mensaje_prompt": "Por favor, escribe el nombre completo y cédula del cliente:",
                 "mensaje_error": "Por favor proporciona nombre completo y cédula.",
@@ -366,10 +388,21 @@ class ChatbotFlujo(models.Model):
                 "nombre_mostrar": "Estudio solicitado",
                 "tipo_dato": "text",
                 "campo_destino": "estudio_solicitado",
-                "es_requerido": True,
+                "es_requerido": False,
                 "es_paso_telefono": False,
                 "mensaje_prompt": "¿Qué estudio de laboratorio necesitas? Indica el nombre del estudio.",
                 "mensaje_error": "Por favor indica qué estudio necesitas.",
+            },
+            {
+                "secuencia": 22,
+                "nombre_interno": "solicitar_consentimiento",
+                "nombre_mostrar": "Consentimiento WhatsApp",
+                "tipo_dato": "boolean",
+                "campo_destino": "consentimiento_whatsapp",
+                "es_requerido": True,
+                "es_paso_telefono": False,
+                "mensaje_prompt": "¿Aceptas que te enviemos mensajes informativos y recordatorios por WhatsApp? Responde sí o no.",
+                "mensaje_error": "Por favor responde 'sí' o 'no'.",
             },
         ]
     
@@ -379,12 +412,34 @@ class ChatbotFlujo(models.Model):
         """
         return [
             {
+                "secuencia": 5,
+                "nombre_interno": "solicitar_phone",
+                "nombre_mostrar": "Teléfono",
+                "tipo_dato": "text",
+                "campo_destino": "phone",
+                "es_requerido": True,
+                "es_paso_telefono": True,
+                "mensaje_prompt": "Por favor, ingresa tu número de teléfono:",
+                "mensaje_error": "Número inválido, intenta de nuevo.",
+            },
+            {
+                "secuencia": 6,
+                "nombre_interno": "solicitar_name",
+                "nombre_mostrar": "Nombre completo",
+                "tipo_dato": "text",
+                "campo_destino": "name",
+                "es_requerido": True,
+                "es_paso_telefono": False,
+                "mensaje_prompt": "Por favor, ingresa tu nombre completo:",
+                "mensaje_error": "Nombre inválido, intenta de nuevo.",
+            },
+            {
                 "secuencia": 10,
                 "nombre_interno": "solicitar_identificacion",
                 "nombre_mostrar": "Identificación del cliente",
                 "tipo_dato": "text",
                 "campo_destino": "identificacion_paciente",
-                "es_requerido": True,
+                "es_requerido": False,
                 "es_paso_telefono": False,
                 "mensaje_prompt": "Por favor, escribe el nombre completo y cédula del cliente:",
                 "mensaje_error": "Por favor proporciona nombre completo y cédula.",
@@ -395,10 +450,21 @@ class ChatbotFlujo(models.Model):
                 "nombre_mostrar": "Estudio solicitado",
                 "tipo_dato": "text",
                 "campo_destino": "estudio_solicitado",
-                "es_requerido": True,
+                "es_requerido": False,
                 "es_paso_telefono": False,
                 "mensaje_prompt": "¿Qué estudio de imágenes necesitas? Indica el nombre del estudio.",
                 "mensaje_error": "Por favor indica qué estudio necesitas.",
+            },
+            {
+                "secuencia": 22,
+                "nombre_interno": "solicitar_consentimiento",
+                "nombre_mostrar": "Consentimiento WhatsApp",
+                "tipo_dato": "boolean",
+                "campo_destino": "consentimiento_whatsapp",
+                "es_requerido": True,
+                "es_paso_telefono": False,
+                "mensaje_prompt": "¿Aceptas que te enviemos mensajes informativos y recordatorios por WhatsApp? Responde sí o no.",
+                "mensaje_error": "Por favor responde 'sí' o 'no'.",
             },
         ]
     
@@ -410,27 +476,23 @@ class ChatbotFlujo(models.Model):
     # MÉTODOS PARA CREAR PASOS EN UN FLUJO (VERSIÓN PERSONALIZADA)
     # ============================================================
     
-    def _crear_pasos_para_flujo(self, incluir_opcionales=True):
+    def _get_pasos_data_para_flujo(self):
         """
-        Crea los pasos para este flujo.
-        Según el nombre del flujo, usa pasos diferentes.
+        Retorna la plantilla de pasos según el nombre del flujo (coincide con n8n).
         """
-        Paso = self.env["chatbot.paso"]
-        
-        # SELECCIONAR PASOS SEGÚN EL NOMBRE DEL FLUJO (coincide con n8n)
         if self.name == "flujo_citas_medios_propios":
-            pasos_data = self._get_pasos_para_medios_propios()
+            return self._get_pasos_para_medios_propios()
         elif self.name == "flujo_citas_seguro":
-            pasos_data = self._get_pasos_para_seguro()
+            return self._get_pasos_para_seguro()
         elif self.name == "flujo_resultados_laboratorio":
-            pasos_data = self._get_pasos_para_resultados_lab()
+            return self._get_pasos_para_resultados_lab()
         elif self.name == "flujo_resultados_imagenes":
-            pasos_data = self._get_pasos_para_resultados_imagenes()
+            return self._get_pasos_para_resultados_imagenes()
         elif self.name == "flujo_agendamiento_precios":
             # Flujo informativo: mostrar información de precios primero.
             # No solicitamos teléfono como primer paso; el usuario puede
             # confirmar que desea agendar y entonces iniciar el flujo de agendamiento.
-            pasos_data = [
+            return [
                 {
                     "secuencia": 1,
                     "nombre_interno": "informar_precios",
@@ -443,21 +505,66 @@ class ChatbotFlujo(models.Model):
                     "mensaje_error": "",
                 }
             ]
-        else:
-            # Flujos genéricos: flujo_agendamiento_directo, flujo_agendamiento_precios, 
-            # flujo_agendamiento_servicios, flujo_agendamiento_otra_consulta, 
-            # flujo_ventas, flujo_agendamiento_default
-            if incluir_opcionales:
-                pasos_data = self._get_todos_los_pasos()
-            else:
-                pasos_data = self._get_pasos_obligatorios()
-        
+        return self._get_todos_los_pasos()
+
+    def _crear_pasos_para_flujo(self, incluir_opcionales=True):
+        """
+        Crea los pasos para este flujo.
+        Según el nombre del flujo, usa pasos diferentes.
+        """
+        Paso = self.env["chatbot.paso"]
+        pasos_data = self._get_pasos_data_para_flujo()
+        if not incluir_opcionales and self.name not in (
+                "flujo_citas_medios_propios",
+                "flujo_citas_seguro",
+                "flujo_resultados_laboratorio",
+                "flujo_resultados_imagenes",
+                "flujo_agendamiento_precios"):
+            pasos_data = self._get_pasos_obligatorios()
         for paso_data in pasos_data:
             paso_vals = paso_data.copy()
             paso_vals["flujo_id"] = self.id
             Paso.create(paso_vals)
-        
         return True
+
+    def action_regenerar_pasos(self):
+        """
+        Reconstruye los pasos faltantes de cada flujo desde su plantilla.
+        No duplica los existentes (match por nombre_interno), no borra y no
+        sobrescribe ningún paso (preserva personalizaciones del usuario).
+        """
+        Paso = self.env["chatbot.paso"]
+        total = 0
+        flujos_tocados = 0
+        for flujo in self:
+            existentes = set(flujo.paso_ids.mapped('nombre_interno'))
+            pasos_data = flujo._get_pasos_data_para_flujo()
+            creados = 0
+            for paso_data in pasos_data:
+                if paso_data['nombre_interno'] in existentes:
+                    continue
+                paso_vals = paso_data.copy()
+                paso_vals['flujo_id'] = flujo.id
+                Paso.create(paso_vals)
+                creados += 1
+            if creados:
+                total += creados
+                flujos_tocados += 1
+        mensaje = (
+            f"{total} paso(s) recreado(s) en {flujos_tocados} flujo(s)."
+            if flujos_tocados
+            else "Todos los pasos ya existían: no hubo cambios."
+        )
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Regenerar pasos',
+                'message': mensaje,
+                'type': 'success',
+                'sticky': False,
+            },
+        }
     
     # ============================================================
     # MAPEO CENTRALIZADO: equipo_asignado → Grupo CRM
@@ -571,6 +678,19 @@ class ChatbotFlujo(models.Model):
                     '(flujo=%s). El mapping NO se sincronizó.', self.ids)
         return res
 
+    _MAPEO_CHATWOOT_POR_FLUJO = {
+        'flujo_agendamiento_directo': ('Agendamiento Directo', 'Agendamiento_Directo'),
+        'flujo_agendamiento_precios': ('Agendamiento Precios', 'Agendamiento_Precios'),
+        'flujo_agendamiento_servicios': ('Agendamiento Servicios', 'Agendamiento_Servicios'),
+        'flujo_ventas': ('Ventas', 'Ventas'),
+        'flujo_agendamiento_otra_consulta': ('Agendamiento Otra Consulta', 'Agendamiento_Otra_Consulta'),
+        'flujo_agendamiento_default': ('Agendamiento Default', ''),
+        'flujo_citas_medios_propios': ('Citas Medios Propios', 'CITAS_MP'),
+        'flujo_citas_seguro': ('Citas Seguros', 'CITAS_SEGUROS'),
+        'flujo_resultados_laboratorio': ('Resultados Laboratorio', 'RESULTADOS_LAB'),
+        'flujo_resultados_imagenes': ('Resultados Imágenes', 'RESULTADOS_IMAGENES'),
+    }
+
     def _sincronizar_mappings(self, flujos, activo):
         """Cascade explícito flujo -> chatwoot.mapping (independiente de write)."""
         try:
@@ -584,6 +704,53 @@ class ChatbotFlujo(models.Model):
             _logger.info(
                 '_sincronizar_mappings: flujos=%s activo=%s -> mappings=%s',
                 flujos.ids, activo, mappings.ids)
+
+    def _ensure_mappings_for_flujos(self, flujos):
+        """
+        Crea un Chatwoot Mapping para cada flujo activo que aún no lo tenga.
+
+        Usa los defaults del conector Chatwoot (agent_id, agent_email, inbox_id)
+        configurados en Settings si están seteados; de lo contrario los deja
+        vacíos para que un humano los complete en la vista de Mappings.
+        """
+        try:
+            mapping_model = self.env['chatwoot.mapping']
+        except KeyError:
+            _logger.warning('_ensure_mappings_for_flujos: chatwoot.mapping no disponible.')
+            return
+        params = self.env['ir.config_parameter'].sudo()
+        default_agent_id = params.get_param('chatwoot.default_agent_id', '') or ''
+        default_agent_email = params.get_param('chatwoot.default_agent_email', '') or ''
+        default_inbox_id = params.get_param('chatwoot.default_inbox_id', '') or ''
+        for flujo in flujos:
+            existentes = mapping_model.sudo().search([('flow_id', '=', flujo.id)])
+            if existentes:
+                continue
+            label, equipo = self._MAPEO_CHATWOOT_POR_FLUJO.get(
+                flujo.name, (flujo.name, ''))
+            vals = {
+                'name': label,
+                'flow_id': flujo.id,
+                'equipo_asignado': equipo or False,
+                'routing_key': flujo.name or '',
+                'active': True,
+            }
+            if default_agent_id:
+                try:
+                    vals['chatwoot_agent_id'] = int(default_agent_id)
+                except (TypeError, ValueError):
+                    _logger.warning('_ensure_mappings_for_flujos: default agent_id inválido=%s', default_agent_id)
+            if default_agent_email:
+                vals['chatwoot_agent_email'] = default_agent_email
+            if default_inbox_id:
+                try:
+                    vals['chatwoot_inbox_id'] = int(default_inbox_id)
+                except (TypeError, ValueError):
+                    _logger.warning('_ensure_mappings_for_flujos: default inbox_id inválido=%s', default_inbox_id)
+            mapping_model.sudo().create(vals)
+            _logger.info(
+                '_ensure_mappings_for_flujos: mapping creado para flujo=%s',
+                flujo.name)
 
     @api.model
     def aplicar_deteccion_automatica(self, prompt_text):
@@ -642,6 +809,8 @@ class ChatbotFlujo(models.Model):
             flujos_arch = flujos.filtered(lambda f: f.name in archivados)
             flujos_act.write({'active': True})
             flujos_arch.write({'active': False})
+            self._ensure_mappings_for_flujos(flujos_act)
+            flujos_act.action_regenerar_pasos()
             self._sincronizar_mappings(flujos_act, True)
             self._sincronizar_mappings(flujos_arch, False)
             _logger.info(
@@ -685,6 +854,8 @@ class ChatbotFlujo(models.Model):
             and f.name not in sin_keywords)
         flujos_act.write({'active': True})
         flujos_arch.write({'active': False})
+        self._ensure_mappings_for_flujos(flujos_act)
+        flujos_act.action_regenerar_pasos()
         self._sincronizar_mappings(flujos_act, True)
         self._sincronizar_mappings(flujos_arch, False)
         _logger.info(
