@@ -3,6 +3,10 @@ import logging
 
 from odoo import fields, models, api, _
 
+from odoo.addons.ai_chatbot_1_portal.chatbot_prompt_normalizer import (
+    normalizar_business_prompt,
+)
+
 _logger = logging.getLogger(__name__)
 
 
@@ -91,13 +95,39 @@ class ResConfigSettings(models.TransientModel):
             },
         }
 
+    @api.onchange('chat_bot_system_prompt')
+    def _onchange_chat_bot_system_prompt(self):
+        """Avisa al cliente cuándo el PRON se corregirá automáticamente al guardar."""
+        prompt = self.chat_bot_system_prompt or ''
+        _normalizado, cambios = normalizar_business_prompt(prompt)
+        if cambios:
+            return {
+                'warning': {
+                    'title': _('Formato del PRON'),
+                    'message': _(
+                        'Se corregirán %(n)s detalle(s) de formato al guardar '
+                        '(esquema JSON con flow_name y campo "text").',
+                        n=cambios,
+                    ),
+                },
+            }
+
     def set_values(self):
-        """Al guardar el system_prompt, ejecuta la auto-detección de flujos."""
+        """Al guardar el system_prompt, normaliza el formato y detecta flujos."""
         res = super().set_values()
         try:
-            prompt = self.env['ir.config_parameter'].sudo().get_param(
-                'ai_chatbot_1_portal.system_prompt', '')
-            self.env['chatbot.flujo'].sudo().aplicar_deteccion_automatica(prompt)
+            params = self.env['ir.config_parameter'].sudo()
+            prompt = params.get_param('ai_chatbot_1_portal.system_prompt', '') or ''
+            if prompt.strip():
+                normalizado, cambios = normalizar_business_prompt(prompt)
+                if cambios:
+                    params.set_param('ai_chatbot_1_portal.system_prompt', normalizado)
+                    _logger.info(
+                        'system_prompt normalizado al guardar: %d correcciones aplicadas',
+                        cambios,
+                    )
+            prompt_final = params.get_param('ai_chatbot_1_portal.system_prompt', '') or ''
+            self.env['chatbot.flujo'].sudo().aplicar_deteccion_automatica(prompt_final)
         except Exception as e:
-            _logger.warning('auto_detección al guardar Settings falló: %s', e)
+            _logger.warning('normalización al guardar Settings falló: %s', e)
         return res

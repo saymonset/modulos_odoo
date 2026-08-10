@@ -8,6 +8,10 @@ from odoo import fields, _
 import re
 import base64
 
+from odoo.addons.ai_chatbot_1_portal.chatbot_prompt_normalizer import (
+    normalizar_business_prompt,
+)
+
 _logger = logging.getLogger(__name__)
 
 class ChatBotUtils:
@@ -627,6 +631,7 @@ class ChatBotUtils:
         """
         params = env['ir.config_parameter'].sudo()
         business_prompt = params.get_param('ai_chatbot_1_portal.system_prompt', '') or ''
+        business_prompt, _n = normalizar_business_prompt(business_prompt)
 
         flujos = env['chatbot.flujo'].sudo().search([('active', '=', True)], order='name')
 
