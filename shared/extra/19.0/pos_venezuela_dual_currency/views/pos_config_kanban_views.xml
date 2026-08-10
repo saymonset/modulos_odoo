@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Total USD + Tasa BCV en las tarjetas del dashboard de POS -->
+    <record id="view_pos_config_kanban_inherit_usd_total" model="ir.ui.view">
+        <field name="name">pos.config.kanban.usd.total</field>
+        <field name="model">pos.config</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_config_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//span[@name='draft_orders']/ancestor::div[hasclass('row')]" position="after">
+                <div class="row">
+                    <div class="col-5">
+                        <span>Total USD</span>
+                    </div>
+                    <span t-esc="statistics.total_usd.display" class="col-7"/>
+                </div>
+                <div class="row">
+                    <div class="col-5">
+                        <span>Tasa BCV</span>
+                    </div>
+                    <span t-esc="statistics.rate.display" class="col-7"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

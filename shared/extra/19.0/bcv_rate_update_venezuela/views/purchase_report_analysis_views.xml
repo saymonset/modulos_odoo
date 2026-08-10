@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Análisis de compra: columna Total USD en la lista -->
+    <record id="purchase_report_view_tree_usd_bcv" model="ir.ui.view">
+        <field name="name">purchase.report.view.list.usd.bcv</field>
+        <field name="model">purchase.report</field>
+        <field name="inherit_id" ref="purchase.purchase_report_view_tree"/>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <field name="untaxed_total" position="after">
+                <field name="currency_usd_id" column_invisible="True"/>
+                <field name="untaxed_total_usd" string="Untaxed Total USD" widget="monetary"
+                       options="{'currency_field': 'currency_usd_id'}"
+                       sum="Sum of Untaxed Total USD" optional="show"/>
+            </field>
+            <field name="price_total" position="after">
+                <field name="price_total_usd" string="Total USD" widget="monetary"
+                       options="{'currency_field': 'currency_usd_id'}"
+                       sum="Sum of Total USD" optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Análisis de compra: medidas USD en el pivot -->
+    <record id="purchase_report_pivot_usd_bcv" model="ir.ui.view">
+        <field name="name">purchase.report.pivot.usd.bcv</field>
+        <field name="model">purchase.report</field>
+        <field name="inherit_id" ref="purchase.view_purchase_order_pivot"/>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <pivot position="inside">
+                <field name="untaxed_total_usd" type="measure"/>
+                <field name="price_total_usd" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+</odoo>

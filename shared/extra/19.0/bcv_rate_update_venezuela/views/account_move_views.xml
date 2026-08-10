@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista form: columnas USD en líneas + Total USD -->
+    <record id="view_move_form_inherit_bcv" model="ir.ui.view">
+        <field name="name">account.move.form.bcv.usd</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="price_tier_type"/>
+            </xpath>
+            <!-- Columnas en las líneas de factura -->
+            <xpath expr="//field[@name='invoice_line_ids']//field[@name='price_subtotal']" position="before">
+                <field name="cop_show_fields" column_invisible="True"/>
+                <field name="bcv_rate_value" string="Tasa BCV (USD/VES)" readonly="1" optional="hide"/>
+                <field name="cop_rate_value" string="Tasa COP" readonly="1" optional="hide" invisible="not cop_show_fields"/>
+                <field name="price_subtotal_usd_bcv" string="Subtotal USD" readonly="1"/>
+                <field name="price_subtotal_cop" string="Subtotal COP" readonly="1" optional="hide" invisible="not cop_show_fields"/>
+            </xpath>
+            <!-- Total USD debajo del tax_totals -->
+            <xpath expr="//group[hasclass('oe_subtotal_footer')]//field[@name='tax_totals']" position="after">
+                <field name="cop_show_fields" invisible="1"/>
+                <div>
+                    <div style="display:flex; align-items:center; gap:5px;" class="mt-2">
+                        <label for="amount_total_usd" string="Total USD ($)" style="font-weight:bold; color:green;"/>
+                        <field name="amount_total_usd" readonly="1" style="font-weight:bold; color:green;" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:5px;" class="mt-1">
+                        <label for="bcv_rate_value" string="Tasa de Cambio (Bs.)" style="font-weight:bold;"/>
+                        <field name="bcv_rate_value" readonly="1" style="font-weight:bold;"/>
+                        <span class="text-muted small">Bs.</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:5px;" class="mt-1">
+                        <label for="amount_total_ves_from_usd" string="Total Bolívares (VES)" style="font-weight:bold; color:green;"/>
+                        <field name="amount_total_ves_from_usd" readonly="1" style="font-weight:bold; color:green;" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:5px;" class="mt-1" invisible="not cop_show_fields">
+                        <label for="amount_total_cop" string="Total COP" style="font-weight:bold; color:blue;"/>
+                        <field name="amount_total_cop" readonly="1" style="font-weight:bold; color:blue;" widget="monetary" options="{'currency_field': 'currency_aux_cop'}"/>
+                    </div>
+                </div>
+            </xpath>
+            <!-- Ocultar Cantidad por pagar (redundante con Total en Bs) -->
+            <xpath expr="//group[hasclass('oe_subtotal_footer')]/field[@name='amount_residual']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Vista tree (lista de facturas) -->
+    <record id="view_invoice_tree_inherit_bcv" model="ir.ui.view">
+        <field name="name">account.invoice.tree.bcv.usd</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='amount_total_in_currency_signed']" position="after">
+                <field name="amount_total_usd" string="Total USD" optional="show" widget="monetary" options="{'currency_field': 'currency_aux'}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

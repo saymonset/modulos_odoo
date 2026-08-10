@@ -1,0 +1,16 @@
+#. module: hr_appraisal_goal
+msgid "Goal"
+msgstr "Objetivo"
+
+msgid "Goals / KPIs"
+msgstr "Objetivos / KPIs"
+
+msgid "Weight (%)"
+msgstr "Peso (%)"
+
+msgid "Progress (%)"
+msgstr "Progreso (%)"
+
+msgid "Final Goal Score (%)"
+msgstr "Puntuación final de objetivos (%)"
+... etc.

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="bcv_rate_update_venezuela.AddressAutofill" owl="1">
+        <div class="d-none" t-att-data-loading="state.loading"></div>
+    </t>
+</templates>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="hr_appraisal_form_inherit_goal" model="ir.ui.view">
+        <field name="name">hr.appraisal.form.goal.tab</field>
+        <field name="model">hr.appraisal</field>
+        <field name="inherit_id" ref="hr_appraisal_oca.hr_appraisal_form_view"/>
+        <field name="arch" type="xml">
+
+            <!-- Add new page after "Appraisal" page -->
+            <xpath expr="//notebook/page[@name='appraisal']" position="after">
+                <page string="Objectives" name="goals">
+                    <group>
+                        <field name="goal_count" invisible="1"/>
+                        <field name="total_weight" readonly="1" string="Total weight"/>
+                        <field name="total_scored_points" readonly="1" string="Total scored points"/>
+                        <field name="final_goal_score" readonly="1" string="Final goal score (%)" widget="percentage"/>
+                    </group>
+                     <field name="goal_ids">
+                        <list string="Goals" editable="bottom">
+                            <field name="sequence" widget="handle"/>
+                            <field name="name"/>
+                            <field name="weight" widget="percentage"/>
+                            <field name="progress" widget="percentage"/>
+                            <field name="scored_points"/>
+                            <field name="deadline" widget="date"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+
+            <!-- Optional: Show final goal score inside manager feedback area -->
+            <xpath expr="//field[@name='manager_feedback']" position="before">
+                <div class="alert alert-info" role="alert" invisible="final_goal_score == 0">
+                    <strong>Objectives performance: </strong> <field name="final_goal_score" widget="percentage"/> achieved.
+                </div>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

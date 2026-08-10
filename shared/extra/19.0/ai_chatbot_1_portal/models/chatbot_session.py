@@ -1,0 +1,963 @@
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
+import json
+import logging
+import re
+from datetime import datetime
+from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import ChatBotUtils
+
+_logger = logging.getLogger(__name__)
+
+class SessionState(models.Model):
+    _name = 'chatbot.session'
+    _description = 'Estado de Sesión de Chatbot'
+    _rec_name = 'session_id'
+    _order = 'create_date desc'
+    
+    # Campo único para session_id
+    session_id = fields.Char(
+        string='ID de Sesión',
+        required=True,
+        unique=True,
+        index=True,
+        help='Identificador único de la sesión (generalmente de un chatbot o widget)'
+    )
+    
+    # Campo JSON para el estado
+    estado = fields.Json(
+        string='Estado Actual',
+        default=lambda self: self._default_estado(),
+        help='Estado completo en formato JSON'
+    )
+
+    last_activity = fields.Datetime(string='Última Actividad', default=lambda self: fields.Datetime.now())
+    
+    # Campos adicionales útiles
+    create_date = fields.Datetime(string='Fecha de Creación', readonly=True)
+    write_date = fields.Datetime(string='Última Actualización', readonly=True)
+    
+    # Campos derivados del JSON para facilitar búsquedas
+    modo = fields.Char(
+        string='Modo Actual',
+        compute='_compute_campos_derivados',
+        store=True,
+        index=True
+    )
+    
+    paso = fields.Char(
+        string='Paso Actual',
+        compute='_compute_campos_derivados',
+        store=True,
+        index=True
+    )
+    
+    pasos_pendientes = fields.Json(
+        string='Pasos Pendientes',
+        default=list,
+        help='Lista ordenada de pasos del flujo pendientes de procesar'
+    )
+    
+    equipo_asignado = fields.Char(
+        string='Equipo Asignado',
+        help='Equipo al que se asignará el lead (Agendamiento_Directo, Ventas, etc.)'
+    )
+    
+    timestamp_estado = fields.Datetime(
+        string='Timestamp del Estado',
+        compute='_compute_campos_derivados',
+        store=True
+    )
+    
+    # Restricción para asegurar que session_id sea único
+    _sql_constraints = [
+        ('session_id_unique', 
+         'UNIQUE(session_id)', 
+         'El ID de sesión debe ser único'),
+    ]
+
+    # ==================================================================
+    #  MÉTODOS PRIVADOS PARA INTEGRACIÓN CON IA
+    # ==================================================================
+    def _get_gpt_service(self):
+        """Retorna el servicio GPT configurado (con sudo para evitar permisos)."""
+        return self.env['gpt.service'].sudo()
+
+    def _generar_pregunta_amigable(self, nombre_mostrar, tipo=None, max_tokens=100):
+        """
+        Convierte un nombre de campo (ej: 'Teléfono') en una pregunta amigable.
+        Primero intenta con IA (prioridad), si falla usa fallbacks manuales.
+        """
+        # Preparamos el prompt enriquecido con el tipo de dato
+        prompt = nombre_mostrar
+        if tipo == 'boolean':
+            prompt += " (recuerda que la respuesta debe ser 'sí' o 'no')"
+        elif tipo in ['image', 'file']:
+            prompt += " (el usuario puede enviar una imagen o escribir 'saltar' si no la tiene)"
+        elif tipo == 'date':
+            prompt += " (formato DD/MM/AAAA)"
+
+        # 1. Intento con IA (prioridad)
+        service = self._get_gpt_service()
+        pregunta = ""
+        try:
+            resultado = service.GenerarPreguntaIntegraia(prompt, max_tokens=max_tokens)
+            if resultado.get('status') == 'success':
+                pregunta = resultado['generated_question']
+                pregunta = pregunta.strip().strip('"')
+        except Exception as e:
+            _logger.error(f"Error generando pregunta amigable con IA para '{nombre_mostrar}': {e}")
+
+        # 2. Si la IA no generó una pregunta válida, usamos fallbacks manuales
+        if not pregunta:
+            fallbacks = {
+                "Teléfono": "Por favor, indíquenos su número de teléfono para poder contactarle si es necesario.",
+                "Nombre completo": "Por favor, proporcione su nombre completo.",
+                "Cédula": "Por favor, ingrese su número de cédula o documento de identidad.",
+                "Fecha de nacimiento": "Por favor, indique su fecha de nacimiento en formato DD/MM/AAAA.",
+                "Consentimiento WhatsApp": "Para poder enviarle recordatorios e información relevante por WhatsApp, necesitamos su autorización. ¿Acepta? Responda 'sí' o 'no'.",
+                "Correo electrónico": "Si lo desea, puede proporcionarnos su correo electrónico para recibir información adicional. En caso contrario, escriba 'omitir'.",
+            }
+            if nombre_mostrar in fallbacks:
+                pregunta = fallbacks[nombre_mostrar]
+            else:
+                if tipo == 'boolean':
+                    pregunta = f"Por favor, responda 'sí' o 'no' para: {nombre_mostrar}."
+                else:
+                    pregunta = f"Por favor, ingrese su {nombre_mostrar.lower()}."
+
+        # 3. Mejoras post-generación
+        if tipo in ['image', 'file'] and 'saltar' not in pregunta.lower():
+            pregunta += " Si no dispone de ello en este momento, puede escribir 'saltar' para omitir este paso."
+        if tipo == 'boolean' and ('sí' not in pregunta.lower() and 'si' not in pregunta.lower()):
+            pregunta += " Por favor, responda 'sí' o 'no'."
+
+        return pregunta
+
+    def _validar_con_ia(self, valor, tipo_dato, paso, nombre_mostrar):
+        """
+        Valida un valor usando el servicio GPT que retorna mensajes de error amigables.
+        Retorna (valido, valor_transformado, mensaje_error)
+        """
+        service = self._get_gpt_service()
+        try:
+            resultado = service.validar_valor_amigable(
+                valor=valor,
+                tipo_dato=tipo_dato,
+                paso=paso,
+                nombre_mostrar=nombre_mostrar,
+                max_tokens=120
+            )
+            if resultado.get('success') and tipo_dato == 'image':
+                valor_ia = resultado.get('valor_transformado') or valor
+                ok, info = ChatBotUtils._is_image_url(valor_ia)
+                if not ok:
+                    return False, None, f"No se detectó imagen válida: {info}. Reenvía la foto o escribe 'saltar'."
+            return (
+                resultado.get('success', False),
+                resultado.get('valor_transformado'),
+                resultado.get('mensaje', '')
+            )
+        except Exception as e:
+            _logger.error(f"Error en validación con IA: {e}")
+            utils = ChatBotUtils()
+            valido, resultado_trad = utils.validar_valor(valor, tipo_dato, paso)
+            if valido:
+                return True, resultado_trad, ''
+            else:
+                return False, None, resultado_trad
+
+    # ==================================================================
+    #  MÉTODOS PRINCIPALES DEL FLUJO
+    # ==================================================================
+    @api.model
+    def iniciar_flujo(self, session_id, flow_name, steps, equipo_asignado, datos_precargados=None, account_id=None, conversation_id=None):
+        """
+        Inicia un flujo para una sesión, guardando los pasos pendientes y estableciendo el primer paso.
+        steps: lista de diccionarios con la definición de cada paso.
+        datos_precargados: dict con datos del cliente ya existentes (opcional).
+        account_id/conversation_id: se inyectan en datos_paciente para que el hook Chatwoot funcione.
+        """
+        _logger.info("Iniciando flujo para session_id: %s, flow_name: %s", session_id, flow_name)
+        _logger.info("Datos precargados: %s", datos_precargados)
+        
+        # Inicializar datos del paciente con los precargados si existen
+        datos_paciente = datos_precargados.copy() if datos_precargados else {}
+        datos_paciente['equipo_asignado'] = equipo_asignado
+        datos_paciente['flow_name'] = flow_name
+        if account_id:
+            datos_paciente['account_id'] = account_id
+        if conversation_id:
+            datos_paciente['conversation_id'] = conversation_id
+        
+        # Filtrar pasos que ya tienen datos precargados
+        steps_filtrados = []
+        for step in steps:
+            campo_destino = step.get('campo_destino')
+            # vat y birthdate solo se repreguntan si el paso es requisito;
+            # si son opcionales y ya hay dato precargado, se omiten.
+            if campo_destino in ('vat', 'birthdate') and step.get('es_requerido', True):
+                steps_filtrados.append(step)
+                continue
+            if datos_precargados and campo_destino and datos_precargados.get(campo_destino):
+                _logger.info("Paso %s ya tiene dato precargado: %s", campo_destino, datos_precargados.get(campo_destino))
+                continue  # Saltar este paso porque ya tiene valor
+            steps_filtrados.append(step)
+        
+        _logger.info("Pasos después de filtrar precargados: %d de %d", len(steps_filtrados), len(steps))
+        
+        # Si no quedan pasos, el flujo está completo
+        if not steps_filtrados:
+            _logger.info("No hay pasos pendientes, flujo completado automáticamente")
+            # Crear lead automáticamente con los datos precargados
+            lead_resultado = self.capturar_lead(datos_paciente)
+            return {
+                'success': True,
+                'flow_completed': True,
+                'lead_resultado': lead_resultado,
+                'datos_paciente': datos_paciente
+            }
+        
+        # Generar pregunta amigable para el primer paso
+        primer_paso = steps_filtrados[0].copy()
+        nombre_original = primer_paso.get('nombre_mostrar', '')
+        pregunta_amigable = self._generar_pregunta_amigable(nombre_original, tipo=primer_paso.get('tipo_dato'))
+        primer_paso['mensaje_prompt'] = pregunta_amigable
+        primer_paso['nombre_mostrar'] = pregunta_amigable
+        steps_filtrados[0] = primer_paso
+        
+        # Buscar o crear registro de sesión
+        registro = self.search([('session_id', '=', session_id)], limit=1)
+        
+        estado_inicial = {
+            'modo': 'FLUJO',
+            'flow_name': flow_name,
+            'paso': primer_paso.get('nombre_interno'),
+            'nombre_mostrar': pregunta_amigable,
+            'tipo_dato': primer_paso.get('tipo_dato'),
+            'mensaje_prompt': pregunta_amigable,
+            'mensaje_error': primer_paso.get('mensaje_error', ''),
+            'es_requerido': primer_paso.get('es_requerido', True),
+            'datos_paciente': datos_paciente,
+            'timestamp': fields.Datetime.now().isoformat()
+        }
+        
+        if not registro:
+            vals = {
+                'session_id': session_id,
+                'estado': estado_inicial,
+                'pasos_pendientes': steps_filtrados,
+                'equipo_asignado': equipo_asignado
+            }
+            registro = self.create(vals)
+            action = 'create'
+            _logger.info("Sesión creada: %s", session_id)
+        else:
+            registro.write({
+                'estado': estado_inicial,
+                'pasos_pendientes': steps_filtrados,
+                'equipo_asignado': equipo_asignado,
+                'last_activity': fields.Datetime.now()
+            })
+            action = 'update'
+            _logger.info("Sesión actualizada: %s", session_id)
+        
+        return {
+            'success': True,
+            'action': action,
+            'session_id': session_id,
+            'record_id': registro.id,
+            'paso_actual': registro.estado['paso'] if registro.estado else None,
+            'pasos_pendientes': registro.pasos_pendientes,
+            'primer_paso': primer_paso
+        }
+
+    def procesar_paso(self, session_id, valor, paso, conversation_id, account_id, platform):  
+        _logger.info("Iniciando procesar_paso para session_id: %s", session_id)
+        registro = self.sudo().search([('session_id', '=', session_id)], limit=1)
+        
+        if not registro:
+            _logger.info("Sesión no encontrada: %s. Generando mensaje sin sesión.", session_id)
+            mensaje = self._generar_mensaje_sin_sesion(valor)
+            return {
+                'success': True,
+                'texto_para_usuario': mensaje,
+                'text': mensaje,
+                'modo': 'COMPLETADO',
+                'session_id': session_id,
+                'conversation_id': conversation_id,
+                'account_id': account_id,
+                'platform': platform
+            }
+
+        if registro.modo == 'COMPLETADO':
+            _logger.info("Sesión previa 'COMPLETADO' encontrada. Eliminando para iniciar proceso limpio.")
+            registro.sudo().unlink()
+            mensaje = self._generar_mensaje_sin_sesion(valor)
+            return {
+                'success': True,
+                'texto_para_usuario': mensaje,
+                'text': mensaje,
+                'modo': 'MENU_PRINCIPAL',
+                'session_id': session_id,
+                'conversation_id': conversation_id,
+                'account_id': account_id,
+                'platform': platform
+            }
+        
+        _logger.info("Sesión encontrada (ID: %s). Modo actual: %s", registro.id, registro.modo)
+
+        # Expiración por inactividad (10 minutos)
+        delta = fields.Datetime.now() - registro.last_activity
+        if delta.total_seconds() > 600:
+            _logger.info("Sesión expirada por inactividad: %s (última actividad hace %d segundos)", session_id, delta.total_seconds())
+            mensaje = self._generar_mensaje_expirado(valor)
+            registro.unlink()
+            return {
+                'success': True,
+                'finalizado': False,
+                'modo': 'COMPLETADO',
+                'texto_para_usuario': mensaje,
+                'text': mensaje,
+                'session_id': session_id,
+                'conversation_id': conversation_id,
+                'account_id': account_id,
+                'platform': platform
+            }
+
+        paso_actual = registro.pasos_pendientes[0] if registro.pasos_pendientes else {}
+        tipo = paso_actual.get('tipo_dato', 'text')
+        campo_destino = paso_actual.get('campo_destino', '')
+
+        # Detección de salida
+        es_url_imagen = re.match(r'^https?://', valor) and (tipo == 'image' or any(ext in valor.lower() for ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.svg', '.tiff']))
+        es_telefono_claro = re.match(r'^\+?[0-9]{7,15}$', valor.strip())
+        es_palabra_flujo = valor.strip().lower() in ['listo', 'no', 'continuar', 'omitir', 'siguiente']
+        
+        if es_url_imagen or es_telefono_claro or es_palabra_flujo:
+            es_salida, mensaje_salida = False, ""
+            _logger.info("Omitiendo detección de salida por IA (es imagen, teléfono o palabra de control: %s)", valor)
+        else:
+            es_salida, mensaje_salida = self._detectar_intencion_salida(valor)
+        
+        if es_salida and (tipo in ['image', 'file'] or 'foto' in campo_destino or 'imagen' in campo_destino):
+            _logger.info("Protección: suprimiendo intención de salida en paso de fotos/archivos")
+            es_salida = False
+            mensaje_salida = ""
+            
+        if es_salida:
+            _logger.info("Marcando sesión como COMPLETADO (por intención de salida): %s", registro.session_id)
+            registro.sudo().write({'modo': 'COMPLETADO'})
+            return {
+                'success': True,
+                'finalizado': True,
+                'modo': 'COMPLETADO',
+                'texto_para_usuario': mensaje_salida,
+                'text': mensaje_salida,
+                'session_id': session_id,
+                'conversation_id': conversation_id,
+                'account_id': account_id,
+                'platform': platform
+            }
+
+        registro.write({'last_activity': fields.Datetime.now()})
+
+        if not registro.pasos_pendientes:
+            mensaje = self._generar_mensaje_sin_pasos(valor)
+            return {
+                'success': True,
+                'finalizado': False,
+                'modo': 'COMPLETADO',
+                'texto_para_usuario': mensaje,
+                'text': mensaje,
+                'session_id': session_id,
+                'conversation_id': conversation_id,
+                'account_id': account_id,
+                'platform': platform
+            }
+
+        es_paso_telefono = paso_actual.get('es_paso_telefono', False) or campo_destino in ('solicitar_phone', 'phone', 'telefono')
+        nombre_mostrar = paso_actual.get('nombre_mostrar', '')
+        
+        es_palabra_salto = valor.strip().lower() in ['no', 'omitir', 'saltar', 'no tengo', 'no la tengo', 'después', 'luego', 'n', 'skip']
+        es_finalizar_carga = valor.strip().lower() in ['listo', 'finalizar', 'terminar', 'ya está', 'ya esta']
+
+        # ========== SALTAR PASOS OPCIONALES Y ESPECIALMENTE EL CORREO ==========
+        palabras_skip_opcional = ['omitir', 'saltar', 'skip', 'no', 'ninguno', 'ninguna', 'n']
+        es_paso_opcional = not paso_actual.get('es_requerido', True)
+        es_paso_email = campo_destino in ['solicitar_email', 'email']
+
+        if (es_paso_opcional or es_paso_email) and valor.strip().lower() in palabras_skip_opcional:
+            _logger.info("Usuario omitió paso (correo o paso opcional): %s", campo_destino)
+            valido = True
+            resultado = None
+            mensaje_error = ""
+        else:
+            # Lógica de salto para imágenes
+            if tipo in ['image', 'file'] and es_palabra_salto and campo_destino not in ('imagenes_adicionales', 'solicitar_imagenes_adicionales'):
+                _logger.info("El usuario decidió saltar el paso de imagen/archivo: %s", campo_destino)
+                valido = True
+                resultado = "No proporcionada"
+                mensaje_error = ""
+            elif campo_destino in ('imagenes_adicionales', 'solicitar_imagenes_adicionales'):
+                valido_img, resultado_img, _ = self._validar_con_ia(valor, 'image', paso, nombre_mostrar)
+                if valido_img:
+                    estado_actual = registro.estado or {}
+                    datos_p = estado_actual.get('datos_paciente', {})
+                    imgs_adicionales = datos_p.get('imagenes_adicionales') or datos_p.get('solicitar_imagenes_adicionales', [])
+                    if isinstance(imgs_adicionales, str):
+                        try:
+                            imgs_adicionales = json.loads(imgs_adicionales)
+                        except:
+                            imgs_adicionales = [imgs_adicionales] if imgs_adicionales else []
+                    if resultado_img not in imgs_adicionales:
+                        imgs_adicionales.append(resultado_img)
+                    datos_p['imagenes_adicionales'] = imgs_adicionales
+                    estado_actual['datos_paciente'] = datos_p
+                    estado_actual['timestamp'] = fields.Datetime.now().isoformat()
+                    registro.write({'estado': estado_actual})
+                    mensaje_recibido = "He recibido la imagen. ¿Deseas agregar otra imagen? Si ya finalizaste, escribe *'listo'* para continuar."
+                    return {
+                        'success': True,
+                        'finalizado': False,
+                        'modo': 'FLUJO',
+                        'texto_para_usuario': mensaje_recibido,
+                        'text': mensaje_recibido,
+                        'session_id': session_id,
+                        'conversation_id': conversation_id,
+                        'account_id': account_id,
+                        'paso_actual': paso,
+                        'mensaje_prompt': mensaje_recibido,
+                        'platform': platform
+                    }
+                else:
+                    if not (es_palabra_salto or es_finalizar_carga):
+                        try:
+                            res_fin = self._get_gpt_service().detectar_intencion_finalizar_carga(valor)
+                        except Exception as e:
+                            _logger.error(f"Error detectando fin de carga con IA: {e}")
+                            res_fin = {'termino': False}
+                    else:
+                        res_fin = {'termino': False}
+                    if es_palabra_salto or es_finalizar_carga or res_fin.get('termino'):
+                        _logger.info("El usuario decidió finalizar carga de imágenes o saltar el paso.")
+                        resultado = registro.estado.get('datos_paciente', {}).get(campo_destino, [])
+                        valido = True
+                    else:
+                        valido, resultado, mensaje_error = self._validar_con_ia(valor, tipo, paso, nombre_mostrar)
+                        if not valido:
+                            return {
+                                'success': True,
+                                'finalizado': False,
+                                'modo': 'FLUJO',
+                                'texto_para_usuario': mensaje_error,
+                                'text': mensaje_error,
+                                'session_id': session_id,
+                                'conversation_id': conversation_id,
+                                'account_id': account_id,
+                                'paso_actual': paso,
+                                'mensaje_prompt': paso_actual.get('mensaje_prompt'),
+                                'platform': platform
+                            }
+            else:
+                # Validación tradicional + IA
+                _logger.info("Procesando valor '%s' para paso '%s' (tipo: %s)", valor, paso, tipo)
+                utils_trad = ChatBotUtils()
+                valido_trad, resultado_trad = utils_trad.validar_valor(valor, tipo, paso)
+                if valido_trad:
+                    _logger.info("Validación tradicional exitosa para '%s': %s", paso, resultado_trad)
+                    valido = True
+                    resultado = resultado_trad
+                    mensaje_error = ""
+                elif es_paso_telefono:
+                    valido = False
+                    resultado = None
+                    mensaje_error = resultado_trad
+                    _logger.info("Validación de teléfono falló, no se delega en IA: %s", resultado_trad)
+                else:
+                    _logger.info("Validación tradicional falló para '%s', intentando con IA...", paso)
+                    valido, resultado, mensaje_error = self._validar_con_ia(valor, tipo, paso, nombre_mostrar)
+                if not valido:
+                    return {
+                        'success': True,
+                        'finalizado': False,
+                        'modo': 'FLUJO',
+                        'texto_para_usuario': mensaje_error,
+                        'text': mensaje_error,
+                        'session_id': session_id,
+                        'conversation_id': conversation_id,
+                        'account_id': account_id,
+                        'paso_actual': paso_actual.get('nombre_interno'),
+                        'mensaje_prompt': paso_actual.get('mensaje_prompt'),
+                        'platform': platform
+                    }
+
+        # Guardar el resultado (solo si no es None)
+        estado_actual = registro.estado or {}
+        if 'datos_paciente' not in estado_actual:
+            estado_actual['datos_paciente'] = {}
+        if resultado is not None:
+            _logger.info("Guardando resultado en datos_paciente: %s = %s", campo_destino, resultado)
+            estado_actual['datos_paciente'][campo_destino] = resultado
+        else:
+            _logger.info("Omitiendo guardado para %s (valor None)", campo_destino)
+
+        nuevos_pasos = registro.pasos_pendientes[1:]
+        _logger.info("Nuevos pasos pendientes iniciales: %d", len(nuevos_pasos))
+
+        # Auto‑rellenado por teléfono
+        utils = ChatBotUtils()
+        if es_paso_telefono:
+            _logger.info("Paso de teléfono detectado. Buscando partner para: %s", valor)
+            partner = utils.find_partner_by_phone(self.env, valor)
+            if partner:
+                _logger.info("Partner encontrado: %s (ID: %s)", partner.name, partner.id)
+                # Mapear campos del partner a TODAS las nomenclaturas de campo_destino
+                # (corta 'name' y 'solicitar_name') para saltar el paso correcto.
+                auto_map = {}
+                if partner.name:
+                    auto_map['name'] = partner.name
+                    auto_map['solicitar_name'] = partner.name
+                    auto_map['nombre_completo'] = partner.name
+                if partner.vat:
+                    auto_map['vat'] = partner.vat
+                    auto_map['solicitar_vat'] = partner.vat
+                if partner.birthdate:
+                    try:
+                        auto_map['birthdate'] = partner.birthdate.isoformat()
+                        auto_map['solicitar_birthdate'] = partner.birthdate.isoformat()
+                    except Exception as e:
+                        _logger.warning("Error al formatear fecha de nacimiento: %s", e)
+                if partner.email:
+                    auto_map['email'] = partner.email
+                    auto_map['solicitar_email'] = partner.email
+                if partner.consentimiento_whatsapp:
+                    auto_map['consentimiento_whatsapp'] = True
+                auto_map['solicitar_es_paciente_nuevo'] = 'no'
+                auto_map['es_paciente_nuevo'] = 'no'
+                
+                for campo_auto, valor_auto in auto_map.items():
+                    estado_actual['datos_paciente'][campo_auto] = valor_auto
+                
+                # No auto-rellenar vat ni birthdate, siempre pedirlos
+                # (ambas nomenclaturas de campo_destino)
+                for campo in ('vat', 'birthdate', 'solicitar_vat', 'solicitar_birthdate'):
+                    auto_map.pop(campo, None)
+                
+                viejos_pasos_count = len(nuevos_pasos)
+                nuevos_pasos = [p for p in nuevos_pasos if p.get('campo_destino') not in auto_map]
+                _logger.info("Auto-relleno completado. Pasos eliminados: %d", viejos_pasos_count - len(nuevos_pasos))
+            else:
+                _logger.info("No se encontró partner para el teléfono: %s", valor)
+                estado_actual['datos_paciente']['solicitar_es_paciente_nuevo'] = 'si'
+
+        if nuevos_pasos:
+            _logger.info("Siguiente paso detectado: %s", nuevos_pasos[0].get('campo_destino'))
+            siguiente = nuevos_pasos[0].copy()
+            pregunta_amigable = self._generar_pregunta_amigable(siguiente.get('nombre_mostrar', ''), tipo=siguiente.get('tipo_dato'))
+            siguiente['mensaje_prompt'] = pregunta_amigable
+            siguiente['nombre_mostrar'] = pregunta_amigable
+            nuevos_pasos[0] = siguiente
+            
+            estado_actual.update({
+                'paso': siguiente.get('campo_destino'),
+                'nombre_mostrar': pregunta_amigable,
+                'tipo_dato': siguiente.get('tipo_dato'),
+                'mensaje_prompt': pregunta_amigable,
+                'es_requerido': siguiente.get('es_requerido'),
+                'modo': 'FLUJO',
+                'timestamp': fields.Datetime.now().isoformat()
+            })
+            
+            registro.write({
+                'estado': estado_actual,
+                'pasos_pendientes': nuevos_pasos
+            })
+            
+            return {
+                'success': True,
+                'texto_para_usuario': pregunta_amigable,
+                'text': pregunta_amigable,
+                'modo': registro.modo,
+                'paso_actual': estado_actual['paso'],
+                'session_id': session_id,
+                'conversation_id': conversation_id,
+                'account_id': account_id,
+                'platform': platform
+            }
+        else:
+            # Flujo completado
+            _logger.info("Flujo completado. Iniciando capturar_lead.")
+            estado_actual['datos_paciente']['account_id'] = account_id
+            estado_actual['datos_paciente']['conversation_id'] = conversation_id
+            lead_resultado = self.capturar_lead(estado_actual['datos_paciente'])
+            _logger.info("Resultado de capturar_lead: %s", lead_resultado.get('success'))
+            registro.sudo().write({'modo': 'COMPLETADO'})
+            equipo_asignado = estado_actual['datos_paciente'].get('equipo_asignado')
+            mensaje_final = self._generar_mensaje_finalizacion(estado_actual['datos_paciente'], lead_resultado=lead_resultado, equipo_asignado=equipo_asignado)
+            _logger.info("Mensaje final generado.")
+            return {
+                'success': True,
+                'finalizado': True,
+                'modo': 'COMPLETADO',
+                'texto_para_usuario': mensaje_final,
+                'text': mensaje_final,
+                'lead_resultado': lead_resultado,
+                'session_id': session_id,
+                'conversation_id': conversation_id,
+                'account_id': account_id,
+                'platform': platform
+            }
+
+    # ==================================================================
+    #  MÉTODOS AUXILIARES
+    # ==================================================================
+    @api.depends('estado')
+    def _compute_campos_derivados(self):
+        for record in self:
+            if record.estado:
+                record.modo = record.estado.get('modo', '')
+                record.paso = record.estado.get('paso', '')
+                timestamp_str = record.estado.get('timestamp', '')
+                if timestamp_str:
+                    try:
+                        record.timestamp_estado = fields.Datetime.from_string(
+                            timestamp_str.replace('Z', '')
+                        )
+                    except:
+                        record.timestamp_estado = False
+                else:
+                    record.timestamp_estado = False
+            else:
+                record.modo = ''
+                record.paso = ''
+                record.timestamp_estado = False
+
+    @api.model
+    def guardar_estado(self, session_id, estado_data):
+        try:
+            if not isinstance(estado_data, dict):
+                raise ValidationError(_("Los datos del estado deben ser un diccionario"))
+            registro = self.search([('session_id', '=', session_id)], limit=1)
+            if registro:
+                estado_actual = registro.estado or {}
+                def merge_dicts(dict1, dict2):
+                    result = dict1.copy()
+                    for key, value in dict2.items():
+                        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                            result[key] = merge_dicts(result[key], value)
+                        else:
+                            result[key] = value
+                    return result
+                nuevo_estado = merge_dicts(estado_actual, estado_data)
+                if 'timestamp' in estado_data:
+                    nuevo_estado['timestamp'] = estado_data['timestamp']
+                elif 'timestamp' not in nuevo_estado:
+                    nuevo_estado['timestamp'] = fields.Datetime.now().isoformat()
+                campos_requeridos = ['modo', 'paso', 'datos_paciente', 'timestamp']
+                for campo in campos_requeridos:
+                    if campo not in nuevo_estado:
+                        if campo == 'modo':
+                            nuevo_estado[campo] = estado_data.get('modo', 'INICIO')
+                        elif campo == 'paso':
+                            nuevo_estado[campo] = estado_data.get('paso', 'BIENVENIDA')
+                        elif campo == 'datos_paciente':
+                            nuevo_estado[campo] = estado_data.get('datos_paciente', {})
+                        elif campo == 'timestamp':
+                            nuevo_estado[campo] = fields.Datetime.now().isoformat()
+                registro.estado = nuevo_estado
+                message = _("Estado actualizado correctamente")
+                action = 'update'
+            else:
+                nuevo_estado = estado_data.copy()
+                if 'modo' not in nuevo_estado:
+                    nuevo_estado['modo'] = 'INICIO'
+                if 'paso' not in nuevo_estado:
+                    nuevo_estado['paso'] = 'BIENVENIDA'
+                if 'datos_paciente' not in nuevo_estado:
+                    nuevo_estado['datos_paciente'] = {}
+                if 'timestamp' not in nuevo_estado:
+                    nuevo_estado['timestamp'] = fields.Datetime.now().isoformat()
+                registro = self.create({
+                    'session_id': session_id,
+                    'estado': nuevo_estado
+                })
+                message = _("Estado creado correctamente")
+                action = 'create'
+            registro._compute_campos_derivados()
+            return {
+                'success': True,
+                'message': message,
+                'action': action,
+                'session_id': session_id,
+                'record_id': registro.id,
+                'write_date': registro.write_date,
+                'estado_actual': registro.estado
+            }
+        except Exception as e:
+            _logger.error(f"Error al guardar estado: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'session_id': session_id
+            }
+
+    @api.model
+    def _default_estado(self):
+        return {
+            "modo": "INICIO",
+            "paso": "BIENVENIDA",
+            "datos_paciente": {},
+            "timestamp": fields.Datetime.now().isoformat()
+        }
+    
+    @api.model
+    def consultar_por_session(self, session_id):
+        try:
+            registro = self.search([('session_id', '=', session_id)], limit=1)
+            if not registro:
+                return {
+                    'success': False,
+                    'session_id': session_id,
+                    'message': _("No se encontró registro con ese session_id"),
+                    'found': False
+                }
+            return {
+                'success': True,
+                'found': True,
+                'session_id': registro.session_id,
+                'estado': registro.estado,
+                'modo': registro.modo,
+                'paso': registro.paso,
+                "tipo_dato": registro.estado.get('tipo_dato') if registro.estado else None,
+                "es_requerido": registro.estado.get('es_requerido') if registro.estado else None,
+                "mensaje_prompt": registro.estado.get('mensaje_prompt') if registro.estado else None,
+                "nombre_mostrar": registro.estado.get('nombre_mostrar') if registro.estado else None,
+                "datos_paciente":  registro.estado.get('datos_paciente') if registro.estado else None
+            }
+        except Exception as e:
+            _logger.error(f"Error al consultar estado: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'session_id': session_id
+            }
+    
+    @api.model
+    def limpiar_sesiones_antiguas(self, horas=24):
+        try:
+            from datetime import datetime, timedelta
+            fecha_limite = datetime.now() - timedelta(hours=horas)
+            registros_antiguos = self.search([
+                ('create_date', '<', fecha_limite)
+            ])
+            cantidad = len(registros_antiguos)
+            registros_antiguos.unlink()
+            return {
+                'success': True,
+                'eliminados': cantidad,
+                'message': _("Se eliminaron %d sesiones antiguas") % cantidad
+            }
+        except Exception as e:
+            _logger.error(f"Error al limpiar sesiones: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    @api.model
+    def create(self, vals):
+        if 'session_id' in vals and not vals['session_id']:
+            raise ValidationError(_("El session_id no puede estar vacío"))
+        return super(SessionState, self).create(vals)
+    
+    def write(self, vals):
+        if 'session_id' in vals:
+            for record in self:
+                if record.session_id != vals['session_id']:
+                    raise ValidationError(
+                        _("No se puede modificar el session_id de una sesión existente")
+                    )
+        return super(SessionState, self).write(vals)
+    
+    @api.model
+    def actualizar_estado_parcial(self, session_id, campos_actualizar):
+        try:
+            registro = self.search([('session_id', '=', session_id)], limit=1)
+            if not registro:
+                return {
+                    'success': False,
+                    'error': _("No se encontró sesión con ese ID"),
+                    'session_id': session_id
+                }
+            estado_actual = registro.estado or {}
+            for campo, valor in campos_actualizar.items():
+                if campo == 'datos_paciente' and isinstance(valor, dict):
+                    if 'datos_paciente' not in estado_actual:
+                        estado_actual['datos_paciente'] = {}
+                    def merge_datos(datos1, datos2):
+                        result = datos1.copy()
+                        for k, v in datos2.items():
+                            if k in result and isinstance(result[k], dict) and isinstance(v, dict):
+                                result[k] = merge_datos(result[k], v)
+                            else:
+                                result[k] = v
+                        return result
+                    estado_actual['datos_paciente'] = merge_datos(estado_actual['datos_paciente'], valor)
+                else:
+                    estado_actual[campo] = valor
+            estado_actual['timestamp'] = fields.Datetime.now().isoformat()
+            registro.estado = estado_actual
+            registro._compute_campos_derivados()
+            return {
+                'success': True,
+                'message': _("Estado actualizado parcialmente"),
+                'session_id': session_id,
+                'record_id': registro.id,
+                'estado_actual': registro.estado
+            }
+        except Exception as e:
+            _logger.error(f"Error al actualizar estado parcial: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'session_id': session_id
+            }
+
+    def capturar_lead(self, datos):
+        """
+        Crea un lead/cita con los datos recolectados durante el flujo.
+        IMPORTANTE: Usa las claves CORRECTAS ('name', 'vat', 'birthdate', 'email', 'consentimiento_whatsapp')
+        que vienen del auto-rellenado, NO las claves 'solicitar_*'.
+        """
+        try:
+            _logger.info("Iniciando capturar_lead para sesión %s", datos.get('session_id'))
+            env = self.env
+            
+            # IMPORTANTE: Usar las claves cortas que vienen del auto-rellenado
+            # El auto-rellenado guarda en 'name', 'vat', 'birthdate', 'email', 'consentimiento_whatsapp'
+            partner_data = {
+                'solicitar_vat': datos.get('vat') or datos.get('solicitar_vat', ''),
+                'solicitar_phone': datos.get('phone') or datos.get('solicitar_phone', ''),
+                'solicitar_name': datos.get('name') or datos.get('solicitar_name', ''),
+                'solicitar_birthdate': datos.get('birthdate') or datos.get('solicitar_birthdate', ''),
+                'solicitar_email': datos.get('email') or datos.get('solicitar_email', ''),
+                'consentimiento': datos.get('consentimiento_whatsapp') or datos.get('consentimiento', False)
+            }
+            
+            _logger.info("Datos para actualizar/crear contacto: %s", partner_data)
+            
+            partner = ChatBotUtils.update_create_contact(env, partner_data)
+            plataforma = datos.get('plataforma', 'whatsapp')
+            medium, source, campaign = ChatBotUtils.setup_utm(env, plataforma)
+            tag = ChatBotUtils.get_or_create_bot_tag(env, plataforma)
+            teams = ChatBotUtils.get_or_create_crm_teams(env)
+
+            equipo_asignado = datos.get('equipo_asignado', 'Agendamiento_Directo')
+            nombre_grupo = None
+            team = None
+            # 1) Team del flujo si se conoce el nombre (fuente de verdad configurable)
+            flow_name = datos.get('flow_name') or datos.get('name_flow')
+            if flow_name:
+                flujo = self.env['chatbot.flujo'].search([('name', '=', flow_name)], limit=1)
+                if flujo and flujo.team_id:
+                    team = flujo.team_id
+                    nombre_grupo = team.name
+            # 2) Fallback: mapeo centralizado legacy por equipo_asignado
+            if not team:
+                mapeo_grupos = self.env['chatbot.flujo']._get_mapeo_equipo_grupo()
+                nombre_grupo = mapeo_grupos.get(equipo_asignado)
+                if nombre_grupo:
+                    if teams and nombre_grupo in teams:
+                        team = teams[nombre_grupo]
+                    else:
+                        team = env['crm.team'].search([('name', '=', nombre_grupo)], limit=1)
+                        if not team:
+                            team = env['crm.team'].search([], limit=1)
+            
+            # Crear lead según el tipo de flujo
+            if equipo_asignado in ['RESULTADOS_LAB', 'RESULTADOS_IMAGENES', 'flujo_resultados_laboratorio', 'flujo_resultados_imagenes']:
+                lead = ChatBotUtils.create_resultados_lead(env, datos, team, medium, source, campaign, tag)
+            else:
+                lead = ChatBotUtils.create_lead(env, datos, partner, team, medium, source, campaign, tag)
+            
+            if datos.get('solicitar_foto_vat') or datos.get('foto_vat') or datos.get('solicitar_imagenes_adicionales') or datos.get('imagenes_adicionales'):
+                validated_images = ChatBotUtils.validate_image_urls(datos)
+                datos.update(validated_images)
+                ChatBotUtils.handle_images(env, datos, lead, partner)
+            return {'success': True, 'lead_info': {'lead_id': lead.id, 'cliente_id': partner.id}}
+        except Exception as e:
+            _logger.error("Error en capturar_lead: %s", str(e), exc_info=True)
+            return {'success': False, 'error': str(e)}   
+    
+    def _generar_mensaje_sin_sesion(self, texto_usuario):
+        service = self._get_gpt_service()
+        try:
+            resultado = service.generar_mensaje_personalizado(
+                contexto="sin_sesion",
+                texto_usuario=texto_usuario
+            )
+            return resultado.get('mensaje', 'No tengo una conversación activa. ¿Quieres comenzar de nuevo?')
+        except Exception:
+            return "No tengo una conversación activa. ¿Quieres comenzar de nuevo?"
+
+    def _detectar_intencion_salida(self, texto_usuario):
+        service = self._get_gpt_service()
+        try:
+            resultado = service.detectar_intencion_salida(texto_usuario)
+            return resultado.get('es_salida', False), resultado.get('mensaje', '')
+        except Exception as e:
+            _logger.error(f"Error detectando intención de salida: {e}")
+            texto_lower = texto_usuario.lower()
+            palabras_salida = ['salir', 'cancelar', 'terminar', 'menu', 'menú', 'volver']
+            es_salida = any(p in texto_lower for p in palabras_salida)
+            mensaje = "Entendido. Si deseas continuar más tarde, aquí estaremos. ¡Hasta pronto!" if es_salida else ""
+            return es_salida, mensaje
+
+    def _generar_mensaje_finalizacion(self, datos_paciente, lead_resultado=None, equipo_asignado=None):
+        service = self._get_gpt_service()
+        try:
+            resumen = ChatBotUtils.format_patient_summary(datos_paciente)
+            contexto = dict(datos_paciente)
+            contexto['resumen_paciente'] = resumen
+            resultado = service.generar_mensaje_finalizacion(contexto)
+            msg = resultado.get('mensaje_final', '') or ''
+        except Exception as e:
+            _logger.error(f"Error generando mensaje de finalización: {e}")
+            msg = ""
+        if not msg:
+            resumen = ChatBotUtils.format_patient_summary(datos_paciente)
+            name = datos_paciente.get('solicitar_name') or datos_paciente.get('name', '')
+            lines = ["Confirmación: Hemos recibido tu información correctamente."]
+            lines.append("")
+            if name:
+                lines.append(f"{name}, a continuación un resumen de lo registrado:")
+            else:
+                lines.append("A continuación, un resumen de lo registrado:")
+            lines.append("")
+            if resumen:
+                lines.append(resumen)
+                lines.append("")
+            lines.append("Siguiente paso: Nuestro equipo revisará tu solicitud y se comunicará contigo en las próximas horas.")
+            msg = "\n".join(lines)
+        lead_id = None
+        if lead_resultado and lead_resultado.get('success'):
+            lead_info = lead_resultado.get('lead_info', {})
+            lead_id = lead_info.get('lead_id')
+        pie = ChatBotUtils._pie_mensaje(lead_id, equipo_asignado, env=self.env)
+        return msg + "\n\n" + pie
+    
+    def _generar_mensaje_expirado(self, texto_usuario):
+        try:
+            res = self._get_gpt_service().generar_mensaje_personalizado('expirado', texto_usuario)
+            return res.get('mensaje', "Tu sesión ha expirado por inactividad. Por favor, inicia un nuevo proceso.")
+        except Exception as e:
+            _logger.error(f"Error generando mensaje de expiración: {e}")
+            return "Tu sesión ha expirado por inactividad. Por favor, inicia un nuevo proceso."
+
+    def _generar_mensaje_sin_pasos(self, texto_usuario):
+        try:
+            res = self._get_gpt_service().generar_mensaje_personalizado('sin_pasos', texto_usuario)
+            return res.get('mensaje', "El proceso ya estaba completado. ¡Gracias!")
+        except Exception as e:
+            _logger.error(f"Error generando mensaje sin pasos: {e}")
+            return "El proceso ya estaba completado. ¡Gracias!"

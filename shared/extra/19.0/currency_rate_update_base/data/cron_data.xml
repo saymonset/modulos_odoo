@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ir_cron_currency_rate_update_all" model="ir.cron">
+        <field name="name">Currency Rate Update: All Providers</field>
+        <field name="model_id" ref="model_currency_rate_provider"/>
+        <field name="state">code</field>
+        <field name="code">model.run_cron_update()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="nextcall" eval="(datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d 08:00:00')"/>
+    </record>
+</odoo>

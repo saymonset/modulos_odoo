@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_pos_payment_method_form_inherit" model="ir.ui.view">
+        <field name="name">pos.payment.method.form.inherit.venezuela</field>
+        <field name="model">pos.payment.method</field>
+        <field name="inherit_id" ref="point_of_sale.pos_payment_method_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='split_transactions']" position="before">
+                <field name="is_igtf"/>
+            </xpath>
+            <xpath expr="//field[@name='is_igtf']" position="after">
+                <field name="igtf_percentage" invisible="not is_igtf" required="is_igtf"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
