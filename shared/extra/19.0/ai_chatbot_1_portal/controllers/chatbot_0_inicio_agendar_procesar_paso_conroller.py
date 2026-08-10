@@ -7,7 +7,7 @@ import traceback
 import uuid
 import re
 
-from .chatbot_utils import ChatBotUtils
+from .chatbot_utils import ChatBotUtils, truncate_for_platform
 
 _logger = logging.getLogger(__name__)
 
@@ -333,7 +333,7 @@ class InicioAgendarController(http.Controller):
                         'success': True,
                         'finalizado': False,
                         'modo': 'MENU_PRINCIPAL',
-                        'texto_para_usuario': 'No hay un flujo activo. Puedes comenzar un nuevo proceso.',
+                        'texto_para_usuario': truncate_for_platform('No hay un flujo activo. Puedes comenzar un nuevo proceso.', platform),
                         'text': valor,
                         'session_id': session_id,
                         'conversation_id': conversation_id,
@@ -350,6 +350,12 @@ class InicioAgendarController(http.Controller):
                 account_id=account_id,
                 platform=platform
             )
+
+            # Safety net: nunca devolver un mensaje que la plataforma rechace por longitud
+            if isinstance(resultado, dict):
+                for clave in ('texto_para_usuario', 'text', 'mensaje'):
+                    if resultado.get(clave):
+                        resultado[clave] = truncate_for_platform(resultado[clave], platform)
 
             return Response(
                 json.dumps(resultado, default=str),

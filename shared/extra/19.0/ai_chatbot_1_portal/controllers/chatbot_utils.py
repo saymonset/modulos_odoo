@@ -15,6 +15,43 @@ from odoo.addons.ai_chatbot_1_portal.chatbot_prompt_normalizer import (
 
 _logger = logging.getLogger(__name__)
 
+# Plataformas Meta con límite restringido de caracteres (regla 1A)
+META_PLATFORMS = {'instagram', 'messenger', 'facebook', 'meta'}
+PLATFORM_LIMITS = {
+    'instagram': 900,
+    'messenger': 900,
+    'facebook': 900,
+    'meta': 900,
+}
+DEFAULT_OUTPUT_LIMIT = 4000   # whatsapp y resto
+EMPTY_PLATFORM_LIMIT = 1000   # platform vacío
+
+
+def truncate_for_platform(text, platform):
+    """Recorta un mensaje para no exceder el límite de la plataforma.
+
+    Solo recorta si hace falta; si el texto ya cabe, devuelve el original.
+    Aplica un límite conservador (menor al tope de la API) para que el envío
+    nunca falle por longitud en Instagram/Messenger/Facebook/Meta.
+    """
+    if not text:
+        return text
+    pdf = platform.lower() if platform else ''
+    if pdf in META_PLATFORMS:
+        limit = PLATFORM_LIMITS['instagram']
+    elif pdf:
+        limit = DEFAULT_OUTPUT_LIMIT
+    else:
+        limit = EMPTY_PLATFORM_LIMIT
+    if len(text) <= limit:
+        return text
+    truncated = text[:limit - 3]  # reserva espacio para "..."
+    cut = truncated.rfind(' ')
+    if cut > 0:
+        truncated = truncated[:cut]
+    return truncated.rstrip() + '...'
+
+
 class ChatBotUtils:
     
     @staticmethod
@@ -687,6 +724,9 @@ class ChatBotUtils:
         lines.append('4. Si no hay un flujo que corresponde, usa flow_name vacío.')
         lines.append('5. Copia session_id, conversation_id, account_id, platform y timestamp_actividad del input.')
         lines.append('6. Límite de caracteres: 4000 para WhatsApp, 900 para redes (instagram/facebook/messenger).')
+        lines.append('   Si el prompt tiene "VERSIÓN CORTA OBLIGATORIA", úsala exactamente cuando platform sea '
+                     'instagram/messenger/facebook/meta.')
+        lines.append('   Como seguridad adicional Odoo recorta cualquier output que supere el límite de la plataforma.')
         lines.append('7. Envía el JSON sin markdown, sin texto adicional y sin comentarios.')
         lines.append('')
         return '\n'.join(lines)
@@ -907,7 +947,10 @@ class ChatBotUtils:
                     }
                     resultado = service.sudo().generar_mensaje_finalizacion(contexto)
                     if resultado and resultado.get('mensaje_final'):
-                        return resultado['mensaje_final'] + "\n\n" + pie
+                        return truncate_for_platform(
+                            resultado['mensaje_final'] + "\n\n" + pie,
+                            data.get('platform'),
+                        )
             except Exception:
                 _logger.info("IA no disponible para generar respuesta, usando fallback manual")
 
@@ -927,7 +970,7 @@ class ChatBotUtils:
         lines.append("Siguiente paso: Nuestro equipo revisará tu solicitud y se comunicará contigo en las próximas horas.")
         lines.append("")
         lines.append(pie)
-        return "\n".join(lines)
+        return truncate_for_platform("\n".join(lines), data.get('platform'))
 
     @staticmethod
     def format_patient_summary(data):

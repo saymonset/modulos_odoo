@@ -5,7 +5,7 @@ import logging
 import re
 from datetime import datetime
 
-from .chatbot_utils import ChatBotUtils
+from .chatbot_utils import ChatBotUtils, truncate_for_platform
 
 _logger = logging.getLogger(__name__)
 
@@ -362,6 +362,7 @@ class ChatBotController(http.Controller):
             _logger.info('RR[HTTP] FIN bloque Chatwoot')
 
             respuesta_bot = ChatBotUtils.generate_response(data, lead_id=lead.id, equipo_asignado=equipo_asignado, env=env)
+            respuesta_bot = truncate_for_platform(respuesta_bot, plataforma)
             
             # Eliminación de sesión (opcional, comentado por seguridad)
             session_id = data.get('session_id')
