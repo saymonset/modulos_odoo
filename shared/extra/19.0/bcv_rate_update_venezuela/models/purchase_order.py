@@ -36,6 +36,12 @@ class PurchaseOrder(models.Model):
         compute='_compute_bcv_rate_value',
         store=True,
     )
+    amount_total_ves_from_usd = fields.Monetary(
+        string='Total Bolívares (VES)',
+        currency_field='currency_id',
+        compute='_compute_bcv_rate_value',
+        store=True,
+    )
 
     price_tier_type = fields.Selection([
         ('retail', 'Menudeo'),
@@ -82,3 +88,4 @@ class PurchaseOrder(models.Model):
         for order in self:
             rate = self.env['product.template']._get_bcv_rate(order.company_id)
             order.bcv_rate_value = rate if rate else 1.0
+            order.amount_total_ves_from_usd = order.amount_total_usd * order.bcv_rate_value if order.amount_total_usd else 0.0

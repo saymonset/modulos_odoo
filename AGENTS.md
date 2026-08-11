@@ -7,27 +7,29 @@ Monorepo que centraliza módulos de la OCA y desarrollos propios/terceros ("extr
 - `shared/oca/{18.0,19.0}/<modulo>` — módulos OCA **vendored** (copiados, sin `.git` interno ni submodules). Se actualizan re-clonando de OCA; no editar salvo migración puntual.
 - `shared/extra/{18.0,19.0}/<modulo>` — módulos propios/terceros. **Aquí está el desarrollo activo.**
 - Reglas: nunca mezclar OCA con extra; siempre organizar por subcarpeta de versión (`18.0`/`19.0`).
+- No desarrollar en staging dirs: `shared/oca/19.0.delete/` (OCA a eliminar) y `shared/oca/19.0/temp_oca_modules/`.
 
 ## Módulos propios clave (`extra/19.0`)
 
 - `bcv_rate_update_venezuela` — tasa BCV + recálculo precios USD/VES/COP (moneda base de la compañía = VES).
-- `currency_rate_update_base` / `currency_rate_update_venezuela` / `currency_rate_update_colombia` — proveedores de tasa; cadena de dependencias típica: `base` → `venezuela`/`colombia` → `bcv_rate_update_venezuela`.
+- `currency_rate_update_base` / `currency_rate_update_venezuela` / `currency_rate_update_colombia` / `currency_rate_update_costa_rica` — proveedores de tasa; cadena de dependencias típica: `base` → `venezuela`/`colombia`/`costa_rica` → `bcv_rate_update_venezuela`.
 - `pos_venezuela_dual_currency`, `product_import_xlsx`, `ai_chatbot_0_core` / `ai_chatbot_1_portal`, `whatsapp_cloud_integration`, `odoo_chatwoot_connector`, `mrp_bom_cost_update`.
 
 ## Rutas: OJO con discrepancias
 
 - README y scripts referencian `/home/odoo/modulos_odoo/` (ruta vieja, **no existe**). El repo real está en `/home/odoo/lead/modulos_odoo/`. Los scripts `3_ver_modulos.sh` y `9_3_mover_destino_aqui.sh` tienen rutas hardcodeadas desactualizadas.
-- Docker mapea el repo a `/opt/odoo/custom-addons/{extra,oca}` dentro del contenedor (`docker-compose.leads.yml` en `~/lead/odoo19-skeleton/`).
+- Docker: el compose real es `~/lead/odoo19-skeleton/postiz-n8n-chatwoot-pgadmin-odoo_19/docker-compose.leads.yml` (el `docker-compose.yaml` del mismo dir solo hace `extends` de este). Mapea el repo a `/opt/odoo/custom-addons/{extra,oca}` dentro del contenedor.
+- `addons_path` (en `odoo.conf`): `/opt/odoo/odoo-core/addons,/opt/odoo/custom-addons/extra,/opt/odoo/custom-addons/oca,/opt/odoo/custom-addons/enterprise`. Bind mounts: `shared/extra/19.0`→`.../extra`, `shared/oca/19.0`→`.../oca`.
 
 ## Verificación / Tests
 
-- **No hay CI ni runner local**; no hay comando único para correr tests. Solo 3 módulos extra tienen `tests/` (`product_import_xlsx`, `bcv_rate_update_venezuela`, `ai_chatbot_1_portal`).
-- La verificación real es contra el contenedor Odoo en ejecución (los hay para distintas BDs: `odoo-19-web`, `odoo-19-web-leads`, etc.).
+- **No hay CI ni runner local**; no hay comando único para correr tests. Solo 4 módulos extra/19.0 tienen `tests/`: `product_import_xlsx`, `bcv_rate_update_venezuela`, `ai_chatbot_1_portal`, `odoo_chatwoot_connector`.
+- La verificación real es contra el contenedor Odoo en ejecución. Contenedor/BD principales para este repo: `odoo-19-web-leads` (puertos 28069/28072) + DB `dbodoo19` en `odoo-db19-leads` (Postgres 15). Existe un contenedor separado `odoo-19-web` para otras BDs.
 
 ## Workflow Docker (gotchas comprobados)
 
-1. Tras editar `.py`, borra `__pycache__` del módulo y reinicia solo el web: `docker restart odoo-19-web-<nombre>`. Los `.pyc` cacheados pueden cargar bytecode viejo aunque el bind mount ya vea el archivo.
-2. Upgrade CLI (más confiable que la UI): `docker exec <contenedor> odoo -d <db> -u <modulo> --stop-after-init`.
+1. Tras editar `.py`, borra `__pycache__` del módulo y reinicia solo el web: `docker restart odoo-19-web-leads`. Los `.pyc` cacheados pueden cargar bytecode viejo aunque el bind mount ya vea el archivo.
+2. Upgrade CLI (más confiable que la UI): `docker exec odoo-19-web-leads odoo -d dbodoo19 -u <modulo> --stop-after-init`.
 3. `Registry.new(db, update_module=True)` como one-liner **no carga** los `addons_path` custom → las vistas XML custom no se procesan. Para forzar recarga de vistas: subir `version` en `__manifest__.py` (ej. `19.0.1.0.5` → `19.0.1.0.6`), reiniciar contenedor y Upgradar desde la UI.
 4. Snippets Python vía `docker exec ... python3 -c "..."` siempre en **una sola línea**; el shell conserva indentación multi-línea → `IndentationError`.
 
