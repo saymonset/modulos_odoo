@@ -27,8 +27,47 @@ Monorepo que centraliza módulos de la OCA y desarrollos propios/terceros ("extr
 
 ## Verificación / Tests
 
-- **No hay CI ni runner local**; no hay comando único para correr tests. Solo 4 módulos extra/19.0 tienen `tests/`: `product_import_xlsx`, `bcv_rate_update_venezuela`, `ai_chatbot_1_portal`, `odoo_chatwoot_connector`.
 - La verificación real es contra el contenedor Odoo en ejecución. Contenedor/BD principales para este repo: `odoo-19-web-leads` (puertos 28069/28072) + DB `dbodoo19` en `odoo-db19-leads` (Postgres 15). Existe un contenedor separado `odoo-19-web` para otras BDs.
+- **Todos los módulos `extra/19.0` tienen tests** (patrón OCA: `TransactionCase` + `@tagged` + `setUpClass` sin tracking).
+
+### Convenciones de testing (patrón OCA 19.0)
+
+- `@tagged("-at_install", "post_install")` en toda clase de test.
+- `setUpClass` con env sin tracking: `mail_create_nolog=True`, `mail_create_nosubscribe=True`, `mail_notrack=True`, `no_reset_password=True`, `tracking_disable=True`.
+- `Form` API para ejercitar onchanges/wizards.
+- `unittest.mock.patch` para HTTP externo (`requests.get`/`requests.post`); `HttpCase` para controllers propios.
+- `@mute_logger("odoo.models.unlink")` para suprimir logs esperados.
+- `tests/__init__.py` con imports explícitos (no wildcard). `common.py` importado primero si existe.
+- Fixtures binarias en `tests/fixtures/`.
+- `Command` (`from odoo import Command`) para m2m/o2m.
+- `invalidate_recordset()` tras writes antes de assertar campos computed.
+- Skeleton base: ver `bcv_rate_update_venezuela/tests/common.py` o `ai_chatbot_1_portal/tests/common.py`.
+
+### Cómo correr tests
+
+Tras modificar cualquier módulo de `extra/19.0`:
+
+```bash
+# 1. Limpiar cache de bytecode
+find shared/extra/19.0/<module> -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null; true
+
+# 2. Upgrade + tests en una sola pasada
+docker exec odoo-19-web python3 /opt/odoo/odoo-core/odoo-bin -d dbodoo19 \
+    -u <module> --test-enable --stop-after-init --log-level=test 2>&1 | tee /tmp/test_<module>.log
+
+# Si el modulo tiene dependencias custom (ej. bcv_rate_update_venezuela),
+# upgrade todo el chain: -u bcv_rate_update_venezuela,currency_rate_update_venezuela,currency_rate_update_base
+```
+
+Para `odoo-19-web-leads` (contenedor de pruebas):
+```bash
+docker exec odoo-19-web-leads python3 /opt/odoo/odoo-core/odoo-bin -d dbodoo19 \
+    -u <module> --test-enable --stop-after-init --log-level=test
+```
+
+### Regla obligatoria
+
+Todo módulo de `extra/19.0` modificado debe pasar sus tests (`--test-enable`) antes de hacer `git push`.
 
 ## Workflow Docker (gotchas comprobados)
 
