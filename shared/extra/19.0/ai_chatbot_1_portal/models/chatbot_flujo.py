@@ -466,6 +466,17 @@ class ChatbotFlujo(models.Model):
                 "mensaje_prompt": "¿Aceptas que te enviemos mensajes informativos y recordatorios por WhatsApp? Responde sí o no.",
                 "mensaje_error": "Por favor responde 'sí' o 'no'.",
             },
+            {
+                "secuencia": 12,
+                "nombre_interno": "solicitar_observacion",
+                "nombre_mostrar": "Observación de la imagen, algo que desea aclarar",
+                "tipo_dato": "text",
+                "campo_destino": "observacion",
+                "es_requerido": False,
+                "es_paso_telefono": False,
+                "mensaje_prompt": "Observación de la imagen, algo que desea aclarar:",
+                "mensaje_error": "Por favor escribe tu observación.",
+            },
         ]
     
     def _get_todos_los_pasos(self):

@@ -91,8 +91,8 @@
             <field name="name">flujo_resultados_imagenes</field>
             <field name="company_id" ref="base.main_company"/>
             <field name="active">True</field>
-            <field name="descripcion_intencion">El usuario consulta o presenta resultados de estudios de imagenología.</field>
-            <field name="palabras_clave">imagenologia,imagenes diagnosticas,rayos x,ecografia,mamografia,rmn,tomografia,radiografia,densitometria</field>
+            <field name="descripcion_intencion">El usuario envía o menciona una imagen, foto, archivo, logo o comprobante (imprenta).</field>
+            <field name="palabras_clave">imagen,imagenes,foto,fotos,archivo,archivos,logo,logos,comprobante,comprobantes</field>
         </record>
         
     </data>

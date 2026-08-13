@@ -523,6 +523,10 @@ class ChatBotUtils:
         if consulta:
             info_adicional.append(f"• Consulta deseada: {consulta}")
         
+        observacion = data.get('solicitar_observacion') or data.get('observacion', '')
+        if observacion:
+            info_adicional.append(f"• Observación: {observacion}")
+        
         seguro = data.get('solicitar_nombre_seguro') or data.get('nombre_seguro', '')
         if seguro:
             info_adicional.append(f"• Seguro: {seguro}")
