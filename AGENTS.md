@@ -15,11 +15,15 @@ Monorepo que centraliza módulos de la OCA y desarrollos propios/terceros ("extr
 - `currency_rate_update_base` / `currency_rate_update_venezuela` / `currency_rate_update_colombia` / `currency_rate_update_costa_rica` — proveedores de tasa; cadena de dependencias típica: `base` → `venezuela`/`colombia`/`costa_rica` → `bcv_rate_update_venezuela`.
 - `pos_venezuela_dual_currency`, `product_import_xlsx`, `ai_chatbot_0_core` / `ai_chatbot_1_portal`, `whatsapp_cloud_integration`, `odoo_chatwoot_connector`, `mrp_bom_cost_update`.
 
-## Rutas: OJO con discrepancias
+## Rutas: OJO con clones y flujo staging→prod
 
-- README y scripts referencian `/home/odoo/modulos_odoo/` (ruta vieja, **no existe**). El repo real está en `/home/odoo/lead/modulos_odoo/`. Los scripts `3_ver_modulos.sh` y `9_3_mover_destino_aqui.sh` tienen rutas hardcodeadas desactualizadas.
-- Docker: el compose real es `~/lead/odoo19-skeleton/postiz-n8n-chatwoot-pgadmin-odoo_19/docker-compose.leads.yml` (el `docker-compose.yaml` del mismo dir solo hace `extends` de este). Mapea el repo a `/opt/odoo/custom-addons/{extra,oca}` dentro del contenedor.
-- `addons_path` (en `odoo.conf`): `/opt/odoo/odoo-core/addons,/opt/odoo/custom-addons/extra,/opt/odoo/custom-addons/oca,/opt/odoo/custom-addons/enterprise`. Bind mounts: `shared/extra/19.0`→`.../extra`, `shared/oca/19.0`→`.../oca`.
+- **Dos clones del mismo repo** (`git@github.com:saymonset/modulos_odoo.git`):
+  - `/home/odoo/lead/modulos_odoo` — **staging/pruebas**. Docker monta este en el contenedor Odoo. Aquí se edita y se prueba; si OK, `git push`.
+  - `/home/odoo/prod/modulos_odoo` — **producción**. Se actualiza solo con `git pull` desde el repo. **No editar directamente**: los cambios saltarían el flujo de prueba y, además, no se reflejarían en el contenedor (que monta `lead`).
+- `opencode.jsonc` (en ambos clones) apunta con ruta absoluta a `/home/odoo/lead/modulos_odoo/instructions.md`; `instructions.md` es idéntico en ambos.
+- README y scripts referencian `/home/odoo/modulos_odoo/` (ruta vieja, **no existe**). Los scripts `3_ver_modulos.sh` y `9_3_mover_destino_aqui.sh` tienen rutas hardcodeadas desactualizadas.
+- Docker: el compose real es `~/lead/odoo19-skeleton/postiz-n8n-chatwoot-pgadmin-odoo_19/docker-compose.leads.yml` (el `docker-compose.yaml` del mismo dir solo hace `extends` de este). Mapea `/home/odoo/lead/modulos_odoo/shared/...` a `/opt/odoo/custom-addons/{extra,oca}` dentro del contenedor.
+- `addons_path` (en `odoo.conf` del contenedor): `/opt/odoo/odoo-core/addons,/opt/odoo/custom-addons/extra,/opt/odoo/custom-addons/oca,/opt/odoo/custom-addons/enterprise`. Bind mounts: `shared/extra/19.0`→`.../extra`, `shared/oca/19.0`→`.../oca`.
 
 ## Verificación / Tests
 
@@ -50,3 +54,5 @@ Monorepo que centraliza módulos de la OCA y desarrollos propios/terceros ("extr
 
 - `session-ses_*.md` están en `.gitignore` (no commitear).
 - Tags: usar anotados (`git tag -a <nombre> -m "..."`); `git push origin <tag>` es necesario — un `git push` normal no sube tags.
+- Commits convencionales (`feat:`, `chore:`, `fix:`...). Branches remotas por cliente: `aristosoluciones_client`, `horebplus`, `lead`, `unisa`.
+- Flujo: editar/probar en `lead` → `push` → `pull` en `prod`. Rama default: `main` en `lead`, `mainfix` en `prod` (== `origin/main`).
