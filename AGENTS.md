@@ -20,14 +20,14 @@ Monorepo que centraliza módulos de la OCA y desarrollos propios/terceros ("extr
 - **Dos clones del mismo repo** (`git@github.com:saymonset/modulos_odoo.git`):
   - `/home/odoo/lead/modulos_odoo` — **staging/pruebas**. Docker monta este en el contenedor Odoo. Aquí se edita y se prueba; si OK, `git push`.
   - `/home/odoo/prod/modulos_odoo` — **producción**. Se actualiza solo con `git pull` desde el repo. **No editar directamente**: los cambios saltarían el flujo de prueba y, además, no se reflejarían en el contenedor (que monta `lead`).
-- `opencode.jsonc` (en ambos clones) apunta con ruta absoluta a `/home/odoo/lead/modulos_odoo/instructions.md`; `instructions.md` es idéntico en ambos.
+- `opencode.jsonc` apunta con ruta absoluta a `/home/odoo/prod/modulos_odoo/instructions.md` en este clon (y a `/home/odoo/lead/modulos_odoo/instructions.md` en el clon lead); `instructions.md` es idéntico en ambos.
 - README y scripts referencian `/home/odoo/modulos_odoo/` (ruta vieja, **no existe**). Los scripts `3_ver_modulos.sh` y `9_3_mover_destino_aqui.sh` tienen rutas hardcodeadas desactualizadas.
-- Docker: el compose real es `~/lead/odoo19-skeleton/postiz-n8n-chatwoot-pgadmin-odoo_19/docker-compose.leads.yml` (el `docker-compose.yaml` del mismo dir solo hace `extends` de este). Mapea `/home/odoo/lead/modulos_odoo/shared/...` a `/opt/odoo/custom-addons/{extra,oca}` dentro del contenedor.
+- Docker: el compose real de PROD es `/home/odoo/prod/odoo19-skeleton/postiz-n8n-chatwoot-pgadmin-odoo_19/docker-compose.odoo.yml` (el `docker-compose.yaml` del mismo dir solo hace `extends` de este). Mapea `/home/odoo/prod/modulos_odoo/shared/...` a `/opt/odoo/custom-addons/{extra,oca}` dentro del contenedor. El clon lead tiene su propio compose `~/lead/odoo19-skeleton/.../docker-compose.leads.yml`.
 - `addons_path` (en `odoo.conf` del contenedor): `/opt/odoo/odoo-core/addons,/opt/odoo/custom-addons/extra,/opt/odoo/custom-addons/oca,/opt/odoo/custom-addons/enterprise`. Bind mounts: `shared/extra/19.0`→`.../extra`, `shared/oca/19.0`→`.../oca`.
 
 ## Verificación / Tests
 
-- La verificación real es contra el contenedor Odoo en ejecución. Contenedor/BD principales para este repo: `odoo-19-web-leads` (puertos 28069/28072) + DB `dbodoo19` en `odoo-db19-leads` (Postgres 15). Existe un contenedor separado `odoo-19-web` para otras BDs.
+- La verificación real es contra el contenedor Odoo en ejecución. Contenedor/BD principales para este repo (PROD): `odoo-19-web` (puertos 18069/18072) + DB `dbodoo19` en `odoo-db19-n8n` (Postgres 15). El par `odoo-19-web-leads` (28069/28072) + `odoo-db19-leads` es el entorno de staging/pruebas.
 - **Todos los módulos `extra/19.0` tienen tests** (patrón OCA: `TransactionCase` + `@tagged` + `setUpClass` sin tracking).
 
 ### Convenciones de testing (patrón OCA 19.0)
@@ -59,7 +59,7 @@ docker exec odoo-19-web python3 /opt/odoo/odoo-core/odoo-bin -d dbodoo19 \
 # upgrade todo el chain: -u bcv_rate_update_venezuela,currency_rate_update_venezuela,currency_rate_update_base
 ```
 
-Para `odoo-19-web-leads` (contenedor de pruebas):
+Para `odoo-19-web-leads` (contenedor de pruebas/staging):
 ```bash
 docker exec odoo-19-web-leads python3 /opt/odoo/odoo-core/odoo-bin -d dbodoo19 \
     -u <module> --test-enable --stop-after-init --log-level=test
@@ -71,8 +71,8 @@ Todo módulo de `extra/19.0` modificado debe pasar sus tests (`--test-enable`) a
 
 ## Workflow Docker (gotchas comprobados)
 
-1. Tras editar `.py`, borra `__pycache__` del módulo y reinicia solo el web: `docker restart odoo-19-web-leads`. Los `.pyc` cacheados pueden cargar bytecode viejo aunque el bind mount ya vea el archivo.
-2. Upgrade CLI (más confiable que la UI): `docker exec odoo-19-web-leads odoo -d dbodoo19 -u <modulo> --stop-after-init`.
+1. Tras editar `.py`, borra `__pycache__` del módulo y reinicia solo el web: `docker restart odoo-19-web`. Los `.pyc` cacheados pueden cargar bytecode viejo aunque el bind mount ya vea el archivo.
+2. Upgrade CLI (más confiable que la UI): `docker exec odoo-19-web odoo -d dbodoo19 -u <modulo> --stop-after-init`. Para staging usar `odoo-19-web-leads`.
 3. `Registry.new(db, update_module=True)` como one-liner **no carga** los `addons_path` custom → las vistas XML custom no se procesan. Para forzar recarga de vistas: subir `version` en `__manifest__.py` (ej. `19.0.1.0.5` → `19.0.1.0.6`), reiniciar contenedor y Upgradar desde la UI.
 4. Snippets Python vía `docker exec ... python3 -c "..."` siempre en **una sola línea**; el shell conserva indentación multi-línea → `IndentationError`.
 
@@ -94,4 +94,4 @@ Todo módulo de `extra/19.0` modificado debe pasar sus tests (`--test-enable`) a
 - `session-ses_*.md` están en `.gitignore` (no commitear).
 - Tags: usar anotados (`git tag -a <nombre> -m "..."`); `git push origin <tag>` es necesario — un `git push` normal no sube tags.
 - Commits convencionales (`feat:`, `chore:`, `fix:`...). Branches remotas por cliente: `aristosoluciones_client`, `horebplus`, `lead`, `unisa`.
-- Flujo: editar/probar en `lead` → `push` → `pull` en `prod`. Rama default: `main` en `lead`, `mainfix` en `prod` (== `origin/main`).
+- Flujo: editar/probar en `lead` → `push` → `pull` en `prod`. Rama default: `main` en ambos clones.
