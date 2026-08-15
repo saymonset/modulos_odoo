@@ -3,5 +3,5 @@
   "skills": {
     "paths": ["~/.agents/skills/odoo-19"]
   },
-  "instructions":["/home/odoo/lead/modulos_odoo/instructions.md"]
+  "instructions":["/home/odoo/prod/modulos_odoo/instructions.md"]
 }
