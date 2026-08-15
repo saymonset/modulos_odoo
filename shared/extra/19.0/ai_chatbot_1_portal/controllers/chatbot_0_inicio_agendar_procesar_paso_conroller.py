@@ -54,7 +54,10 @@ class InicioAgendarController(http.Controller):
         for paso in flow.paso_ids.sorted('secuencia'):
             if not paso.active:
                 continue
-            if paso.es_requerido or incluir_opcionales:
+            # Los pasos de imagen/archivo siempre se incluyen (son opcionales
+            # y el usuario puede responder 'saltar'), aunque el parámetro de
+            # pasos opcionales esté desactivado.
+            if paso.es_requerido or incluir_opcionales or paso.tipo_dato in ('image', 'file'):
                 steps.append({
                     'id': paso.id,
                     'secuencia': paso.secuencia,

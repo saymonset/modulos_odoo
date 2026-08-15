@@ -271,6 +271,39 @@ class SessionState(models.Model):
             'primer_paso': primer_paso
         }
 
+    def _acumular_imagen_adicional(self, registro, url_imagen, session_id, conversation_id, account_id, platform, paso=None):
+        """Acumula una URL de imagen en 'imagenes_adicionales' del estado de la
+        sesión y devuelve la respuesta de 'imagen recibida'. Se reutiliza tanto
+        en el paso de imágenes como en la captura espontánea."""
+        estado_actual = registro.estado or {}
+        datos_p = estado_actual.get('datos_paciente', {})
+        imgs_adicionales = datos_p.get('imagenes_adicionales') or datos_p.get('solicitar_imagenes_adicionales', [])
+        if isinstance(imgs_adicionales, str):
+            try:
+                imgs_adicionales = json.loads(imgs_adicionales)
+            except Exception:
+                imgs_adicionales = [imgs_adicionales] if imgs_adicionales else []
+        if url_imagen not in imgs_adicionales:
+            imgs_adicionales.append(url_imagen)
+        datos_p['imagenes_adicionales'] = imgs_adicionales
+        estado_actual['datos_paciente'] = datos_p
+        estado_actual['timestamp'] = fields.Datetime.now().isoformat()
+        registro.write({'estado': estado_actual})
+        mensaje_recibido = "He recibido la imagen. ¿Deseas agregar otra imagen? Si ya finalizaste, escribe *'listo'* para continuar."
+        return {
+            'success': True,
+            'finalizado': False,
+            'modo': 'FLUJO',
+            'texto_para_usuario': mensaje_recibido,
+            'text': mensaje_recibido,
+            'session_id': session_id,
+            'conversation_id': conversation_id,
+            'account_id': account_id,
+            'paso_actual': paso,
+            'mensaje_prompt': mensaje_recibido,
+            'platform': platform
+        }
+
     def procesar_paso(self, session_id, valor, paso, conversation_id, account_id, platform):  
         _logger.info("Iniciando procesar_paso para session_id: %s", session_id)
         registro = self.sudo().search([('session_id', '=', session_id)], limit=1)
@@ -381,6 +414,21 @@ class SessionState(models.Model):
         es_palabra_salto = valor.strip().lower() in ['no', 'omitir', 'saltar', 'no tengo', 'no la tengo', 'después', 'luego', 'n', 'skip']
         es_finalizar_carga = valor.strip().lower() in ['listo', 'finalizar', 'terminar', 'ya está', 'ya esta']
 
+        # ========== CAPTURA ESPONTÁNEA DE IMÁGENES ==========
+        # Si el usuario envía una imagen (URL) sin que el paso actual la pida,
+        # se acumula en imagenes_adicionales en lugar de descartarse.
+        es_url_imagen_entrante = bool(re.match(r'^https?://', valor)) and any(
+            ext in valor.lower() for ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.svg', '.tiff'])
+        es_paso_imagen_activo = tipo in ['image', 'file'] or campo_destino in (
+            'imagenes_adicionales', 'solicitar_imagenes_adicionales',
+            'foto_vat', 'solicitar_foto_vat')
+        if es_url_imagen_entrante and not es_paso_imagen_activo:
+            _logger.info("Imagen espontánea detectada (sin paso de imagen activo): %s", valor[:150])
+            valido_img, resultado_img, _ = self._validar_con_ia(valor, 'image', paso, nombre_mostrar)
+            if valido_img and resultado_img and re.match(r'^https?://', str(resultado_img)):
+                return self._acumular_imagen_adicional(
+                    registro, resultado_img, session_id, conversation_id, account_id, platform, paso)
+
         # ========== SALTAR PASOS OPCIONALES Y ESPECIALMENTE EL CORREO ==========
         palabras_skip_opcional = ['omitir', 'saltar', 'skip', 'no', 'ninguno', 'ninguna', 'n']
         es_paso_opcional = not paso_actual.get('es_requerido', True)
@@ -401,34 +449,8 @@ class SessionState(models.Model):
             elif campo_destino in ('imagenes_adicionales', 'solicitar_imagenes_adicionales'):
                 valido_img, resultado_img, _ = self._validar_con_ia(valor, 'image', paso, nombre_mostrar)
                 if valido_img:
-                    estado_actual = registro.estado or {}
-                    datos_p = estado_actual.get('datos_paciente', {})
-                    imgs_adicionales = datos_p.get('imagenes_adicionales') or datos_p.get('solicitar_imagenes_adicionales', [])
-                    if isinstance(imgs_adicionales, str):
-                        try:
-                            imgs_adicionales = json.loads(imgs_adicionales)
-                        except:
-                            imgs_adicionales = [imgs_adicionales] if imgs_adicionales else []
-                    if resultado_img not in imgs_adicionales:
-                        imgs_adicionales.append(resultado_img)
-                    datos_p['imagenes_adicionales'] = imgs_adicionales
-                    estado_actual['datos_paciente'] = datos_p
-                    estado_actual['timestamp'] = fields.Datetime.now().isoformat()
-                    registro.write({'estado': estado_actual})
-                    mensaje_recibido = "He recibido la imagen. ¿Deseas agregar otra imagen? Si ya finalizaste, escribe *'listo'* para continuar."
-                    return {
-                        'success': True,
-                        'finalizado': False,
-                        'modo': 'FLUJO',
-                        'texto_para_usuario': mensaje_recibido,
-                        'text': mensaje_recibido,
-                        'session_id': session_id,
-                        'conversation_id': conversation_id,
-                        'account_id': account_id,
-                        'paso_actual': paso,
-                        'mensaje_prompt': mensaje_recibido,
-                        'platform': platform
-                    }
+                    return self._acumular_imagen_adicional(
+                        registro, resultado_img, session_id, conversation_id, account_id, platform, paso)
                 else:
                     if not (es_palabra_salto or es_finalizar_carga):
                         try:
