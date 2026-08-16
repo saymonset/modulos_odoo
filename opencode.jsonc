@@ -3,5 +3,30 @@
   "skills": {
     "paths": ["~/.agents/skills/odoo-19"]
   },
-  "instructions":["/home/odoo/prod/modulos_odoo/instructions.md"]
+  "instructions": ["/home/odoo/prod/modulos_odoo/instructions.md"],
+  "mcp": {
+    "odoo-server": {
+      "type": "local",
+      "command": ["odoo-mcp"],
+      "environment": {
+        "ODOO_URL": "http://127.0.0.1:18069",
+        "ODOO_DB": "dbodoo19",
+        "ODOO_USERNAME": "admin",
+        "ODOO_PASSWORD": "815d8329d266ab14e3f8800891feb0d295e811f9",
+        "ODOO_API_KEY": "815d8329d266ab14e3f8800891feb0d295e811f9",
+        "ODOO_TRANSPORT": "json2",
+        "ODOO_JSON2_DATABASE_HEADER": "1"
+      },
+      "enabled": true
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp", "--headless", "--browser", "chromium"],
+      "environment": {
+        "LD_LIBRARY_PATH": "/home/odoo/.local/lib/alsa"
+      },
+      "timeout": 20000,
+      "enabled": true
+    }
+  }
 }
