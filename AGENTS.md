@@ -15,21 +15,64 @@ Monorepo que centraliza módulos de la OCA y desarrollos propios/terceros ("extr
 - `currency_rate_update_base` / `currency_rate_update_venezuela` / `currency_rate_update_colombia` / `currency_rate_update_costa_rica` — proveedores de tasa; cadena de dependencias típica: `base` → `venezuela`/`colombia`/`costa_rica` → `bcv_rate_update_venezuela`.
 - `pos_venezuela_dual_currency`, `product_import_xlsx`, `ai_chatbot_0_core` / `ai_chatbot_1_portal`, `whatsapp_cloud_integration`, `odoo_chatwoot_connector`, `mrp_bom_cost_update`.
 
-## Rutas: OJO con discrepancias
+## Rutas: OJO con clones y flujo staging→prod
 
-- README y scripts referencian `/home/odoo/modulos_odoo/` (ruta vieja, **no existe**). El repo real está en `/home/odoo/lead/modulos_odoo/`. Los scripts `3_ver_modulos.sh` y `9_3_mover_destino_aqui.sh` tienen rutas hardcodeadas desactualizadas.
-- Docker: el compose real es `~/lead/odoo19-skeleton/postiz-n8n-chatwoot-pgadmin-odoo_19/docker-compose.leads.yml` (el `docker-compose.yaml` del mismo dir solo hace `extends` de este). Mapea el repo a `/opt/odoo/custom-addons/{extra,oca}` dentro del contenedor.
-- `addons_path` (en `odoo.conf`): `/opt/odoo/odoo-core/addons,/opt/odoo/custom-addons/extra,/opt/odoo/custom-addons/oca,/opt/odoo/custom-addons/enterprise`. Bind mounts: `shared/extra/19.0`→`.../extra`, `shared/oca/19.0`→`.../oca`.
+- **Dos clones del mismo repo** (`git@github.com:saymonset/modulos_odoo.git`):
+  - `/home/odoo/lead/modulos_odoo` — **staging/pruebas**. Docker monta este en el contenedor Odoo. Aquí se edita y se prueba; si OK, `git push`.
+  - `/home/odoo/prod/modulos_odoo` — **producción**. Se actualiza solo con `git pull` desde el repo. **No editar directamente**: los cambios saltarían el flujo de prueba y, además, no se reflejarían en el contenedor (que monta `lead`).
+- `opencode.jsonc` apunta con ruta absoluta a `/home/odoo/prod/modulos_odoo/instructions.md` en este clon (y a `/home/odoo/lead/modulos_odoo/instructions.md` en el clon lead); `instructions.md` es idéntico en ambos.
+- README y scripts referencian `/home/odoo/modulos_odoo/` (ruta vieja, **no existe**). Los scripts `3_ver_modulos.sh` y `9_3_mover_destino_aqui.sh` tienen rutas hardcodeadas desactualizadas.
+- Docker: el compose real de PROD es `/home/odoo/prod/odoo19-skeleton/postiz-n8n-chatwoot-pgadmin-odoo_19/docker-compose.odoo.yml` (el `docker-compose.yaml` del mismo dir solo hace `extends` de este). Mapea `/home/odoo/prod/modulos_odoo/shared/...` a `/opt/odoo/custom-addons/{extra,oca}` dentro del contenedor. El clon lead tiene su propio compose `~/lead/odoo19-skeleton/.../docker-compose.leads.yml`.
+- `addons_path` (en `odoo.conf` del contenedor): `/opt/odoo/odoo-core/addons,/opt/odoo/custom-addons/extra,/opt/odoo/custom-addons/oca,/opt/odoo/custom-addons/enterprise`. Bind mounts: `shared/extra/19.0`→`.../extra`, `shared/oca/19.0`→`.../oca`.
 
 ## Verificación / Tests
 
-- **No hay CI ni runner local**; no hay comando único para correr tests. Solo 4 módulos extra/19.0 tienen `tests/`: `product_import_xlsx`, `bcv_rate_update_venezuela`, `ai_chatbot_1_portal`, `odoo_chatwoot_connector`.
-- La verificación real es contra el contenedor Odoo en ejecución. Contenedor/BD principales para este repo: `odoo-19-web-leads` (puertos 28069/28072) + DB `dbodoo19` en `odoo-db19-leads` (Postgres 15). Existe un contenedor separado `odoo-19-web` para otras BDs.
+- La verificación real es contra el contenedor Odoo en ejecución. Contenedor/BD principales para este repo (PROD): `odoo-19-web` (puertos 18069/18072) + DB `dbodoo19` en `odoo-db19-n8n` (Postgres 15). El par `odoo-19-web-leads` (28069/28072) + `odoo-db19-leads` es el entorno de staging/pruebas.
+- **Todos los módulos `extra/19.0` tienen tests** (patrón OCA: `TransactionCase` + `@tagged` + `setUpClass` sin tracking).
+
+### Convenciones de testing (patrón OCA 19.0)
+
+- `@tagged("-at_install", "post_install")` en toda clase de test.
+- `setUpClass` con env sin tracking: `mail_create_nolog=True`, `mail_create_nosubscribe=True`, `mail_notrack=True`, `no_reset_password=True`, `tracking_disable=True`.
+- `Form` API para ejercitar onchanges/wizards.
+- `unittest.mock.patch` para HTTP externo (`requests.get`/`requests.post`); `HttpCase` para controllers propios.
+- `@mute_logger("odoo.models.unlink")` para suprimir logs esperados.
+- `tests/__init__.py` con imports explícitos (no wildcard). `common.py` importado primero si existe.
+- Fixtures binarias en `tests/fixtures/`.
+- `Command` (`from odoo import Command`) para m2m/o2m.
+- `invalidate_recordset()` tras writes antes de assertar campos computed.
+- Skeleton base: ver `bcv_rate_update_venezuela/tests/common.py` o `ai_chatbot_1_portal/tests/common.py`.
+
+### Cómo correr tests
+
+Tras modificar cualquier módulo de `extra/19.0`:
+
+```bash
+# 1. Limpiar cache de bytecode
+find shared/extra/19.0/<module> -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null; true
+
+# 2. Upgrade + tests en una sola pasada
+docker exec odoo-19-web python3 /opt/odoo/odoo-core/odoo-bin -d dbodoo19 \
+    -u <module> --test-enable --stop-after-init --log-level=test 2>&1 | tee /tmp/test_<module>.log
+
+# Si el modulo tiene dependencias custom (ej. bcv_rate_update_venezuela),
+# upgrade todo el chain: -u bcv_rate_update_venezuela,currency_rate_update_venezuela,currency_rate_update_base
+```
+
+Para `odoo-19-web-leads` (contenedor de pruebas/staging):
+```bash
+docker exec odoo-19-web-leads python3 /opt/odoo/odoo-core/odoo-bin -d dbodoo19 \
+    -u <module> --test-enable --stop-after-init --log-level=test
+```
+
+### Regla obligatoria
+
+Todo módulo de `extra/19.0` modificado debe pasar sus tests (`--test-enable`) antes de hacer `git push`.
 
 ## Workflow Docker (gotchas comprobados)
 
-1. Tras editar `.py`, borra `__pycache__` del módulo y reinicia solo el web: `docker restart odoo-19-web-leads`. Los `.pyc` cacheados pueden cargar bytecode viejo aunque el bind mount ya vea el archivo.
-2. Upgrade CLI (más confiable que la UI): `docker exec odoo-19-web-leads odoo -d dbodoo19 -u <modulo> --stop-after-init`.
+1. Tras editar `.py`, borra `__pycache__` del módulo y reinicia solo el web: `docker restart odoo-19-web`. Los `.pyc` cacheados pueden cargar bytecode viejo aunque el bind mount ya vea el archivo.
+2. Upgrade CLI (más confiable que la UI): `docker exec odoo-19-web odoo -d dbodoo19 -u <modulo> --stop-after-init`. Para staging usar `odoo-19-web-leads`.
 3. `Registry.new(db, update_module=True)` como one-liner **no carga** los `addons_path` custom → las vistas XML custom no se procesan. Para forzar recarga de vistas: subir `version` en `__manifest__.py` (ej. `19.0.1.0.5` → `19.0.1.0.6`), reiniciar contenedor y Upgradar desde la UI.
 4. Snippets Python vía `docker exec ... python3 -c "..."` siempre en **una sola línea**; el shell conserva indentación multi-línea → `IndentationError`.
 
@@ -50,3 +93,5 @@ Monorepo que centraliza módulos de la OCA y desarrollos propios/terceros ("extr
 
 - `session-ses_*.md` están en `.gitignore` (no commitear).
 - Tags: usar anotados (`git tag -a <nombre> -m "..."`); `git push origin <tag>` es necesario — un `git push` normal no sube tags.
+- Commits convencionales (`feat:`, `chore:`, `fix:`...). Branches remotas por cliente: `aristosoluciones_client`, `horebplus`, `lead`, `unisa`.
+- Flujo: editar/probar en `lead` → `push` → `pull` en `prod`. Rama default: `main` en ambos clones.

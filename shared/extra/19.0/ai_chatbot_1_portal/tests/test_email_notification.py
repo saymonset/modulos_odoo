@@ -1,11 +1,13 @@
-from odoo.tests import TransactionCase, tagged
+from odoo.tests import tagged
 import logging
+
+from .common import BaseChatbotTestCase
 
 _logger = logging.getLogger(__name__)
 
 
-@tagged('ai_chatbot_1_portal', 'email_notification')
-class TestEmailNotification(TransactionCase):
+@tagged("-at_install", "post_install", "ai_chatbot_1_portal", "email_notification")
+class TestEmailNotification(BaseChatbotTestCase):
 
     @classmethod
     def setUpClass(cls):

@@ -1,10 +1,11 @@
 from odoo.tests import TransactionCase, tagged
+from odoo.tools import mute_logger
 import logging
 
 _logger = logging.getLogger(__name__)
 
 
-@tagged('odoo_chatwoot_connector', 'routing_mapping')
+@tagged("-at_install", "post_install", "odoo_chatwoot_connector", "routing_mapping")
 class TestRoutingFlow(TransactionCase):
 
     @classmethod
@@ -26,6 +27,7 @@ class TestRoutingFlow(TransactionCase):
             [('key', 'like', 'odoo_chatwoot_connector_last_mapping_%')]
         ).unlink()
 
+    @mute_logger("odoo.models.unlink")
     def test_routing_key_codigo_generico(self):
         self._clean_params()
         m = self.Mapping.create({
@@ -38,6 +40,7 @@ class TestRoutingFlow(TransactionCase):
         )
         self.assertEqual(rec.id, m.id)
 
+    @mute_logger("odoo.models.unlink")
     def test_equipo_asignado_legacy_sigue_funcionando(self):
         self._clean_params()
         m = self.Mapping.create({
@@ -50,6 +53,7 @@ class TestRoutingFlow(TransactionCase):
         )
         self.assertEqual(rec.id, m.id)
 
+    @mute_logger("odoo.models.unlink")
     def test_flow_name_fallback_sin_equipo(self):
         self._clean_params()
         m = self.Mapping.create({
@@ -62,6 +66,7 @@ class TestRoutingFlow(TransactionCase):
         )
         self.assertEqual(rec.id, m.id)
 
+    @mute_logger("odoo.models.unlink")
     def test_flow_name_fallback_cuando_equipo_no_coincide(self):
         self._clean_params()
         m = self.Mapping.create({
@@ -74,6 +79,7 @@ class TestRoutingFlow(TransactionCase):
         )
         self.assertEqual(rec.id, m.id)
 
+    @mute_logger("odoo.models.unlink")
     def test_round_robin_por_equipo(self):
         self._clean_params()
         m1 = self.Mapping.create({

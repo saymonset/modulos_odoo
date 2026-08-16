@@ -1,0 +1,1 @@
+from . import test_fetch_rate_bccr

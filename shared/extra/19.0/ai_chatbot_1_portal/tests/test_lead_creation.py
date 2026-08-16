@@ -1,13 +1,15 @@
-from odoo.tests import TransactionCase, tagged
+from odoo.tests import tagged
 from odoo.exceptions import ValidationError
 from unittest.mock import patch
 import logging
 
+from .common import BaseChatbotTestCase
+
 _logger = logging.getLogger(__name__)
 
 
-@tagged('ai_chatbot_1_portal', 'lead_creation')
-class TestLeadCreation(TransactionCase):
+@tagged("-at_install", "post_install", "ai_chatbot_1_portal", "lead_creation")
+class TestLeadCreation(BaseChatbotTestCase):
 
     @classmethod
     def setUpClass(cls):

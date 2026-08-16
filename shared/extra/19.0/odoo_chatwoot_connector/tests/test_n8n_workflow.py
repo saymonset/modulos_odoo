@@ -9,7 +9,7 @@ WORKFLOW_PATH = os.path.join(
 )
 
 
-@tagged('odoo_chatwoot_connector', 'n8n_workflow')
+@tagged("-at_install", "post_install", "odoo_chatwoot_connector", "n8n_workflow")
 class TestN8nWorkflow(TransactionCase):
 
     def _load_workflow(self):

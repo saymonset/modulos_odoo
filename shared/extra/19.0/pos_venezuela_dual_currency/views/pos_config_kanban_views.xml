@@ -7,14 +7,22 @@
         <field name="model">pos.config</field>
         <field name="inherit_id" ref="point_of_sale.view_pos_config_kanban"/>
         <field name="arch" type="xml">
-            <xpath expr="//span[@name='draft_orders']/ancestor::div[hasclass('row')]" position="after">
-                <div class="row">
+            <xpath expr="//div[hasclass('row') and span[@name='opening_cash']]" position="after">
+                <div class="row" t-if="statistics and statistics.opening_usd">
                     <div class="col-5">
-                        <span>Total USD</span>
+                        <span>Apertura USD</span>
+                    </div>
+                    <span t-esc="statistics.opening_usd.display" class="col-7"/>
+                </div>
+            </xpath>
+            <xpath expr="//div[hasclass('row') and span[@name='draft_orders']]" position="after">
+                <div class="row" t-if="statistics and statistics.total_usd and statistics.total_usd.amount">
+                    <div class="col-5">
+                        <span>Vendido USD</span>
                     </div>
                     <span t-esc="statistics.total_usd.display" class="col-7"/>
                 </div>
-                <div class="row">
+                <div class="row" t-if="statistics and statistics.rate">
                     <div class="col-5">
                         <span>Tasa BCV</span>
                     </div>

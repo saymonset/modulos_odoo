@@ -17,5 +17,11 @@ class PosConfig(models.Model):
             'amount': total_usd,
             'display': usd.format(total_usd) if usd else f"${total_usd:,.2f}",
         }
-        statistics['rate'] = {'amount': rate, 'display': f"{rate:,.4f}"}
+        raw_opening = (statistics.get('cash') or {}).get('raw_opening_cash') or 0.0
+        opening_usd = raw_opening / rate if rate else 0.0
+        statistics['opening_usd'] = {
+            'amount': opening_usd,
+            'display': usd.format(opening_usd) if usd else f"${opening_usd:,.2f}",
+        }
+        statistics['rate'] = {'amount': rate or 0.0, 'display': f"{(rate or 0.0):,.4f}"}
         return statistics
