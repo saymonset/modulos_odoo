@@ -311,7 +311,7 @@ class ChatBotUtils:
 
     @staticmethod
     def get_ultima_cita(env, partner_id):
-        """Obtiene información de la última cita del paciente"""
+        """Obtiene información de la última solicitud del cliente"""
         ultima_cita = env['crm.lead'].search([
             ('partner_id', '=', partner_id),
             ('type', '=', 'opportunity'),
@@ -413,7 +413,7 @@ class ChatBotUtils:
     def create_lead(env, data, partner, team, medium, source, campaign, tag):
         """Crear lead en CRM con email y consentimiento en la descripción"""
         description = ChatBotUtils.generate_description(data)
-        servicio = data.get('servicio_solicitado') or data.get('solicitar_servicio', 'Consulta')
+        servicio = data.get('servicio_solicitado') or data.get('solicitar_servicio', 'Solicitud')
         nombre = data.get('name') or data.get('solicitar_name', 'Sin nombre')
         lead_name = f"{servicio} - {nombre}"
         
@@ -422,9 +422,9 @@ class ChatBotUtils:
         descripcion_grupos = env['chatbot.flujo']._get_mapeo_equipo_descripcion()
         area_texto = descripcion_grupos.get(equipo_asignado, '')
         if area_texto:
-            description += f"\n\n**👥 CENTRAL DE CITAS:** {area_texto.capitalize()}"
+            description += f"\n\n**👥 ÁREA RESPONSABLE:** {area_texto.capitalize()}"
         if team:
-            description += f"\n**🏥 EQUIPO ASIGNADO:** {team.name}"
+            description += f"\n**📋 EQUIPO ASIGNADO:** {team.name}"
         
         # Normalizar teléfono para lead
         phone_raw = data.get('phone') or data.get('solicitar_phone', '')
@@ -457,8 +457,8 @@ class ChatBotUtils:
     @staticmethod
     def create_resultados_lead(env, data, team, medium, source, campaign, tag):
         """
-        Crear lead específico para resultados de laboratorio o imágenes
-        Incluye toda la información recogida del paciente durante la conversación.
+        Crear lead específico para solicitudes de documentos, resultados o archivos
+        Incluye toda la información recogida del cliente durante la conversación.
         """
         identificacion = (
             data.get('identificacion_paciente') or 
@@ -474,20 +474,20 @@ class ChatBotUtils:
         )
         equipo_asignado = data.get('equipo_asignado', 'RESULTADOS_LAB')
         
-        tipo_estudio = "LABORATORIO" if equipo_asignado in ['RESULTADOS_LAB', 'flujo_resultados_laboratorio'] else "IMAGENOLOGÍA"
+        tipo_estudio = "DOCUMENTOS" if equipo_asignado in ['RESULTADOS_LAB', 'flujo_resultados_laboratorio'] else "ARCHIVOS"
         
-        lead_name = f"Resultados {tipo_estudio} - {estudio[:50]}"
+        lead_name = f"Solicitud de {tipo_estudio} - {estudio[:50]}"
         
         # === SECCIÓN 1: Encabezado del tipo de solicitud ===
-        description = f"""**SOLICITUD DE RESULTADOS - {tipo_estudio}**
+        description = f"""**SOLICITUD DE {tipo_estudio}**
 
-• Identificación del paciente: {identificacion}
-• Estudio solicitado: {estudio}
+• Identificación del cliente: {identificacion}
+• Documento solicitado: {estudio}
 • Plataforma: {data.get('plataforma', 'WhatsApp')}
 • Fecha de solicitud: {datetime.now().strftime('%d/%m/%Y %H:%M')}
 """
         
-        # === SECCIÓN 2: Todos los datos del paciente recogidos durante el flujo ===
+        # === SECCIÓN 2: Todos los datos del cliente recogidos durante el flujo ===
         info_adicional = []
         
         name = data.get('solicitar_name') or data.get('name', '')
@@ -521,7 +521,7 @@ class ChatBotUtils:
         
         consulta = data.get('solicitar_consulta_deseada') or data.get('consulta_deseada', '')
         if consulta:
-            info_adicional.append(f"• Consulta deseada: {consulta}")
+            info_adicional.append(f"• Servicio o trámite: {consulta}")
         
         observacion = data.get('solicitar_observacion') or data.get('observacion', '')
         if observacion:
@@ -529,7 +529,7 @@ class ChatBotUtils:
         
         seguro = data.get('solicitar_nombre_seguro') or data.get('nombre_seguro', '')
         if seguro:
-            info_adicional.append(f"• Seguro: {seguro}")
+            info_adicional.append(f"• Convenio o cobertura: {seguro}")
         
         fecha_pref = data.get('solicitar_fecha_preferida') or data.get('fecha_preferida', '')
         if fecha_pref:
@@ -546,19 +546,19 @@ class ChatBotUtils:
         es_nuevo = data.get('solicitar_es_paciente_nuevo') or data.get('es_paciente_nuevo', '')
         if es_nuevo:
             es_nuevo_value = 'Sí' if str(es_nuevo).lower() in ['true', '1', 'sí', 'si', 'yes'] else 'No'
-            info_adicional.append(f"• Paciente nuevo: {es_nuevo_value}")
+            info_adicional.append(f"• Cliente nuevo: {es_nuevo_value}")
         
         membresia = data.get('solicitar_membresia_interes') or data.get('membresia_interes', '')
         if membresia:
             membresia_value = 'Sí' if str(membresia).lower() in ['true', '1', 'sí', 'si', 'yes'] else 'No'
-            info_adicional.append(f"• Interés Tarjeta Salud: {membresia_value}")
+            info_adicional.append(f"• Interés en planes: {membresia_value}")
         
         if info_adicional:
-            description += "\n**📋 DATOS COMPLETOS DEL PACIENTE**\n\n"
+            description += "\n**📋 DATOS COMPLETOS DEL CLIENTE**\n\n"
             description += "\n".join(info_adicional)
         
         if team:
-            description += f"\n\n**🏥 EQUIPO ASIGNADO:** {team.name}"
+            description += f"\n\n**📋 EQUIPO ASIGNADO:** {team.name}"
         
         lead_data = {
             'name': lead_name,
@@ -585,7 +585,7 @@ class ChatBotUtils:
         platform = data.get('plataforma', 'WhatsApp')
         if platform.lower() == 'whatsapp':
             platform = 'WhatsApp'
-        lines = [f"Cita desde {platform} Bot \n"]
+        lines = [f"Solicitud desde {platform} Bot \n"]
 
         defaults = {
             'solicitar_fecha_preferida': 'lo antes posible',
@@ -600,13 +600,13 @@ class ChatBotUtils:
             (('solicitar_email', 'email'), 'Correo electrónico'),
             (('consentimiento', 'consentimiento_whatsapp'), 'Consentimiento WhatsApp'),
             (('solicitar_servicio', 'servicio_solicitado', 'solicitar_servicio'), 'Servicio'),
-            (('solicitar_consulta_deseada', 'consulta_deseada'), 'Consulta deseada'),
-            (('solicitar_nombre_seguro', 'nombre_seguro'), 'Nombre del seguro'),
+            (('solicitar_consulta_deseada', 'consulta_deseada'), 'Servicio o trámite'),
+            (('solicitar_nombre_seguro', 'nombre_seguro'), 'Convenio o cobertura'),
             (('solicitar_fecha_preferida', 'fecha_preferida'), 'Fecha preferida'),
             (('hora_preferida', ), 'Horario'),
             (('solicitar_medio_pago', 'medio_pago'), 'Medio de pago'),
             (('solicitar_es_paciente_nuevo', 'es_paciente_nuevo'), 'Cliente nuevo'),
-            (('solicitar_membresia_interes', 'membresia_interes'), 'Interés Tarjeta Salud'),
+            (('solicitar_membresia_interes', 'membresia_interes'), 'Interés en planes'),
         ]
 
         for keys, label in fields_order:
@@ -928,9 +928,9 @@ class ChatBotUtils:
             if tema:
                 pie.append(f"📌 {tema.capitalize()}")
         pie.append("Proceso: Asignación y seguimiento de solicitud.")
-        pie.append("Privacidad: Tus datos cuentan con total confidencialidad.")
-        pie.append("Siguiente paso: Nuestro equipo se comunicará en breve.")
-        pie.append(f"Agradecimiento: Gracias por elegir a {ChatBotUtils._get_brand_name(env)}.")
+        pie.append("Privacidad: Tus datos están protegidos con total confidencialidad.")
+        pie.append("Próximo paso: Nuestro equipo se comunicará contigo muy pronto.")
+        pie.append(f"Agradecimiento: Gracias por confiar en {ChatBotUtils._get_brand_name(env)}. Estamos comprometidos con brindarte la mejor atención.")
         pie.append(ChatBotUtils._platform_attribution_line(env))
         return "\n".join(line for line in pie if line)
 
@@ -1082,7 +1082,7 @@ class ChatBotUtils:
         if resumen:
             lines.append(resumen)
             lines.append("")
-        lines.append("Siguiente paso: Nuestro equipo revisará tu solicitud y se comunicará contigo en las próximas horas.")
+        lines.append("Siguiente paso: Nuestro equipo revisará tu solicitud y se comunicará contigo muy pronto. ¡Gracias por tu confianza!")
         lines.append("")
         lines.append(pie)
         return truncate_for_platform("\n".join(lines), data.get('platform'))
@@ -1125,12 +1125,12 @@ class ChatBotUtils:
         # Consulta deseada
         consulta = data.get('solicitar_consulta_deseada') or data.get('consulta_deseada', '')
         if consulta:
-            lines.append(f"Consulta: {consulta}")
+            lines.append(f"Servicio o trámite: {consulta}")
         
-        # Seguro
+        # Convenio
         seguro = data.get('solicitar_nombre_seguro') or data.get('nombre_seguro', '')
         if seguro:
-            lines.append(f"Seguro: {seguro}")
+            lines.append(f"Convenio: {seguro}")
         
         # Fecha y hora preferida
         fecha = data.get('solicitar_fecha_preferida') or data.get('fecha_preferida', '')
@@ -1155,7 +1155,7 @@ class ChatBotUtils:
         # Estudio (para resultados)
         estudio = data.get('estudio_solicitado') or data.get('solicitar_estudio', '')
         if estudio:
-            lines.append(f"Estudio solicitado: {estudio}")
+            lines.append(f"Documento solicitado: {estudio}")
         
         if not lines:
             return ""

@@ -17,14 +17,14 @@ Mapa principal
 
 | Texto en WhatsApp | Clave tecnica | Flujo de Odoo | Grupo Odoo | Chatwoot |
 | --- | --- | --- | --- | --- |
-| Medios propios | `CITAS_MP` | `flujo_citas_medios_propios` | Grupo Citas | Inbox 7, agente 9 si esta activo |
-| Seguro medico | `CITAS_SEGUROS` | `flujo_citas_seguro` | Grupo Citas | Inbox / agente configurado |
+| Pago directo | `CITAS_MP` | `flujo_citas_medios_propios` | Grupo Citas | Inbox 7, agente 9 si esta activo |
+| Convenio o cobertura | `CITAS_SEGUROS` | `flujo_citas_seguro` | Grupo Citas | Inbox / agente configurado |
 | Precios | `Agendamiento_Precios` | `flujo_agendamiento_precios` | Grupo Informativo | Inbox / agente configurado |
 | Servicios | `Agendamiento_Servicios` | `flujo_agendamiento_servicios` | Grupo Ventas | Inbox / agente configurado |
 | Otra consulta | `Agendamiento_Otra_Consulta` | `flujo_agendamiento_otra_consulta` | Grupo Citas | Inbox / agente configurado |
 | Ventas | `Ventas` | `flujo_ventas` | Grupo Ventas | Inbox / agente de ventas |
-| Resultados laboratorio | `RESULTADOS_LAB` | `flujo_resultados_laboratorio` | Grupo Laboratorio | Inbox / agente de laboratorio |
-| Resultados imagenes | `RESULTADOS_IMAGENES` | `flujo_resultados_imagenes` | Grupo Imagenologia | Inbox / agente de imagenologia |
+| Documentos y resultados | `RESULTADOS_LAB` | `flujo_resultados_laboratorio` | Grupo Laboratorio | Inbox / agente de laboratorio |
+| Archivos e imagenes | `RESULTADOS_IMAGENES` | `flujo_resultados_imagenes` | Grupo Imagenologia | Inbox / agente de imagenologia |
 
 Regla simple
 - Si el usuario pulsa una opcion en WhatsApp, n8n traduce esa opcion a una clave tecnica.
@@ -45,7 +45,7 @@ Como configurar un mapping en Odoo
 10. Guardar.
 
 Ejemplo practico
-- WhatsApp: Medios propios
+- WhatsApp: Pago directo
 - Clave tecnica: `CITAS_MP`
 - Flujo: `flujo_citas_medios_propios`
 - Grupo Odoo: Grupo Citas

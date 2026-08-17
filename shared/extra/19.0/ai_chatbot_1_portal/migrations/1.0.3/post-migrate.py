@@ -33,7 +33,7 @@ DATOS_FLUJOS = {
     ),
     'flujo_agendamiento_servicios': (
         'El usuario pregunta por servicios, procedimientos o paquetes ofrecidos.',
-        'servicio,servicios,procedimientos,procedimiento,paquete,paquetes,tratamiento,tratamientos',
+        'servicio,servicios,procedimientos,procedimiento,paquete,paquetes,tramite,tramites,proceso,procesos',
     ),
     'flujo_ventas': (
         'El usuario quiere comprar, pedir, encargar o adquirir productos del negocio.',
@@ -48,20 +48,20 @@ DATOS_FLUJOS = {
         '',
     ),
     'flujo_citas_medios_propios': (
-        'Cita médica pagada por el propio paciente (sin seguro).',
-        'clinica,clinicas,hospital,hospitales,salud,medico,medicos,doctor,doctores,consultorio,medicina',
+        'El usuario desea gestionar un servicio o trámite con pago directo por cuenta propia.',
+        'pago directo,cuenta propia,particular,sin convenio,autopago,pago particular,por mi cuenta',
     ),
     'flujo_citas_seguro': (
-        'Cita médica cubierta por un seguro médico o aseguradora.',
-        'seguro,seguros,aseguradora,poliza,seguro medico,plan de salud,ips,sanitas,sura,coomeva,eps',
+        'El usuario desea gestionar un servicio o trámite a través de un convenio, afiliación o cobertura.',
+        'convenio,convenios,afiliacion,afiliacion,cobertura,plan,planes,poliza,póliza,beneficio,beneficios',
     ),
     'flujo_resultados_laboratorio': (
-        'El usuario consulta o requiere exámenes de laboratorio o sus resultados.',
-        'laboratorio,laboratorio clinico,examen,examenes,sangre,biometria,glicemia,resultados de laboratorio,mis resultados',
+        'El usuario solicita documentos, resultados, constancias o certificados.',
+        'documento,documentos,resultado,resultados,constancia,constancias,certificado,certificados,reporte,reportes,mis resultados',
     ),
     'flujo_resultados_imagenes': (
-        'El usuario consulta o presenta resultados de estudios de imagenología.',
-        'imagenologia,imagenes diagnosticas,rayos x,ecografia,mamografia,rmn,tomografia,radiografia,densitometria',
+        'El usuario envía o menciona una imagen, foto, archivo, logo o comprobante.',
+        'imagen,imagenes,foto,fotos,archivo,archivos,logo,logos,comprobante,comprobantes',
     ),
 }
 

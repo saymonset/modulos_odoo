@@ -56,7 +56,7 @@ MENU_OPTIONS = {  # opcion del menu maestro -> tipoPregunta esperado
 }
 
 CTA_PATTERNS = [
-    r'agend', r'cita', r'contact',
+    r'agend', r'cita', r'contact', r'tramit', r'reserv', r'pedid', r'solicit',
     r'cotiz', r'¿qu', r'as.?esor', r'llamad', r'demo',
 ]
 
@@ -413,7 +413,7 @@ class PromptAnalyzer:
                 else:
                     lines.append(
                         f"  * {rule['name']} (main={length} chars): recorta a <=900. "
-                        f"Conserva precios USD y CTA de cita."
+                        f"Conserva precios y CTA de contacto o solicitud."
                     )
         return '\n'.join(lines)
 

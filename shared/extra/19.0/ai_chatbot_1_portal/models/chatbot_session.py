@@ -110,20 +110,20 @@ class SessionState(models.Model):
         # 2. Si la IA no generó una pregunta válida, usamos fallbacks manuales
         if not pregunta:
             fallbacks = {
-                "Teléfono": "Por favor, indíquenos su número de teléfono para poder contactarle si es necesario.",
-                "Nombre completo": "Por favor, proporcione su nombre completo.",
-                "Cédula": "Por favor, ingrese su número de cédula o documento de identidad.",
-                "Fecha de nacimiento": "Por favor, indique su fecha de nacimiento en formato DD/MM/AAAA.",
-                "Consentimiento WhatsApp": "Para poder enviarle recordatorios e información relevante por WhatsApp, necesitamos su autorización. ¿Acepta? Responda 'sí' o 'no'.",
-                "Correo electrónico": "Si lo desea, puede proporcionarnos su correo electrónico para recibir información adicional. En caso contrario, escriba 'omitir'.",
+                "Teléfono": "Para poder contactarte, ¿nos compartes tu número de teléfono?",
+                "Nombre completo": "Nos gustaría saber tu nombre completo. ¿Cómo te llamas?",
+                "Cédula": "Si tienes tu número de cédula o documento de identidad a la mano, compártelo con nosotros.",
+                "Fecha de nacimiento": "¿Podrías indicarnos tu fecha de nacimiento? (Formato: DD/MM/AAAA)",
+                "Consentimiento WhatsApp": "¿Te gustaría recibir información útil y recordatorios por WhatsApp? Responde 'sí' o 'no'.",
+                "Correo electrónico": "Si lo deseas, puedes compartirnos tu correo electrónico para enviarte información adicional. Si prefieres no hacerlo, escribe 'omitir'.",
             }
             if nombre_mostrar in fallbacks:
                 pregunta = fallbacks[nombre_mostrar]
             else:
                 if tipo == 'boolean':
-                    pregunta = f"Por favor, responda 'sí' o 'no' para: {nombre_mostrar}."
+                    pregunta = f"Por favor, responde 'sí' o 'no' para: {nombre_mostrar}."
                 else:
-                    pregunta = f"Por favor, ingrese su {nombre_mostrar.lower()}."
+                    pregunta = f"Por favor, compártenos tu {nombre_mostrar.lower()}."
 
         # 3. Mejoras post-generación
         if tipo in ['image', 'file'] and 'saltar' not in pregunta.lower():
@@ -918,9 +918,9 @@ class SessionState(models.Model):
                 contexto="sin_sesion",
                 texto_usuario=texto_usuario
             )
-            return resultado.get('mensaje', 'No tengo una conversación activa. ¿Quieres comenzar de nuevo?')
+            return resultado.get('mensaje', 'Hola, no tengo una conversación activa en este momento. ¿Te gustaría iniciar un nuevo proceso? Estoy aquí para ayudarte.')
         except Exception:
-            return "No tengo una conversación activa. ¿Quieres comenzar de nuevo?"
+            return "Hola, no tengo una conversación activa en este momento. ¿Te gustaría iniciar un nuevo proceso? Estoy aquí para ayudarte."
 
     def _detectar_intencion_salida(self, texto_usuario):
         service = self._get_gpt_service()
@@ -932,7 +932,7 @@ class SessionState(models.Model):
             texto_lower = texto_usuario.lower()
             palabras_salida = ['salir', 'cancelar', 'terminar', 'menu', 'menú', 'volver']
             es_salida = any(p in texto_lower for p in palabras_salida)
-            mensaje = "Entendido. Si deseas continuar más tarde, aquí estaremos. ¡Hasta pronto!" if es_salida else ""
+            mensaje = "Entendido. Si deseas continuar más tarde, aquí estaremos para ayudarte. ¡Hasta pronto y que tengas un excelente día!" if es_salida else ""
             return es_salida, mensaje
 
     def _generar_mensaje_finalizacion(self, datos_paciente, lead_resultado=None, equipo_asignado=None):
@@ -959,7 +959,7 @@ class SessionState(models.Model):
             if resumen:
                 lines.append(resumen)
                 lines.append("")
-            lines.append("Siguiente paso: Nuestro equipo revisará tu solicitud y se comunicará contigo en las próximas horas.")
+            lines.append("Siguiente paso: Nuestro equipo revisará tu solicitud y se comunicará contigo muy pronto. ¡Gracias por tu confianza!")
             msg = "\n".join(lines)
         lead_id = None
         if lead_resultado and lead_resultado.get('success'):
@@ -971,15 +971,15 @@ class SessionState(models.Model):
     def _generar_mensaje_expirado(self, texto_usuario):
         try:
             res = self._get_gpt_service().generar_mensaje_personalizado('expirado', texto_usuario)
-            return res.get('mensaje', "Tu sesión ha expirado por inactividad. Por favor, inicia un nuevo proceso.")
+            return res.get('mensaje', "Tu sesión ha expirado por inactividad. No te preocupes, puedes iniciar un nuevo proceso cuando estés listo. ¡Estaremos encantados de ayudarte!")
         except Exception as e:
             _logger.error(f"Error generando mensaje de expiración: {e}")
-            return "Tu sesión ha expirado por inactividad. Por favor, inicia un nuevo proceso."
+            return "Tu sesión ha expirado por inactividad. No te preocupes, puedes iniciar un nuevo proceso cuando estés listo. ¡Estaremos encantados de ayudarte!"
 
     def _generar_mensaje_sin_pasos(self, texto_usuario):
         try:
             res = self._get_gpt_service().generar_mensaje_personalizado('sin_pasos', texto_usuario)
-            return res.get('mensaje', "El proceso ya estaba completado. ¡Gracias!")
+            return res.get('mensaje', "El proceso ya está completado. ¡Muchas gracias por tu tiempo y confianza!")
         except Exception as e:
             _logger.error(f"Error generando mensaje sin pasos: {e}")
-            return "El proceso ya estaba completado. ¡Gracias!"
+            return "El proceso ya está completado. ¡Muchas gracias por tu tiempo y confianza!"

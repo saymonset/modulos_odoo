@@ -29,8 +29,8 @@
             <field name="name">flujo_agendamiento_servicios</field>
             <field name="company_id" ref="base.main_company"/>
             <field name="active">True</field>
-            <field name="descripcion_intencion">El usuario pregunta por servicios, procedimientos o paquetes ofrecidos.</field>
-            <field name="palabras_clave">servicio,servicios,procedimientos,procedimiento,paquete,paquetes,tratamiento,tratamientos</field>
+            <field name="descripcion_intencion">El usuario pregunta por servicios, procedimientos, trámites o paquetes ofrecidos.</field>
+            <field name="palabras_clave">servicio,servicios,procedimientos,procedimiento,paquete,paquetes,tramite,tramites,proceso,procesos</field>
         </record>
         
         <!-- Flujo 4: Ventas -->
@@ -64,8 +64,8 @@
             <field name="name">flujo_citas_medios_propios</field>
             <field name="company_id" ref="base.main_company"/>
             <field name="active">True</field>
-            <field name="descripcion_intencion">Cita médica pagada por el propio paciente (sin seguro).</field>
-            <field name="palabras_clave">clinica,clinicas,hospital,hospitales,salud,medico,medicos,doctor,doctores,consultorio,medicina</field>
+            <field name="descripcion_intencion">El usuario desea gestionar un servicio o trámite con pago directo por cuenta propia.</field>
+            <field name="palabras_clave">pago directo,cuenta propia,particular,sin convenio,autopago,pago particular,por mi cuenta</field>
         </record>
         
         <!-- Flujo 8: Citas con Seguro Médico -->
@@ -73,8 +73,8 @@
             <field name="name">flujo_citas_seguro</field>
             <field name="company_id" ref="base.main_company"/>
             <field name="active">True</field>
-            <field name="descripcion_intencion">Cita médica cubierta por un seguro médico o aseguradora.</field>
-            <field name="palabras_clave">seguro,seguros,aseguradora,poliza,seguro medico,plan de salud,ips,sanitas,sura,coomeva,eps</field>
+            <field name="descripcion_intencion">El usuario desea gestionar un servicio o trámite a través de un convenio, afiliación o cobertura.</field>
+            <field name="palabras_clave">convenio,convenios,afiliacion,afiliacion,cobertura,plan,planes,poliza,póliza,beneficio,beneficios</field>
         </record>
         
         <!-- Flujo 9: Resultados de Laboratorio -->
@@ -82,8 +82,8 @@
             <field name="name">flujo_resultados_laboratorio</field>
             <field name="company_id" ref="base.main_company"/>
             <field name="active">True</field>
-            <field name="descripcion_intencion">El usuario consulta o requiere resultados de exámenes de laboratorio.</field>
-            <field name="palabras_clave">laboratorio,laboratorio clinico,examen,examenes,sangre,biometria,glicemia,resultados de laboratorio,mis resultados</field>
+            <field name="descripcion_intencion">El usuario solicita documentos, resultados, constancias o certificados.</field>
+            <field name="palabras_clave">documento,documentos,resultado,resultados,constancia,constancias,certificado,certificados,reporte,reportes,mis resultados</field>
         </record>
         
         <!-- Flujo 10: Resultados de Imágenes -->
@@ -91,7 +91,7 @@
             <field name="name">flujo_resultados_imagenes</field>
             <field name="company_id" ref="base.main_company"/>
             <field name="active">True</field>
-            <field name="descripcion_intencion">El usuario envía o menciona una imagen, foto, archivo, logo o comprobante (imprenta).</field>
+            <field name="descripcion_intencion">El usuario envía o menciona una imagen, foto, archivo, logo o comprobante.</field>
             <field name="palabras_clave">imagen,imagenes,foto,fotos,archivo,archivos,logo,logos,comprobante,comprobantes</field>
         </record>
         

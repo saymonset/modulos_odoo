@@ -144,11 +144,11 @@ class ChatBotController(http.Controller):
                 cors='*')
     def capturar_lead_http(self, **kw):
         """
-        Crear cita completa usando ChatBotUtils
+        Crear la solicitud completa usando ChatBotUtils
         Versión optimizada
         """
         try:
-            _logger.info("=== INICIO CREACION DE CITA HTTP (OPTIMIZADO) ===")
+            _logger.info("=== INICIO CREACION DE SOLICITUD HTTP (OPTIMIZADO) ===")
             
             http_request = request.httprequest
             content_type = http_request.headers.get('Content-Type', '').lower()
@@ -171,7 +171,7 @@ class ChatBotController(http.Controller):
                 if not data:
                     data = dict(http_request.args)
             
-            _logger.info("Datos recibidos para crear cita: %s", json.dumps(data, default=str))
+            _logger.info("Datos recibidos para crear la solicitud: %s", json.dumps(data, default=str))
             _logger.info("Email recibido: %s", data.get('solicitar_email'))
             _logger.info("Consentimiento recibido: %s", data.get('consentimiento'))
             
@@ -404,7 +404,7 @@ class ChatBotController(http.Controller):
                 'grupo_asignado': nombre_grupo
             }
             
-            _logger.info("Cita creada exitosamente: Lead ID %s para cliente %s", lead.id, partner.name)
+            _logger.info("Solicitud creada exitosamente: Lead ID %s para cliente %s", lead.id, partner.name)
             return Response(
                 json.dumps(response_data, default=str),
                 content_type='application/json; charset=utf-8',
@@ -412,7 +412,7 @@ class ChatBotController(http.Controller):
             )
             
         except Exception as e:
-            _logger.error("ERROR CREANDO CITA: %s", str(e), exc_info=True)
+            _logger.error("ERROR CREANDO SOLICITUD: %s", str(e), exc_info=True)
             return Response(
                 json.dumps({'existe': False, 'error': True, 'mensaje': 'Error al registrar la solicitud', 'detalle': str(e)}),
                 status=500,

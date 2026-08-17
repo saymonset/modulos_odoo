@@ -27,10 +27,10 @@ class TestEmailNotification(BaseChatbotTestCase):
         cls.team.write({'member_ids': [(6, 0, [cls.user.id])]})
 
         cls.partner = cls.env['res.partner'].create({
-            'name': 'Test Patient',
+            'name': 'Test Cliente',
             'vat': '12345678',
             'phone': '+584141234567',
-            'email': 'patient@test.com',
+            'email': 'cliente@test.com',
             'type': 'contact',
             'company_type': 'person',
         })

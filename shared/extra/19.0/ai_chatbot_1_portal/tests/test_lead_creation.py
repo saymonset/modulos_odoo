@@ -35,10 +35,10 @@ class TestLeadCreation(BaseChatbotTestCase):
         cls.team.write({'member_ids': [(6, 0, [cls.user_1.id, cls.user_2.id])]})
 
         cls.partner = cls.env['res.partner'].create({
-            'name': 'Test Patient',
+            'name': 'Test Cliente',
             'vat': '12345678',
             'phone': '+584141234567',
-            'email': 'patient@test.com',
+            'email': 'cliente@test.com',
             'type': 'contact',
             'company_type': 'person',
         })
@@ -70,7 +70,7 @@ class TestLeadCreation(BaseChatbotTestCase):
             'plataforma': 'whatsapp',
             'equipo_asignado': 'Agendamiento_Directo',
             'solicitar_fecha_preferida': '01/07/2026',
-            'solicitar_consulta_deseada': 'Medicina General',
+            'solicitar_consulta_deseada': 'Asesoría general',
             'name': 'Juan Pérez',
             'phone': '+584161234567',
             'email': 'juan@test.com',
@@ -115,12 +115,12 @@ class TestLeadCreation(BaseChatbotTestCase):
         self.assertEqual(lead.email_from, self.partner.email)
 
     def test_03_create_resultados_lead_lab(self):
-        """Crear lead de resultados de laboratorio"""
+        """Crear lead de solicitud de documentos/resultados"""
         from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import ChatBotUtils
 
         data = self._make_lead_data({
             'equipo_asignado': 'RESULTADOS_LAB',
-            'estudio_solicitado': 'Hemograma Completo',
+            'estudio_solicitado': 'Reporte de resultados',
             'identificacion_paciente': 'Juan Pérez',
         })
         lead = ChatBotUtils.create_resultados_lead(
@@ -128,18 +128,18 @@ class TestLeadCreation(BaseChatbotTestCase):
             self.utm_medium, self.utm_source, self.utm_campaign, self.tag
         )
         self.assertTrue(lead.id)
-        self.assertIn('Resultados LABORATORIO', lead.name)
-        self.assertIn('Hemograma Completo', lead.name)
-        self.assertIn('SOLICITUD DE RESULTADOS', lead.description)
-        self.assertIn('LABORATORIO', lead.description)
+        self.assertIn('Solicitud de DOCUMENTOS', lead.name)
+        self.assertIn('Reporte de resultados', lead.name)
+        self.assertIn('SOLICITUD DE DOCUMENTOS', lead.description)
+        self.assertIn('DOCUMENTOS', lead.description)
 
     def test_04_create_resultados_lead_imagenes(self):
-        """Crear lead de resultados de imágenes"""
+        """Crear lead de solicitud de archivos/imágenes"""
         from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import ChatBotUtils
 
         data = self._make_lead_data({
             'equipo_asignado': 'RESULTADOS_IMAGENES',
-            'estudio_solicitado': 'Resonancia Magnética',
+            'estudio_solicitado': 'Fotografía de producto',
             'identificacion_paciente': 'María García',
         })
         lead = ChatBotUtils.create_resultados_lead(
@@ -147,8 +147,8 @@ class TestLeadCreation(BaseChatbotTestCase):
             self.utm_medium, self.utm_source, self.utm_campaign, self.tag
         )
         self.assertTrue(lead.id)
-        self.assertIn('Resultados IMAGENOLOGÍA', lead.name)
-        self.assertIn('IMAGENOLOGÍA', lead.description)
+        self.assertIn('Solicitud de ARCHIVOS', lead.name)
+        self.assertIn('ARCHIVOS', lead.description)
 
     def test_05_round_robin_assignment(self):
         """Round-robin asigna usuarios secuencialmente"""
@@ -207,7 +207,7 @@ class TestLeadCreation(BaseChatbotTestCase):
         self.assertIn('87654321', description)
         self.assertIn('juan@test.com', description)
         self.assertIn('Consulta General', description)
-        self.assertIn('Medicina General', description)
+        self.assertIn('Asesoría general', description)
         self.assertIn('WhatsApp', description)
 
     def test_08_create_partner_lead_integration(self):
@@ -215,7 +215,7 @@ class TestLeadCreation(BaseChatbotTestCase):
         from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import ChatBotUtils
 
         partner = ChatBotUtils.update_create_contact(self.env, {
-            'solicitar_name': 'Nuevo Paciente',
+            'solicitar_name': 'Nuevo Cliente',
             'solicitar_vat': '99999999',
             'solicitar_phone': '+584241234567',
             'solicitar_birthdate': '10/10/1985',
@@ -223,12 +223,12 @@ class TestLeadCreation(BaseChatbotTestCase):
             'consentimiento': True,
         })
         self.assertTrue(partner.id, "Partner debe crearse")
-        self.assertEqual(partner.name, 'Nuevo Paciente')
+        self.assertEqual(partner.name, 'Nuevo Cliente')
         self.assertEqual(partner.vat, '99999999')
         self.assertEqual(partner.email, 'nuevo@test.com')
 
         data = self._make_lead_data({
-            'solicitar_name': 'Nuevo Paciente',
+            'solicitar_name': 'Nuevo Cliente',
             'solicitar_vat': '99999999',
             'solicitar_phone': '+584241234567',
             'solicitar_email': 'nuevo@test.com',
