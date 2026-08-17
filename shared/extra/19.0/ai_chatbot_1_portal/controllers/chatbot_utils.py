@@ -676,23 +676,18 @@ class ChatBotUtils:
         business_prompt, _n = reformatear_prompt_aplanado(business_prompt)
         business_prompt, _n = normalizar_business_prompt(business_prompt)
 
+        # Auto-expandir placeholder [MENÚ BASE] con las 4 opciones de la regla 10
+        _MENU_DEF_RE = re.compile(
+            r'MENÚ BASE \(copiar EXACTO[^\n]*\n'
+            r'([1-4]\uFE0F\u20E3[^\n]*(?:\n[1-4]\uFE0F\u20E3[^\n]*){0,3})'
+        )
+        _m = _MENU_DEF_RE.search(business_prompt)
+        if _m and '[MENÚ BASE]' in business_prompt:
+            business_prompt = business_prompt.replace('[MENÚ BASE]', _m.group(1))
+
         flujos = env['chatbot.flujo'].sudo().search([('active', '=', True)], order='name')
 
         lines = []
-        lines.append('=== DIRECTIVA DE CONTEXTO (MÁXIMA PRIORIDAD) ===')
-        lines.append('Estás en MODO MENÚ PRINCIPAL: NO hay un flujo activo ni preguntas pendientes en el backend.')
-        lines.append('Decide ÚNICAMENTE con el mensaje ACTUAL del usuario:')
-        lines.append('- NO uses el historial de la conversación para continuar, re-disparar o re-iniciar un flujo de')
-        lines.append('  captura de datos (teléfono, nombre, imágenes, etc.) ni para asumir que el usuario está')
-        lines.append('  respondiendo a una pregunta previa de un flujo.')
-        lines.append('- Si el mensaje actual es un saludo ("hola", "buenos días", "ok", "ok hola", "jola"), ambiguo,')
-        lines.append('  o NO contiene una intención nueva y clara (agendar, cotizar, pedir precios, enviar una imagen')
-        lines.append('  con URL http, anunciar el envío de un diseño/archivo/logo), responde con el MENÚ PRINCIPAL:')
-        lines.append('  isMenu=true, equipo_asignado="", flow_name="".')
-        lines.append('- Solo dispara un flujo si el mensaje ACTUAL expresa explícitamente esa intención.')
-        lines.append('- EXCEPCIÓN ÚNICA: "sí"/"no" como respuesta directa a una pregunta que TÚ hiciste en el menú')
-        lines.append('  (ej. confirmar una cita o cotización) puede usar tipoPregunta CONFIRMACION.')
-        lines.append('')
         lines.append('=== INFORMACIÓN DEL NEGOCIO ===')
         lines.append(business_prompt.strip() if business_prompt.strip() else
                      '(Sin información comercial configurada)')
