@@ -1,6 +1,6 @@
 {
     "name": "Odoo Chatwoot Connector",
-    "version": "1.0.6",
+    "version": "1.0.8",
     "summary": "Integración Chatwoot: asignar conversaciones y tags desde Odoo",
     "description": "Asigna conversaciones, agrega tags y notifica agentes en Chatwoot desde Odoo.",
     "category": "Tools",
@@ -8,6 +8,8 @@
     "website": "https://aristosoluciones.integraia.lat",
     "depends": ["base", "mail", "ai_chatbot_1_portal"],
     "data": [
+        "security/ir.model.access.csv",
+        "security/chatwoot_security.xml",
         "views/chatwoot_settings_views.xml",
         "views/chatwoot_mapping_views.xml",
         "views/crm_lead_views.xml",

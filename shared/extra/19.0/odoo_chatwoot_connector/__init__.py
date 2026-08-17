@@ -59,7 +59,7 @@ def post_init_setup_acl(param):
             _normalize_chatwoot_mapping_values(env)
 
             model_mapping = env['ir.model'].sudo().search([('model', '=', 'chatwoot.mapping')], limit=1)
-            group = env.ref('base.group_erp_manager', raise_if_not_found=False)
+            group = env.ref('odoo_chatwoot_connector.group_chatwoot_user', raise_if_not_found=False)
             if model_mapping and group:
                 existing = env['ir.model.access'].sudo().search([('name', '=', 'access_chatwoot_mapping')], limit=1)
                 if not existing:

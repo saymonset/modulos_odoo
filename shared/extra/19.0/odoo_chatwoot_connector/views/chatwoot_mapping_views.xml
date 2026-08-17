@@ -78,7 +78,7 @@
     <field name="search_view_id" ref="view_chatwoot_mapping_search"/>
   </record>
 
-  <menuitem id="menu_chatwoot_root" name="Chatwoot" sequence="90"/>
+  <menuitem id="menu_chatwoot_root" name="Chatwoot" sequence="90" web_icon="odoo_chatwoot_connector,static/description/icon.png" groups="odoo_chatwoot_connector.group_chatwoot_user"/>
   <menuitem id="menu_chatwoot_config" name="Integración Chatwoot" parent="menu_chatwoot_root" sequence="10"/>
   <menuitem id="menu_chatwoot_mappings" name="Mappings" parent="menu_chatwoot_config" action="action_chatwoot_mapping" sequence="20"/>
 
