@@ -679,6 +679,20 @@ class ChatBotUtils:
         flujos = env['chatbot.flujo'].sudo().search([('active', '=', True)], order='name')
 
         lines = []
+        lines.append('=== DIRECTIVA DE CONTEXTO (MÁXIMA PRIORIDAD) ===')
+        lines.append('Estás en MODO MENÚ PRINCIPAL: NO hay un flujo activo ni preguntas pendientes en el backend.')
+        lines.append('Decide ÚNICAMENTE con el mensaje ACTUAL del usuario:')
+        lines.append('- NO uses el historial de la conversación para continuar, re-disparar o re-iniciar un flujo de')
+        lines.append('  captura de datos (teléfono, nombre, imágenes, etc.) ni para asumir que el usuario está')
+        lines.append('  respondiendo a una pregunta previa de un flujo.')
+        lines.append('- Si el mensaje actual es un saludo ("hola", "buenos días", "ok", "ok hola", "jola"), ambiguo,')
+        lines.append('  o NO contiene una intención nueva y clara (agendar, cotizar, pedir precios, enviar una imagen')
+        lines.append('  con URL http, anunciar el envío de un diseño/archivo/logo), responde con el MENÚ PRINCIPAL:')
+        lines.append('  isMenu=true, equipo_asignado="", flow_name="".')
+        lines.append('- Solo dispara un flujo si el mensaje ACTUAL expresa explícitamente esa intención.')
+        lines.append('- EXCEPCIÓN ÚNICA: "sí"/"no" como respuesta directa a una pregunta que TÚ hiciste en el menú')
+        lines.append('  (ej. confirmar una cita o cotización) puede usar tipoPregunta CONFIRMACION.')
+        lines.append('')
         lines.append('=== INFORMACIÓN DEL NEGOCIO ===')
         lines.append(business_prompt.strip() if business_prompt.strip() else
                      '(Sin información comercial configurada)')
@@ -732,6 +746,11 @@ class ChatBotUtils:
                      'instagram/messenger/facebook/meta.')
         lines.append('   Como seguridad adicional Odoo recorta cualquier output que supere el límite de la plataforma.')
         lines.append('7. Envía el JSON sin markdown, sin texto adicional y sin comentarios.')
+        lines.append('8. Cuando actives un flujo (equipo_asignado no vacío), incluye en "output" una '
+                     'frase humana que indique al usuario que va a entrar a una serie de preguntas, '
+                     'y entre paréntesis al final del texto incluye el valor exacto de flow_name. '
+                     'Ejemplo: "¡Perfecto! Voy a hacerle unas preguntas rápidas para continuar. '
+                     '(flujo_agendamiento_directo)"')
         lines.append('')
         return '\n'.join(lines)
 

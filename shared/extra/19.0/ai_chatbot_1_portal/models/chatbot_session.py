@@ -221,8 +221,11 @@ class SessionState(models.Model):
         primer_paso = steps_filtrados[0].copy()
         nombre_original = primer_paso.get('nombre_mostrar', '')
         pregunta_amigable = self._generar_pregunta_amigable(nombre_original, tipo=primer_paso.get('tipo_dato'))
-        primer_paso['mensaje_prompt'] = pregunta_amigable
-        primer_paso['nombre_mostrar'] = pregunta_amigable
+        # Anteponer aviso de flujo al primer paso: n8n envía solo steps[0].nombre_mostrar
+        # cuando se dispara un flujo, así que el aviso debe viajar dentro del primer paso.
+        aviso_flujo = f"¡Excelente! Para continuar, le haré unas breves preguntas y un asesor de la empresa lo contactará. ({flow_name})\nSi no desea continuar, escriba \"salir\".\n\n"
+        primer_paso['mensaje_prompt'] = aviso_flujo + pregunta_amigable
+        primer_paso['nombre_mostrar'] = aviso_flujo + pregunta_amigable
         steps_filtrados[0] = primer_paso
         
         # Buscar o crear registro de sesión
