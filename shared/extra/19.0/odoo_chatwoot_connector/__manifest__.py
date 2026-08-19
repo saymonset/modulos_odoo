@@ -8,8 +8,8 @@
     "website": "https://aristosoluciones.integraia.lat",
     "depends": ["base", "mail", "ai_chatbot_1_portal"],
     "data": [
-        "security/ir.model.access.csv",
         "security/chatwoot_security.xml",
+        "security/ir.model.access.csv",
         "views/chatwoot_settings_views.xml",
         "views/chatwoot_mapping_views.xml",
         "views/crm_lead_views.xml",
