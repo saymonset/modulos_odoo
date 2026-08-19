@@ -76,6 +76,7 @@ Todo módulo de `extra/19.0` modificado debe pasar sus tests (`--test-enable`) a
 - Pipeline serializado (`concurrency: deploy-prod`): `changes` (detecta módulos `extra/19.0` tocados y resuelve la cadena de deps custom en orden topológico) → `lint` (compileall, claves de manifest, anti-patrón `attrs=` en XML) → `test` (rsync de los módulos al clon **lead**, restart `odoo-19-web-leads`, `-u <cadena> --test-enable` contra staging `dbodoo19`; log como artifact) → `deploy` (`git fetch + merge --ff-only` en el clon **prod**, `-u <cadena>` sin tests en `odoo-19-web`, restart + health check :18069).
 - Push sin cambios en `extra/19.0` → lint/test se skipean y deploy solo hace `git pull`.
 - OJO: el deploy exige clon prod limpio (`merge --ff-only`); cambios locales sin commitear que colisionen harán fallar el job. Mantener el flujo lead→push→pull.
+- Auth del runner: el servicio corre sin ssh-agent → el clon **prod** tiene `core.sshCommand` apuntando a `~/.ssh/id_ed25519_deploy` (sin passphrase), registrada como **deploy key read-only** del repo. La llave personal `id_ed25519` (con passphrase) es la de los pushes interactivos desde lead.
 
 ## Workflow Docker (gotchas comprobados)
 
