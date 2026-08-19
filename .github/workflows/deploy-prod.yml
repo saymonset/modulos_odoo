@@ -1,0 +1,225 @@
+name: deploy-prod
+
+on:
+  push:
+    branches: [main]
+
+# Deploys serializados: nunca dos pipelines contra los contenedores a la vez
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: [self-hosted, odoo-prod]
+    timeout-minutes: 5
+    outputs:
+      modules: ${{ steps.detect.outputs.modules }}
+      any: ${{ steps.detect.outputs.any }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed modules and resolve custom dependency chain
+        id: detect
+        shell: bash
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          RANGE="${BEFORE:-}..${GITHUB_SHA}"
+          if [ -z "${BEFORE:-}" ] || [[ "${BEFORE}" =~ ^0+$ ]] || ! git rev-parse --verify "${BEFORE}" >/dev/null 2>&1; then
+            RANGE="HEAD~1..HEAD"
+          fi
+          echo "Diff range: ${RANGE}"
+          export RANGE
+          MODS=$(python3 - <<'PYEOF'
+          import ast, os, pathlib, subprocess
+
+          root = pathlib.Path("shared/extra/19.0")
+          files = subprocess.check_output(
+              ["git", "diff", "--name-only", os.environ["RANGE"]], text=True
+          ).splitlines()
+          changed = {
+              f.split("/")[3]
+              for f in files
+              if f.startswith("shared/extra/19.0/") and len(f.split("/")) > 3
+          }
+
+          def custom_deps(module):
+              manifest = root / module / "__manifest__.py"
+              if not manifest.exists():
+                  return []
+              data = ast.literal_eval(manifest.read_text())
+              return [d for d in data.get("depends", []) if (root / d).is_dir()]
+
+          order, seen = [], set()
+
+          def visit(module):
+              if module in seen or not (root / module).is_dir():
+                  return
+              seen.add(module)
+              for dep in custom_deps(module):
+                  visit(dep)
+              order.append(module)
+
+          for module in sorted(changed):
+              visit(module)
+          print(",".join(order))
+          PYEOF
+          )
+          echo "Modules (topological order): ${MODS:-<none>}"
+          echo "modules=${MODS}" >> "${GITHUB_OUTPUT}"
+          if [ -n "${MODS}" ]; then
+            echo "any=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "any=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+  lint:
+    needs: changes
+    if: needs.changes.outputs.any == 'true'
+    runs-on: [self-hosted, odoo-prod]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint changed modules
+        shell: bash
+        env:
+          MODULES: ${{ needs.changes.outputs.modules }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PYEOF'
+          import ast, compileall, os, pathlib, sys
+
+          root = pathlib.Path("shared/extra/19.0")
+          for module in os.environ["MODULES"].split(","):
+              module_dir = root / module
+              if not compileall.compile_dir(str(module_dir), quiet=1, force=True):
+                  sys.exit(f"lint: error de sintaxis Python en {module}")
+              manifest = module_dir / "__manifest__.py"
+              data = ast.literal_eval(manifest.read_text())
+              for key in ("name", "version", "depends"):
+                  if key not in data:
+                      sys.exit(f"lint: {manifest} sin clave '{key}'")
+              for xml in module_dir.rglob("*.xml"):
+                  if " attrs=" in xml.read_text():
+                      sys.exit(f"lint: {xml} usa attrs= (Odoo 19: usa invisible=/required= directos)")
+              print(f"lint OK: {module}")
+          PYEOF
+
+  test:
+    needs: [changes, lint]
+    if: needs.changes.outputs.any == 'true'
+    runs-on: [self-hosted, odoo-prod]
+    timeout-minutes: 45
+    env:
+      LEAD_REPO: /home/odoo/lead/modulos_odoo
+      STAGING_WEB: odoo-19-web-leads
+      STAGING_DB: dbodoo19
+      STAGING_HEALTH: http://localhost:28069/web/health
+      MODULES: ${{ needs.changes.outputs.modules }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync changed modules to staging clone
+        shell: bash
+        run: |
+          set -euo pipefail
+          IFS=',' read -ra MODS <<< "${MODULES}"
+          for m in "${MODS[@]}"; do
+            rsync -a --delete "shared/extra/19.0/${m}/" "${LEAD_REPO}/shared/extra/19.0/${m}/"
+            find "${LEAD_REPO}/shared/extra/19.0/${m}" -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
+          done
+
+      - name: Restart staging Odoo and wait for health
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker restart "${STAGING_WEB}"
+          for i in $(seq 1 60); do
+            if curl -sf "${STAGING_HEALTH}" >/dev/null 2>&1; then
+              echo "staging healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::odoo staging no respondio en ${STAGING_HEALTH}"
+          exit 1
+
+      - name: Run module tests on staging database
+        shell: bash
+        run: |
+          set -uo pipefail
+          docker exec "${STAGING_WEB}" python3 /opt/odoo/odoo-core/odoo-bin \
+            -d "${STAGING_DB}" \
+            -u "${MODULES}" \
+            --test-enable --stop-after-init --log-level=test 2>&1 | tee test.log
+          rc=${PIPESTATUS[0]}
+          if [ "${rc}" -ne 0 ]; then
+            echo "::error::odoo-bin salio con codigo ${rc}"
+            exit "${rc}"
+          fi
+          if grep -E "FAILED \(|: FAIL: |: ERROR: " test.log; then
+            echo "::error::fallos de test detectados en el log"
+            exit 1
+          fi
+          echo "tests OK: ${MODULES}"
+
+      - name: Upload test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-log-${{ github.run_number }}
+          path: test.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+  deploy:
+    needs: [changes, lint, test]
+    # Sin modulos: solo git pull. Con modulos: exige lint+test en verde.
+    if: always() && (needs.changes.outputs.any == 'false' || (needs.lint.result == 'success' && needs.test.result == 'success'))
+    runs-on: [self-hosted, odoo-prod]
+    timeout-minutes: 30
+    env:
+      PROD_REPO: /home/odoo/prod/modulos_odoo
+      PROD_WEB: odoo-19-web
+      PROD_DB: dbodoo19
+      PROD_HEALTH: http://localhost:18069/web/health
+      MODULES: ${{ needs.changes.outputs.modules }}
+    steps:
+      - name: Fast-forward prod clone to origin/main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C "${PROD_REPO}" fetch origin main
+          git -C "${PROD_REPO}" merge --ff-only origin/main
+
+      - name: Upgrade changed modules in prod and restart
+        if: needs.changes.outputs.any == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          IFS=',' read -ra MODS <<< "${MODULES}"
+          for m in "${MODS[@]}"; do
+            find "${PROD_REPO}/shared/extra/19.0/${m}" -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
+          done
+          docker exec "${PROD_WEB}" python3 /opt/odoo/odoo-core/odoo-bin \
+            -d "${PROD_DB}" \
+            -u "${MODULES}" \
+            --stop-after-init
+          docker restart "${PROD_WEB}"
+          for i in $(seq 1 90); do
+            if curl -sf "${PROD_HEALTH}" >/dev/null 2>&1; then
+              echo "prod healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::odoo prod no respondio en ${PROD_HEALTH}"
+          exit 1

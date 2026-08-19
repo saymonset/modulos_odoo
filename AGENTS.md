@@ -69,6 +69,13 @@ docker exec odoo-19-web-leads python3 /opt/odoo/odoo-core/odoo-bin -d dbodoo19 \
 
 Todo módulo de `extra/19.0` modificado debe pasar sus tests (`--test-enable`) antes de hacer `git push`.
 
+## CI/CD (GitHub Actions)
+
+- Workflow: `.github/workflows/deploy-prod.yml`. Trigger: `push` a `main`. Runner: **self-hosted** en el servidor (label `odoo-prod`), instalado como servicio en `/home/odoo/actions-runner`.
+- Pipeline serializado (`concurrency: deploy-prod`): `changes` (detecta módulos `extra/19.0` tocados y resuelve la cadena de deps custom en orden topológico) → `lint` (compileall, claves de manifest, anti-patrón `attrs=` en XML) → `test` (rsync de los módulos al clon **lead**, restart `odoo-19-web-leads`, `-u <cadena> --test-enable` contra staging `dbodoo19`; log como artifact) → `deploy` (`git fetch + merge --ff-only` en el clon **prod**, `-u <cadena>` sin tests en `odoo-19-web`, restart + health check :18069).
+- Push sin cambios en `extra/19.0` → lint/test se skipean y deploy solo hace `git pull`.
+- OJO: el deploy exige clon prod limpio (`merge --ff-only`); cambios locales sin commitear que colisionen harán fallar el job. Mantener el flujo lead→push→pull.
+
 ## Workflow Docker (gotchas comprobados)
 
 1. Tras editar `.py`, borra `__pycache__` del módulo y reinicia solo el web: `docker restart odoo-19-web`. Los `.pyc` cacheados pueden cargar bytecode viejo aunque el bind mount ya vea el archivo.
