@@ -49,9 +49,9 @@ Situación: {descripcion_contexto}
 El usuario acaba de escribir: "{texto_usuario}" (si está vacío, ignóralo).
 
 Debes:
-- Explicar brevemente qué ocurrió (sin tecnicismos).
-- Invitar al usuario a comenzar un nuevo proceso o acción.
-- Mantener un tono empático y humano.
+- Explicar brevemente qué ocurrió en lenguaje sencillo y sin tecnicismos (no uses "expiró" ni "inactividad").
+- Invitar al usuario a continuar: pregúntale si quiere retomar lo que buscaba, agendar una asesoría, o resolver otra consulta.
+- Mantener un tono empático, cálido y humano.
 - Máximo 2 frases.
 
 Responde ÚNICAMENTE con un JSON en este formato: {{ "mensaje": "texto del mensaje" }}
@@ -79,7 +79,7 @@ Responde ÚNICAMENTE con un JSON en este formato: {{ "mensaje": "texto del mensa
             # Fallbacks claros
             fallbacks = {
                 'sin_sesion': "No tengo una conversación activa. ¿Te gustaría comenzar de nuevo?",
-                'expirado': "Tu sesión ha expirado por inactividad. Por favor, inicia un nuevo proceso.",
+                'expirado': "¡No te preocupes! 😊 Pasó un rato sin actividad y cerramos tu proceso para cuidar tu información. Si quieres, retomamos donde ibas, o si prefieres agendamos una asesoría para orientarte mejor. ¿Qué necesitas?",
                 'sin_pasos': "Ya habías completado el proceso anterior. ¿Necesitas algo más?"
             }
             return {"mensaje": fallbacks.get(contexto, "Lo siento, hubo un error. Por favor, intenta de nuevo.")}
