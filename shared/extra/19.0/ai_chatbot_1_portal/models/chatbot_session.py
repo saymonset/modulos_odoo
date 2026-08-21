@@ -974,10 +974,10 @@ class SessionState(models.Model):
     def _generar_mensaje_expirado(self, texto_usuario):
         try:
             res = self._get_gpt_service().generar_mensaje_personalizado('expirado', texto_usuario)
-            return res.get('mensaje', "Tu sesión ha expirado por inactividad. No te preocupes, puedes iniciar un nuevo proceso cuando estés listo. ¡Estaremos encantados de ayudarte!")
+            return res.get('mensaje', "¡No te preocupes! 😊 Pasó un rato sin actividad y cerramos tu proceso para cuidar tu información. Si quieres, retomamos donde ibas, o si prefieres agendamos una asesoría para orientarte mejor. ¿Qué necesitas?")
         except Exception as e:
             _logger.error(f"Error generando mensaje de expiración: {e}")
-            return "Tu sesión ha expirado por inactividad. No te preocupes, puedes iniciar un nuevo proceso cuando estés listo. ¡Estaremos encantados de ayudarte!"
+            return "¡No te preocupes! 😊 Pasó un rato sin actividad y cerramos tu proceso para cuidar tu información. Si quieres, retomamos donde ibas, o si prefieres agendamos una asesoría para orientarte mejor. ¿Qué necesitas?"
 
     def _generar_mensaje_sin_pasos(self, texto_usuario):
         try:
