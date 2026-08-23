@@ -2,7 +2,7 @@
 
 Monorepo que centraliza módulos de la OCA y desarrollos propios/terceros ("extra") para Odoo 18.0 y 19.0. Git: `git@github.com:saymonset/modulos_odoo.git`, rama `main`.
 
-## Estructura
+## Estructura!!!!
 
 - `shared/oca/{18.0,19.0}/<modulo>` — módulos OCA **vendored** (copiados, sin `.git` interno ni submodules). Se actualizan re-clonando de OCA; no editar salvo migración puntual.
 - `shared/extra/{18.0,19.0}/<modulo>` — módulos propios/terceros. **Aquí está el desarrollo activo.**
