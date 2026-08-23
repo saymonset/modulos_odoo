@@ -13,6 +13,9 @@ class TestRoutingFlow(TransactionCase):
         super().setUpClass()
 
         cls.Mapping = cls.env['chatwoot.mapping']
+        # Archivar los mappings de datos por defecto para que solo cuenten los
+        # creados por cada test (los tests asumen una base limpia).
+        cls.Mapping.sudo().search([('active', '=', True)]).write({'active': False})
         cls.team_a = cls.env['crm.team'].create({'name': 'Test Equipo A'})
         cls.team_b = cls.env['crm.team'].create({'name': 'Test Equipo B'})
         cls.flow_medios = cls.env['chatbot.flujo'].create({

@@ -9,7 +9,7 @@
       <xpath expr="//form" position="inside">
         <group string="Chatwoot Integration">
           <field name="chatwoot_base_url"/>
-          <field name="chatwoot_api_token"/>
+          <field name="chatwoot_api_token" password="True"/>
           <field name="chatwoot_timeout"/>
           <field name="chatwoot_account_id" readonly="1"/>
           <button name="action_discover_default_admin" type="object"
@@ -22,4 +22,75 @@
       </xpath>
     </field>
   </record>
+
+  <!-- Vista dedicada de configuración accesible desde el menú del módulo.
+       Es una vista primaria (no heredada) de res.config.settings con
+       js_class="base_settings" para que el guardado dispare `execute` ->
+       `set_values()` (persistencia real de los config_parameter).
+       priority=99 evita que la acción global de Settings la tome como vista
+       por defecto. -->
+  <record id="view_chatwoot_settings_menu_form" model="ir.ui.view">
+    <field name="name">res.config.settings.view.form.chatwoot.menu</field>
+    <field name="model">res.config.settings</field>
+    <field name="priority" eval="99"/>
+    <field name="arch" type="xml">
+      <form string="Configuración Chatwoot" class="oe_form_configuration" js_class="base_settings">
+        <app string="Chatwoot" name="odoo_chatwoot_connector" groups="base.group_system">
+          <block title="Conexión Chatwoot">
+            <setting string="Chatwoot base URL" help="URL base de la instancia de Chatwoot (ej: http://chatwoot-app:3000)">
+              <field name="chatwoot_base_url"/>
+            </setting>
+            <setting string="Chatwoot API token" help="Token de acceso a la API de Chatwoot">
+              <field name="chatwoot_api_token" password="True"/>
+            </setting>
+            <setting string="Chatwoot timeout (s)" help="Timeout en segundos para las llamadas a la API de Chatwoot">
+              <field name="chatwoot_timeout"/>
+            </setting>
+            <setting string="Chatwoot Account ID" help="ID de la cuenta en Chatwoot. Se autodescubre con el botón 'Descubrir agente admin'.">
+              <field name="chatwoot_account_id" readonly="1"/>
+            </setting>
+            <setting string="Agente y bandeja por defecto" help="Se aplican a los mappings nuevos. Los vacíos de mappings activos se rellenan con 'Descubrir agente admin'.">
+              <button name="action_discover_default_admin" type="object"
+                      string="Descubrir agente admin de Chatwoot"
+                      class="oe_link"/>
+              <field name="chatwoot_default_agent_id"/>
+              <field name="chatwoot_default_agent_email"/>
+              <field name="chatwoot_default_inbox_id"/>
+            </setting>
+          </block>
+          <block title="Chat Bot Integra / Agente n8n">
+            <setting string="Marca y atribución" help="Texto de marca y línea de atribución que ven los clientes">
+              <field name="chat_bot_brand_name"/>
+              <field name="chat_bot_platform_promotion_enabled"/>
+              <field name="chat_bot_platform_promotion_text"/>
+              <field name="chat_bot_webhook_url"/>
+            </setting>
+            <setting string="Configuración del agente (n8n)" help="Mensaje del sistema que se inyecta al agente de n8n junto al catálogo de flujos activos">
+              <field name="chat_bot_system_prompt"/>
+              <button name="action_detectar_flujos" type="object"
+                      string="Detectar flujos automáticamente"
+                      class="btn-primary"
+                      confirm="Se analizará el prompt y se activarán o archivarán los flujos (y sus Chatwoot Mappings) según las palabras clave del negocio. ¿Continuar?"/>
+              <field name="chat_bot_fallback_message"/>
+              <field name="chat_bot_api_token" password="True"/>
+              <field name="chat_bot_include_optional_steps"/>
+            </setting>
+          </block>
+        </app>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_chatwoot_settings" model="ir.actions.act_window">
+    <field name="name">Configuración Chatwoot</field>
+    <field name="res_model">res.config.settings</field>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="view_chatwoot_settings_menu_form"/>
+    <field name="context">{'module': 'odoo_chatwoot_connector'}</field>
+    <field name="target">current</field>
+  </record>
+
+  <menuitem id="menu_chatwoot_settings" name="Configuración"
+            parent="menu_chatwoot_config" sequence="10"
+            action="action_chatwoot_settings" groups="base.group_system"/>
 </odoo>

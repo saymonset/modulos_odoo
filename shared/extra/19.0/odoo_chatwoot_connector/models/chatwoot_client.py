@@ -233,19 +233,13 @@ class ChatwootClient(models.AbstractModel):
         headers = self._headers(api_token)
         try:
             url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}"
-            _logger.info('_get_conversation_details calling GET %s', url)
             r = requests.get(url, headers=headers, timeout=timeout)
-            _logger.info('_get_conversation_details response status=%s', r.status_code)
             if r.status_code != 200:
                 _logger.warning('_get_conversation_details non-200: %s %s', r.status_code, r.text[:500])
                 return None
-            data = r.json() or {}
-            meta = data.get('meta', {})
-            assignee = meta.get('assignee')
-            _logger.info('_get_conversation_details success. meta.assignee=%s', assignee)
-            return data
+            return r.json() or {}
         except Exception as e:
-            _logger.warning('Error obteniendo conversación %s: %s', conversation_id, e, exc_info=True)
+            _logger.warning('Error obteniendo conversación %s: %s', conversation_id, e)
             return None
 
     def _set_conversation_status(self, account_id, conversation_id, status):

@@ -155,16 +155,8 @@ class ChatbotSessionInherit(models.Model):
                     _logger.info('RR[session] assign_conversation RESULTADO: %s', result)
                     if lead and lead.exists():
                         ejecutivo = assigned_agent_name or mapping_rec.chatwoot_agent_email or 'sin datos'
-                        if result.get('assigned_to') in ('agent', 'preserved'):
-                            lead.message_post(body=f"Solicitud recibida. Agente asignado: {ejecutivo}")
-                            _logger.info('RR[session] chatter message posted: ejecutivo=%s', ejecutivo)
-                        elif result.get('assigned_to') != 'existing':
-                            lead.message_post(body=f"Solicitud recibida. Agente asignado: {ejecutivo}")
-                            _logger.info('RR[session] chatter message posted: ejecutivo=%s', ejecutivo)
-                        else:
-                            _logger.info('RR[session][conv=%s]: assignee skipped, no chatter',
-                                         conversation_id)
-                            ejecutivo = 'preservado'
+                        lead.message_post(body=f"Solicitud recibida. Agente asignado: {ejecutivo}")
+                        _logger.info('RR[session] chatter message posted: ejecutivo=%s', ejecutivo)
                         # Store chatwoot ids on the lead for backup lookups
                         try:
                             lead.sudo().write({
@@ -172,7 +164,7 @@ class ChatbotSessionInherit(models.Model):
                                 'chatwoot_account_id': str(account_id),
                                 'chatwoot_processing_status': 'assigned' if result.get('ok', False) else 'error',
                                 'chatwoot_processed_at': fields.Datetime.now(),
-                                'chatwoot_assigned_agent_name': ejecutivo if result.get('ok', False) else False,
+                                'chatwoot_assigned_agent_name': ejecutivo if result.get('ok', False) else '',
                                 'chatwoot_assign_log': json.dumps({
                                     'assigned_to': result.get('assigned_to'),
                                     'assignee_id': result.get('assignee_id'),
