@@ -133,8 +133,10 @@ jobs:
           set -euo pipefail
           IFS=',' read -ra MODS <<< "${MODULES}"
           for m in "${MODS[@]}"; do
-            rsync -a --delete "shared/extra/19.0/${m}/" "${LEAD_REPO}/shared/extra/19.0/${m}/"
-            find "${LEAD_REPO}/shared/extra/19.0/${m}" -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
+            rsync -a --delete --exclude='__pycache__/' --exclude='*.pyc' \
+              "shared/extra/19.0/${m}/" "${LEAD_REPO}/shared/extra/19.0/${m}/"
+            docker exec -u root "${STAGING_WEB}" \
+              find "/opt/odoo/custom-addons/extra/${m}" -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
           done
 
       - name: Restart staging Odoo and wait for health
@@ -207,7 +209,8 @@ jobs:
           set -euo pipefail
           IFS=',' read -ra MODS <<< "${MODULES}"
           for m in "${MODS[@]}"; do
-            find "${PROD_REPO}/shared/extra/19.0/${m}" -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
+            docker exec -u root "${PROD_WEB}" \
+              find "/opt/odoo/custom-addons/extra/${m}" -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
           done
           docker exec "${PROD_WEB}" python3 /opt/odoo/odoo-core/odoo-bin \
             -d "${PROD_DB}" \
