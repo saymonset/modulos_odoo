@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Análisis de facturación: columna Total USD en la lista -->
+    <!-- Análisis de facturación: columna Total USD y COP en la lista -->
     <record id="account_invoice_report_view_tree_usd_bcv" model="ir.ui.view">
         <field name="name">account.invoice.report.view.list.usd.bcv</field>
         <field name="model">account.invoice.report</field>
@@ -14,15 +14,29 @@
                        options="{'currency_field': 'currency_usd_id'}"
                        sum="Total" optional="show"/>
             </field>
+            <field name="price_subtotal_usd" position="after">
+                <field name="cop_show_fields" column_invisible="True"/>
+                <field name="currency_cop_id" column_invisible="True"/>
+                <field name="price_subtotal_cop" string="Untaxed Total COP" widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       sum="Total" optional="hide"
+                       column_invisible="not cop_show_fields"/>
+            </field>
             <field name="price_total" position="after">
                 <field name="price_total_usd" string="Total USD" widget="monetary"
                        options="{'currency_field': 'currency_usd_id'}"
                        sum="Total" optional="show"/>
             </field>
+            <field name="price_total_usd" position="after">
+                <field name="price_total_cop" string="Total COP" widget="monetary"
+                       options="{'currency_field': 'currency_cop_id'}"
+                       sum="Total" optional="hide"
+                       column_invisible="not cop_show_fields"/>
+            </field>
         </field>
     </record>
 
-    <!-- Análisis de facturación: medidas USD en el pivot -->
+    <!-- Análisis de facturación: medidas USD y COP en el pivot -->
     <record id="account_invoice_report_pivot_usd_bcv" model="ir.ui.view">
         <field name="name">account.invoice.report.pivot.usd.bcv</field>
         <field name="model">account.invoice.report</field>
@@ -32,6 +46,8 @@
             <pivot position="inside">
                 <field name="price_subtotal_usd" type="measure"/>
                 <field name="price_total_usd" type="measure"/>
+                <field name="price_subtotal_cop" type="measure"/>
+                <field name="price_total_cop" type="measure"/>
             </pivot>
         </field>
     </record>
