@@ -16,11 +16,13 @@ class TestWhatsappMessage(BaseWhatsappTestCase):
         super().setUpClass()
         cls.template = cls.env['whatsapp.template'].create({
             'name': 'test_template',
+            'friendly_name': 'Plantilla de prueba',
             'language_code': 'es',
             'has_video_header': False,
         })
         cls.template_video = cls.env['whatsapp.template'].create({
             'name': 'test_video_template',
+            'friendly_name': 'Plantilla de video de prueba',
             'language_code': 'es',
             'has_video_header': True,
         })
@@ -66,14 +68,18 @@ class TestWhatsappMessage(BaseWhatsappTestCase):
             response=MagicMock(json=lambda: {'error': {'message': 'API Error'}})
         )
         with patch('requests.post', return_value=error_response):
-            with self.assertRaises(UserError):
+            error_raised = False
+            try:
                 wizard.action_send_whatsapp_message()
-        history = self.env['whatsapp.history'].search([
-            ('partner_id', '=', self.partner.id),
-            ('direction', '=', 'outgoing'),
-            ('status', '=', 'error'),
-        ], order='id desc', limit=1)
-        self.assertTrue(history)
+            except UserError:
+                error_raised = True
+            self.assertTrue(error_raised)
+            history = self.env['whatsapp.history'].search([
+                ('partner_id', '=', self.partner.id),
+                ('direction', '=', 'outgoing'),
+                ('status', '=', 'error'),
+            ], order='id desc', limit=1)
+            self.assertTrue(history)
         self.assertEqual(history.status, 'error')
 
     @mute_logger("odoo.addons.whatsapp_cloud_integration.models.whatsapp_message")

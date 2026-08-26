@@ -17,6 +17,7 @@ class TestPhoneNormalization(BaseWhatsappTestCase):
         })
         template = self.env['whatsapp.template'].create({
             'name': 'test_template',
+            'friendly_name': 'Plantilla de prueba',
             'language_code': 'es',
             'has_video_header': False,
         })
@@ -73,6 +74,7 @@ class TestPhoneNormalization(BaseWhatsappTestCase):
         })
         template = self.env['whatsapp.template'].create({
             'name': 'test_tpl',
+            'friendly_name': 'Plantilla de prueba',
             'language_code': 'es',
             'has_video_header': False,
         })

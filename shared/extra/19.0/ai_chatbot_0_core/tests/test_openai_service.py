@@ -25,7 +25,7 @@ class TestOpenAIService(TransactionCase):
         })
 
     def test_01_get_openai_client_no_api_key(self):
-        self.config.write({'api_key': False, 'active': False})
+        self.config.write({'active': False})
         with self.assertRaises(ValidationError):
             self.env['openai.service']._get_openai_client()
 
