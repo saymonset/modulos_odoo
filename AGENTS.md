@@ -76,7 +76,11 @@ Todo módulo de `extra/19.0` modificado debe pasar sus tests (`--test-enable`) a
 - Pipeline serializado (`concurrency: deploy-prod`): `changes` (detecta módulos `extra/19.0` tocados y resuelve la cadena de deps custom en orden topológico) → `lint` (compileall, claves de manifest, anti-patrón `attrs=` en XML) → `test` (rsync de los módulos al clon **lead**, restart `odoo-19-web-leads`, `-u <cadena> --test-enable` contra staging `dbodoo19`; log como artifact) → `deploy` (`git fetch + merge --ff-only` en el clon **prod**, `-u <cadena>` sin tests en `odoo-19-web`, restart + health check :18069).
 - Push sin cambios en `extra/19.0` → lint/test se skipean y deploy solo hace `git pull`.
 - OJO: el deploy exige clon prod limpio (`merge --ff-only`); cambios locales sin commitear que colisionen harán fallar el job. Mantener el flujo lead→push→pull.
-- Auth del runner: el servicio corre sin ssh-agent → el clon **prod** tiene `core.sshCommand` apuntando a `~/.ssh/id_ed25519_deploy` (sin passphrase), registrada como **deploy key read-only** del repo. La llave personal `id_ed25519` (con passphrase) es la de los pushes interactivos desde lead.
+- Auth del runner (deploy): el job `deploy` hace `git fetch origin main` en el clon prod. El runner corre **sin ssh-agent**, así que el clon **prod** tiene `core.sshCommand` que usa el **agente persistente** de `odoo` con la llave personal `id_ed25519`:
+  ```
+  git -C /home/odoo/prod/modulos_odoo config core.sshCommand "ssh -o BatchMode=yes -o IdentityAgent=/home/odoo/.ssh/agent.sock"
+  ```
+  `IdentityAgent=` apunta al socket del agente persistente (que ya tiene `id_ed25519` cargada), de modo que git del runner autentica sin depender de su entorno. El agente persistente (`ssh-agent -a /home/odoo/.ssh/agent.sock -D`) es un proceso **detached** (`setsid`) que sobrevive al cierre de sesión pero **no a un reinicio del sistema**; tras un reinicio, ejecutar `/home/odoo/.local/bin/ssh-agent-recovery.sh` (pide la passphrase una vez). Nota: la deploy key `~/.ssh/id_ed25519_deploy` ya no se usa (GitHub la rechaza); la llave personal `id_ed25519` (con passphrase) también es la de los pushes interactivos desde lead.
 
 ## Workflow Docker (gotchas comprobados)
 
