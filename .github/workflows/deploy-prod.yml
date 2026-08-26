@@ -161,7 +161,7 @@ jobs:
           docker exec "${STAGING_WEB}" python3 /opt/odoo/odoo-core/odoo-bin \
             -d "${STAGING_DB}" \
             -u "${MODULES}" \
-            --test-enable --stop-after-init --log-level=test 2>&1 | tee test.log
+            --test-enable --stop-after-init --log-level=test --no-http 2>&1 | tee test.log
           rc=${PIPESTATUS[0]}
           if [ "${rc}" -ne 0 ]; then
             echo "::error::odoo-bin salio con codigo ${rc}"
@@ -215,7 +215,7 @@ jobs:
           docker exec "${PROD_WEB}" python3 /opt/odoo/odoo-core/odoo-bin \
             -d "${PROD_DB}" \
             -u "${MODULES}" \
-            --stop-after-init
+            --stop-after-init --no-http
           docker restart "${PROD_WEB}"
           for i in $(seq 1 90); do
             if curl -sf "${PROD_HEALTH}" >/dev/null 2>&1; then
