@@ -7,7 +7,7 @@ Monorepo que centraliza módulos de la OCA y desarrollos propios/terceros ("extr
 - `shared/oca/{18.0,19.0}/<modulo>` — módulos OCA **vendored** (copiados, sin `.git` interno ni submodules). Se actualizan re-clonando de OCA; no editar salvo migración puntual.
 - `shared/extra/{18.0,19.0}/<modulo>` — módulos propios/terceros. **Aquí está el desarrollo activo.**
 - Reglas: nunca mezclar OCA con extra; siempre organizar por subcarpeta de versión (`18.0`/`19.0`).
-- No desarrollar en staging dirs: `shared/oca/19.0.delete/` (OCA a eliminar) y `shared/oca/19.0/temp_oca_modules/`.
+- No desarrollar en staging dir: `shared/oca/19.0.delete/` (OCA a eliminar; no está montado en el contenedor).
 
 ## Módulos propios clave (`extra/19.0`)
 
