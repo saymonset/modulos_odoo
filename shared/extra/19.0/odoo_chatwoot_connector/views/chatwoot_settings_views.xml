@@ -1,28 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <!-- Integrate Chatwoot settings into the global Settings form -->
-  <record id="view_chatwoot_settings_inherit" model="ir.ui.view">
-    <field name="name">chatwoot.settings.inherit</field>
-    <field name="model">res.config.settings</field>
-    <field name="inherit_id" ref="base.res_config_settings_view_form"/>
-    <field name="arch" type="xml">
-      <xpath expr="//form" position="inside">
-        <group string="Chatwoot Integration">
-          <field name="chatwoot_base_url"/>
-          <field name="chatwoot_api_token" password="True"/>
-          <field name="chatwoot_timeout"/>
-          <field name="chatwoot_account_id" readonly="1"/>
-          <button name="action_discover_default_admin" type="object"
-                  string="Descubrir agente admin de Chatwoot"
-                  class="oe_link"/>
-          <field name="chatwoot_default_agent_id"/>
-          <field name="chatwoot_default_agent_email"/>
-          <field name="chatwoot_default_inbox_id"/>
-        </group>
-      </xpath>
-    </field>
-  </record>
-
   <!-- Vista dedicada de configuración accesible desde el menú del módulo.
        Es una vista primaria (no heredada) de res.config.settings con
        js_class="base_settings" para que el guardado dispare `execute` ->
@@ -58,21 +35,25 @@
               <field name="chatwoot_default_inbox_id"/>
             </setting>
           </block>
-          <block title="Chat Bot Integra / Agente n8n">
-            <setting string="Marca y atribución" help="Texto de marca y línea de atribución que ven los clientes">
-              <field name="chat_bot_brand_name"/>
-              <field name="chat_bot_platform_promotion_enabled"/>
-              <field name="chat_bot_platform_promotion_text"/>
+          <block title="Agente n8n">
+            <div class="alert alert-warning" role="alert"
+                 invisible="has_active_business_config">
+              <b>Modo legacy</b> — No hay una Configuración de negocio activa.
+              La marca, la atribución y el prompt del agente se toman de los
+              parámetros históricos.
+              <button name="action_open_business_config" type="object"
+                      string="Abrir Configuraciones de negocio" class="btn-link"/>
+            </div>
+            <setting string="Webhook n8n" help="Webhook URL used by the website chatbot.">
               <field name="chat_bot_webhook_url"/>
             </setting>
-            <setting string="Configuración del agente (n8n)" help="Mensaje del sistema que se inyecta al agente de n8n junto al catálogo de flujos activos">
-              <field name="chat_bot_system_prompt"/>
-              <button name="action_detectar_flujos" type="object"
-                      string="Detectar flujos automáticamente"
-                      class="btn-primary"
-                      confirm="Se analizará el prompt y se activarán o archivarán los flujos (y sus Chatwoot Mappings) según las palabras clave del negocio. ¿Continuar?"/>
+            <setting string="Mensaje fallback" help="Mensaje que n8n usa cuando el agente no puede obtener configuración.">
               <field name="chat_bot_fallback_message"/>
+            </setting>
+            <setting string="API Token para n8n" help="Token compartido que el workflow de n8n debe enviar en el header 'x-chatbot-token' al consultar /configuracion_agente.">
               <field name="chat_bot_api_token" password="True"/>
+            </setting>
+            <setting string="Incluir pasos opcionales en los flujos" help="Si está activo, los flujos ejecutan también los pasos marcados como opcionales.">
               <field name="chat_bot_include_optional_steps"/>
             </setting>
           </block>

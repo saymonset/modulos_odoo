@@ -10,6 +10,9 @@
 
         <record id="chatbot_config_integraia" model="chatbot.config">
             <field name="name">IntegraIA</field>
+            <field name="brand_name">IntegraIA</field>
+            <field name="attribution_enabled">True</field>
+            <field name="attribution_text">@integraiaconodoo</field>
             <field name="cta_url">https://integraia.lat/</field>
             <field name="contacto">📞 Horario Lun-Vie 08:00-17:00, Sáb 09:00-13:00 hora Venezuela.
 📧 saymon_set@hotmail.com · 📱 WhatsApp +58 412 914 1074 · 🌐 https://integraia.lat/</field>

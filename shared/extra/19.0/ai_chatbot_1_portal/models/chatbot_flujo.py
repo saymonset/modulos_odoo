@@ -304,8 +304,8 @@ class ChatbotFlujo(models.Model):
         """
         Pasos específicos para el flujo flujo_citas_seguro
         """
-        brand = self.env['ir.config_parameter'].sudo().get_param(
-            'ai_chatbot_1_portal.brand_name') or 'IntegraIA'
+        brand, _enabled, _text = self.env['chatbot.config']._get_brand_settings()
+        brand = brand or 'IntegraIA'
         pasos = self._get_pasos_obligatorios()
         pasos.extend([
             {
