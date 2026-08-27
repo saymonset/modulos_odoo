@@ -649,6 +649,18 @@ class ChatbotFlujo(models.Model):
         mapeo = self._get_mapeo_equipo_grupo()
         return {k: v for k, v in mapeo.items() if k.startswith("flujo_")}
 
+    @api.model
+    def _get_flow_routing_map(self):
+        """
+        Mapa {routing_key o name: name} de los flujos ACTIVOS para n8n.
+
+        Mismo dominio que build_agent_system_prompt (active=True).
+        Permite al nodo n8n enrutar flujos nuevos creados en Odoo sin
+        re-editar el workflow: la clave de enrutamiento gana sobre el nombre.
+        """
+        flujos = self.sudo().search([('active', '=', True)], order='name')
+        return {flujo.routing_key or flujo.name: flujo.name for flujo in flujos}
+
     # ============================================================
     # MAPEO CENTRALIZADO: equipo_asignado → texto descriptivo
     # ============================================================
