@@ -1,4 +1,4 @@
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 
 
 class ChatbotConfig(models.Model):
@@ -75,3 +75,26 @@ class ChatbotConfig(models.Model):
                 '@integraiaconodoo',
             ),
         )
+
+    def action_activar_flujos(self):
+        """Activa los flujos de esta config (+ default) y archiva el resto."""
+        self.ensure_one()
+        resultado = self.env['chatbot.flujo'].sudo()._aplicar_deteccion_desde_config(
+            self)
+        activados = resultado.get('activados', [])
+        archivados = resultado.get('archivados', [])
+        mensaje = resultado.get('mensaje', '')
+        if activados:
+            mensaje += f"\nActivados: {', '.join(activados)}"
+        if archivados:
+            mensaje += f"\nArchivados: {', '.join(archivados)}"
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Activar flujos'),
+                'message': mensaje or 'Sin cambios.',
+                'type': 'success',
+                'sticky': True,
+            },
+        }

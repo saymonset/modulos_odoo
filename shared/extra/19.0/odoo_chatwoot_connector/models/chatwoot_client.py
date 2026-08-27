@@ -489,11 +489,9 @@ class ChatwootClient(models.AbstractModel):
             try:
                 content = mapping['notify_message']
                 try:
-                    params = self.env['ir.config_parameter'].sudo()
-                    enabled = params.get_param('ai_chatbot_1_portal.platform_promotion_enabled')
-                    if enabled and str(enabled).lower() in ('1', 'true', 'yes', 'on'):
-                        text = params.get_param('ai_chatbot_1_portal.platform_promotion_text') or '@integraiaconodoo'
-                        content += f"\n\n_Atención automatizada por {text}_"
+                    _brand, enabled, text = self.env['chatbot.config']._get_brand_settings()
+                    if enabled:
+                        content += f"\n\n_Atención automatizada por {text or '@integraiaconodoo'}_"
                 except Exception:
                     pass
                 url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}/messages"

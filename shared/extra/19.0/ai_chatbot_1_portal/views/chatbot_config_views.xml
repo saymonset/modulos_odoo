@@ -24,9 +24,18 @@
             <field name="model">chatbot.config</field>
             <field name="arch" type="xml">
                 <form string="Configuración de negocio">
+                    <header>
+                        <button name="action_activar_flujos" type="object"
+                                string="Activar flujos de esta configuración"
+                                class="btn-primary"/>
+                    </header>
                     <sheet>
                         <group>
                             <field name="name"/>
+                            <field name="brand_name"/>
+                            <field name="attribution_enabled"/>
+                            <field name="attribution_text"
+                                   invisible="attribution_enabled == False"/>
                             <field name="cta_url"/>
                             <field name="output_instagram"/>
                             <field name="active"/>

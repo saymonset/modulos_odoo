@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class ResConfigSettings(models.TransientModel):
@@ -16,6 +16,26 @@ class ResConfigSettings(models.TransientModel):
                                                help='Email del agente de Chatwoot para los mappings nuevos creados automáticamente. Si lo dejas vacío, se autodescubre el administrador.')
     chatwoot_default_inbox_id = fields.Integer(string='Inbox por defecto (id)', config_parameter='chatwoot.default_inbox_id',
                                                help='ID de la bandeja de entrada de Chatwoot para los mappings nuevos creados automáticamente.')
+
+    has_active_business_config = fields.Boolean(
+        string="Tiene config de negocio activa",
+        compute="_compute_has_active_business_config",
+    )
+
+    @api.depends()
+    def _compute_has_active_business_config(self):
+        for record in self:
+            record.has_active_business_config = bool(
+                self.env['chatbot.config'].sudo()._get_active_config()
+            )
+
+    def action_open_business_config(self):
+        """Abre la ficha de Configuraciones de negocio (chatbot.config)."""
+        action = self.env.ref(
+            'ai_chatbot_1_portal.action_chatbot_config'
+        ).read()[0]
+        action['target'] = 'current'
+        return action
 
     def action_discover_default_admin(self):
         """Descubre el agente administrador de Chatwoot vía API, lo guarda

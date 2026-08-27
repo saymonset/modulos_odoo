@@ -909,11 +909,10 @@ class ChatBotUtils:
 
     @staticmethod
     def _get_brand_name(env):
-        """Devuelve el nombre de marca configurado en Ajustes, o el de la compañía,
+        """Devuelve el nombre de marca de la config activa, o el de la compañía,
         o un fallback genérico."""
         if env:
-            params = env['ir.config_parameter'].sudo()
-            brand = params.get_param('ai_chatbot_1_portal.brand_name') or ''
+            brand, _enabled, _text = env['chatbot.config']._get_brand_settings()
             if not brand:
                 brand = env.company.name or ''
             if brand:
@@ -924,17 +923,15 @@ class ChatBotUtils:
     def _platform_attribution_line(env):
         """Línea promocional de la plataforma (cursiva, sutil).
 
-        Solo aparece si el parámetro ai_chatbot_1_portal.platform_promotion_enabled
-        está activo. El texto se configura en ai_chatbot_1_portal.platform_promotion_text.
+        Solo aparece si la config activa (o el param legacy) tiene la atribución
+        activa. El texto se configura en la ficha Configuraciones de negocio.
         """
         if not env:
             return ""
-        params = env['ir.config_parameter'].sudo()
-        enabled = params.get_param('ai_chatbot_1_portal.platform_promotion_enabled')
-        if not enabled or str(enabled).lower() not in ('1', 'true', 'yes', 'on'):
+        _brand, enabled, text = env['chatbot.config']._get_brand_settings()
+        if not enabled:
             return ""
-        text = params.get_param('ai_chatbot_1_portal.platform_promotion_text') or '@integraiaconodoo'
-        return f"\n\n_Atención automatizada por {text}_"
+        return f"\n\n_Atención automatizada por {text or '@integraiaconodoo'}_"
 
     @staticmethod
     def _pie_mensaje(lead_id, equipo_asignado, env=None):

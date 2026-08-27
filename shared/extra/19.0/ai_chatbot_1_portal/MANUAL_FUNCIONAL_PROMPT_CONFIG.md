@@ -1,4 +1,4 @@
-# Tutorial: Prompt universal multicliente (SPEC 01)
+# Tutorial: Prompt universal multicliente (SPEC 01 + SPEC 03)
 
 Guía funcional para configurar el prompt del agente desde Odoo, por cliente,
 sin tocar código ni editar n8n.
@@ -33,6 +33,12 @@ que pasa a ser artefacto exportado, ya no fuente de verdad).
 1. **Chatbot → Configuraciones de negocio → Nuevo**
 2. Llena la cabecera:
    - **Nombre del negocio**: "Clínica Sonrisa"
+   - **Nombre de marca** (SPEC 03): marca que ve el cliente final en los
+     mensajes ("Gracias por confiar en ..."). Si está vacío, se usa el nombre
+     del negocio.
+   - **Atribución de plataforma** (SPEC 03): activa la línea discreta en
+     cursiva "Atención automatizada por ...". El texto por defecto es
+     `@integraiaconodoo`.
    - **Rol / objetivo**: `TÚ ERES: la asistente virtual de la Clínica Sonrisa...`
      (quién es + qué vende + tono)
    - **URL de llamada a la acción**: `clinica-sonrisa.com`
@@ -70,10 +76,31 @@ que pasa a ser artefacto exportado, ya no fuente de verdad).
 
 ## 5. Detección de flujos (importante)
 
-Con config activa, la detección ya **no parsea texto**: al ejecutarla (botón
-*Detección de flujos* en Ajustes, o al guardar), Odoo **activa los flujos que
-marcaste en la config + el flujo default** y archiva el resto. Puedes
-verificarlo en Chatbot → Flujos (columna activo).
+Con config activa, la detección ya **no parsea texto**: con el botón
+**"Activar flujos de esta configuración"** de la ficha (SPEC 03), Odoo
+**activa los flujos que marcaste en la config + el flujo default** y archiva
+el resto. Puedes verificarlo en Chatbot → Flujos (columna activo).
+
+> Nota: el botón "Detectar flujos automáticamente" y los bloques del chatbot
+> ya no existen en Ajustes generales (SPEC 03). Todo lo del negocio se
+> configura en la ficha Configuraciones de negocio.
+
+## 5b. Dónde quedó cada configuración (SPEC 03)
+
+Una sola fuente visible por tipo de cosa:
+
+| Qué configuro | Dónde |
+|---|---|
+| Negocio: nombre de marca, atribución, rol, conocimiento, intenciones, flujos, prompt del agente | **Chatbot → Configuraciones de negocio** (`chatbot.config`) |
+| Operación: conexión Chatwoot, webhook n8n, token API, mensaje fallback, pasos opcionales | **Chatwoot → Configuración** |
+| Prompt legacy (`ai_chatbot_1_portal.system_prompt`) | Fallback oculto sin UI (rollback instantáneo) |
+
+- En la vista **Chatwoot → Configuración**, si no hay ninguna config de negocio
+  activa aparece un **aviso de modo legacy** con acceso directo a
+  Configuraciones de negocio.
+- La **marca y la atribución** que ve el cliente se leen de la config activa;
+  si no hay config activa, se usan los parámetros históricos (comportamiento
+  idéntico a antes, sin regresión).
 
 ## 6. Probar que funciona
 
