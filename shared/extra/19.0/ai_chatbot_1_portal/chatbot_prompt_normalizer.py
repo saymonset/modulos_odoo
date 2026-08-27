@@ -58,6 +58,28 @@ def normalizar_business_prompt(prompt_text):
     return texto, cambios
 
 
+def normalizar_business_prompt_desde_config(config):
+    """Normaliza el contenido de texto libre de una chatbot.config.
+
+    Aplica las mismas reglas de alineación del esquema de 10 campos a los
+    campos de texto libre (role, bloque_conocimiento, contacto) por si el
+    cliente pegó restos del formato legacy en su config.
+
+    Devuelve (texto_normalizado, cantidad_de_correcciones).
+    """
+    if not config:
+        return '', 0
+
+    cambios = 0
+    texto = ''
+    for parte in filter(None, (config.role, config.bloque_conocimiento, config.contacto)):
+        normalizado, c = normalizar_business_prompt(parte)
+        cambios += c
+        if normalizado:
+            texto += normalizado.strip() + '\n'
+    return texto.rstrip('\n'), cambios
+
+
 # Marcadores estructurales que delimitaban líneas antes de que el campo
 # fields.Char (obsoleto) aplanara el PRON a una sola línea.
 _MARCADORES_RE = re.compile(

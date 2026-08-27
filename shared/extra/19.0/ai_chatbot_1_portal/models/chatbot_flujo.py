@@ -800,8 +800,13 @@ class ChatbotFlujo(models.Model):
     @api.model
     def aplicar_deteccion_automatica(self, prompt_text):
         """
-        Detección híbrida de flujos relevantes según el system_prompt del cliente.
+        Detección de flujos según el cliente.
 
+        Si existe una chatbot.config activa, los flujos del cliente se leen de
+        la config (flujo_ids) en vez de parsear texto: se activan los flujos
+        del cliente + el default y se archivan los demás.
+
+        Sin config: detección híbrida por texto (legacy).
         1. Normaliza el prompt (minúsculas, sin acentos).
         2. Keyword matching: cada flujo expone palabras_clave; si alguna aparece
            en el prompt, el flujo aplica.
@@ -814,6 +819,10 @@ class ChatbotFlujo(models.Model):
 
         El flujo 'flujo_agendamiento_default' siempre queda activo (fallback).
         """
+        config = self.env['chatbot.config'].sudo()._get_active_config()
+        if config:
+            return self._aplicar_deteccion_desde_config(config)
+
         prompt_text = prompt_text or ''
         prompt_norm = _normalizar_texto(prompt_text)
 
@@ -909,6 +918,40 @@ class ChatbotFlujo(models.Model):
         return {'activados': [f.name for f in flujos_act],
                 'archivados': [f.name for f in flujos_arch],
                 'metodo': 'ia', 'mensaje': 'Detección por IA de respaldo.'}
+
+    @api.model
+    def _aplicar_deteccion_desde_config(self, config):
+        """
+        Activa los flujos de la chatbot.config del cliente (flujos por cliente)
+        y archiva el resto. El flujo default queda siempre activo (fallback).
+        """
+        flujos = self.sudo().with_context(active_test=False).search([])
+        default_flow = flujos.filtered(lambda f: f.name == 'flujo_agendamiento_default')
+        flujos_config = config.with_context(active_test=False).flujo_ids
+        flujos_act = (flujos_config | default_flow).sudo()
+        flujos_arch = flujos - flujos_act
+
+        from odoo.addons.ai_chatbot_1_portal.chatbot_prompt_normalizer import (
+            normalizar_business_prompt_desde_config,
+        )
+        _texto, cambios_normalizacion = normalizar_business_prompt_desde_config(config)
+
+        flujos_act.write({'active': True})
+        flujos_arch.write({'active': False})
+        self._ensure_mappings_for_flujos(flujos_act)
+        flujos_act.action_regenerar_pasos()
+        self._sincronizar_mappings(flujos_act, True)
+        self._sincronizar_mappings(flujos_arch, False)
+        _logger.info(
+            'auto_detección (config): activados=%s archivados=%s normalizador_cambios=%s',
+            [f.name for f in flujos_act], [f.name for f in flujos_arch],
+            cambios_normalizacion)
+        return {
+            'activados': [f.name for f in flujos_act],
+            'archivados': [f.name for f in flujos_arch],
+            'metodo': 'config',
+            'mensaje': f'Flujos activados desde la config del cliente ({cambios_normalizacion} correcciones de normalización).',
+        }
 
     @api.model_create_multi
     def create(self, vals_list):
