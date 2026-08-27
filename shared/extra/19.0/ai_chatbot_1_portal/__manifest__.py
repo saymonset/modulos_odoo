@@ -19,6 +19,7 @@
         "views/remove_powered_by.xml",  # AÑADIDO: El xml para eliminar el footer debe ir aquí
         'views/chatbot_flujo_views.xml',
         'views/chatbot_paso_views.xml',
+        'views/chatbot_config_views.xml',
         'views/partner_view.xml',
         'views/menu_views.xml',
     ],

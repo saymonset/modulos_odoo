@@ -15,5 +15,11 @@
                   parent="menu_chatbot_root"
                   action="action_chatbot_paso"
                   sequence="30"/>
+
+        <!-- Submenú Configuraciones de negocio -->
+        <menuitem id="menu_chatbot_config"
+                  parent="menu_chatbot_root"
+                  action="action_chatbot_config"
+                  sequence="40"/>
     </data>
 </odoo>
