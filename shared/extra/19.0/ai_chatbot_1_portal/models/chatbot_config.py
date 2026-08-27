@@ -38,8 +38,40 @@ class ChatbotConfig(models.Model):
         help='Si se genera una variante corta (output_corto) para Instagram/Meta.',
     )
     active = fields.Boolean(default=True)
+    brand_name = fields.Char(
+        string="Nombre de marca",
+        help="Marca que ve el cliente final. Si está vacío se usa el nombre del negocio.",
+    )
+    attribution_enabled = fields.Boolean(string="Atribución de plataforma")
+    attribution_text = fields.Char(
+        string="Texto de atribución",
+        default="@integraiaconodoo",
+    )
 
     @api.model
     def _get_active_config(self):
         """Retorna la config de negocio activa (la más reciente) o vacío."""
         return self.sudo().search([('active', '=', True)], order='id desc', limit=1)
+
+    @api.model
+    def _get_brand_settings(self):
+        """(brand_name, attribution_enabled, attribution_text) desde la config
+        activa; fallback a ir.config_parameter si no hay config (modo legacy)."""
+        config = self._get_active_config()
+        if config:
+            return (
+                config.brand_name,
+                config.attribution_enabled,
+                config.attribution_text,
+            )
+        params = self.env['ir.config_parameter'].sudo()
+        return (
+            params.get_param('ai_chatbot_1_portal.brand_name', ''),
+            params.get_param(
+                'ai_chatbot_1_portal.platform_promotion_enabled', 'False'
+            ) == 'True',
+            params.get_param(
+                'ai_chatbot_1_portal.platform_promotion_text',
+                '@integraiaconodoo',
+            ),
+        )
