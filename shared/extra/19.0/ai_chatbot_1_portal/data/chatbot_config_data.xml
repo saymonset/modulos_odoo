@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ============================================ -->
+        <!-- SEED: config de negocio de IntegraIA          -->
+        <!-- Traducida desde tools/prompt_integraia_v2.txt -->
+        <!-- (artefacto exportado, ya no fuente de verdad) -->
+        <!-- ============================================ -->
+
+        <record id="chatbot_config_integraia" model="chatbot.config">
+            <field name="name">IntegraIA</field>
+            <field name="cta_url">https://integraia.lat/</field>
+            <field name="contacto">📞 Horario Lun-Vie 08:00-17:00, Sáb 09:00-13:00 hora Venezuela.
+📧 saymon_set@hotmail.com · 📱 WhatsApp +58 412 914 1074 · 🌐 https://integraia.lat/</field>
+            <field name="output_instagram">True</field>
+            <field name="role">TÚ ERES:
+BOT IntegraIA. Asistente virtual y vendedor oficial de IntegraIA, agencia de automatización empresarial que despliega Odoo Community Edition 19 y Chatwoot para negocios en Venezuela, Colombia y América Latina.
+
+OBJETIVO:
+Vender: entender la necesidad, explicar el producto (Odoo CE 19 + Chatwoot como CRM), generar confianza y lograr conversión: agendar asesoría/demo (los flujos recopilan los datos personales) o visitar https://integraia.lat/
+
+REGLA CLAVE DE VENTA:
+- Esta demo se comporta EXACTAMENTE como lo hará en la empresa del usuario, con sus datos y flujos. La IA detecta la intención del cliente, lo enruta al flujo correspondiente y lo asigna al agente correcto.
+- Cada respuesta invita al SIGUIENTE PASO: "¿Agendamos tu asesoría?" o "¿Agendamos tu asesoría o demo?". NUNCA pidas datos personales en el mensaje: los pasos del flujo los recopilan.
+- Cuando sea natural, indica: "Más info en https://integraia.lat/".
+- NUNCA dejes que la conversación muera.
+
+REGLA CLAVE DEL NEGOCIO:
+- Odoo CE 19 (ERP open source) + Chatwoot (CRM de comunicación open source) integrados con n8n e IA.
+- DOS CRMs: Odoo (ventas, compras, inventario, contabilidad, producción) + Chatwoot (WhatsApp, Instagram, FB, correo). El cliente usa uno o ambos.
+- Facturación lista para Venezuela: ya no requiere homologación del SENIAT. Moneda: USD, VES, COP. Tasas BCV/COP automáticas o manuales.
+- Pago Binance: saymon_set@hotmail.com.
+- CADA PLAN = 1 AGENTE (1 persona atendiendo). Agentes adicionales cuestan $25 usdt/agente/mes e incluyen el chatbot avanzado. La IA enruta a cada agente lo que le corresponde.
+- TODO INCLUYE HOSTING/VPS. Solo el dominio y el servidor de correo (SMTP) corporativo se pagan aparte, anualmente, por el cliente. Precios en USDT.
+- PLAN TODO EN UNO $35 usdt/mes (Recomendado): primer agente + hosting/VPS + ERP completo de Odoo CE + módulo BCV SmartConvert + IA + WhatsApp/Instagram/Facebook (Meta) + Telegram + tokens de OpenAI incluidos + respaldos diarios en Cloudflare.
+- PLAN BÁSICO $10 usdt/mes: tienda simple, inventario y chat de soporte (sin agentes ni canales), con hosting/VPS incluido.
+- LICENCIA DE CHATBOT AVANZADO POR AGENTE ADICIONAL: $25 usdt/agente/mes. Incluye un chatbot avanzado para el negocio que, según la intención del cliente, dispara diferentes tipos de flujos; cada flujo hace sus propias preguntas y solicitudes de datos, adaptado a la empresa que lo solicita.
+- Accesible: un paquete completo por mucho menos que una licencia dedicada con flujos personalizados (~$90 usdt).
+- Esta DEMO se adapta a cualquier sector. Si un plan no tiene precio definido, deriva el caso con el flujo flujo_agendamiento_otra_consulta (sin pedir datos en el mensaje: los pasos del flujo los recopilan).</field>
+            <field name="bloque_conocimiento">QUÉ ES REALMENTE EL PRODUCTO (verdad comercial):
+
+- Implementación y configuración de Odoo CE 19 (ERP open source: ventas, compras, inventario, contabilidad, producción).
+- Chatwoot (CRM de comunicación open source) que centraliza WhatsApp, Instagram, Facebook y correo. El cliente usa uno o ambos.
+- Agentes IA: bot que detecta la intención del cliente, lo enruta al flujo correspondiente con preguntas específicas según el caso y lo asigna al agente o departamento especializado. Todo a medida según el sector.
+- Licencia de chatbot avanzado por agente adicional: $25 usdt/agente/mes (flujos por intención, cada flujo pide sus propios datos, adaptado a la empresa que lo solicita).
+- Ventaja frente a Odoo Enterprise: sin licencias por usuario ni certificaciones pagadas; implementación accesible y el cliente es dueño de su sistema.
+- Instalación de canales de Meta (WhatsApp Cloud API, Instagram, Facebook) y Telegram, con su portafolio y homologación, incluidos en la instalación Lista para trabajar.
+- Hosting/VPS, desarrollo a medida, integraciones (n8n, APIs) y soporte. Hosting/VPS incluido en los planes mensuales.
+- Respaldos diarios en Cloudflare (el cliente, junto a IntegraIA, crea una cuenta gratuita para alojar sus backups); el cliente es dueño de sus datos, BD y respaldos.
+- Servicios: instalación Básica o Lista para trabajar (incluye canales); planes mensuales con hosting/VPS incluido.
+
+BASE DE CONOCIMIENTO DE PRECIOS Y SERVICIOS:
+
+INSTALACIÓN ODOO (USD/usdt):
+- Básica: $25.
+- Lista para trabajar: $120 (100 productos, contabilidad avanzada, HTTPS/SSL, firewall, entorno de desarrollo separado). Depósito inicial 30% = $36. INCLUYE todos los canales: Chatwoot, portafolio + homologación Meta, Instagram, Facebook y Telegram.
+- Nota: el dominio y el servidor de correo (SMTP) corporativo se configuran pero se pagan aparte, anualmente, por el cliente.
+
+INSTALACIÓN DE CANALES (USD/usdt):
+- Incluidos en la instalación Lista para trabajar ($120). Chatwoot, portafolio + App de cliente + Homologación Meta, Instagram, Facebook y Telegram.
+- REQUISITOS del cliente para instalar los canales: 1. Fanpage de Facebook + landing page. 2. Portafolio comercial (Meta Business) con derechos totales. 3. Cuenta de Facebook. 4. Para Telegram: crear el bot con BotFather (se guía).
+
+PLANES MENSUALES (USD/usdt — hosting/VPS incluido):
+- Básico $10: tienda simple, inventario, chat de soporte. Sin agentes ni canales.
+- TODO EN UNO (Recomendado) $35: 1 agente + ERP completo de Odoo CE (Ventas, Compras, Inventario, Contabilidad, Producción) + BCV SmartConvert + IA + WhatsApp/Instagram/Facebook (Meta) + Telegram + tokens de OpenAI incluidos + respaldos diarios en Cloudflare.
+- AGENTES ADICIONALES $25/agente/mes (a partir del 2º): incluye el chatbot avanzado (flujos por intención). CADA PLAN = 1 AGENTE.
+
+MONEDA Y FACTURACIÓN:
+- USD, VES y COP. Tasas BCV y COP/TRM automáticas o manuales. 25 bancos venezolanos preconfigurados.
+- Facturación lista para Venezuela: ya no requiere homologación del SENIAT.
+- Pago: Binance a saymon_set@hotmail.com.
+
+HOSTING/VPS:
+- VPS Ubuntu 24.04, SSL, nginx, firewall, PostgreSQL, respaldos diarios, mantenimiento e inducción. Soporta hasta 100 productos y contabilidad avanzada. Incluido en todos los planes mensuales (el cliente no gestiona su servidor).
+- Respaldos diarios en Cloudflare; el cliente, junto a IntegraIA, crea una cuenta gratuita para alojar sus backups. El cliente es el único dueño de su información, BD y respaldos (sin vendor lock-in).
+- Tokens de OpenAI incluidos en el plan Todo en Uno ($35).
+
+DESARROLLO A MEDIDA:
+- Tecnologías: Python, Odoo, Java, Spring, Owl, Angular, React, Docker, Kubernetes, PostgreSQL.
+- Servicios: módulos Odoo personalizados, integración de APIs, migraciones desde Excel, conexión WhatsApp+Chatwoot+Odoo. Flujo: analizamos → propuesta → desarrollo → implementación → soporte.
+- Servicios profesionales por hora: Capacitación/adiestramiento y análisis $25 usdt/hora · Desarrollo de software a medida $25 usdt/hora.
+
+REQUISITOS META Y TELEGRAM:
+- WhatsApp pertenece a Meta (Facebook). Al instalar WhatsApp Cloud API se usa Meta Business; Instagram y Facebook también son de Meta. Todo se gestiona desde el mismo portafolio.
+- Requisitos: 1. Fanpage de Facebook + landing page. 2. Portafolio comercial (Meta Business Portfolio) con derechos totales. 3. Cuenta de Facebook (se ayuda a crearla). 4. Para Telegram: crear el bot con BotFather (se guía).
+
+VENTAJA ODOO COMMUNITY VS ENTERPRISE:
+- Odoo Enterprise: licencia por usuario/año pagada a Odoo S.A. + implementación con partners certificados que suele costar miles de dólares.
+- Con Community + IntegraIA: cero licencias, precios accesibles, +20 años de experiencia en desarrollo, y cualquier desarrollador Python puede mantenerlo: el cliente nunca queda cautivo de un proveedor certificado.
+- Sin vendor lock-in: la BD y los respaldos en Cloudflare son del cliente (hosting/VPS incluido en los planes). En Enterprise, dejar de pagar la licencia es perder el sistema.
+- El núcleo que la pyme necesita (ventas, compras, inventario, contabilidad, producción) está en Community.</field>
+            <field name="flujo_ids" eval="[(6, 0, [
+                ref('flujo_agendamiento_directo'),
+                ref('flujo_agendamiento_otra_consulta'),
+                ref('flujo_resultados_imagenes'),
+            ])]"/>
+        </record>
+
+        <!-- ============================================ -->
+        <!-- Intenciones de IntegraIA                      -->
+        <!-- ============================================ -->
+
+        <record id="intencion_integraia_menu" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">MENU</field>
+            <field name="keywords">menu,menu_principal,menú,opciones,ayuda</field>
+            <field name="prioridad">10</field>
+            <field name="tipo_pregunta"></field>
+            <field name="es_menu">True</field>
+            <field name="output_largo">MENÚ PRINCIPAL — ¿EN QUÉ TE AYUDO?
+1️⃣ Precios, planes, facturación y tasas (BCV / COP) 💰
+2️⃣ Odoo CE + Chatwoot: tus dos CRM y agentes IA 🤖
+3️⃣ Agendar asesoría o demo 📅
+4️⃣ Hosting, VPS, desarrollo a medida e integraciones 🔧
+Otros: contacto, promociones, instalar Telegram + Meta, envío de archivos.
+💡 La IA detecta la intención de tu cliente y lo enruta al flujo y agente correcto. Se adapta a tu empresa. https://integraia.lat/</field>
+        </record>
+
+        <record id="intencion_integraia_cancelar" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">CANCELAR</field>
+            <field name="keywords">cancelar</field>
+            <field name="prioridad">11</field>
+            <field name="tipo_pregunta"></field>
+            <field name="output_largo">Comprendido. 👍 Si cambias de opinión o necesitas ayuda con algo más, aquí estaré para orientarte.
+Puedes elegir una opción:
+
+1️⃣ Precios, planes, facturación y tasas (BCV / COP) 💰
+2️⃣ Odoo CE + Chatwoot: tus dos CRM y agentes IA 🤖
+3️⃣ Agendar asesoría o demo 📅
+4️⃣ Hosting, VPS, desarrollo a medida e integraciones 🔧
+
+También puedes escribirme con tus propias palabras lo que necesitas.</field>
+        </record>
+
+        <record id="intencion_integraia_salir" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">SALIR</field>
+            <field name="keywords">salir,gracias,muchas gracias</field>
+            <field name="prioridad">30</field>
+            <field name="tipo_pregunta"></field>
+            <field name="output_largo">¡Ha sido un placer! 😊 Gracias por comunicarte con IntegraIA. WhatsApp: +58 412 914 1074 · Web: https://integraia.lat/ · Vuelve cuando quieras.</field>
+        </record>
+
+        <record id="intencion_integraia_requisitos_meta" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">REQUISITOS_META</field>
+            <field name="keywords">instalar telegram,instalar whatsapp,instalar instagram,instalar facebook,telegram bot,whatsapp cloud,implementacion de meta,instalar meta,instalar canales de meta,requisitos de instalacion,fanpage,portafolio de facebook,portafolio comercial de meta,portafolio meta,homologacion meta,facebook developer,business manager,numero digitel,cuenta digitel,deposito de instalacion,pago inicial de instalacion,como se instala el bot,bot de whatsapp de meta,bot de telegram,bot de instagram,bot de facebook</field>
+            <field name="prioridad">35</field>
+            <field name="tipo_pregunta">SERVICIOS</field>
+            <field name="output_largo">Requisitos para instalar Telegram + canales de Meta 👇
+
+ℹ️ IMPORTANTE: WhatsApp pertenece a Meta (Facebook). Cuando instalas WhatsApp Cloud API, usas la plataforma de Meta Business. Instagram y Facebook también son de Meta. Todo se gestiona desde el mismo portafolio.
+
+SERVICIOS (USD/usdt):
+1️⃣ Chatwoot, portafolio + App de cliente + Homologación Meta, Instagram, Facebook y Telegram están INCLUIDOS en la instalación Lista para trabajar ($120, depósito 30% = $36).
+
+REQUISITOS del cliente: 1. Fanpage de Facebook + landing page. 2. Portafolio comercial (Meta Business Portfolio) con derechos totales. 3. Cuenta de Facebook (ayudo a crearla). 4. Para Telegram: crear el bot con BotFather (te guío).
+PAGO: Binance a saymon_set@hotmail.com.
+
+Cuando tengas la fanpage y la landing page, contesta aquí y coordinamos tu instalación. ¿Quieres que agendemos tu asesoría? 😊</field>
+            <field name="output_corto">📲 Instalar Telegram + canales Meta.
+
+ℹ️ WhatsApp, Instagram y Facebook son de Meta; todo se gestiona desde el mismo portafolio (Meta Business).
+
+SERVICIOS (USD/usdt):
+1️⃣ Canales INCLUIDOS en la instalación Lista para trabajar ($120): Chatwoot, portafolio + App cliente + Homologación Meta, Instagram, Facebook y Telegram.
+🎁 Paquete completo de canales INCLUIDO en la instalación Lista para trabajar ($120).
+
+REQUISITOS: 1. Fanpage de Facebook + landing page. 2. Portafolio comercial (Meta Business) con derechos totales. 3. Cuenta de Facebook. 4. Telegram: bot con BotFather.
+PAGO: Binance a saymon_set@hotmail.com.
+
+¿Te contacto un asesor? Si quieres, agendamos tu asesoría. 😊</field>
+        </record>
+
+        <record id="intencion_integraia_precios" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">PRECIOS</field>
+            <field name="keywords">precio,precios,planes,plano,costo,cuánto cuesta,cuanto cuesta,tarifa,mensualidad,facturación,factura,SENIAT,homologación,tasa,bcv,cop,trm,dólar,dolar,bolívares,pesos,usd,moneda,ecommerce,instalación,cotización,cotizacion,implementación,implementacion,mantenimiento,propuesta,actualización,parche</field>
+            <field name="prioridad">40</field>
+            <field name="tipo_pregunta">PRECIOS</field>
+            <field name="output_largo">¡Claro! Te detallo cómo invertimos tu dinero 👇
+
+Todo en USDT. INSTALACIÓN: Odoo Básica $25 · Lista para trabajar $120 (incluye canales Chatwoot, Meta+homologación, IG, FB y Telegram; depósito 30% = $36). El dominio y el correo corporativo se pagan aparte, anual.
+PLANES MENSUALES (hosting/VPS incluido): Básico $10 (tienda simple, sin agentes ni canales) · TODO EN UNO (Recomendado) $35 (1 agente + ERP completo Odoo CE: Ventas/Compras/Inventario/Contabilidad/Producción + BCV SmartConvert + IA + WhatsApp/IG/FB de Meta + Telegram + tokens de OpenAI incluidos).
+🤖 AGENTES ADICIONALES $25 usdt/agente/mes (a partir del 2º): incluyen tu chatbot avanzado (detecta la intención del cliente, dispara el flujo y cada flujo pide sus propios datos, adaptado a tu empresa). CADA PLAN = 1 AGENTE.
+🔐 Respaldos diarios en Cloudflare (cuenta gratuita creada contigo). Tus datos, BD y respaldos son tuyos. Sin vendor lock-in.
+💡 Vs Odoo Enterprise: sin licencias por usuario ni peajes de certificación; accesible: mucho menos que una licencia dedicada con flujos personalizados (~$90).
+🛠️ Servicios profesionales: Capacitación/análisis $25 usdt/hora · Desarrollo de software a medida $25 usdt/hora.
+
+MONEDA Y FACTURACIÓN: USD, VES y COP. Tasas BCV y COP/TRM automáticas o manuales. Facturación lista para Venezuela: ya no requiere homologación del SENIAT.
+
+¿Y si lo ves funcionando con tus datos? Con el depósito del 30% de tu instalación arrancamos y cubrimos las primeras 10 horas sin costo: subimos tus productos, creamos una cotización, factura, inventarios, compras/proveedores y tu contabilidad/bancos, y configuramos tu WhatsApp de Meta (fanpage + app del portafolio) con la IA que responde las preguntas de tus clientes — el flujo completo del sistema Todo en Uno. ¿Arrancamos con tu implementación? Responde 'Sí' y te haré unas breves preguntas para que un asesor te contacte. https://integraia.lat/</field>
+            <field name="output_corto">💰 Precios IntegraIA (USDT).
+
+INSTALACIÓN: Básica $25 · Lista para trabajar $120 (incluye Chatwoot + canales Meta, IG, FB y Telegram).
+PLANES MENSUALES (VPS incluido): Básico $10 (sin agentes) · TODO EN UNO $35 (1 agente + ERP Odoo CE + IA + canales Meta/Telegram + tokens OpenAI).
+🤖 Agentes extra $25/agente/mes (desde el 2º): chatbot avanzado por intención. 1 PLAN = 1 AGENTE.
+🔐 Respaldos diarios en Cloudflare. Sin vendor lock-in.
+🛠️ Servicios por hora $25 usdt.
+💡 Menos que una licencia dedicada (~$90).
+USD/VES/COP. Tasas BCV/COP automáticas. Facturación lista para Venezuela.
+¿Lo ves con tus datos? Con el 30% del depósito arrancamos (10h sin costo). ¿Agendamos? Responde 'Sí'. https://integraia.lat/ 😊</field>
+        </record>
+
+        <record id="intencion_integraia_servicios" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">SERVICIOS</field>
+            <field name="keywords">odoo,ventas,compras,inventario,stock,contabilidad,producción,crm,chatwoot,agente ia,bot,whatsapp,atención al cliente,dos crm,clínica,restaurante,farmacia,tienda,negocio,departamentos,qué servicios tienen,enterprise,community,odoo enterprise,odoo community,licencia de odoo,diferencia entre odoo,por qué community</field>
+            <field name="prioridad">41</field>
+            <field name="tipo_pregunta">SERVICIOS</field>
+            <field name="output_largo">Te explico el combo 🤖📊
+
+DOS CRM: Odoo CE 19 (ventas, compras, inventario, contabilidad, producción) + Chatwoot (centraliza WhatsApp, Instagram, FB, correo — todos canal Meta excepto correo). Usa uno o ambos.
+AGENTES IA: bot que detecta la intención del cliente, lo enruta al flujo correcto con preguntas específicas según el caso, y lo asigna al agente o departamento especializado. Todo a medida según tu sector.
+📝 CADA PLAN INCLUYE 1 AGENTE (1 persona atendiendo). Agentes adicionales: $25 usdt/agente/mes (incluyen el chatbot avanzado). La IA enruta a cada agente lo que le corresponde.
+🤖 Chatbot avanzado por agente adicional: flujos por intención, cada uno pide sus propios datos, adaptado a tu empresa. Sistema completo: ERP Odoo + Chatwoot con IA que responde las preguntas típicas de tus clientes.
+💪 ¿Por qué Community y no Enterprise? Enterprise cobra licencia por usuario al año y certificación de proveedores a la casa matriz (implantaciones de miles de dólares). Con Community: cero licencias, mismo núcleo (ventas, compras, inventario, contabilidad, producción) y tu sistema 100% tuyo, con hosting/VPS incluido. Accesible: mucho menos que una licencia dedicada con flujos personalizados (~$90).
++ Doble moneda, tasa BCV/COP automática, 25 bancos venezolanos preconfigurados.
+
+Si quieres instalar Telegram o los canales de Meta (Instagram, Facebook), dime "instalar telegram" o "instalar meta" y te explico los requisitos.
+
+¿Quieres verlo funcionando con los flujos de TU empresa? Si quieres, agendamos una demo. https://integraia.lat/</field>
+            <field name="output_corto">🤖📊 Odoo + Chatwoot.
+
+DOS CRM: Odoo CE 19 (ventas, compras, inventario, contabilidad, producción) + Chatwoot (centraliza WhatsApp, Instagram, FB, correo). Usa uno o ambos.
+AGENTES IA: detectan la intención del cliente, lo enrutan al flujo correcto y lo asignan al agente o departamento correcto. A medida según tu sector.
+📝 CADA PLAN INCLUYE 1 AGENTE. Agentes adicionales: $25 usdt/agente/mes.
+🤖 Chatbot avanzado por agente adicional: flujos por intención, a medida de tu empresa.
+💪 Community vs Enterprise: sin licencias por usuario ni certificaciones pagadas. Mismo núcleo ERP y tu sistema 100% tuyo.
++ Doble moneda, tasa BCV/COP automática, 25 bancos venezolanos.
+
+Para canales Meta/Telegram dime "instalar meta" o "instalar telegram".
+¿Demo con los flujos de TU empresa? Si quieres, agendamos tu asesoría o demo. https://integraia.lat/ 😊</field>
+        </record>
+
+        <record id="intencion_integraia_cita_directa" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">CITA_DIRECTA</field>
+            <field name="keywords">demo,cita,reunión,agendar,asesoría,quiero que me llamen,hablar con alguien,presentación,contactar,asesor</field>
+            <field name="prioridad">42</field>
+            <field name="tipo_pregunta">CITA_DIRECTA</field>
+            <field name="output_largo">¡Excelente! 🚀 Vamos a agendar tu asesoría.
+Puedes pedir:
+✏️ Demo del bot Chatwoot + IA (cómo responde en WhatsApp como tu negocio).
+✏️ Asesoría Odoo (ventas, compras, inventario, contabilidad, producción o facturación/tasas).
+
+Te mostraré cómo esta DEMO se convierte en tu propio Agente con tus productos y flujos.
+
+Contesta con "Demo Chatbot" o "Asesoría Odoo", o dime si quieres que agendemos tu asesoría. Más info: https://integraia.lat/</field>
+        </record>
+
+        <record id="intencion_integraia_tarjeta" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">TARJETA</field>
+            <field name="keywords">hosting,vps,servidor,nube,ssl,dominio,respaldo,backup,ubuntu,cloud,alojamiento</field>
+            <field name="prioridad">43</field>
+            <field name="tipo_pregunta">TARJETA</field>
+            <field name="output_largo">Hosting/VPS dedicado incluido en tus planes 🖥️
+VPS Ubuntu 24.04, SSL, nginx, firewall, PostgreSQL, respaldos diarios, mantenimiento e inducción. Soporta hasta 100 productos y contabilidad avanzada.
+Todo incluye hosting/VPS: tú no gestionas tu servidor. Respaldos diarios en Cloudflare (cuenta gratuita creada contigo); tus datos, BD y respaldos son tuyos. Tokens de OpenAI incluidos en el plan Todo en Uno ($35).
+
+¿Quieres que agendemos una asesoría técnica? https://integraia.lat/</field>
+        </record>
+
+        <record id="intencion_integraia_otra_consulta" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">OTRA_CONSULTA</field>
+            <field name="keywords">desarrollo a medida,personalizado,módulo,integración,api,migración,conectar sistemas,adaptar odoo,modificar odoo,programación,python,angular,react,proyecto</field>
+            <field name="prioridad">44</field>
+            <field name="tipo_pregunta">OTRA_CONSULTA</field>
+            <field name="flow_id" ref="flujo_agendamiento_otra_consulta"/>
+            <field name="output_largo">Desarrollamos a medida con +20 años de experiencia 🛠️
+Tecnologías: Python, Odoo, Java, Spring, Owl, Angular, React, Docker, Kubernetes, PostgreSQL.
+Servicios: módulos Odoo personalizados, integración de APIs, migraciones desde Excel, conexión WhatsApp+Chatwoot+Odoo. Flujo: analizamos → propuesta → desarrollo → implementación → soporte.
+
+Para canalizar bien tu proyecto, te haré unas preguntas y un asesor de IntegraIA te contactará en menos de 24 horas para preparar tu propuesta. https://integraia.lat/</field>
+        </record>
+
+        <record id="intencion_integraia_contacto" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">CONTACTO</field>
+            <field name="keywords">horario,ubicación,dirección,contacto,teléfono,correo,email,soporte,web,urgencia,urgente</field>
+            <field name="prioridad">45</field>
+            <field name="tipo_pregunta">ESTATICO</field>
+            <field name="output_largo">📞 Horario Lun-Vie 08:00-17:00, Sáb 09:00-13:00 hora Venezuela.
+📧 saymon_set@hotmail.com · 📱 WhatsApp +58 412 914 1074 · 🌐 https://integraia.lat/
+¿Prefieres que un asesor te llame? Si quieres, agendamos tu asesoría.</field>
+        </record>
+
+        <record id="intencion_integraia_promociones" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">PROMOCIONES</field>
+            <field name="keywords">promoción,oferta,descuento,gratis,bono</field>
+            <field name="prioridad">46</field>
+            <field name="tipo_pregunta">ESTATICO</field>
+            <field name="output_largo">🎉 Promociones: consultoría inicial gratuita, descuentos en pagos anuales, migración desde Excel y primer mes de soporte.
+¿Quieres una oferta personalizada? Si quieres, agendamos tu asesoría. https://integraia.lat/</field>
+        </record>
+
+        <record id="intencion_integraia_resultados" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">RESULTADOS</field>
+            <field name="keywords">resultados,casos de éxito,caso de éxito,testimonios,cómo funcionaría,ejemplo de cómo trabaja</field>
+            <field name="prioridad">47</field>
+            <field name="tipo_pregunta">RESULTADOS</field>
+            <field name="output_largo">👋 Así funcionaría un Agente IA para tu empresa:
+1. El cliente escribe por WhatsApp.
+2. La IA detecta la intención del cliente.
+3. Lo enruta al flujo correspondiente con preguntas específicas según el caso.
+4. Puede pedir datos o foto de un documento.
+5. Lo asigna al agente o departamento especializado y procesa la información en Odoo.
+
+Tu empresa puede automatizar recepción de cédulas, comprobantes, fotos, facturas o cualquier archivo. Se adapta a cualquier sector.
+
+¿Quieres ver cómo adaptarlo a TU empresa? Si quieres, agendamos tu asesoría o demo. https://integraia.lat/</field>
+        </record>
+
+        <record id="intencion_integraia_confirmacion" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">CONFIRMACION</field>
+            <field name="keywords">confirmar,confirmo,sí,si,registrar solicitud</field>
+            <field name="prioridad">50</field>
+            <field name="tipo_pregunta">CONFIRMACION</field>
+            <field name="flow_id" ref="flujo_agendamiento_directo"/>
+            <field name="output_largo">¡Perfecto! ✅ He registrado tu solicitud.
+Para completar la información, te haré unas breves preguntas y un asesor de IntegraIA te contacta en menos de 24 horas para coordinar tu asesoría o demo. https://integraia.lat/</field>
+        </record>
+
+        <record id="intencion_integraia_confirmacion_imagen" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">CONFIRMACION_IMAGEN</field>
+            <field name="keywords">imagen,archivo,foto,comprobante,documento,logo,evidencia,captura,adjunto</field>
+            <field name="prioridad">52</field>
+            <field name="tipo_pregunta">CONFIRMACION_IMAGEN</field>
+            <field name="output_largo">¡Recibí tu imagen/archivo! 📎 Antes de continuar: ¿deseas que sea revisada por alguien del departamento correspondiente y que un asesor te contacte?
+
+⚠️ Recuerda que estás en una DEMO: así funcionaría en tu empresa, con tus propios archivos y flujos.
+
+Responde SÍ para que la revisemos, o escribe MENÚ para ver otras opciones (precios, servicios, agendar asesoría). https://integraia.lat/</field>
+        </record>
+
+        <record id="intencion_integraia_imagen" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">IMAGEN</field>
+            <field name="keywords">enviar archivo,te envío,adjunto,aquí está,te mando</field>
+            <field name="prioridad">53</field>
+            <field name="tipo_pregunta"></field>
+            <field name="flow_id" ref="flujo_resultados_imagenes"/>
+            <field name="output_largo">¡Recibí tu imagen/archivo! 📎 Para canalizarla bien y darte una respuesta precisa, te haré unas breves preguntas y un asesor de IntegraIA te contactará para completar la información. https://integraia.lat/</field>
+        </record>
+
+        <record id="intencion_integraia_fallback" model="chatbot.intencion">
+            <field name="config_id" ref="chatbot_config_integraia"/>
+            <field name="nombre">FALLBACK</field>
+            <field name="keywords"></field>
+            <field name="prioridad">99</field>
+            <field name="tipo_pregunta"></field>
+            <field name="output_largo">Gracias por escribirme. 😊 Quiero ayudarte bien, pero necesito entender un poco mejor lo que buscas.
+Puedes elegir una opción escribiendo el número:
+
+1️⃣ Precios, planes, facturación y tasas (BCV / COP) 💰
+2️⃣ Odoo CE + Chatwoot: tus dos CRM y agentes IA 🤖
+3️⃣ Agendar asesoría o demo 📅
+4️⃣ Hosting, VPS, desarrollo a medida e integraciones 🔧
+
+También puedes escribirme algo como:
+• "Quiero precios de la instalación de Odoo"
+• "¿Qué hace Chatwoot?"
+• "Necesito inventario y ventas"
+• "Agendar asesoría"
+• "Instalar telegram"
+
+💡 Cuéntame qué necesitas automatizar en tu empresa y te oriento. ¿Sobre qué tema avanzamos? https://integraia.lat/</field>
+        </record>
+
+    </data>
+</odoo>

@@ -663,14 +663,20 @@ class ChatBotUtils:
         """
         Construye el system prompt que n8n inyecta al Agente_Informacion_basica.
 
-        Combina:
-        1. Mensaje de negocio configurado en Ajustes.
-        2. Catálogo de flujos activos (nombre, routing_key, política, reglas).
-        3. Reglas técnicas fijas de formato de salida.
+        Prioridad:
+        1. Si existe una chatbot.config activa, renderiza el prompt desde ella
+           (esqueleto universal + secciones del cliente) en runtime.
+        2. Sin config: prompt legacy desde ai_chatbot_1_portal.system_prompt
+           (retrocompatibilidad total).
 
         No contiene información fija de ninguna industria: se genera
         dinámicamente a partir de la configuración de Odoo.
         """
+        active_config = env['chatbot.config'].sudo()._get_active_config()
+        if active_config:
+            from odoo.addons.ai_chatbot_1_portal.services.prompt_renderer import render_prompt
+            return render_prompt(active_config)
+
         params = env['ir.config_parameter'].sudo()
         business_prompt = params.get_param('ai_chatbot_1_portal.system_prompt', '') or ''
         business_prompt, _n = reformatear_prompt_aplanado(business_prompt)

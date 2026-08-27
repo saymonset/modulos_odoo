@@ -1,6 +1,6 @@
 # SPEC 01 — Prompt universal multicliente para el chatbot
 
-> **Status:** Draft
+> **Status:** Implemented
 > **Depends on:** (ninguno)
 > **Date:** 2026-08-27
 > **Objective:** Permitir que cualquier cliente (inmobiliaria, clínica, doctor, mecánico, gobernación) tenga su propio prompt de negocio generado desde una configuración guardada en Odoo, reutilizando un esqueleto universal único (JSON, clasificación de intención, flujos, límites por plataforma).
