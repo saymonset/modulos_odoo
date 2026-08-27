@@ -13,6 +13,7 @@
         "data/chatbot_flujos_data.xml",
         "data/chatbot_teams_data.xml",
         "data/chatbot_pasos_data.xml",
+        "data/chatbot_config_data.xml",
         "data/chatbot_email_template.xml",
         "views/res_config_settings_view.xml",  # AÑADIDO: El XML debe ir aquí
         "views/login_templates.xml",  # AÑADIDO: El XML debe ir aquí

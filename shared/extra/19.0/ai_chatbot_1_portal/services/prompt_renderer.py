@@ -61,10 +61,11 @@ def _render_universal_skeleton():
 
 
 def _render_flujos(config):
-    if not config.flujo_ids:
+    flujos_config = config.with_context(active_test=False).flujo_ids
+    if not flujos_config:
         return "(Sin flujos activos configurados.)"
     lines = ["=== FLUJOS DISPONIBLES (usa EXACTAMENTE estos valores) ==="]
-    for i, flujo in enumerate(config.flujo_ids.sorted('name'), 1):
+    for i, flujo in enumerate(flujos_config.sorted('name'), 1):
         routing_key = flujo.routing_key or flujo.name
         lines.append(f"{i}. flow_name: {flujo.name}")
         lines.append(f"   - equipo_asignado (código de enrutamiento): {routing_key}")
@@ -111,7 +112,8 @@ def _render_menu(config):
         return "(Sin menú configurado.)"
     lines = ["=== MENÚ DE OPCIONES ==="]
     for opcion in opciones:
-        lines.append(f"- {opcion.nombre}: {opcion.output_largo.strip() if opcion.output_largo else ''}")
+        texto = (opcion.output_largo or '').strip() or opcion.nombre
+        lines.append(texto)
     return "\n".join(lines)
 
 
