@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class ChatbotConfig(models.Model):
@@ -38,3 +38,8 @@ class ChatbotConfig(models.Model):
         help='Si se genera una variante corta (output_corto) para Instagram/Meta.',
     )
     active = fields.Boolean(default=True)
+
+    @api.model
+    def _get_active_config(self):
+        """Retorna la config de negocio activa (la más reciente) o vacío."""
+        return self.sudo().search([('active', '=', True)], order='id desc', limit=1)
