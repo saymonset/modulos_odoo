@@ -1,6 +1,6 @@
 # SPEC 02 — Flow map dinámico para n8n (mapeo de flujos sin hardcodeo)
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 01 (parcial: el endpoint lee `chatbot.flujo` directo; SPEC 01
 > luego re-fuentea el flow_map desde `chatbot.config`)
 > **Date:** 2026-08-27

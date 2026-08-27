@@ -422,6 +422,7 @@ class InicioAgendarController(http.Controller):
 
             data['system_prompt'] = system_prompt or fallback_message
             data['fallback_message'] = fallback_message
+            data['flow_map'] = request.env['chatbot.flujo'].sudo()._get_flow_routing_map()
             return Response(
                 json.dumps(data, default=str),
                 status=200,
