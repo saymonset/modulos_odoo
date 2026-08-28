@@ -1,7 +1,7 @@
 {
     'name': 'Currency Rate Update Base',
     'summary': 'Base engine for multi-bank currency rate updates',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.0.1',
     'category': 'Accounting',
     'author': 'Simon Alberto Rodriguez Pacheco',
     'license': 'LGPL-3',

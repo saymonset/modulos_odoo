@@ -136,7 +136,15 @@ class CurrencyRateProvider(models.Model):
                 final_rate = rate_value
 
         _logger.info(f"Updating rate for {target_currency.name} (Base: {base_currency.name}): {final_rate}")
-        
+
+        # Odoo 19 forbids rate <= 0 (CHECK rate > 0): skip invalid rates
+        if final_rate <= 0:
+            _logger.warning(
+                "Skipping rate update for %s: value must be positive, got %s",
+                target_currency.name, final_rate,
+            )
+            return
+
         # Create or update today's rate
         rate_record = self.env['res.currency.rate'].search([
             ('currency_id', '=', target_currency.id),

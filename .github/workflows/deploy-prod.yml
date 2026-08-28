@@ -161,7 +161,8 @@ jobs:
           docker exec "${STAGING_WEB}" python3 /opt/odoo/odoo-core/odoo-bin \
             -d "${STAGING_DB}" \
             -u "${MODULES}" \
-            --test-enable --stop-after-init --log-level=test --no-http 2>&1 | tee test.log
+            --test-enable --stop-after-init --log-level=test --no-http \
+            --logfile=/dev/stdout 2>&1 | tee test.log
           rc=${PIPESTATUS[0]}
           if [ "${rc}" -ne 0 ]; then
             echo "::error::odoo-bin salio con codigo ${rc}"
