@@ -112,6 +112,17 @@ export class CustomPaymentLines extends Component {
             && this.props.paymentLines.length > 0;
     }
 
+    // Nombre del método de pago al que se aplicará el monto (si hay línea seleccionada)
+    get selectedPaymentName() {
+        const lines = this.props.paymentLines || [];
+        const selected = lines.find((l) => l.isSelected && l.isSelected());
+        try {
+            return (selected && selected.payment_method_id && selected.payment_method_id.name) || "";
+        } catch (_) {
+            return "";
+        }
+    }
+
     // ── Actions ──
 
     selectCurrency(currencyId) {
@@ -180,6 +191,39 @@ export class CustomPaymentLines extends Component {
         if (ev.key === "Enter") {
             this.applyToPaymentLine();
         }
+    }
+
+    // Pagar exactamente el monto restante en la moneda activa
+    applyExactRemaining() {
+        if (!this.props.paymentLines || this.props.paymentLines.length === 0) return;
+        const order = this.pos.getOrder();
+        const remainingBs = order ? order.remainingDue : 0;
+        if (remainingBs <= 0) return;
+
+        const rate = this.state.rate || 1;
+        const copRate = this.state.copRate || 1;
+        let value;
+        if (this.state.selectedCurrency === "usd") {
+            value = rate > 0 ? remainingBs / rate : 0;
+        } else if (this.state.selectedCurrency === "cop") {
+            value = rate > 0 && copRate > 0 ? (remainingBs / rate) * copRate : 0;
+        } else {
+            value = remainingBs;
+        }
+        this.state.inputAmount = this._formatInput(value);
+        this.applyToPaymentLine();
+    }
+
+    clearInput() {
+        this.state.inputAmount = "";
+    }
+
+    _formatInput(value) {
+        if (!isFinite(value) || value <= 0) return "";
+        const rounded = Math.round(value * 100) / 100;
+        return Number.isInteger(rounded)
+            ? String(rounded)
+            : rounded.toFixed(2).replace(/\.?0+$/, "");
     }
 
     // ── Rate ──

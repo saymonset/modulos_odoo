@@ -2,31 +2,40 @@
 <templates id="template" xml:space="preserve">
 
     <t t-name="pos_venezuela_dual_currency.PaymentScreenDueUsd">
-        <div class="payment-due-usd px-2 py-1">
-            <!-- Total en Bs arriba -->
-            <div class="d-flex justify-content-between align-items-center small text-muted">
+        <div class="payment-due-usd">
+            <!-- Total en Bs -->
+            <div class="due-row muted">
                 <span>Total</span>
                 <span>Bs. <t t-esc="formatAmount(totalBs)"/></span>
             </div>
             <!-- Total en USD -->
-            <div class="d-flex justify-content-between align-items-center small text-muted border-bottom pb-1 mb-1">
+            <div class="due-row muted">
                 <span>Total $</span>
                 <span>$ <t t-esc="formatAmount(totalUsd)"/></span>
             </div>
-            <!-- Restante USD: rojo, más grande, arriba -->
-            <div class="d-flex justify-content-between align-items-center">
+            <!-- Restante USD: destacado -->
+            <div class="due-row">
                 <span class="text-danger fw-bold">Resta $</span>
-                <span class="text-danger fw-bold fs-6">$ <t t-esc="formatAmount(remainingUsd)"/></span>
+                <span class="text-danger fw-bold">$ <t t-esc="formatAmount(remainingUsd)"/></span>
             </div>
-            <!-- Restante Bs: azul, debajo, tamaño normal -->
-            <div class="d-flex justify-content-between align-items-center">
+            <!-- Restante Bs -->
+            <div class="due-row">
                 <span class="text-primary fw-bold">Resta Bs.</span>
                 <span class="text-primary fw-bold">Bs. <t t-esc="formatAmount(remainingBs)"/></span>
             </div>
-            <!-- Restante COP: verde, compacto -->
-            <div t-if="showCop" class="d-flex justify-content-between align-items-center border-top pt-1 mt-1 small">
+            <!-- Restante COP -->
+            <div t-if="showCop" class="due-row">
                 <span class="text-success fw-bold">Resta COP</span>
                 <span class="text-success fw-bold">$ <t t-esc="formatAmount(remainingCop)"/></span>
+            </div>
+            <!-- Cambio (vueltas) multimoneda -->
+            <div t-if="showChange" class="change-block">
+                <div class="change-title fw-bold">Cambio</div>
+                <div class="d-flex justify-content-between fw-bold">
+                    <span>Bs. <t t-esc="formatAmount(changeBs)"/></span>
+                    <span>$ <t t-esc="formatAmount(changeUsd)"/></span>
+                    <span t-if="showCop">COP <t t-esc="formatAmount(changeCop)"/></span>
+                </div>
             </div>
         </div>
     </t>

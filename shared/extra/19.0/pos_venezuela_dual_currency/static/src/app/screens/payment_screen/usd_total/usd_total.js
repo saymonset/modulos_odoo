@@ -50,6 +50,23 @@ export class PaymentScreenDueUsd extends Component {
         return _copEnabled && _copRate > 0 && _copRateLoaded;
     }
 
+    // Cambio (vueltas): solo cuando se pagó de más
+    get changeBs() {
+        return Math.max(0, -this.remainingBs);
+    }
+
+    get showChange() {
+        return this.remainingBs < 0;
+    }
+
+    get changeUsd() {
+        return _rate > 0 ? this.changeBs / _rate : 0;
+    }
+
+    get changeCop() {
+        return _copRate > 0 ? this.changeUsd * _copRate : 0;
+    }
+
     formatAmount(value) {
         if (value == null || isNaN(value)) return "0,00";
         return Number(value).toLocaleString("es-VE", {
