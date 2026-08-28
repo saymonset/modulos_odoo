@@ -139,3 +139,15 @@ class TestPurchaseReportCop(BaseBcvTestCase):
         self.assertIn('untaxed_total_cop', combined)
         self.assertIn('price_total_cop', combined)
         self.assertIn('cop_show_fields', combined)
+
+    def test_09_sale_report_query_runs(self):
+        """El SQL de sale.report debe ejecutarse sin error (regresión max(boolean)/GROUP BY)."""
+        sr = self.env['sale.report']
+        self.assertIn('cop_show_fields', sr._fields)
+        sr.search([], limit=1)
+
+    def test_10_invoice_report_query_runs(self):
+        """El SQL de account.invoice.report debe ejecutarse sin error (no agrupa por line.id)."""
+        ar = self.env['account.invoice.report']
+        self.assertIn('cop_show_fields', ar._fields)
+        ar.search([], limit=1)
