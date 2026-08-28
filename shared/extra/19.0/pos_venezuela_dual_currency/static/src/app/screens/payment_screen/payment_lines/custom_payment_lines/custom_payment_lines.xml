@@ -2,21 +2,21 @@
 <templates id="template" xml:space="preserve">
 
     <t t-name="pos_venezuela_dual_currency.CustomPaymentLines">
-        <div class="currency-converter d-flex flex-column gap-1 mb-1 px-2 py-2 bg-light rounded border">
-            <!-- Header: tasa compacta -->
-            <div class="d-flex align-items-center justify-content-between">
-                <span class="fw-bold small text-uppercase">Convertir</span>
-                <span t-if="state.rateLoaded" class="text-muted small">
+        <div class="currency-converter d-flex flex-column gap-2 mb-1">
+            <!-- Header: título + tasa -->
+            <div class="d-flex align-items-center justify-content-between currency-converter-header">
+                <span class="fw-bold small text-uppercase converter-title">Convertir</span>
+                <span t-if="state.rateLoaded" class="text-muted rate">
                     <t t-esc="formatDecimal(state.rate)"/> Bs/US$
                 </span>
             </div>
 
-            <!-- Currency Toggle -->
-            <div class="d-flex gap-1">
+            <!-- Moneda destino: toggle -->
+            <div class="d-flex currency-toggle">
                 <t t-foreach="currencies" t-as="currency" t-key="currency.id">
-                    <button class="btn btn-sm flex-fill text-truncate py-0"
+                    <button class="btn flex-fill text-truncate"
                         t-att-class="{
-                            'btn-primary fw-bold': state.selectedCurrency === currency.id,
+                            'btn-primary': state.selectedCurrency === currency.id,
                             'btn-secondary': state.selectedCurrency !== currency.id,
                         }"
                         t-on-click="() => this.selectCurrency(currency.id)">
@@ -25,14 +25,13 @@
                 </t>
             </div>
 
-            <!-- Input Row compacta -->
-            <div class="input-group input-group-sm">
-                <span class="input-group-text fw-bold bg-light py-0">
-                    <t t-esc="activeCurrency.symbol"/>
-                </span>
+            <!-- Input del monto -->
+            <div class="input-group">
+                <span class="input-group-text fw-bold bg-light"><t t-esc="activeCurrency.symbol"/></span>
                 <input type="text" class="form-control text-end fw-bold"
                     inputmode="decimal"
-                    placeholder="0.00"
+                    placeholder="Monto a pagar"
+                    aria-label="Monto a pagar"
                     t-att-value="state.inputAmount"
                     t-on-input="(ev) => this.onInputChange(ev)"
                     t-on-keydown="(ev) => this.onKeydown(ev)"
@@ -45,18 +44,35 @@
                 </button>
             </div>
 
-            <!-- Conversion Preview compacta -->
-            <div t-if="displayConversion" class="d-flex justify-content-center align-items-center gap-1 flex-wrap">
+            <!-- Conversión preview -->
+            <div t-if="displayConversion" class="conversion-preview d-flex justify-content-center align-items-center gap-1 flex-wrap text-muted">
                 <t t-foreach="displayConversion" t-as="conv" t-key="conv.label">
-                    <span t-if="conv_index > 0" class="text-muted small mx-1">=</span>
-                    <span class="fw-bold small"><t t-esc="conv.label"/> <t t-esc="formatDecimal(conv.value)"/></span>
+                    <span t-if="conv_index > 0" class="mx-1">=</span>
+                    <span class="fw-bold"><t t-esc="conv.label"/> <t t-esc="formatDecimal(conv.value)"/></span>
                 </t>
             </div>
 
-            <!-- Remaining Due Hint -->
-            <div t-if="state.inputFocused and props.paymentLines and props.paymentLines.length > 0"
-                class="text-center text-muted small">
-                Presiona <strong>Enter</strong> para aplicar
+            <!-- Acciones rápidas + hint de método destino -->
+            <div t-if="props.paymentLines and props.paymentLines.length > 0" class="d-flex flex-column gap-1">
+                <div class="d-flex quick-actions">
+                    <button class="btn btn-outline-primary flex-fill"
+                        t-on-click="() => this.applyExactRemaining()">
+                        <i class="fa fa-check-circle me-1"/> Total exacto
+                    </button>
+                    <button class="btn btn-outline-secondary flex-fill"
+                        t-att-disabled="!state.inputAmount"
+                        t-on-click="() => this.clearInput()">
+                        <i class="fa fa-eraser me-1"/> Limpiar
+                    </button>
+                </div>
+                <div class="payment-target-hint text-center text-muted">
+                    <t t-if="selectedPaymentName">
+                        Monto para: <strong><t t-esc="selectedPaymentName"/></strong>
+                    </t>
+                    <t t-else="">
+                        Selecciona un método de pago
+                    </t>
+                </div>
             </div>
         </div>
     </t>
