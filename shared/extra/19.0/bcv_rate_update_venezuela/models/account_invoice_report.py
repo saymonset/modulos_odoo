@@ -66,7 +66,7 @@ class AccountInvoiceReport(models.Model):
                     / move.invoice_currency_rate / NULLIF(%(bcv_rate)s, 0.0)
                     * NULLIF(%(cop_rate)s, 0.0) AS price_total_cop,
                 %(cop_id)s AS currency_cop_id,
-                MAX((SELECT rc.cop_show_fields FROM res_company rc
+                BOOL_OR((SELECT rc.cop_show_fields FROM res_company rc
                       WHERE rc.id = line.company_id)) AS cop_show_fields
             """,
             bcv_rate=bcv_rate,
