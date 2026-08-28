@@ -69,7 +69,7 @@ class PurchaseReport(models.Model):
                     * account_currency_table.rate / NULLIF(%(bcv_rate)s, 0.0))::decimal(16, 2)
                     * NULLIF(%(cop_rate)s, 0.0) AS price_total_cop,
                 %(cop_id)s AS currency_cop_id,
-                MAX((SELECT rc.cop_show_fields FROM res_company rc
+                BOOL_OR((SELECT rc.cop_show_fields FROM res_company rc
                       WHERE rc.id = po.company_id)) AS cop_show_fields
             """,
             bcv_rate=bcv_rate,

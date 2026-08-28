@@ -103,6 +103,7 @@ class TestPurchaseReportCop(BaseBcvTestCase):
         """Cuando cop_show_fields=False, el campo cop_show_fields del report
         debe ser False."""
         self.company.cop_show_fields = False
+        self.company.flush_recordset()
         self._create_confirmed_po(qty=1.0, price=200.0)
         pr = self.env['purchase.report'].search([
             ('product_id', '=', self.product.id),
@@ -110,6 +111,7 @@ class TestPurchaseReportCop(BaseBcvTestCase):
         self.assertTrue(pr)
         self.assertFalse(pr.cop_show_fields)
         self.company.cop_show_fields = True
+        self.company.flush_recordset()
 
     def test_06_sale_report_has_cop_fields(self):
         """sale.report debe tener los campos COP definidos."""

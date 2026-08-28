@@ -73,7 +73,7 @@ class SaleReport(models.Model):
         res['currency_usd_id'] = usd.id if usd else False
         res['currency_cop_id'] = cop.id if cop else False
         res['cop_show_fields'] = (
-            "MAX((SELECT rc.cop_show_fields FROM res_company rc"
+            "BOOL_OR((SELECT rc.cop_show_fields FROM res_company rc"
             " WHERE rc.id = s.company_id))"
         )
         return res
@@ -110,7 +110,7 @@ class SaleReport(models.Model):
         res['currency_usd_id'] = usd.id if usd else False
         res['currency_cop_id'] = cop.id if cop else False
         res['cop_show_fields'] = (
-            "MAX((SELECT rc.cop_show_fields FROM res_company rc"
+            "BOOL_OR((SELECT rc.cop_show_fields FROM res_company rc"
             " WHERE rc.id = pos.company_id))"
         )
         return res
