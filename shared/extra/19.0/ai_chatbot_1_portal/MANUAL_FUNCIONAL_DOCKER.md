@@ -136,19 +136,18 @@ Traducción: "coge el token de la variable de entorno CHATBOT_API_TOKEN del cont
 
 ## 3. El workflow de n8n (cómo importarlo)
 
-El robot n8n se program visualmente con "flujos" (workflows). Los flujos oficiales de este proyecto están en la carpeta:
-`ai_chatbot_1_portal/n8n/`
+El robot n8n se program visualmente con "flujos" (workflows). Los flujos oficiales de este proyecto viven en el stack de despliegue, en la carpeta `odoo19-skeleton/n8n_json/` (una por cliente, git-versionada; única fuente de verdad):
 
 | Archivo | Cuál es |
 |---|---|
-| `chatbot_create_lead_0.json` | El flujo principal y actual (`chatbot_create_lead_0_con_menu_whatsapp`) |
+| `chatbot_create_lead_0_con_menu_whatsapp.json` | El flujo principal y actual (`chatbot_create_lead_0_con_menu_whatsapp`) |
 | `chatbot-simple_1_subflow.json` | Un sub-flujo de apoyo/alternativa |
 
 Para importarlo en n8n:
 
 1. Entra a `https://n8n.aristosoluciones.integraia.lat` (usuario `admin` y la contraseña que está en `secrets/n8n_password.txt` del servidor).
 2. Pulsa **Workflows** (menú izquierdo) → **Create Workflow** → y con el tres-puntos elige **Import from JSON**.
-3. Selecciona el archivo `chatbot_create_lead_0.json`.
+3. Selecciona el archivo `chatbot_create_lead_0_con_menu_whatsapp.json`.
 4. Revisa que en el nodo **`Obtener_configuracion_agente`** la URL señale tu dominio: `https://aristosoluciones.integraia.lat/ai_chatbot_1_portal/configuracion_agente`.
 5. Guarda y deja el flujo **Open** (activado) con el interruptor de la parte superior.
 
@@ -218,6 +217,6 @@ Resultado esperado:
 1. n8n es el robot que conversa; Odoo guarda los datos y crea los leads.
 2. El token de n8n va en **2 sitios iguales**: Ajustes de Odoo → "API Token para n8n" y `docker-compose.n8n.yml` → `CHATBOT_API_TOKEN`.
 3. Que **no coincidan** = error `Token inválido` en el nodo `Obtener_configuracion_agente`.
-4. El flujo principal se importa desde `ai_chatbot_1_portal/n8n/chatbot_create_lead_0.json`.
+4. El flujo principal se importa desde `odoo19-skeleton/n8n_json/chatbot_create_lead_0_con_menu_whatsapp.json`.
 5. Después de cambiar el token en Docker: `docker compose up -d --force-recreate n8n`.
 6. ¿Dudas? Mira `docker compose logs n8n` antes de tocar nada.
