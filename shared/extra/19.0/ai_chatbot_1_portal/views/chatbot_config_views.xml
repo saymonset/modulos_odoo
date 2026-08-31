@@ -28,6 +28,10 @@
                         <button name="action_activar_flujos" type="object"
                                 string="Activar flujos de esta configuración"
                                 class="btn-primary"/>
+                        <button name="action_refrescar_desde_rag" type="object"
+                                string="Refrescar intenciones desde RAG"
+                                class="btn-primary"
+                                confirm="Se regenerarán las intenciones de contenido (es_auto_rag) desde la tabla n8n_vectors y se actualizará la Base de conocimiento. ¿Continuar?"/>
                     </header>
                     <sheet>
                         <group>
@@ -58,6 +62,7 @@
                                         <field name="tipo_pregunta"/>
                                         <field name="es_menu"/>
                                         <field name="flow_id"/>
+                                        <field name="es_auto_rag"/>
                                     </list>
                                 </field>
                             </page>
