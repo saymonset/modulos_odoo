@@ -68,25 +68,7 @@
             <field name="palabras_clave">pago directo,cuenta propia,particular,sin convenio,autopago,pago particular,por mi cuenta</field>
         </record>
         
-        <!-- Flujo 8: Citas con Seguro Médico -->
-        <record id="flujo_citas_seguro" model="chatbot.flujo">
-            <field name="name">flujo_citas_seguro</field>
-            <field name="company_id" ref="base.main_company"/>
-            <field name="active">True</field>
-            <field name="descripcion_intencion">El usuario desea gestionar un servicio o trámite a través de un convenio, afiliación o cobertura.</field>
-            <field name="palabras_clave">convenio,convenios,afiliacion,afiliacion,cobertura,plan,planes,poliza,póliza,beneficio,beneficios</field>
-        </record>
-        
-        <!-- Flujo 9: Resultados de Laboratorio -->
-        <record id="flujo_resultados_laboratorio" model="chatbot.flujo">
-            <field name="name">flujo_resultados_laboratorio</field>
-            <field name="company_id" ref="base.main_company"/>
-            <field name="active">True</field>
-            <field name="descripcion_intencion">El usuario solicita documentos, resultados, constancias o certificados.</field>
-            <field name="palabras_clave">documento,documentos,resultado,resultados,constancia,constancias,certificado,certificados,reporte,reportes,mis resultados</field>
-        </record>
-        
-        <!-- Flujo 10: Resultados de Imágenes -->
+        <!-- Flujo 8: Resultados de Imágenes -->
         <record id="flujo_resultados_imagenes" model="chatbot.flujo">
             <field name="name">flujo_resultados_imagenes</field>
             <field name="company_id" ref="base.main_company"/>
