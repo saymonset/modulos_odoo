@@ -20,6 +20,15 @@ def _normalizar_texto(texto):
     return ''.join(_CHAR_ACCENT_MAP.get(c, c) for c in texto)
 
 
+# Flujos que SIEMPRE quedan activos (capacidades universales del bot,
+# independientes del negocio): el de respaldo y el de imágenes/archivos
+# (todo cliente puede enviar fotos, logos o comprobantes por WhatsApp).
+_FLUJOS_SIEMPRE_ACTIVOS = (
+    'flujo_agendamiento_default',
+    'flujo_resultados_imagenes',
+)
+
+
 class ChatbotFlujo(models.Model):
     _name = "chatbot.flujo"
     _description = "Flujo de chatbot"
@@ -474,7 +483,7 @@ class ChatbotFlujo(models.Model):
                 "campo_destino": "imagenes_adicionales",
                 "es_requerido": False,
                 "es_paso_telefono": False,
-                "mensaje_prompt": "Por favor, envíanos una foto o imagen del documento o archivo. Puedes enviar varias imágenes. Si no la tienes en este momento, escribe 'saltar' para continuar.",
+                "mensaje_prompt": "Por favor, envíanos una foto o imagen del documento o archivo. Puedes enviar varias imágenes: escribe *'listo'* cuando termines, o 'saltar' para omitir el paso.",
                 "mensaje_error": "Por favor, envía una imagen clara del documento o archivo.",
             },
             {
@@ -625,9 +634,6 @@ class ChatbotFlujo(models.Model):
             "Agendamiento_Tarjeta": "Grupo Ventas",
             "flujo_ventas": "Grupo Ventas",
             "Ventas": "Grupo Ventas",
-            # Aliases de compatibilidad (nombres antiguos)
-            "flujo_ventas_unisa": "Grupo Ventas",
-            "Ventas_UNISA": "Grupo Ventas",
             "CITAS_MP": "Grupo Citas",
             "flujo_citas_medios_propios": "Grupo Citas",
             "CITAS_SEGUROS": "Grupo Citas",
@@ -685,8 +691,6 @@ class ChatbotFlujo(models.Model):
             "Agendamiento_Tarjeta": "ventas de hosting y dominio",
             "flujo_ventas": "ventas de hosting y dominio",
             "Ventas": "ventas de hosting y dominio",
-            "flujo_ventas_unisa": "ventas de hosting y dominio",
-            "Ventas_UNISA": "ventas de hosting y dominio",
             "CITAS_MP": "gestión con pago directo",
             "flujo_citas_medios_propios": "gestión con pago directo",
             "CITAS_SEGUROS": "gestión por convenio o cobertura",
@@ -750,9 +754,103 @@ class ChatbotFlujo(models.Model):
                 '_sincronizar_mappings: flujos=%s activo=%s -> mappings=%s',
                 flujos.ids, activo, mappings.ids)
 
+    # Catálogo base de flujos. Mantener sincronizado con
+    # data/chatbot_flujos_data.xml (seed de instalación). Se usa para
+    # auto-recrear el catálogo si un usuario borra los flujos.
+    _CATALOGO_FLUJOS_BASE = (
+        {
+            'xmlid': 'flujo_agendamiento_directo',
+            'name': 'flujo_agendamiento_directo',
+            'descripcion_intencion': 'El usuario quiere agendar directamente una cita, turno o reserva.',
+            'palabras_clave': 'cita,citas,agenda,agendar,agendamiento,reservar,reserva,turno,turnos,cupo,horario',
+        },
+        {
+            'xmlid': 'flujo_agendamiento_precios',
+            'name': 'flujo_agendamiento_precios',
+            'descripcion_intencion': 'El usuario pregunta por precios, costos, tarifas o cotizaciones.',
+            'palabras_clave': 'precio,precios,costo,costos,cuanto,valor,tarifa,tarifas,cotizacion,cotizaciones,plan,planes',
+        },
+        {
+            'xmlid': 'flujo_agendamiento_servicios',
+            'name': 'flujo_agendamiento_servicios',
+            'descripcion_intencion': 'El usuario pregunta por servicios, procedimientos, trámites o paquetes ofrecidos.',
+            'palabras_clave': 'servicio,servicios,procedimientos,procedimiento,paquete,paquetes,tramite,tramites,proceso,procesos',
+        },
+        {
+            'xmlid': 'flujo_ventas',
+            'name': 'flujo_ventas',
+            'descripcion_intencion': 'El usuario quiere comprar, pedir, encargar o adquirir productos del negocio.',
+            'palabras_clave': 'venta,ventas,vender,compra,comprar,pedido,pedidos,carrito,producto,productos,tienda,domicilio,delivery,retail',
+        },
+        {
+            'xmlid': 'flujo_agendamiento_otra_consulta',
+            'name': 'flujo_agendamiento_otra_consulta',
+            'descripcion_intencion': 'El usuario tiene otra consulta o solicitud no cubierta por los demás flujos.',
+            'palabras_clave': 'consulta,dudas,duda,pregunta,preguntas,informacion,solicitud,asesoria,orientacion',
+        },
+        {
+            'xmlid': 'flujo_agendamiento_default',
+            'name': 'flujo_agendamiento_default',
+            'descripcion_intencion': 'Flujo de respaldo cuando ninguna otra intención aplica.',
+            'palabras_clave': '',
+        },
+        {
+            'xmlid': 'flujo_citas_medios_propios',
+            'name': 'flujo_citas_medios_propios',
+            'descripcion_intencion': 'El usuario desea gestionar un servicio o trámite con pago directo por cuenta propia.',
+            'palabras_clave': 'pago directo,cuenta propia,particular,sin convenio,autopago,pago particular,por mi cuenta',
+        },
+        {
+            'xmlid': 'flujo_resultados_imagenes',
+            'name': 'flujo_resultados_imagenes',
+            'descripcion_intencion': 'El usuario envía o menciona una imagen, foto, archivo, logo o comprobante.',
+            'palabras_clave': 'imagen,imagenes,foto,fotos,archivo,archivos,logo,logos,comprobante,comprobantes',
+        },
+    )
+
+    def _ensure_catalogo_flujos(self):
+        """
+        (Re)crea los flujos base del catálogo que hayan sido eliminados.
+
+        Los crea con active=False (la detección decide cuáles activar) y con
+        generar_pasos_automatico=True (los pasos nacen al crearlos). Registra
+        también los ir.model_data con los xmlids del seed para que un upgrade
+        posterior del módulo no los duplique.
+        """
+        main_company = self.env.ref('base.main_company')
+        creados = 0
+        for item in self._CATALOGO_FLUJOS_BASE:
+            existente = self.sudo().with_context(active_test=False).search(
+                [('name', '=', item['name'])], limit=1)
+            if existente:
+                continue
+            flujo = self.sudo().create({
+                'name': item['name'],
+                'company_id': main_company.id,
+                'descripcion_intencion': item['descripcion_intencion'],
+                'palabras_clave': item['palabras_clave'],
+                'generar_pasos_automatico': True,
+                'active': False,
+            })
+            self.env['ir.model.data'].sudo().create({
+                'module': 'ai_chatbot_1_portal',
+                'name': item['xmlid'],
+                'model': 'chatbot.flujo',
+                'res_id': flujo.id,
+                'noupdate': True,
+            })
+            creados += 1
+        if creados:
+            _logger.info(
+                '_ensure_catalogo_flujos: recreados %d flujo(s) base (archivados).',
+                creados)
+        return creados
+
     def _ensure_mappings_for_flujos(self, flujos):
         """
-        Crea un Chatwoot Mapping para cada flujo activo que aún no lo tenga.
+        Crea un Chatwoot Mapping para cada flujo activo que aún no lo tenga,
+        adoptando primero los mappings huérfanos (flow_id vacío pero con
+        routing_key igual al nombre del flujo) para no duplicar.
 
         Usa los defaults del conector Chatwoot (agent_id, agent_email, inbox_id)
         configurados en Settings si están seteados; de lo contrario los deja
@@ -770,6 +868,19 @@ class ChatbotFlujo(models.Model):
         for flujo in flujos:
             existentes = mapping_model.sudo().search([('flow_id', '=', flujo.id)])
             if existentes:
+                continue
+            # Adoptar un mapping huérfano (flow_id vacío pero routing_key igual
+            # al nombre del flujo) para no duplicar y conservar sus defaults.
+            huerfano = mapping_model.sudo().search([
+                ('active', '=', True),
+                ('flow_id', '=', False),
+                ('routing_key', '=', flujo.name),
+            ], limit=1)
+            if huerfano:
+                huerfano.sudo().write({'flow_id': flujo.id})
+                _logger.info(
+                    '_ensure_mappings_for_flujos: mapping huérfano adoptado para flujo=%s (mapping %s)',
+                    flujo.name, huerfano.id)
                 continue
             label, equipo = self._MAPEO_CHATWOOT_POR_FLUJO.get(
                 flujo.name, (flujo.name, ''))
@@ -859,7 +970,10 @@ class ChatbotFlujo(models.Model):
 
         if activados:
             # Hubo al menos un match por keywords: aplicar resultado.
-            flujos_act = flujos.filtered(lambda f: f.name in activados) | default_flow
+            siempre_activos = flujos.filtered(
+                lambda f: f.name in _FLUJOS_SIEMPRE_ACTIVOS)
+            flujos_act = (flujos.filtered(lambda f: f.name in activados)
+                          | default_flow | siempre_activos)
             flujos_arch = flujos.filtered(lambda f: f.name in archivados)
             flujos_act.write({'active': True})
             flujos_arch.write({'active': False})
@@ -901,11 +1015,15 @@ class ChatbotFlujo(models.Model):
             return {'activados': [], 'archivados': [],
                     'metodo': 'ia_sin_recomendaciones',
                     'mensaje': 'La IA no recomendó flujos: se mantuvo la configuración actual.'}
-        flujos_act = flujos.filtered(lambda f: f.name in activados_ia) | default_flow
+        siempre_activos = flujos.filtered(
+            lambda f: f.name in _FLUJOS_SIEMPRE_ACTIVOS)
+        flujos_act = (flujos.filtered(lambda f: f.name in activados_ia)
+                      | default_flow | siempre_activos)
         flujos_arch = flujos.filtered(
             lambda f: f.name not in activados_ia
             and f not in default_flow
-            and f.name not in sin_keywords)
+            and f.name not in sin_keywords
+            and f.name not in _FLUJOS_SIEMPRE_ACTIVOS)
         flujos_act.write({'active': True})
         flujos_arch.write({'active': False})
         self._ensure_mappings_for_flujos(flujos_act)
@@ -927,8 +1045,10 @@ class ChatbotFlujo(models.Model):
         """
         flujos = self.sudo().with_context(active_test=False).search([])
         default_flow = flujos.filtered(lambda f: f.name == 'flujo_agendamiento_default')
+        siempre_activos = flujos.filtered(
+            lambda f: f.name in _FLUJOS_SIEMPRE_ACTIVOS)
         flujos_config = config.with_context(active_test=False).flujo_ids
-        flujos_act = (flujos_config | default_flow).sudo()
+        flujos_act = (flujos_config | default_flow | siempre_activos).sudo()
         flujos_arch = flujos - flujos_act
 
         from odoo.addons.ai_chatbot_1_portal.chatbot_prompt_normalizer import (

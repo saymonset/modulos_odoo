@@ -82,10 +82,13 @@ class SessionState(models.Model):
         """Retorna el servicio GPT configurado (con sudo para evitar permisos)."""
         return self.env['gpt.service'].sudo()
 
-    def _generar_pregunta_amigable(self, nombre_mostrar, tipo=None, max_tokens=100):
+    def _generar_pregunta_amigable(self, nombre_mostrar, tipo=None, max_tokens=100, mensaje_prompt_original=None):
         """
         Convierte un nombre de campo (ej: 'Teléfono') en una pregunta amigable.
         Primero intenta con IA (prioridad), si falla usa fallbacks manuales.
+        Si hay un mensaje_prompt_original (el prompt real del paso), se prefiere
+        cuando la IA no responde, para no perder instrucciones importantes
+        (p. ej. 'Puedes enviar varias imágenes...').
         """
         # Preparamos el prompt enriquecido con el tipo de dato
         prompt = nombre_mostrar
@@ -117,7 +120,10 @@ class SessionState(models.Model):
                 "Consentimiento WhatsApp": "¿Te gustaría recibir información útil y recordatorios por WhatsApp? Responde 'sí' o 'no'.",
                 "Correo electrónico": "Si lo deseas, puedes compartirnos tu correo electrónico para enviarte información adicional. Si prefieres no hacerlo, escribe 'omitir'.",
             }
-            if nombre_mostrar in fallbacks:
+            if mensaje_prompt_original:
+                # Preferir el prompt real del paso (más rico y preciso).
+                pregunta = mensaje_prompt_original
+            elif nombre_mostrar in fallbacks:
                 pregunta = fallbacks[nombre_mostrar]
             else:
                 if tipo == 'boolean':
@@ -220,7 +226,9 @@ class SessionState(models.Model):
         # Generar pregunta amigable para el primer paso
         primer_paso = steps_filtrados[0].copy()
         nombre_original = primer_paso.get('nombre_mostrar', '')
-        pregunta_amigable = self._generar_pregunta_amigable(nombre_original, tipo=primer_paso.get('tipo_dato'))
+        pregunta_amigable = self._generar_pregunta_amigable(
+            nombre_original, tipo=primer_paso.get('tipo_dato'),
+            mensaje_prompt_original=primer_paso.get('mensaje_prompt'))
         # Anteponer aviso de flujo al primer paso: n8n envía solo steps[0].nombre_mostrar
         # cuando se dispara un flujo, así que el aviso debe viajar dentro del primer paso.
         aviso_flujo = f"¡Excelente! Para continuar, le haré unas breves preguntas y un asesor de la empresa lo contactará. ({flow_name})\nSi no desea continuar, escriba \"salir\".\n\n"
@@ -427,10 +435,8 @@ class SessionState(models.Model):
             'foto_vat', 'solicitar_foto_vat')
         if es_url_imagen_entrante and not es_paso_imagen_activo:
             _logger.info("Imagen espontánea detectada (sin paso de imagen activo): %s", valor[:150])
-            valido_img, resultado_img, _ = self._validar_con_ia(valor, 'image', paso, nombre_mostrar)
-            if valido_img and resultado_img and re.match(r'^https?://', str(resultado_img)):
-                return self._acumular_imagen_adicional(
-                    registro, resultado_img, session_id, conversation_id, account_id, platform, paso)
+            return self._acumular_imagen_adicional(
+                registro, valor, session_id, conversation_id, account_id, platform, paso)
 
         # ========== SALTAR PASOS OPCIONALES Y ESPECIALMENTE EL CORREO ==========
         palabras_skip_opcional = ['omitir', 'saltar', 'skip', 'no', 'ninguno', 'ninguna', 'n']
@@ -450,6 +456,15 @@ class SessionState(models.Model):
                 resultado = "No proporcionada"
                 mensaje_error = ""
             elif campo_destino in ('imagenes_adicionales', 'solicitar_imagenes_adicionales'):
+                # Una URL http(s) ya resuelta por n8n (media URL del adjunto) se
+                # acumula DIRECTAMENTE: no depende de la validación IA (requiere
+                # API key de OpenAI en Odoo) ni de HEAD (frágil con URLs firmadas
+                # sin extensión). Así el flujo SIEMPRE espera el "listo" para
+                # agregar más imágenes.
+                if re.match(r'^https?://', valor):
+                    return self._acumular_imagen_adicional(
+                        registro, valor, session_id, conversation_id,
+                        account_id, platform, paso)
                 valido_img, resultado_img, _ = self._validar_con_ia(valor, 'image', paso, nombre_mostrar)
                 if valido_img:
                     return self._acumular_imagen_adicional(
@@ -466,6 +481,8 @@ class SessionState(models.Model):
                     if es_palabra_salto or es_finalizar_carga or res_fin.get('termino'):
                         _logger.info("El usuario decidió finalizar carga de imágenes o saltar el paso.")
                         resultado = registro.estado.get('datos_paciente', {}).get(campo_destino, [])
+                        if isinstance(resultado, str) and re.match(r'^https?://', resultado):
+                            resultado = [resultado]
                         valido = True
                     else:
                         valido, resultado, mensaje_error = self._validar_con_ia(valor, tipo, paso, nombre_mostrar)
@@ -521,6 +538,11 @@ class SessionState(models.Model):
         if 'datos_paciente' not in estado_actual:
             estado_actual['datos_paciente'] = {}
         if resultado is not None:
+            # Normalizar imágenes/archivos a lista: nunca se guardan como string
+            # suelto (evita que validate_image_urls/handle_images lo descarten).
+            if campo_destino in ('imagenes_adicionales', 'solicitar_imagenes_adicionales') \
+                    and isinstance(resultado, str) and re.match(r'^https?://', resultado):
+                resultado = [resultado]
             _logger.info("Guardando resultado en datos_paciente: %s = %s", campo_destino, resultado)
             estado_actual['datos_paciente'][campo_destino] = resultado
         else:
@@ -578,14 +600,18 @@ class SessionState(models.Model):
         if nuevos_pasos:
             _logger.info("Siguiente paso detectado: %s", nuevos_pasos[0].get('campo_destino'))
             siguiente = nuevos_pasos[0].copy()
-            pregunta_amigable = self._generar_pregunta_amigable(siguiente.get('nombre_mostrar', ''), tipo=siguiente.get('tipo_dato'))
+            nombre_real = siguiente.get('nombre_mostrar', '')
+            pregunta_amigable = self._generar_pregunta_amigable(
+                nombre_real, tipo=siguiente.get('tipo_dato'),
+                mensaje_prompt_original=siguiente.get('mensaje_prompt'))
             siguiente['mensaje_prompt'] = pregunta_amigable
-            siguiente['nombre_mostrar'] = pregunta_amigable
+            # Conservar el nombre real del paso (no sobrescribirlo con el prompt).
+            siguiente['nombre_mostrar'] = nombre_real
             nuevos_pasos[0] = siguiente
-            
+
             estado_actual.update({
                 'paso': siguiente.get('campo_destino'),
-                'nombre_mostrar': pregunta_amigable,
+                'nombre_mostrar': nombre_real,
                 'tipo_dato': siguiente.get('tipo_dato'),
                 'mensaje_prompt': pregunta_amigable,
                 'es_requerido': siguiente.get('es_requerido'),

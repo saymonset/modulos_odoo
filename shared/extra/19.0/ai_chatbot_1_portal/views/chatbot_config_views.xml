@@ -25,9 +25,18 @@
             <field name="arch" type="xml">
                 <form string="Configuración de negocio">
                     <header>
+                        <button name="action_recargar_todo_desde_rag" type="object"
+                                string="Sincronizar todo desde RAG"
+                                class="btn-primary"
+                                confirm="Lee n8n_vectors, actualiza rol/contacto/base de conocimiento, regenera las intenciones, (re)crea los flujos base del catálogo, detecta y activa los flujos que aplican a tu negocio (con sus pasos) y (re)genera los Chatwoot Mappings automáticamente. Si la tabla n8n_vectors está vacía o no existe, no se cambia nada: verás un aviso y deberás ejecutar primero la ingestión RAG en n8n. ¿Continuar?"/>
                         <button name="action_activar_flujos" type="object"
-                                string="Activar flujos de esta configuración"
-                                class="btn-primary"/>
+                                string="Activar solo los flujos marcados (no usa RAG)"
+                                class="btn-secondary"
+                                confirm="NO lee el RAG. Activa únicamente los flujos marcados en 'Flujos de este cliente' más el flujo por defecto, archiva el resto, y (re)genera sus pasos y mappings. Si el campo 'Flujos de este cliente' está vacío, se archivarán todos y solo quedará activo el flujo por defecto. ¿Continuar?"/>
+                        <button name="action_refrescar_desde_rag" type="object"
+                                string="Refrescar solo intenciones (no toca flujos)"
+                                class="btn-secondary"
+                                confirm="Actualiza solo rol/contacto/base de conocimiento e intenciones desde n8n_vectors. NO modifica flujos ni Chatwoot Mappings. Si la tabla n8n_vectors está vacía o no existe, no se cambia nada: verás un aviso. ¿Continuar?"/>
                     </header>
                     <sheet>
                         <group>
@@ -45,7 +54,7 @@
                             <field name="contacto" widget="text"/>
                             <field name="bloque_conocimiento" widget="text"/>
                         </group>
-                        <group string="Flujos activos">
+                        <group string="Flujos de este cliente">
                             <field name="flujo_ids" widget="many2many_tags"/>
                         </group>
                         <notebook>
@@ -58,6 +67,7 @@
                                         <field name="tipo_pregunta"/>
                                         <field name="es_menu"/>
                                         <field name="flow_id"/>
+                                        <field name="es_auto_rag"/>
                                     </list>
                                 </field>
                             </page>
@@ -71,6 +81,16 @@
             <field name="name">Configuraciones de negocio</field>
             <field name="res_model">chatbot.config</field>
             <field name="view_mode">list,form</field>
+        </record>
+
+        <!-- Acción para crear/actualizar el cliente desde el RAG sin abrir una
+             config previa (n8n_vectors es la única fuente de verdad). -->
+        <record id="action_crear_cliente_desde_rag" model="ir.actions.server">
+            <field name="name">Crear cliente desde RAG</field>
+            <field name="model_id" ref="model_chatbot_config"/>
+            <field name="binding_model_id" ref="model_chatbot_config"/>
+            <field name="state">code</field>
+            <field name="code">result = env['chatbot.config'].sudo()._crear_cliente_desde_rag_por_accion()</field>
         </record>
 
         <!-- ============================================ -->

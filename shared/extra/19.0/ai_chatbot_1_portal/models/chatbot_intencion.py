@@ -38,3 +38,10 @@ class ChatbotIntencion(models.Model):
         string="Muestra el menú",
         help="Si esta intención muestra el menú de opciones.",
     )
+    es_auto_rag = fields.Boolean(
+        string="Auto desde RAG",
+        help="Si esta intención se gestiona automáticamente desde la tabla "
+             "n8n_vectors (el botón 'Refrescar intenciones desde RAG' la borra "
+             "y la recrea).",
+        default=False,
+    )

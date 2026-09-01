@@ -2,7 +2,7 @@
 Después de varios intentos con ACL, la solución más limpia y recomendada por AWS fue usar una Bucket Policy para hacer públicos los objetos. Aquí tienes el resumen de lo que hicimos y cómo queda configurado todo para tu campaña de WhatsApp.
 
 1. Creaste el bucket en S3
-Nombre del bucket: mis-videos-unisa
+Nombre del bucket: mis-videos-integraia.lat
 
 Región: us-east-1 (N. Virginia)
 
@@ -35,14 +35,14 @@ json
       "Effect": "Allow",
       "Principal": "*",
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::mis-videos-unisa/*"
+      "Resource": "arn:aws:s3:::mis-videos-integraia.lat/*"
     }
   ]
 }
 Importante: El Resource usa /* al final, lo que hace público todos los objetos dentro del bucket. Si en el futuro quieres más seguridad y solo exponer un archivo específico, puedes cambiar esa línea por:
 
 json
-"Resource": "arn:aws:s3:::mis-videos-unisa/tarjeta.mp4"
+"Resource": "arn:aws:s3:::mis-videos-integraia.lat/tarjeta.mp4"
 5. Guardaste los cambios
 Hiciste clic en Save changes y confirmaste la acción escribiendo confirm.
 
@@ -50,7 +50,7 @@ Hiciste clic en Save changes y confirmaste la acción escribiendo confirm.
 Una vez aplicada la política, cualquier persona puede acceder al objeto. La URL pública del video es:
 
 text
-https://mis-videos-unisa.s3.us-east-1.amazonaws.com/tarjeta.mp4
+https://mis-videos-integraia.lat.s3.us-east-1.amazonaws.com/tarjeta.mp4
 Puedes confirmar su accesibilidad pegándola en un navegador en modo incógnito o usando curl.
 
 7. Usaste la URL en Odoo
@@ -84,6 +84,6 @@ O cambiar la política para que solo afecte al archivo tarjeta.mp4 (como se most
 
 🧪 Verificación rápida
 bash
-curl -I https://mis-videos-unisa.s3.us-east-1.amazonaws.com/tarjeta.mp4
+curl -I https://mis-videos-integraia.lat.s3.us-east-1.amazonaws.com/tarjeta.mp4
 Debe responder HTTP/1.1 200 OK.
 

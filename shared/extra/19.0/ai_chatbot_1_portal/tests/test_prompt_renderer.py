@@ -12,19 +12,41 @@ class TestPromptRenderer(BaseChatbotTestCase):
             vals['routing_key'] = routing_key
         return self.env['chatbot.flujo'].create(vals)
 
-    def test_01_config_integraia_renderiza_intenciones_flujos_json(self):
-        config = self.env.ref('ai_chatbot_1_portal.chatbot_config_integraia')
-        self.assertTrue(config, "El seed IntegraIA debe existir")
+    def test_01_config_renderiza_intenciones_flujos_json(self):
+        flujo_directo = self._crear_flujo('flujo_agendamiento_directo')
+        flujo_imagen = self._crear_flujo('flujo_resultados_imagenes')
+        config = self.env['chatbot.config'].create({
+            'name': 'Cliente Test',
+            'role': 'TÚ ERES:\nBOT CLIENTE TEST. Vendedor oficial.',
+            'flujo_ids': [(6, 0, [flujo_directo.id, flujo_imagen.id])],
+        })
+        for nombre, tipo in (('PRECIOS', 'PRECIOS'), ('CITA_DIRECTA', 'CITA_DIRECTA'),
+                             ('CONFIRMACION', 'CONFIRMACION'),
+                             ('CONFIRMACION_IMAGEN', 'CONFIRMACION_IMAGEN'),
+                             ('IMAGEN', '')):
+            self.env['chatbot.intencion'].create({
+                'config_id': config.id,
+                'nombre': nombre,
+                'tipo_pregunta': tipo,
+                'prioridad': 42,
+            })
 
         from odoo.addons.ai_chatbot_1_portal.services.prompt_renderer import render_prompt
         prompt = render_prompt(config)
 
-        self.assertIn('BOT IntegraIA', prompt)
-        for intencion in ('PRECIOS', 'SERVICIOS', 'CITA_DIRECTA', 'OTRA_CONSULTA',
-                          'CONFIRMACION', 'CONFIRMACION_IMAGEN', 'IMAGEN'):
+        self.assertIn('BOT CLIENTE TEST', prompt)
+        # La regla crítica de imágenes va ANTES que el role del negocio.
+        self.assertLess(
+            prompt.index('REGLA CRÍTICA: IMÁGENES / ARCHIVOS ADJUNTOS'),
+            prompt.index('BOT CLIENTE TEST'),
+            'La regla de imágenes debe estar al inicio del prompt')
+        self.assertIn('CONFIRMACION_IMAGEN', prompt)
+        self.assertIn('NUNCA dispares flujo_ventas', prompt)
+        self.assertIn('flujo_resultados_imagenes', prompt)
+        for intencion in ('PRECIOS', 'CITA_DIRECTA', 'CONFIRMACION',
+                          'CONFIRMACION_IMAGEN', 'IMAGEN'):
             self.assertIn(intencion, prompt)
-        for flujo in ('flujo_agendamiento_directo', 'flujo_agendamiento_otra_consulta',
-                      'flujo_resultados_imagenes'):
+        for flujo in ('flujo_agendamiento_directo', 'flujo_resultados_imagenes'):
             self.assertIn(flujo, prompt)
         for key in ('"output"', '"tipoPregunta"', '"isMenu"', '"equipo_asignado"',
                     '"flow_name"', '"session_id"', '"conversation_id"', '"account_id"',
