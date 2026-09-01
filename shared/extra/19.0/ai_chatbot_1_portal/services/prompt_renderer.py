@@ -125,6 +125,31 @@ def render_prompt(config):
     config.ensure_one()
     lines = []
 
+    # Regla crítica al INICIO: el manejo de imágenes/archivos es universal y
+    # tiene máxima prioridad. Evita que el agente interprete un archivo como
+    # una orden comercial (p. ej. disparar flujo_ventas).
+    lines.append("=== REGLA CRÍTICA: IMÁGENES / ARCHIVOS ADJUNTOS ===")
+    lines.append(
+        'Si el campo "URL de imagen" NO está vacío y empieza con "http", '
+        "el usuario envió una imagen o archivo adjunto. EN ESE CASO:"
+    )
+    lines.append('1. Responde SIEMPRE con tipoPregunta "CONFIRMACION_IMAGEN".')
+    lines.append('2. Deja equipo_asignado="" y flow_name="" (NO dispares ningún flujo).')
+    lines.append(
+        "3. Pregunta al usuario si desea que un asesor revise la imagen/archivo "
+        "(p. ej. \"¡Recibí tu imagen/archivo! ¿Quieres que la revise un asesor "
+        "y te contacte? Responde SÍ o NO.\")."
+    )
+    lines.append(
+        "4. NUNCA dispares flujo_ventas ni otro flujo comercial por el simple "
+        "hecho de recibir una imagen o archivo."
+    )
+    lines.append(
+        '5. Solo cuando el usuario confirme con "sí" la revisión, dispara '
+        'flujo_resultados_imagenes (tipoPregunta "IMAGEN").'
+    )
+    lines.append("")
+
     if config.role:
         lines.append("TÚ ERES:")
         lines.append(config.role.strip())

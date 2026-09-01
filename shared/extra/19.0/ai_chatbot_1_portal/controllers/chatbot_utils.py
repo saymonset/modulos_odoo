@@ -895,7 +895,11 @@ class ChatBotUtils:
         try:
             imagenes_raw = data.get('imagenes_adicionales') or data.get('solicitar_imagenes_adicionales', [])
             if isinstance(imagenes_raw, str):
-                imagenes = json.loads(imagenes_raw)
+                # Puede venir como string suelto (una URL) o como JSON serializado.
+                if imagenes_raw.strip().startswith('http'):
+                    imagenes = [imagenes_raw]
+                else:
+                    imagenes = json.loads(imagenes_raw)
             elif isinstance(imagenes_raw, list):
                 imagenes = imagenes_raw
             else:
@@ -903,8 +907,13 @@ class ChatBotUtils:
             for img_url in imagenes:
                 if img_url and re.match(r'^https?://', img_url):
                     validated_data['imagenes_adicionales'].append(img_url)
-        except:
-            validated_data['imagenes_adicionales'] = []
+        except Exception:
+            # Nunca descartar una URL válida por un fallo de parsing: se conserva
+            # como lista con esa URL para que handle_images pueda adjuntarla.
+            if isinstance(imagenes_raw, str) and imagenes_raw.strip().startswith('http'):
+                validated_data['imagenes_adicionales'] = [imagenes_raw]
+            else:
+                validated_data['imagenes_adicionales'] = []
         return validated_data
 
     @staticmethod

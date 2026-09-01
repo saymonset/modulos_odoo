@@ -84,7 +84,7 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
             self.assertTrue(mappings, 'Debe existir mapping para el flujo activo')
             self.assertTrue(mappings.active)
 
-    def test_02_recarga_total_sin_flujos_detectados_conserva_estado(self):
+    def test_02_contenido_generico_activa_flujo_imagenes_y_default(self):
         self._crear_tabla_n8n_vectors()
         self._insertar_documento('demo_sin_match', "SECCIÓN ÚNICA:\nContenido genérico sin palabras clave.", 1)
 
@@ -96,10 +96,22 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
 
         resultado = config.action_recargar_todo_desde_rag()
 
-        self.assertEqual(resultado['params']['type'], 'warning')
-        self.assertIn('no se detectaron flujos', resultado['params']['message'])
-        self.assertTrue(flujo_ventas.active,
-                        'Sin detección, los flujos no deben archivarse')
+        # Aunque el texto no matchee, el flujo de imágenes y el default son
+        # universales y siempre quedan activos.
+        self.assertEqual(resultado['params']['type'], 'success')
+        self.assertIn('flujo_resultados_imagenes', config.flujo_ids.mapped('name'),
+                      'El flujo de imágenes debe estar siempre en la config')
+        Flujo = self.env['chatbot.flujo']
+        self.assertTrue(
+            Flujo.search([('name', '=', 'flujo_resultados_imagenes')],
+                         limit=1).active,
+            'El flujo de imágenes debe quedar activo')
+        self.assertTrue(
+            Flujo.search([('name', '=', 'flujo_agendamiento_default')],
+                         limit=1).active,
+            'El flujo default debe quedar activo')
+        self.assertFalse(Flujo.browse(flujo_ventas.id).active,
+                         'El flujo no matcheado se archiva')
 
     def test_03_genera_intenciones_sistema_desde_rag(self):
         self._crear_tabla_n8n_vectors()
@@ -125,6 +137,18 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
             self.assertFalse(slot.output_largo,
                              '%s queda vacía para pinceladas humanas' % base)
 
+        # Imágenes/archivos: universales, nacen con guion por defecto.
+        for img in ('IMAGEN', 'CONFIRMACION_IMAGEN'):
+            slot = intenciones.filtered(lambda i: i.nombre == img)
+            self.assertTrue(slot, '%s debe existir' % img)
+            self.assertTrue(slot.output_largo,
+                            '%s debe traer una respuesta por defecto' % img)
+        confirmacion = intenciones.filtered(
+            lambda i: i.nombre == 'CONFIRMACION_IMAGEN')
+        self.assertEqual(confirmacion.tipo_pregunta, 'CONFIRMACION_IMAGEN')
+        imagen = intenciones.filtered(lambda i: i.nombre == 'IMAGEN')
+        self.assertEqual(imagen.tipo_pregunta, 'IMAGEN')
+
         self.assertIn('PRODUCTOS Y PRECIOS', nombres)
         self.assertTrue(all(i.flow_id in config.flujo_ids
                             for i in intenciones.filtered('flow_id')))
@@ -135,6 +159,8 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
         self._insertar_documento('demo', "CONTACTO:\nWhatsApp +58 412 914 1074.", 2)
         self._insertar_documento('demo', "PRODUCTOS:\nVenta de impresiones, ofrecemos cotizar y pedidos.", 3)
         self._crear_flujo('flujo_ventas_test', 'venta,cotizar,pedido')
+
+        self.env['chatbot.config'].sudo().search([]).unlink()
 
         self.assertFalse(
             self.env['chatbot.config'].sudo().search([]),
@@ -159,3 +185,76 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
             rec = self.env.ref('ai_chatbot_1_portal.%s' % xmlid,
                                raise_if_not_found=False)
             self.assertFalse(rec, 'No debe existir el seed demo %s' % xmlid)
+
+    def test_06_recrea_catalogo_flujos_borrados(self):
+        """Si borran los flujos base, recargar los vuelve a crear (archivados)."""
+        self._crear_tabla_n8n_vectors()
+        self._insertar_documento('demo', "TÚ ERES:\nBOT CLIENTE TEST.", 1)
+        self._insertar_documento('demo', "VENTAS Y PRODUCTOS:\nVenta de artículos, ofrecemos cotizar y pedidos.", 2)
+
+        Flujo = self.env['chatbot.flujo'].sudo()
+        catalogo = Flujo.with_context(active_test=False).search([
+            ('name', 'in', [
+                'flujo_agendamiento_directo', 'flujo_agendamiento_precios',
+                'flujo_agendamiento_servicios', 'flujo_ventas',
+                'flujo_agendamiento_otra_consulta', 'flujo_agendamiento_default',
+                'flujo_citas_medios_propios', 'flujo_resultados_imagenes',
+            ])])
+        catalogo.with_context(active_test=False).unlink()
+
+        config = self.env['chatbot.config'].create({'name': 'Cliente Test'})
+        resultado = config.action_recargar_todo_desde_rag()
+
+        self.assertEqual(resultado['params']['type'], 'success')
+        recreados = Flujo.with_context(active_test=False).search([
+            ('name', 'in', [
+                'flujo_agendamiento_directo', 'flujo_agendamiento_precios',
+                'flujo_agendamiento_servicios', 'flujo_ventas',
+                'flujo_agendamiento_otra_consulta', 'flujo_agendamiento_default',
+                'flujo_citas_medios_propios', 'flujo_resultados_imagenes',
+            ])])
+        self.assertEqual(len(recreados), 8, 'Debe recrearse el catálogo completo')
+        self.assertIn('flujo_ventas', recreados.filtered('active').mapped('name'),
+                      'El flujo que matchea debe quedar activo')
+        ventas = recreados.filtered(lambda f: f.name == 'flujo_ventas')
+        self.assertTrue(ventas.paso_ids, 'El flujo recreado debe tener pasos')
+        # No duplicar al recargar de nuevo
+        config.action_recargar_todo_desde_rag()
+        total = Flujo.with_context(active_test=False).search_count([
+            ('name', 'in', ['flujo_ventas', 'flujo_agendamiento_directo'])])
+        self.assertEqual(total, 2, 'Recargar de nuevo no debe duplicar el catálogo')
+
+    def test_07_adopta_mappings_huerfanos(self):
+        """Un mapping huérfano (sin flow_id) con routing_key del flujo se adopta."""
+        if 'chatwoot.mapping' not in self.env.registry:
+            return
+        self._crear_tabla_n8n_vectors()
+        self._insertar_documento('demo', "TÚ ERES:\nBOT CLIENTE TEST.", 1)
+        self._insertar_documento('demo', "VENTAS:\nVenta de artículos, ofrecemos cotizar y pedidos.", 2)
+
+        Flujo = self.env['chatbot.flujo'].sudo()
+        Mapping = self.env['chatwoot.mapping'].sudo()
+        Flujo.with_context(active_test=False).search([]).with_context(
+            active_test=False).unlink()
+        Mapping.with_context(active_test=False).search([]).unlink()
+
+        # Huérfano creado ANTES de recargar: el pipeline debe adoptarlo en vez
+        # de crear un mapping nuevo.
+        mapping_huerfano = Mapping.create({
+            'name': 'Ventas (huérfano)',
+            'routing_key': 'flujo_ventas',
+            'equipo_asignado': 'Ventas',
+            'active': True,
+        })
+        self.assertFalse(mapping_huerfano.flow_id)
+
+        config = self.env['chatbot.config'].create({'name': 'Cliente Test'})
+        config.action_recargar_todo_desde_rag()
+
+        ventas = Flujo.with_context(active_test=False).search(
+            [('name', '=', 'flujo_ventas')], limit=1)
+        self.assertTrue(ventas)
+        self.assertEqual(mapping_huerfano.flow_id.id, ventas.id,
+                         'El mapping huérfano debe adoptarse (relink flow_id)')
+        total = Mapping.search_count([('flow_id', '=', ventas.id)])
+        self.assertEqual(total, 1, 'No debe duplicarse el mapping al adoptar')

@@ -46,7 +46,7 @@ ALLOWED_TIPO_PREGUNTA = [
 ]
 
 ALLOWED_EQUIPO = [
-    '', 'Agendamiento_Directo', 'Ventas_UNISA', 'CITAS_MP', 'CITAS_SEGUROS',
+    '', 'Agendamiento_Directo', 'Ventas', 'CITAS_MP', 'CITAS_SEGUROS',
     'RESULTADOS_LAB', 'RESULTADOS_IMAGENES',
 ]
 

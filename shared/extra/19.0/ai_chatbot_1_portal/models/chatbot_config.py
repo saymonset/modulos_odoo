@@ -136,11 +136,16 @@ _SYSTEM_INTENCIONES = {
         'keywords': ('imagen,archivo,foto,comprobante,documento,logo,evidencia,'
                      'captura,adjunto'),
         'prioridad': 52, 'es_menu': False, 'tipo_pregunta': 'CONFIRMACION_IMAGEN',
+        'output_default': ('¡Recibí tu imagen/archivo! 📎 ¿Quieres que la revise '
+                           'un asesor y te contacte? Responde SÍ o NO.'),
     },
     'IMAGEN': {
         'nombre': 'IMAGEN',
         'keywords': 'enviar archivo,te envío,adjunto,aquí está,te mando',
-        'prioridad': 53, 'es_menu': False, 'tipo_pregunta': '',
+        'prioridad': 53, 'es_menu': False, 'tipo_pregunta': 'IMAGEN',
+        'output_default': ('¡Perfecto! Voy a canalizar tu archivo con el '
+                           'departamento correspondiente. Te haré unas breves '
+                           'preguntas. (flujo_resultados_imagenes)'),
     },
     'FALLBACK': {
         'nombre': 'FALLBACK', 'keywords': '', 'prioridad': 99,
@@ -149,7 +154,13 @@ _SYSTEM_INTENCIONES = {
 }
 
 # Ranuras esenciales que siempre se crean (vacías si el RAG no las trae).
-_BASE_SISTEMA = ('MENU', 'CANCELAR', 'SALIR', 'FALLBACK')
+# Incluye las de manejo de imágenes/archivos: todo cliente puede enviar fotos,
+# logos o comprobantes por WhatsApp, así que sus intenciones y flujo deben
+# existir siempre.
+_BASE_SISTEMA = (
+    'MENU', 'CANCELAR', 'SALIR', 'FALLBACK',
+    'IMAGEN', 'CONFIRMACION_IMAGEN',
+)
 
 
 class ChatbotConfig(models.Model):
@@ -181,7 +192,7 @@ class ChatbotConfig(models.Model):
     )
     flujo_ids = fields.Many2many(
         "chatbot.flujo",
-        string="Flujos activos",
+        string="Flujos de este cliente (marca los que aplican)",
         help='Catálogo de flujos que este cliente tiene activos.',
     )
     output_instagram = fields.Boolean(
@@ -323,6 +334,10 @@ class ChatbotConfig(models.Model):
                 procesadas.add(norm_key)
             elif norm_key not in _BASE_SISTEMA:
                 continue
+            elif cfg.get('output_default'):
+                # Intenciones universales (p. ej. manejo de imágenes) con guion
+                # por defecto: no quedan vacías, el humano puede editarlas luego.
+                output = cfg['output_default']
             vals.append({
                 'config_id': self.id,
                 'nombre': cfg['nombre'],
@@ -515,6 +530,11 @@ class ChatbotConfig(models.Model):
                         e)
         flujos_matched = self.env['chatbot.flujo'].browse(
             [f.id for f in matched])
+        # El flujo de imágenes/archivos es universal: siempre disponible para
+        # todo cliente (puede enviar fotos, logos o comprobantes por WhatsApp).
+        flujo_imagenes = flujos.filtered(
+            lambda f: f.name == 'flujo_resultados_imagenes')
+        flujos_matched = (flujos_matched | flujo_imagenes)
         return {'flujos': flujos_matched, 'metodo': metodo}
 
     def _vincular_flow_id_en_intenciones(self, flujos):
@@ -565,7 +585,10 @@ class ChatbotConfig(models.Model):
                 resumen_rag.get('titulo', 'Recargar desde RAG'),
                 resumen_rag['mensaje'], resumen_rag.get('tipo', 'warning'))
 
+        # Auto-curación del catálogo: si borraron los flujos base, se recrean
+        # (archivados) para que la detección tenga candidatos.
         flujo_model = self.env['chatbot.flujo'].sudo()
+        flujo_model._ensure_catalogo_flujos()
         flujos = flujo_model.with_context(active_test=False).search([])
 
         texto = "\n\n".join(filter(None, [

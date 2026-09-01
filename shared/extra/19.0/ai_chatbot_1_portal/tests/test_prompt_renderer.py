@@ -35,6 +35,14 @@ class TestPromptRenderer(BaseChatbotTestCase):
         prompt = render_prompt(config)
 
         self.assertIn('BOT CLIENTE TEST', prompt)
+        # La regla crítica de imágenes va ANTES que el role del negocio.
+        self.assertLess(
+            prompt.index('REGLA CRÍTICA: IMÁGENES / ARCHIVOS ADJUNTOS'),
+            prompt.index('BOT CLIENTE TEST'),
+            'La regla de imágenes debe estar al inicio del prompt')
+        self.assertIn('CONFIRMACION_IMAGEN', prompt)
+        self.assertIn('NUNCA dispares flujo_ventas', prompt)
+        self.assertIn('flujo_resultados_imagenes', prompt)
         for intencion in ('PRECIOS', 'CITA_DIRECTA', 'CONFIRMACION',
                           'CONFIRMACION_IMAGEN', 'IMAGEN'):
             self.assertIn(intencion, prompt)

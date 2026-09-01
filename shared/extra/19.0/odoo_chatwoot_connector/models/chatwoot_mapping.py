@@ -21,8 +21,6 @@ EQUIPO_ASIGNADO_SELECTION = [
     ('flujo_agendamiento_precios', 'Legacy: flujo_agendamiento_precios'),
     ('flujo_agendamiento_servicios', 'Legacy: flujo_agendamiento_servicios'),
     ('flujo_agendamiento_otra_consulta', 'Legacy: flujo_agendamiento_otra_consulta'),
-    ('flujo_ventas_unisa', 'Legacy: flujo_ventas_unisa'),
-    ('Ventas_UNISA', 'Legacy: Ventas_UNISA'),
     ('flujo_citas_medios_propios', 'Legacy: flujo_citas_medios_propios'),
     ('flujo_citas_seguro', 'Legacy: flujo_citas_seguro'),
     ('flujo_resultados_laboratorio', 'Legacy: flujo_resultados_laboratorio'),

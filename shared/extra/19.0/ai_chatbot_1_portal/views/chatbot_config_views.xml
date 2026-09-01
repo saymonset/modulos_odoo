@@ -25,21 +25,18 @@
             <field name="arch" type="xml">
                 <form string="Configuración de negocio">
                     <header>
-                        <button name="action_crear_cliente_desde_rag" type="object"
-                                string="Crear/Actualizar cliente desde RAG"
-                                class="btn-primary"
-                                confirm="Se crea (o actualiza) la configuración del cliente a partir de la tabla n8n_vectors, se regeneran las intenciones, se detectan y activan los flujos con sus pasos, y se (re)crean los Chatwoot Mappings. ¿Continuar?"/>
                         <button name="action_recargar_todo_desde_rag" type="object"
-                                string="Recargar intenciones, flujos y mappings"
-                                class="btn-secondary"
-                                confirm="Se leen n8n_vectors, se regeneran las intenciones (es_auto_rag), se detectan y activan los flujos aplicables con sus pasos, y se (re)crean los Chatwoot Mappings. Los flujos no detectados se archivarán. ¿Continuar?"/>
+                                string="Sincronizar todo desde RAG"
+                                class="btn-primary"
+                                confirm="Lee n8n_vectors, actualiza rol/contacto/base de conocimiento, regenera las intenciones, (re)crea los flujos base del catálogo, detecta y activa los flujos que aplican a tu negocio (con sus pasos) y (re)genera los Chatwoot Mappings automáticamente. Si la tabla n8n_vectors está vacía o no existe, no se cambia nada: verás un aviso y deberás ejecutar primero la ingestión RAG en n8n. ¿Continuar?"/>
                         <button name="action_activar_flujos" type="object"
-                                string="Activar flujos de esta configuración"
-                                class="btn-secondary"/>
-                        <button name="action_refrescar_desde_rag" type="object"
-                                string="Refrescar intenciones desde RAG"
+                                string="Activar solo los flujos marcados (no usa RAG)"
                                 class="btn-secondary"
-                                confirm="Se regenerarán las intenciones de contenido (es_auto_rag) desde la tabla n8n_vectors y se actualizará la Base de conocimiento. ¿Continuar?"/>
+                                confirm="NO lee el RAG. Activa únicamente los flujos marcados en 'Flujos de este cliente' más el flujo por defecto, archiva el resto, y (re)genera sus pasos y mappings. Si el campo 'Flujos de este cliente' está vacío, se archivarán todos y solo quedará activo el flujo por defecto. ¿Continuar?"/>
+                        <button name="action_refrescar_desde_rag" type="object"
+                                string="Refrescar solo intenciones (no toca flujos)"
+                                class="btn-secondary"
+                                confirm="Actualiza solo rol/contacto/base de conocimiento e intenciones desde n8n_vectors. NO modifica flujos ni Chatwoot Mappings. Si la tabla n8n_vectors está vacía o no existe, no se cambia nada: verás un aviso. ¿Continuar?"/>
                     </header>
                     <sheet>
                         <group>
@@ -57,7 +54,7 @@
                             <field name="contacto" widget="text"/>
                             <field name="bloque_conocimiento" widget="text"/>
                         </group>
-                        <group string="Flujos activos">
+                        <group string="Flujos de este cliente">
                             <field name="flujo_ids" widget="many2many_tags"/>
                         </group>
                         <notebook>
