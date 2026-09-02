@@ -150,6 +150,8 @@ _SYSTEM_INTENCIONES = {
     'FALLBACK': {
         'nombre': 'FALLBACK', 'keywords': '', 'prioridad': 99,
         'es_menu': False, 'tipo_pregunta': '',
+        'output_default': ('Disculpa, no entendí 🤔 ¿Puedes reformularlo? '
+                           'Escribe *menu* para ver las opciones.'),
     },
 }
 
@@ -291,6 +293,24 @@ class ChatbotConfig(models.Model):
         filas.sort(key=lambda f: (f[0], _pos(f)))
         secciones = _detectar_secciones([(f[0], f[1]) for f in filas])
 
+        def _dedupe(lista):
+            """Elimina secciones duplicadas: conserva la primera versión no vacía
+            por nombre normalizado y descarta repeticiones posteriores."""
+            vistos = set()
+            resultado = []
+            for n, t in lista:
+                t = (t or '').strip()
+                if not t:
+                    continue
+                clave = _normalizar(n)
+                if clave in vistos:
+                    continue
+                vistos.add(clave)
+                resultado.append((n, t))
+            return resultado
+
+        secciones = _dedupe(secciones)
+
         role_partes = [t for (n, t) in secciones if _es_seccion_role(n)]
         conocimiento = [(n, t) for (n, t) in secciones
                         if not _es_seccion_role(n)]
@@ -334,9 +354,10 @@ class ChatbotConfig(models.Model):
                 procesadas.add(norm_key)
             elif norm_key not in _BASE_SISTEMA:
                 continue
-            elif cfg.get('output_default'):
-                # Intenciones universales (p. ej. manejo de imágenes) con guion
-                # por defecto: no quedan vacías, el humano puede editarlas luego.
+            if not output and cfg.get('output_default'):
+                # Intenciones universales (p. ej. manejo de imágenes, FALLBACK)
+                # con guion por defecto: no quedan vacías, el humano puede
+                # editarlas luego.
                 output = cfg['output_default']
             vals.append({
                 'config_id': self.id,
@@ -393,6 +414,10 @@ class ChatbotConfig(models.Model):
         ]).unlink()
 
         vals_sistema, procesadas = self._generar_intenciones_sistema(conocimiento)
+
+        for v in vals_sistema:
+            if v.get('nombre') == 'FALLBACK' and not (v.get('output_largo') or '').strip():
+                v['output_largo'] = _SYSTEM_INTENCIONES['FALLBACK']['output_default']
 
         vals = list(vals_sistema)
         vistos = set()
