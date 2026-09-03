@@ -883,7 +883,12 @@ class SessionState(models.Model):
         try:
             _logger.info("Iniciando capturar_lead para sesión %s", datos.get('session_id'))
             env = self.env
-            
+
+            # Normalizar claves: los pasos pueden guardar el dato con campo_destino
+            # distinto (nombre_completo/telefono) del que leen el lead y el contacto
+            # (name/phone). Esto garantiza que la data capturada siempre llegue.
+            datos = ChatBotUtils._normalizar_datos_paciente(datos)
+
             # IMPORTANTE: Usar las claves cortas que vienen del auto-rellenado
             # El auto-rellenado guarda en 'name', 'vat', 'birthdate', 'email', 'consentimiento_whatsapp'
             partner_data = {

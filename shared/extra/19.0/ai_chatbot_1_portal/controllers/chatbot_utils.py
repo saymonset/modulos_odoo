@@ -417,14 +417,9 @@ class ChatBotUtils:
         nombre = data.get('name') or data.get('solicitar_name', 'Sin nombre')
         lead_name = f"{servicio} - {nombre}"
         
-        # Agregar equipo responsable a la descripción
-        equipo_asignado = data.get('equipo_asignado', '')
-        descripcion_grupos = env['chatbot.flujo']._get_mapeo_equipo_descripcion()
-        area_texto = descripcion_grupos.get(equipo_asignado, '')
-        if area_texto:
-            description += f"\n\n**👥 ÁREA RESPONSABLE:** {area_texto.capitalize()}"
+        # Agregar equipo responsable a la descripción (grupo CRM real del flujo)
         if team:
-            description += f"\n**📋 EQUIPO ASIGNADO:** {team.name}"
+            description += f"\n\n**👥 ÁREA RESPONSABLE:** {team.name}"
         
         # Normalizar teléfono para lead
         phone_raw = data.get('phone') or data.get('solicitar_phone', '')
@@ -918,10 +913,13 @@ class ChatBotUtils:
 
     @staticmethod
     def _get_brand_name(env):
-        """Devuelve el nombre de marca de la config activa, o el de la compañía,
-        o un fallback genérico."""
+        """Devuelve el nombre de marca de la config activa, o el nombre del
+        negocio de la config, o el de la compañía, o un fallback genérico."""
         if env:
             brand, _enabled, _text = env['chatbot.config']._get_brand_settings()
+            if not brand:
+                config = env['chatbot.config']._get_active_config()
+                brand = config.name if config else ''
             if not brand:
                 brand = env.company.name or ''
             if brand:
@@ -944,19 +942,15 @@ class ChatBotUtils:
 
     @staticmethod
     def _pie_mensaje(lead_id, equipo_asignado, env=None):
-        """Genera el pie del mensaje con datos de referencia (formato neutro)."""
+        """Genera el pie del mensaje de finalización (formato corto y amigable).
+
+        Solo Referencia y el próximo paso; sin textos demo ni líneas
+        burocráticas. La atribución aparece únicamente si la config la activa.
+        """
         pie = []
         if lead_id:
             pie.append(f"Referencia: {lead_id}")
-        if env and equipo_asignado:
-            desc = env['chatbot.flujo']._get_mapeo_equipo_descripcion()
-            tema = desc.get(equipo_asignado, '')
-            if tema:
-                pie.append(f"📌 {tema.capitalize()}")
-        pie.append("Proceso: Asignación y seguimiento de solicitud.")
-        pie.append("Privacidad: Tus datos están protegidos con total confidencialidad.")
-        pie.append("Próximo paso: Nuestro equipo se comunicará contigo muy pronto.")
-        pie.append(f"Agradecimiento: Gracias por confiar en {ChatBotUtils._get_brand_name(env)}. Estamos comprometidos con brindarte la mejor atención.")
+        pie.append("Próximo paso: Nuestro equipo se comunicará contigo muy pronto. ¡Gracias!")
         pie.append(ChatBotUtils._platform_attribution_line(env))
         return "\n".join(line for line in pie if line)
 
@@ -1038,6 +1032,27 @@ class ChatBotUtils:
         return None
 
     @staticmethod
+    def _normalizar_datos_paciente(data):
+        """Rellena las claves canónicas (name, phone, vat, email, birthdate,
+        consentimiento_whatsapp) a partir de cualquier alias que use el flujo
+        (solicitar_*, nombre_completo, telefono, ...).
+
+        Los pasos pueden guardar el dato con distinto campo_destino según el
+        cliente; esta normalización garantiza que el lead, el contacto y el
+        resumen final lean siempre la misma clave.
+        """
+        data = dict(data or {})
+        for canonical in ('name', 'phone', 'vat', 'email',
+                          'birthdate', 'consentimiento_whatsapp'):
+            if not data.get(canonical):
+                valor = ChatBotUtils._get_step_value(data, canonical)
+                if valor is not None and valor != '':
+                    data[canonical] = valor
+        if not data.get('consentimiento') and data.get('consentimiento_whatsapp'):
+            data['consentimiento'] = data['consentimiento_whatsapp']
+        return data
+
+    @staticmethod
     def _build_notify_message_with_audit(mapping_rec, assigned_agent_email, audit):
         """
         Mensaje de notificación interna para el agente Chatwoot.
@@ -1071,8 +1086,15 @@ class ChatBotUtils:
         """Generar respuesta personalizada según el flujo, usando IA si está disponible."""
         pie = ChatBotUtils._pie_mensaje(lead_id, equipo_asignado, env=env)
 
-        descripcion_grupos = env['chatbot.flujo']._get_mapeo_equipo_descripcion() if env else {}
-        grupo_texto = descripcion_grupos.get(equipo_asignado, 'atención al cliente')
+        grupo_texto = 'atención al cliente'
+        if env and equipo_asignado:
+            flujo = env['chatbot.flujo'].sudo().search(
+                ['|', ('routing_key', '=', equipo_asignado),
+                 ('name', '=', equipo_asignado)], limit=1)
+            if flujo:
+                grupo_texto = (
+                    flujo.team_id.name or flujo.grupo_asignado
+                    or 'atención al cliente')
         if env and lead_id:
             try:
                 service = env.get('gpt.service')
@@ -1116,6 +1138,7 @@ class ChatBotUtils:
     @staticmethod
     def format_patient_summary(data):
         """Devuelve un resumen neutro de todos los datos del cliente para mostrar al usuario."""
+        data = ChatBotUtils._normalizar_datos_paciente(data)
         lines = []
         
         # Nombre
