@@ -41,16 +41,26 @@
                     <sheet>
                         <group string="Onboarding (primera vez)">
                             <div class="alert alert-info" role="alert">
-                                <b>Checklist:</b>
-                                1️⃣ Ingiere los documentos comerciales del
-                                cliente en el RAG (n8n). 2️⃣ Pulsa
-                                <b>"Sincronizar todo desde RAG"</b>.
-                                3️⃣ Revisa el menú y las intenciones. 4️⃣ Si el
-                                negocio necesita más flujos, márcalos en
-                                "Flujos de este cliente" y pulsa
-                                <b>"Activar solo los flujos marcados"</b>.
-                                5️⃣ Prueba por WhatsApp: "menu", una pregunta
-                                de precios y "sí quiero cotizar".
+                                <b>Cómo poner un cliente a funcionar:</b><br/>
+                                1️⃣ Sube a la carpeta de Google Drive del
+                                cliente sus documentos reales: precios,
+                                catálogo, horarios, políticas. (Nada del prompt
+                                del bot).<br/>
+                                2️⃣ En n8n, ejecuta el workflow "Sistema RAG
+                                standar" para cargarlos.<br/>
+                                3️⃣ Pulsa <b>"Sincronizar todo desde RAG"</b>:
+                                Odoo arma el menú, las intenciones y activa los
+                                flujos solito.<br/>
+                                4️⃣ Prueba por WhatsApp: "menu" y una pregunta
+                                de precios. El bot debe responder con la
+                                información, SIN pedirte datos.<br/>
+                                5️⃣ ¿Te falta un flujo especial (ej. citas por
+                                seguro, un trámite propio)? Créalo en
+                                Chatbot → Flujos, márcalo abajo en "Flujos de
+                                este cliente" y pulsa <b>"Activar solo los
+                                flujos marcados"</b>.
+                                ⚠️ OJO: ese botón archiva todos los flujos que
+                                NO marques.
                             </div>
                         </group>
                         <group string="Diagnóstico">
