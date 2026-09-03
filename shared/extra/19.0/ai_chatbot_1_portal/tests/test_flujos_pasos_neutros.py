@@ -59,3 +59,23 @@ class TestFlujosPasosNeutros(BaseChatbotTestCase):
             {'name': 'Mi Negocio Test', 'active': True})
         brand = ChatBotUtils._get_brand_name(self.env)
         self.assertEqual(brand, 'Mi Negocio Test')
+
+    def test_05_flujo_nuevo_politica_confirmation(self):
+        """El default de politica_inicio es confirmación (pregunta siempre)."""
+        flujo = self._crear_flujo('flujo_agendamiento_precios')
+        self.assertEqual(flujo.politica_inicio, 'confirmation')
+
+    def test_06_prompt_incluye_regla16_y_politica(self):
+        """El prompt universal pide confirmación y renderiza la política."""
+        flujo = self._crear_flujo('flujo_agendamiento_precios')
+        config = self.env['chatbot.config'].create({
+            'name': 'Cliente Test',
+            'flujo_ids': [(6, 0, [flujo.id])],
+        })
+        from odoo.addons.ai_chatbot_1_portal.services.prompt_renderer import (
+            render_prompt)
+        prompt = render_prompt(config)
+        self.assertIn(
+            'PREGUNTA DE CONFIRMACIÓN ANTES DE ENTRAR A UN FLUJO', prompt)
+        self.assertIn(
+            'Política de inicio: Requiere confirmación del usuario', prompt)

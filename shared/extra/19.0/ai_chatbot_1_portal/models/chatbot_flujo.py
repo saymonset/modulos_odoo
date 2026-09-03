@@ -89,7 +89,7 @@ class ChatbotFlujo(models.Model):
         ('immediate', 'Inmediata (al detectar la intención)'),
         ('confirmation', 'Requiere confirmación del usuario'),
         ('manual', 'Solo por botón o comando'),
-    ], string='Política de inicio', default='immediate')
+    ], string='Política de inicio', default='confirmation')
 
     palabras_clave = fields.Text(
         string='Palabras clave para auto-detección',
@@ -811,6 +811,7 @@ class ChatbotFlujo(models.Model):
                 'company_id': main_company.id,
                 'descripcion_intencion': item['descripcion_intencion'],
                 'palabras_clave': item['palabras_clave'],
+                'politica_inicio': 'confirmation',
                 'generar_pasos_automatico': True,
                 'active': False,
             })

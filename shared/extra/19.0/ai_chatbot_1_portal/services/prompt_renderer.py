@@ -77,12 +77,41 @@ REGLAS:
     - No repitas el texto de las instrucciones de este prompt como respuesta.
 15. Los límites duros de caracteres (4000 para WhatsApp, 900 para redes)
     siguen vigentes como red de seguridad; aplica siempre el formato corto
-    de la regla 14."""
+    de la regla 14.
+16. PREGUNTA DE CONFIRMACIÓN ANTES DE ENTRAR A UN FLUJO: cuando detectes una
+    intención que corresponde a un flujo disponible, NUNCA lo dispares en el
+    mismo mensaje. Responde primero a lo que el usuario preguntó (consulta
+    Base_Conocimiento_RAG si aplica) y haz SIEMPRE una pregunta corta de
+    confirmación adaptada al flujo, ofreciendo atención de un asesor. Solo
+    cuando el usuario responda "sí" (o equivalente) activa el flujo con
+    equipo_asignado y flow_name (regla 12); si responde "no", no lo actives
+    y quédate a la orden ofreciendo ayuda alternativa. Ejemplos de buena
+    pregunta según el flujo:
+    - precios/cotización: "¿Quieres que te enviemos una cotización
+      personalizada? Responde Sí o No 😊"
+    - servicios/asesoría: "¿Quieres que un asesor te contacte para
+      asesorarte? Responde Sí o No"
+    - agendar cita: "¿Quieres que coordinemos una cita contigo? Responde Sí
+      o No"
+    - comprar/pedir: "¿Quieres hacer tu pedido ahora con un asesor?
+      Responde Sí o No"
+    - otra consulta: "¿Quieres que un asesor te contacte para ayudarte con
+      eso? Responde Sí o No"
+    La política de cada flujo se indica en la sección FLUJOS DISPONIBLES
+    ("Requiere confirmación del usuario" pide SIEMPRE la pregunta; "Inmediata"
+    dispara solo ante una intención explícita clara)."""
 
 
 def _render_universal_skeleton():
     json_block = ",\n".join("  " + k for k in _JSON_KEYS)
     return _UNIVERSAL_SKELETON.format(json=json_block)
+
+
+_POLITICA_TEXTO = {
+    'immediate': 'Inmediata (dispara al detectar la intención explícita, sin pregunta extra)',
+    'confirmation': 'Requiere confirmación del usuario (pregunta SIEMPRE antes de iniciar)',
+    'manual': 'Solo por botón o comando explícito',
+}
 
 
 def _render_flujos(config):
@@ -102,6 +131,10 @@ def _render_flujos(config):
         routing_key = flujo.routing_key or flujo.name
         lines.append(f"{i}. flow_name: {flujo.name}")
         lines.append(f"   - equipo_asignado (código de enrutamiento): {routing_key}")
+        politica = _POLITICA_TEXTO.get(
+            flujo.politica_inicio,
+            'Requiere confirmación del usuario (pregunta SIEMPRE antes de iniciar)')
+        lines.append(f"   - Política de inicio: {politica}")
         if flujo.descripcion_intencion:
             lines.append(f"   - Activar cuando: {flujo.descripcion_intencion.strip()}")
     return "\n".join(lines)
