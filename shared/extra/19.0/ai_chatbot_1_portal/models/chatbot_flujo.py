@@ -71,8 +71,12 @@ class ChatbotFlujo(models.Model):
 
     descripcion_intencion = fields.Text(
         string='Descripción para el agente',
-        help='Instrucción que se inyecta al prompt del agente para explicarle '
-             'cuándo debe activar este flujo.',
+        help='Instrucción que se inyecta al prompt del agente ("Activar '
+             'cuando"). Redáctala como CONFIRMACIÓN explícita del usuario '
+             '(p. ej. "El usuario CONFIRMA que quiere una cotización formal '
+             'o dejar sus datos"), NUNCA como simple pregunta ("cuando '
+             'pregunte por precios"), porque eso haría que el bot dispare el '
+             'flujo ante una consulta informativa.',
     )
 
     condiciones_no_inicio = fields.Text(
@@ -761,31 +765,31 @@ class ChatbotFlujo(models.Model):
         {
             'xmlid': 'flujo_agendamiento_directo',
             'name': 'flujo_agendamiento_directo',
-            'descripcion_intencion': 'El usuario quiere agendar directamente una cita, turno o reserva.',
+            'descripcion_intencion': 'El usuario pide explícitamente agendar una cita, turno o reserva (quiere dejar sus datos).',
             'palabras_clave': 'cita,citas,agenda,agendar,agendamiento,reservar,reserva,turno,turnos,cupo,horario',
         },
         {
             'xmlid': 'flujo_agendamiento_precios',
             'name': 'flujo_agendamiento_precios',
-            'descripcion_intencion': 'El usuario pregunta por precios, costos, tarifas o cotizaciones.',
+            'descripcion_intencion': 'El usuario CONFIRMA que quiere una cotización formal o dejar sus datos para un presupuesto (p. ej. responde "sí" a la oferta de cotizar). Una simple pregunta de precios NO activa este flujo: se responde con Base_Conocimiento_RAG.',
             'palabras_clave': 'precio,precios,costo,costos,cuanto,valor,tarifa,tarifas,cotizacion,cotizaciones,plan,planes',
         },
         {
             'xmlid': 'flujo_agendamiento_servicios',
             'name': 'flujo_agendamiento_servicios',
-            'descripcion_intencion': 'El usuario pregunta por servicios, procedimientos, trámites o paquetes ofrecidos.',
+            'descripcion_intencion': 'El usuario CONFIRMA que quiere agendar asesoría/demo o dejar sus datos para un servicio. Una simple pregunta de servicios NO activa este flujo: se responde con Base_Conocimiento_RAG.',
             'palabras_clave': 'servicio,servicios,procedimientos,procedimiento,paquete,paquetes,tramite,tramites,proceso,procesos',
         },
         {
             'xmlid': 'flujo_ventas',
             'name': 'flujo_ventas',
-            'descripcion_intencion': 'El usuario quiere comprar, pedir, encargar o adquirir productos del negocio.',
+            'descripcion_intencion': 'El usuario CONFIRMA que quiere comprar o hacer un pedido y acepta dejar sus datos. Una simple consulta de producto NO activa este flujo: se responde con Base_Conocimiento_RAG.',
             'palabras_clave': 'venta,ventas,vender,compra,comprar,pedido,pedidos,carrito,producto,productos,tienda,domicilio,delivery,retail',
         },
         {
             'xmlid': 'flujo_agendamiento_otra_consulta',
             'name': 'flujo_agendamiento_otra_consulta',
-            'descripcion_intencion': 'El usuario tiene otra consulta o solicitud no cubierta por los demás flujos.',
+            'descripcion_intencion': 'El usuario CONFIRMA que quiere que un asesor lo contacte por una consulta no cubierta por los demás flujos.',
             'palabras_clave': 'consulta,dudas,duda,pregunta,preguntas,informacion,solicitud,asesoria,orientacion',
         },
         {

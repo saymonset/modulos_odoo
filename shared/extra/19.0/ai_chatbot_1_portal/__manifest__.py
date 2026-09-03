@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'ai_chatbot_1_portal',
-    'version': '1.0.18',
+    'version': '1.0.19',
     'summary': """ ai_chatbot_1_portal Summary """,
     'description': """Módulo de portal para Chatbot de IA. Proporciona la interfaz y componentes de portal para el chatbot de Inteligencia Artificial.""",
     'author': 'Simon Alberto Rodriguez Pacheco',

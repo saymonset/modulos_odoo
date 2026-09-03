@@ -11,7 +11,7 @@
             <field name="name">flujo_agendamiento_directo</field>
             <field name="company_id" ref="base.main_company"/>
             <field name="active">True</field>
-            <field name="descripcion_intencion">El usuario quiere agendar directamente una cita, turno o reserva.</field>
+            <field name="descripcion_intencion">El usuario pide explícitamente agendar una cita, turno o reserva (quiere dejar sus datos).</field>
             <field name="palabras_clave">cita,citas,agenda,agendar,agendamiento,reservar,reserva,turno,turnos,cupo,horario</field>
         </record>
         
@@ -20,7 +20,7 @@
             <field name="name">flujo_agendamiento_precios</field>
             <field name="company_id" ref="base.main_company"/>
             <field name="active">True</field>
-            <field name="descripcion_intencion">El usuario pregunta por precios, costos, tarifas o cotizaciones.</field>
+            <field name="descripcion_intencion">El usuario CONFIRMA que quiere una cotización formal o dejar sus datos para un presupuesto (p. ej. responde "sí" a la oferta de cotizar). Una simple pregunta de precios NO activa este flujo: se responde con Base_Conocimiento_RAG.</field>
             <field name="palabras_clave">precio,precios,costo,costos,cuanto,valor,tarifa,tarifas,cotizacion,cotizaciones,plan,planes</field>
         </record>
         
@@ -29,7 +29,7 @@
             <field name="name">flujo_agendamiento_servicios</field>
             <field name="company_id" ref="base.main_company"/>
             <field name="active">True</field>
-            <field name="descripcion_intencion">El usuario pregunta por servicios, procedimientos, trámites o paquetes ofrecidos.</field>
+            <field name="descripcion_intencion">El usuario CONFIRMA que quiere agendar asesoría/demo o dejar sus datos para un servicio. Una simple pregunta de servicios NO activa este flujo: se responde con Base_Conocimiento_RAG.</field>
             <field name="palabras_clave">servicio,servicios,procedimientos,procedimiento,paquete,paquetes,tramite,tramites,proceso,procesos</field>
         </record>
         
@@ -38,7 +38,7 @@
             <field name="name">flujo_ventas</field>
             <field name="company_id" ref="base.main_company"/>
             <field name="active">True</field>
-            <field name="descripcion_intencion">El usuario quiere comprar, pedir, encargar o adquirir productos del negocio.</field>
+            <field name="descripcion_intencion">El usuario CONFIRMA que quiere comprar o hacer un pedido y acepta dejar sus datos. Una simple consulta de producto NO activa este flujo: se responde con Base_Conocimiento_RAG.</field>
             <field name="palabras_clave">venta,ventas,vender,compra,comprar,pedido,pedidos,carrito,producto,productos,tienda,panaderia,pan,restaurante,domicilio,delivery,retail</field>
         </record>
         
@@ -47,7 +47,7 @@
             <field name="name">flujo_agendamiento_otra_consulta</field>
             <field name="company_id" ref="base.main_company"/>
             <field name="active">True</field>
-            <field name="descripcion_intencion">El usuario tiene otra consulta o solicitud no cubierta por los demás flujos.</field>
+            <field name="descripcion_intencion">El usuario CONFIRMA que quiere que un asesor lo contacte por una consulta no cubierta por los demás flujos.</field>
             <field name="palabras_clave">consulta,dudas,duda,pregunta,preguntas,informacion,solicitud,asesoria,orientacion</field>
         </record>
         
