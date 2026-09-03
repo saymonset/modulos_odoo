@@ -48,6 +48,17 @@ def _es_seccion_role(nombre):
     return n in ('TU ERES', 'OBJETIVO') or n.startswith('REGLA')
 
 
+def _limpiar_role(t):
+    """Quita el encabezado 'TÚ ERES:' que el RAG trae incluido en la sección.
+
+    El renderer del prompt ya antepone su propio encabezado 'TÚ ERES:'; si el
+    texto del documento lo repite, termina duplicado en el system prompt.
+    """
+    t = (t or '').strip()
+    t = re.sub(r'^\s*TÚ\s*ERES\s*:?\s*', '', t, flags=re.IGNORECASE)
+    return t.strip()
+
+
 def _detectar_secciones(filas):
     secciones = []
     por_archivo = {}
@@ -104,14 +115,33 @@ _SYSTEM_INTENCIONES = {
     'MENU': {
         'nombre': 'MENU', 'keywords': 'menu,menu_principal,menú,opciones,ayuda',
         'prioridad': 10, 'es_menu': True, 'tipo_pregunta': '',
+        # Guion por defecto: si el RAG no trae la sección MENÚ (lo habitual),
+        # el menú nunca queda vacío. Al detectar flujos se regenera un menú
+        # dinámico por cliente (ver _generar_menu_desde_flujos).
+        'output_default': (
+            '¡Hola! 👋 ¿Qué necesitas hoy?\n'
+            '1️⃣  Precios y cotizaciones\n'
+            '2️⃣  Servicios del negocio\n'
+            '3️⃣  Agendar una cita o asesoría\n'
+            '4️⃣  Otra consulta\n'
+            '\nResponde con el número de la opción o escríbeme lo que necesitas. 😊'
+        ),
     },
     'CANCELAR': {
         'nombre': 'CANCELAR', 'keywords': 'cancelar',
         'prioridad': 11, 'es_menu': False, 'tipo_pregunta': '',
+        'output_default': (
+            '¡Entendido! 👍 No hay problema. Escribe *menu* cuando quieras '
+            'volver a empezar.'
+        ),
     },
     'SALIR': {
         'nombre': 'SALIR', 'keywords': 'salir,gracias,muchas gracias',
         'prioridad': 30, 'es_menu': False, 'tipo_pregunta': '',
+        'output_default': (
+            '¡Fue un placer ayudarte! 😊 Aquí estoy cuando me necesites. '
+            'Que tengas un excelente día.'
+        ),
     },
     'CITA_DIRECTA': {
         'nombre': 'CITA_DIRECTA',
@@ -164,6 +194,32 @@ _BASE_SISTEMA = (
     'IMAGEN', 'CONFIRMACION_IMAGEN',
 )
 
+# Marcadores que delatan que lo ingerido en n8n_vectors es el PROMPT del bot y
+# no documentos comerciales del negocio. Si aparecen, la recarga RAG se aborta
+# con un aviso para no regenerar una configuración basura (menú vacío,
+# respuestas enlatadas meta, tipoPregunta no reconocidos, etc.).
+_MARCADORES_PROMPT = (
+    'FORMATO DE SALIDA OBLIGATORIO',
+    'tipoPregunta',
+    'flow_name',
+    'isMenu',
+    'RESPUESTAS POR INTENCIÓN',
+    'FLUJOS DISPONIBLES',
+    'CONSTRUCCIÓN FINAL DEL JSON',
+    # los prompts usan encabezados con "==="; los documentos comerciales no
+    '===',
+)
+
+# Intenciones sistema que representan una ACCIÓN de captura/confirmación.
+# SOLO ellas pueden llevar flow_id (Flujo que dispara). Las intenciones de
+# contenido (precios, productos, servicios, medidas) y de menú NUNCA disparan
+# flujos: se responden consultando Base_Conocimiento_RAG, y el flujo arranca
+# solo cuando el usuario confirma explícitamente.
+_INTENCIONES_ACCION = (
+    'CITA_DIRECTA', 'CONFIRMACION', 'IMAGEN',
+    'CONFIRMACION_IMAGEN', 'OTRA_CONSULTA',
+)
+
 
 class ChatbotConfig(models.Model):
     _name = "chatbot.config"
@@ -211,6 +267,63 @@ class ChatbotConfig(models.Model):
         string="Texto de atribución",
         default="@integraiaconodoo",
     )
+    diagnostico = fields.Text(
+        string="Diagnóstico",
+        compute="_compute_diagnostico",
+        store=False,
+    )
+    intenciones_contenido_con_flujo = fields.Integer(
+        string="Intenciones de contenido con flujo vinculado",
+        compute="_compute_diagnostico",
+        store=False,
+    )
+
+    @api.depends('intencion_ids', 'intencion_ids.flow_id',
+                 'intencion_ids.es_auto_rag', 'intencion_ids.nombre')
+    def _compute_diagnostico(self):
+        accion_nombres = {_normalizar(n) for n in _INTENCIONES_ACCION}
+        for config in self:
+            intenciones = config.intencion_ids.filtered(lambda i: i.es_auto_rag)
+            mal = intenciones.filtered(
+                lambda i: _normalizar(i.nombre or '') not in accion_nombres
+                and i.flow_id)
+            menu = intenciones.filtered(lambda i: i.nombre == 'MENU')
+            lineas = []
+            if mal:
+                lineas.append(
+                    '⚠️ %d intención(es) de contenido tienen "Flujo que '
+                    'dispara": el bot puede mandar al flujo de captura ante '
+                    'una simple pregunta. Pulsa "Desvincular flujos de '
+                    'contenido" para que responda con el RAG.'
+                    % len(mal))
+            if menu and not (menu.output_largo or '').strip():
+                lineas.append(
+                    '⚠️ El menú está vacío: pulsa "Sincronizar todo desde RAG".')
+            if not intenciones:
+                lineas.append(
+                    'ℹ️ Sin intenciones generadas: ingiere los documentos '
+                    'comerciales en el RAG (n8n) y pulsa "Sincronizar todo '
+                    'desde RAG".')
+            config.diagnostico = '\n'.join(lineas) or '✅ Configuración en orden.'
+            config.intenciones_contenido_con_flujo = len(mal)
+
+    def action_desvincular_flujos_contenido(self):
+        """Botón de 1 clic: quita el flujo de las intenciones de contenido."""
+        self.ensure_one()
+        accion_nombres = {_normalizar(n) for n in _INTENCIONES_ACCION}
+        mal = self.intencion_ids.filtered(
+            lambda i: i.es_auto_rag
+            and _normalizar(i.nombre or '') not in accion_nombres
+            and i.flow_id)
+        count = len(mal)
+        mal.write({'flow_id': False})
+        return self._notificar(
+            'Desvincular flujos de contenido',
+            ('Se desvincularon %d intención(es) de contenido.'
+             % count) if count else
+            'No había intenciones de contenido con flujo vinculado.',
+            'success' if count else 'info',
+        )
 
     @api.model
     def _get_active_config(self):
@@ -317,7 +430,8 @@ class ChatbotConfig(models.Model):
         contacto = next(
             (t for (n, t) in secciones if _normalizar(n) == 'CONTACTO'), None)
 
-        role = "\n\n".join(role_partes) if role_partes else ''
+        role = "\n\n".join(_limpiar_role(t) for t in role_partes) \
+            if role_partes else ''
         return {
             'ok': True, 'titulo': 'RAG', 'tipo': 'success',
             'filas': filas, 'secciones': secciones,
@@ -371,6 +485,66 @@ class ChatbotConfig(models.Model):
             })
         return vals, procesadas
 
+    # Valores de tipo_pregunta reconocidos por n8n para construir botones.
+    # Las claves van normalizadas (mayúsculas, sin acentos).
+    _MAPEO_TIPO_PREGUNTA = (
+        ('PRECIOS', ('PRECIO', 'COSTO', 'TARIFA', 'COTIZ', 'CUANTO', 'CUESTA')),
+        ('SERVICIOS', ('SERVICIO', 'PROCEDIMIENTO', 'TRAMITE', 'PAQUETE',
+                       'PRODUCTO', 'PRESUPUESTO')),
+        ('ESTATICO', ('HORARIO', 'PROMOCION', 'UBICACION', 'CONTACTO',
+                      'DIRECCION', 'SUCURSAL')),
+    )
+
+    def _mapear_tipo_pregunta(self, nombre, texto):
+        """Mapea una sección de contenido a un tipoPregunta reconocido por n8n.
+
+        Si no aplica ninguno devuelve '' (el agente responde sin botones).
+        """
+        t = _normalizar('%s %s' % (nombre or '', texto or ''))
+        for tipo, claves in self._MAPEO_TIPO_PREGUNTA:
+            for clave in claves:
+                if clave in t:
+                    return tipo
+        return ''
+
+    # Etiquetas amigables del menú por flujo conocido. Los flujos con nombre
+    # propio (clientes verticales) usan su descripcion_intencion o el nombre.
+    _MENU_LABELS = {
+        'flujo_agendamiento_precios': 'Precios y cotizaciones',
+        'flujo_agendamiento_servicios': 'Servicios del negocio',
+        'flujo_agendamiento_directo': 'Agendar una cita o asesoría',
+        'flujo_ventas': 'Comprar o pedir un producto',
+        'flujo_resultados_imagenes': 'Enviar imagen o archivo',
+        'flujo_agendamiento_otra_consulta': 'Otra consulta',
+    }
+
+    def _generar_menu_desde_flujos(self, flujos):
+        """Construye el menú del cliente a partir de los flujos detectados.
+
+        Devuelve el texto de output_largo de la intención MENU o '' si no hay
+        flujos con los que armar un menú útil.
+        """
+        numeracion = ['1️⃣ ', '2️⃣ ', '3️⃣ ', '4️⃣ ', '5️⃣ ', '6️⃣ ', '7️⃣ ', '8️⃣ ']
+        lineas = []
+        for f in flujos.sorted('name'):
+            if f.name == 'flujo_agendamiento_default':
+                continue
+            if len(lineas) >= len(numeracion):
+                break
+            etiqueta = self._MENU_LABELS.get(f.name)
+            if not etiqueta:
+                etiqueta = (f.descripcion_intencion or '').strip() or (
+                    f.name.replace('flujo_', '').replace('_', ' ').title())
+            lineas.append(numeracion[len(lineas)] + etiqueta)
+        if not lineas:
+            return ''
+        return (
+            '¡Hola! 👋 ¿Qué necesitas hoy?\n'
+            + '\n'.join(lineas)
+            + '\n\nResponde con el número de la opción o escríbeme lo que '
+            'necesitas. 😊'
+        )
+
     def _refrescar_desde_rag(self):
         """
         Lee n8n_vectors, actualiza role/contacto/bloque_conocimiento de la
@@ -395,14 +569,50 @@ class ChatbotConfig(models.Model):
         role_partes = datos['role_partes']
         conocimiento = datos['conocimiento']
 
+        # Guardia anti-prompt: si lo ingerido parece el prompt del bot (no
+        # documentos comerciales), abortamos SIN modificar nada para no
+        # regenerar una configuración basura.
+        texto_total = "\n".join(t for _, t in secciones) + "\n" + \
+            "\n".join(role_partes)
+        for marcador in _MARCADORES_PROMPT:
+            if marcador in texto_total:
+                return {
+                    'ok': False,
+                    'titulo': 'El RAG parece el prompt del bot',
+                    'mensaje': (
+                        'Se detectó "%s" en los documentos ingeridos. Eso '
+                        'indica que subiste el prompt del bot y no documentos '
+                        'comerciales (precios, catálogo, políticas, horarios). '
+                        'No se modificó nada. Ingiere los documentos reales '
+                        'del negocio en n8n y vuelve a intentar.' % marcador),
+                    'tipo': 'warning',
+                    'documentos': datos['documentos'],
+                    'secciones': len(secciones),
+                    'intenciones': 0,
+                    'role_actualizado': False,
+                }
+
         vals_config = {}
         if role_partes:
-            vals_config['role'] = "\n\n".join(role_partes)[:12000]
+            vals_config['role'] = "\n\n".join(
+                _limpiar_role(t) for t in role_partes)[:12000]
         contenido = [(n, t) for (n, t) in conocimiento
                      if _normalizar(n) != 'CONTACTO']
         if contenido:
+            # RAG-first: el prompt lleva solo una guía breve + los temas.
+            # El contenido comercial real vive en n8n_vectors y se consulta en
+            # runtime con la herramienta Base_Conocimiento_RAG. Así el agente
+            # no puede responder desde el prompt sin llamar la herramienta ni
+            # volcar catálogos completos.
+            temas = ', '.join(dict.fromkeys(
+                (n or '').strip() for n, _ in contenido if (n or '').strip()))
             vals_config['bloque_conocimiento'] = (
-                "\n\n".join(t for _, t in contenido)[:12000])
+                'El negocio tiene una base de conocimiento (precios, '
+                'productos, servicios, medidas, acabados, horarios y '
+                'políticas) que se consulta SIEMPRE con la herramienta '
+                'Base_Conocimiento_RAG.\n'
+                'Temas disponibles: %s' % (temas or 'comercial')
+            )
         if datos['contacto']:
             vals_config['contacto'] = datos['contacto'][:4000]
         if vals_config:
@@ -438,8 +648,11 @@ class ChatbotConfig(models.Model):
                 'nombre': nombre,
                 'keywords': _extract_keywords(texto),
                 'prioridad': 60 + indice * 10,
-                'tipo_pregunta': nombre,
-                'output_largo': texto[:2000],
+                'tipo_pregunta': self._mapear_tipo_pregunta(nombre, texto),
+                # RAG-first: sin respuestas enlatadas. El contenido vive en la
+                # herramienta Base_Conocimiento_RAG; la respuesta la redacta el
+                # agente con el resultado de la consulta.
+                'output_largo': '',
                 'es_auto_rag': True,
             })
             indice += 1
@@ -564,13 +777,25 @@ class ChatbotConfig(models.Model):
 
     def _vincular_flow_id_en_intenciones(self, flujos):
         """
-        Vincula 'flow_id' (Flujo que dispara) en las intenciones es_auto_rag
-        cuyo texto/palabras clave coincidan con un flujo detectado.
+        Vincula 'flow_id' (Flujo que dispara) SOLO en intenciones de ACCIÓN
+        (agendar, confirmar, enviar imagen, derivar a asesor). Las intenciones
+        de contenido (precios, productos, servicios, medidas) NUNCA llevan
+        flujo: se responden consultando Base_Conocimiento_RAG, y el flujo solo
+        arranca cuando el usuario confirma explícitamente (regla 2/3 del
+        esqueleto). Esto evita que el bot dispare capturas ante una simple
+        pregunta informativa.
         No toca intenciones manuales.
         :return: cantidad de intenciones vinculadas.
         """
+        # Intenciones sistema que representan una acción de captura/confirmación.
+        accion_nombres = {_normalizar(n) for n in _INTENCIONES_ACCION}
         vinculadas = 0
         for intencion in self.intencion_ids.filtered(lambda i: i.es_auto_rag):
+            if _normalizar(intencion.nombre or '') not in accion_nombres:
+                # Contenido / menú / salir / fallback: sin flujo de captura.
+                if intencion.flow_id:
+                    intencion.flow_id = False
+                continue
             texto_i = _normalizar(' '.join(filter(None, [
                 intencion.nombre or '',
                 intencion.keywords or '',
@@ -632,6 +857,15 @@ class ChatbotConfig(models.Model):
                 'warning')
 
         self.write({'flujo_ids': [(6, 0, flujos_detectados.ids)]})
+
+        # Menú dinámico por cliente: se regenera desde los flujos detectados
+        # (un mecánico no muestra el mismo menú que una panadería).
+        menu_texto = self._generar_menu_desde_flujos(flujos_detectados)
+        if menu_texto:
+            self.intencion_ids.filtered(
+                lambda i: i.nombre == 'MENU' and i.es_auto_rag
+            ).write({'output_largo': menu_texto})
+
         vinculadas = self._vincular_flow_id_en_intenciones(flujos_detectados)
 
         resultado = flujo_model._aplicar_deteccion_desde_config(self)

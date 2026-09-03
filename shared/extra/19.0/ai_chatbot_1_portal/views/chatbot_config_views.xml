@@ -39,6 +39,39 @@
                                 confirm="Actualiza solo rol/contacto/base de conocimiento e intenciones desde n8n_vectors. NO modifica flujos ni Chatwoot Mappings. Si la tabla n8n_vectors está vacía o no existe, no se cambia nada: verás un aviso. ¿Continuar?"/>
                     </header>
                     <sheet>
+                        <group string="Onboarding (primera vez)">
+                            <div class="alert alert-info" role="alert">
+                                <b>Cómo poner un cliente a funcionar:</b><br/>
+                                1️⃣ Sube a la carpeta de Google Drive del
+                                cliente sus documentos reales: precios,
+                                catálogo, horarios, políticas. (Nada del prompt
+                                del bot).<br/>
+                                2️⃣ En n8n, ejecuta el workflow "Sistema RAG
+                                standar" para cargarlos.<br/>
+                                3️⃣ Pulsa <b>"Sincronizar todo desde RAG"</b>:
+                                Odoo arma el menú, las intenciones y activa los
+                                flujos solito.<br/>
+                                4️⃣ Prueba por WhatsApp: "menu" y una pregunta
+                                de precios. El bot debe responder con la
+                                información, SIN pedirte datos.<br/>
+                                5️⃣ ¿Te falta un flujo especial (ej. citas por
+                                seguro, un trámite propio)? Créalo en
+                                Chatbot → Flujos, márcalo abajo en "Flujos de
+                                este cliente" y pulsa <b>"Activar solo los
+                                flujos marcados"</b>.
+                                ⚠️ OJO: ese botón archiva todos los flujos que
+                                NO marques.
+                            </div>
+                        </group>
+                        <group string="Diagnóstico">
+                            <field name="diagnostico" widget="text" readonly="1"/>
+                            <button name="action_desvincular_flujos_contenido"
+                                    type="object"
+                                    string="Desvincular flujos de contenido"
+                                    class="btn-secondary"
+                                    invisible="intenciones_contenido_con_flujo == 0"
+                                    confirm="Quita el 'Flujo que dispara' de las intenciones de contenido para que el bot responda precios/servicios con el RAG y no dispare capturas ante preguntas informativas. ¿Continuar?"/>
+                        </group>
                         <group>
                             <field name="name"/>
                             <field name="brand_name"/>
@@ -59,6 +92,17 @@
                         </group>
                         <notebook>
                             <page string="Intenciones">
+                                <div class="alert alert-info" role="alert">
+                                    <b>Tips:</b> las intenciones de
+                                    <b>contenido</b> (precios, servicios,
+                                    productos, medidas) <b>NO deben tener
+                                    "Flujo que dispara"</b>: se responden
+                                    consultando la base de conocimiento (RAG).
+                                    El flujo solo se activa en intenciones de
+                                    <b>ACCIÓN</b> (agendar, confirmar, imagen,
+                                    otra consulta) o cuando el usuario confirma
+                                    que quiere cotizar/agendar/comprar.
+                                </div>
                                 <field name="intencion_ids">
                                     <list editable="bottom">
                                         <field name="nombre"/>

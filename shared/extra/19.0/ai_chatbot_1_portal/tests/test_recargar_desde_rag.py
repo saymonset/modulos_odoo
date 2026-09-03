@@ -129,13 +129,16 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
         self.assertIn('MENU', nombres, 'MENU se crea desde la sección RAG')
         menu = intenciones.filtered(lambda i: i.nombre == 'MENU')
         self.assertTrue(menu.es_menu)
-        self.assertTrue(menu.output_largo, 'MENU debe traer el texto del RAG')
+        self.assertTrue(menu.output_largo, 'MENU debe traer un menú por defecto')
 
+        # Ranuras universales: nacen con un guion por defecto amigable para que
+        # nunca queden vacías (antes el menú respondía literal "MENU").
         for base in ('CANCELAR', 'SALIR', 'FALLBACK'):
             slot = intenciones.filtered(lambda i: i.nombre == base)
             self.assertTrue(slot, '%s debe existir como ranura' % base)
-            self.assertFalse(slot.output_largo,
-                             '%s queda vacía para pinceladas humanas' % base)
+            self.assertTrue(
+                slot.output_largo,
+                '%s debe traer una respuesta por defecto amigable' % base)
 
         # Imágenes/archivos: universales, nacen con guion por defecto.
         for img in ('IMAGEN', 'CONFIRMACION_IMAGEN'):
@@ -150,6 +153,22 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
         self.assertEqual(imagen.tipo_pregunta, 'IMAGEN')
 
         self.assertIn('PRODUCTOS Y PRECIOS', nombres)
+        # RAG-first: las intenciones de contenido no llevan respuesta enlatada
+        # y su tipoPregunta se mapea a un valor reconocido por n8n (o "").
+        productos = intenciones.filtered(lambda i: i.nombre == 'PRODUCTOS Y PRECIOS')
+        self.assertTrue(productos)
+        self.assertFalse(productos.output_largo,
+                         'Las intenciones de contenido no llevan respuesta '
+                         'enlatada: la respuesta sale de Base_Conocimiento_RAG')
+        self.assertEqual(productos.tipo_pregunta, 'PRECIOS',
+                         'tipoPregunta mapeado a un valor reconocido por n8n')
+        # Contenido SIN flujo: solo las intenciones de ACCIÓN llevan flow_id.
+        self.assertFalse(productos.flow_id,
+                         'Las intenciones de contenido no deben disparar flujos')
+        for img in ('IMAGEN', 'CONFIRMACION_IMAGEN'):
+            self.assertTrue(
+                intenciones.filtered(lambda i: i.nombre == img).flow_id,
+                '%s debe llevar el flujo de imágenes' % img)
         self.assertTrue(all(i.flow_id in config.flujo_ids
                             for i in intenciones.filtered('flow_id')))
 
@@ -258,3 +277,97 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
                          'El mapping huérfano debe adoptarse (relink flow_id)')
         total = Mapping.search_count([('flow_id', '=', ventas.id)])
         self.assertEqual(total, 1, 'No debe duplicarse el mapping al adoptar')
+
+    def test_08_aborta_si_el_rag_es_el_prompt_del_bot(self):
+        """Si lo ingerido parece el prompt del bot, no se regenera nada.
+
+        Evita que un onboarding automatizado genere configuraciones basura
+        (menú vacío, respuestas enlatadas meta, tipoPregunta no reconocidos).
+        """
+        self._crear_tabla_n8n_vectors()
+        self._insertar_documento(
+            'prompt_bot',
+            "TÚ ERES:\nBOT ARISTOS.\n"
+            "=== FORMATO DE SALIDA OBLIGATORIO ===\n"
+            '{"output": "", "tipoPregunta": "", "flow_name": ""}', 1)
+
+        config = self.env['chatbot.config'].create({'name': 'Cliente Test'})
+        resultado = config.action_recargar_todo_desde_rag()
+
+        self.assertEqual(resultado['params']['type'], 'warning')
+        self.assertIn('prompt del bot', resultado['params']['message'])
+        self.assertFalse(
+            config.intencion_ids.filtered(lambda i: i.es_auto_rag),
+            'No se deben crear intenciones a partir del prompt del bot')
+        self.assertFalse(config.role, 'No se debe tocar el role')
+
+    def test_09_menu_dinamico_desde_flujos_detectados(self):
+        """El menú se genera de los flujos detectados, no queda literal."""
+        self._crear_tabla_n8n_vectors()
+        self._insertar_documento(
+            'demo', "TÚ ERES:\nBOT PANADERIA TEST.", 1)
+        self._insertar_documento(
+            'demo',
+            "PRODUCTOS Y PRECIOS:\nVenta de pan artesanal, ofrecemos cotizar "
+            "pedidos y pasteles personalizados.", 2)
+
+        flujo_ventas = self._crear_flujo('flujo_ventas', 'venta,cotizar,pedido')
+        flujo_precios = self._crear_flujo(
+            'flujo_agendamiento_precios', 'precio,costo,tarifa')
+        config = self.env['chatbot.config'].create({'name': 'Panadería Test'})
+        config.action_recargar_todo_desde_rag()
+
+        menu = config.intencion_ids.filtered(
+            lambda i: i.nombre == 'MENU' and i.es_auto_rag)
+        self.assertTrue(menu.output_largo)
+        self.assertIn('Precios y cotizaciones', menu.output_largo)
+        self.assertIn('1️⃣', menu.output_largo)
+        self.assertNotEqual(menu.output_largo.strip(), 'MENU')
+
+    def test_10_diagnostico_y_guardrail_flujos(self):
+        """El diagnóstico no reporta contenido con flujo y el prompt incluye
+        el guardrail de que las preguntas informativas no disparan flujos."""
+        self._crear_tabla_n8n_vectors()
+        self._insertar_documento(
+            'demo', "TÚ ERES:\nBOT CLIENTE TEST.", 1)
+        self._insertar_documento(
+            'demo',
+            "PRODUCTOS Y PRECIOS:\nVenta de artículos, ofrecemos cotizar y "
+            "pedidos.", 2)
+        self._crear_flujo('flujo_ventas', 'venta,cotizar')
+
+        config = self.env['chatbot.config'].create({'name': 'Cliente Test'})
+        config.action_recargar_todo_desde_rag()
+
+        self.assertEqual(config.intenciones_contenido_con_flujo, 0,
+                         'El diagnóstico no debe reportar contenido con flujo')
+        self.assertIn('en orden', config.diagnostico or '')
+
+        from odoo.addons.ai_chatbot_1_portal.services.prompt_renderer import render_prompt
+        prompt = render_prompt(config)
+        self.assertIn('NUNCA dispara un flujo', prompt,
+                      'El guardrail de flujos debe estar en el prompt')
+        self.assertIn('solo se activan cuando el usuario CONFIRMA', prompt)
+
+    def test_11_desvincula_flujos_de_contenido(self):
+        """El botón de 1 clic quita el flujo de las intenciones de contenido."""
+        self._crear_tabla_n8n_vectors()
+        self._insertar_documento(
+            'demo', "TÚ ERES:\nBOT CLIENTE TEST.", 1)
+        self._insertar_documento(
+            'demo',
+            "PRODUCTOS Y PRECIOS:\nVenta de artículos, ofrecemos cotizar.", 2)
+        self._crear_flujo('flujo_ventas', 'venta,cotizar')
+
+        config = self.env['chatbot.config'].create({'name': 'Cliente Test'})
+        config.action_recargar_todo_desde_rag()
+
+        # Forzar el caso malo: vincular el flujo de ventas a la de contenido.
+        productos = config.intencion_ids.filtered(
+            lambda i: i.nombre == 'PRODUCTOS Y PRECIOS')
+        productos.write({'flow_id': config.flujo_ids[0].id})
+        self.assertEqual(config.intenciones_contenido_con_flujo, 1)
+
+        res = config.action_desvincular_flujos_contenido()
+        self.assertEqual(res.get('params', {}).get('type'), 'success')
+        self.assertFalse(productos.flow_id, 'El flujo se desvincula')

@@ -18,7 +18,10 @@ class ChatbotIntencion(models.Model):
     )
     tipo_pregunta = fields.Char(
         string="Tipo de pregunta",
-        help='Mapeo al JSON de salida (PRECIOS, CITA_DIRECTA, CONFIRMACION_IMAGEN, ...).',
+        help='Mapeo al JSON de salida. Valores que n8n convierte en botones: '
+             'PRECIOS, SERVICIOS, TARJETA, CITA_DIRECTA, RESULTADOS, ESTATICO '
+             '(o CONFIRMACION_IMAGEN / IMAGEN para imágenes). Si está vacío o '
+             'no se reconoce, se responde solo con texto (sin botones).',
     )
     output_largo = fields.Text(
         string="Respuesta larga",
@@ -31,7 +34,11 @@ class ChatbotIntencion(models.Model):
     flow_id = fields.Many2one(
         "chatbot.flujo",
         string="Flujo que dispara",
-        help="Flujo que se activa cuando se clasifica esta intención (opcional).",
+        help='SOLO para intenciones de ACCIÓN (agendar, confirmar, imagen, '
+             'otra consulta) o cuando el usuario confirma que quiere cotizar, '
+             'agendar o comprar. Las intenciones de CONTENIDO (precios, '
+             'servicios, productos, medidas) NUNCA llevan flujo: se responden '
+             'consultando Base_Conocimiento_RAG.',
         ondelete="set null",
     )
     es_menu = fields.Boolean(

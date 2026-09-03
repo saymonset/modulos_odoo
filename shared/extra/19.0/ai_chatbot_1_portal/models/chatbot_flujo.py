@@ -71,8 +71,12 @@ class ChatbotFlujo(models.Model):
 
     descripcion_intencion = fields.Text(
         string='Descripción para el agente',
-        help='Instrucción que se inyecta al prompt del agente para explicarle '
-             'cuándo debe activar este flujo.',
+        help='Instrucción que se inyecta al prompt del agente ("Activar '
+             'cuando"). Redáctala como CONFIRMACIÓN explícita del usuario '
+             '(p. ej. "El usuario CONFIRMA que quiere una cotización formal '
+             'o dejar sus datos"), NUNCA como simple pregunta ("cuando '
+             'pregunte por precios"), porque eso haría que el bot dispare el '
+             'flujo ante una consulta informativa.',
     )
 
     condiciones_no_inicio = fields.Text(
@@ -85,7 +89,7 @@ class ChatbotFlujo(models.Model):
         ('immediate', 'Inmediata (al detectar la intención)'),
         ('confirmation', 'Requiere confirmación del usuario'),
         ('manual', 'Solo por botón o comando'),
-    ], string='Política de inicio', default='immediate')
+    ], string='Política de inicio', default='confirmation')
 
     palabras_clave = fields.Text(
         string='Palabras clave para auto-detección',
@@ -530,23 +534,11 @@ class ChatbotFlujo(models.Model):
             return self._get_pasos_para_resultados_lab()
         elif self.name == "flujo_resultados_imagenes":
             return self._get_pasos_para_resultados_imagenes()
-        elif self.name == "flujo_agendamiento_precios":
-            # Flujo informativo: mostrar información de precios primero.
-            # No solicitamos teléfono como primer paso; el usuario puede
-            # confirmar que desea agendar y entonces iniciar el flujo de agendamiento.
-            return [
-                {
-                    "secuencia": 1,
-                    "nombre_interno": "informar_precios",
-                    "nombre_mostrar": "Información de precios",
-                    "tipo_dato": "text",
-                    "campo_destino": "informacion_precios",
-                    "es_requerido": False,
-                    "es_paso_telefono": False,
-                    "mensaje_prompt": "Conoce nuestros planes y tarifas. ¿Deseas que te enviemos una cotización? Responde 'Sí' para continuar.",
-                    "mensaje_error": "",
-                }
-            ]
+        # flujo_agendamiento_precios usa el template genérico: con la
+        # arquitectura RAG-first el agente ya responde precios con la
+        # herramienta Base_Conocimiento_RAG antes de que el usuario confirme la
+        # cotización; el flujo es pura captura de datos (teléfono, nombre,
+        # cédula/fecha opcionales, consentimiento).
         return self._get_todos_los_pasos()
 
     def _crear_pasos_para_flujo(self, incluir_opcionales=True):
@@ -560,8 +552,7 @@ class ChatbotFlujo(models.Model):
                 "flujo_citas_medios_propios",
                 "flujo_citas_seguro",
                 "flujo_resultados_laboratorio",
-                "flujo_resultados_imagenes",
-                "flujo_agendamiento_precios"):
+                "flujo_resultados_imagenes"):
             pasos_data = self._get_pasos_obligatorios()
         for paso_data in pasos_data:
             paso_vals = paso_data.copy()
@@ -674,32 +665,23 @@ class ChatbotFlujo(models.Model):
     @api.model
     def _get_mapeo_equipo_descripcion(self):
         """
-        Fuente de verdad única.
-        Retorna un dict {clave: texto} que describe en español
-        el área responsable para cada equipo_asignado.
+        Mapa {routing_key o name: descripción del área responsable}.
+
+        Fuente dinámica y sin textos de demo: usa el grupo CRM (team_id) o el
+        grupo_asignado de cada flujo activo. Se conserva para compatibilidad con
+        llamadas externas; el mensaje de finalización ya no lo usa (pie corto).
         """
-        return {
-            "Agendamiento_Directo": "soporte general e información",
-            "flujo_agendamiento_directo": "soporte general e información",
-            "Agendamiento_Precios": "información de tienda virtual y planes",
-            "flujo_agendamiento_precios": "información de tienda virtual y planes",
-            # Cambiado: flujo_agendamiento_servicios ahora apunta a Grupo Ventas
-            "Agendamiento_Servicios": "información sobre agentes de IA",
-            "flujo_agendamiento_servicios": "información sobre agentes de IA",
-            "Agendamiento_Otra_Consulta": "desarrollo y consultoría",
-            "flujo_agendamiento_otra_consulta": "desarrollo y consultoría",
-            "Agendamiento_Tarjeta": "ventas de hosting y dominio",
-            "flujo_ventas": "ventas de hosting y dominio",
-            "Ventas": "ventas de hosting y dominio",
-            "CITAS_MP": "gestión con pago directo",
-            "flujo_citas_medios_propios": "gestión con pago directo",
-            "CITAS_SEGUROS": "gestión por convenio o cobertura",
-            "flujo_citas_seguro": "gestión por convenio o cobertura",
-            "RESULTADOS_LAB": "solicitud de documentos y resultados",
-            "flujo_resultados_laboratorio": "solicitud de documentos y resultados",
-            "RESULTADOS_IMAGENES": "solicitud de archivos e imágenes",
-            "flujo_resultados_imagenes": "solicitud de archivos e imágenes",
-        }
+        mapeo = {}
+        flujos = self.sudo().with_context(active_test=False).search([])
+        for f in flujos:
+            texto = (f.team_id.name or f.grupo_asignado or f.name or '').strip()
+            clave = (f.routing_key or f.name or '').strip()
+            if not clave:
+                continue
+            mapeo[clave] = texto
+            if f.name and f.name != clave:
+                mapeo[f.name] = texto
+        return mapeo
 
     # ============================================================
     # MÉTODOS PRINCIPALES: CREATE, COPY
@@ -761,31 +743,31 @@ class ChatbotFlujo(models.Model):
         {
             'xmlid': 'flujo_agendamiento_directo',
             'name': 'flujo_agendamiento_directo',
-            'descripcion_intencion': 'El usuario quiere agendar directamente una cita, turno o reserva.',
+            'descripcion_intencion': 'El usuario pide explícitamente agendar una cita, turno o reserva (quiere dejar sus datos).',
             'palabras_clave': 'cita,citas,agenda,agendar,agendamiento,reservar,reserva,turno,turnos,cupo,horario',
         },
         {
             'xmlid': 'flujo_agendamiento_precios',
             'name': 'flujo_agendamiento_precios',
-            'descripcion_intencion': 'El usuario pregunta por precios, costos, tarifas o cotizaciones.',
+            'descripcion_intencion': 'El usuario CONFIRMA que quiere una cotización formal o dejar sus datos para un presupuesto (p. ej. responde "sí" a la oferta de cotizar). Una simple pregunta de precios NO activa este flujo: se responde con Base_Conocimiento_RAG.',
             'palabras_clave': 'precio,precios,costo,costos,cuanto,valor,tarifa,tarifas,cotizacion,cotizaciones,plan,planes',
         },
         {
             'xmlid': 'flujo_agendamiento_servicios',
             'name': 'flujo_agendamiento_servicios',
-            'descripcion_intencion': 'El usuario pregunta por servicios, procedimientos, trámites o paquetes ofrecidos.',
+            'descripcion_intencion': 'El usuario CONFIRMA que quiere agendar asesoría/demo o dejar sus datos para un servicio. Una simple pregunta de servicios NO activa este flujo: se responde con Base_Conocimiento_RAG.',
             'palabras_clave': 'servicio,servicios,procedimientos,procedimiento,paquete,paquetes,tramite,tramites,proceso,procesos',
         },
         {
             'xmlid': 'flujo_ventas',
             'name': 'flujo_ventas',
-            'descripcion_intencion': 'El usuario quiere comprar, pedir, encargar o adquirir productos del negocio.',
+            'descripcion_intencion': 'El usuario CONFIRMA que quiere comprar o hacer un pedido y acepta dejar sus datos. Una simple consulta de producto NO activa este flujo: se responde con Base_Conocimiento_RAG.',
             'palabras_clave': 'venta,ventas,vender,compra,comprar,pedido,pedidos,carrito,producto,productos,tienda,domicilio,delivery,retail',
         },
         {
             'xmlid': 'flujo_agendamiento_otra_consulta',
             'name': 'flujo_agendamiento_otra_consulta',
-            'descripcion_intencion': 'El usuario tiene otra consulta o solicitud no cubierta por los demás flujos.',
+            'descripcion_intencion': 'El usuario CONFIRMA que quiere que un asesor lo contacte por una consulta no cubierta por los demás flujos.',
             'palabras_clave': 'consulta,dudas,duda,pregunta,preguntas,informacion,solicitud,asesoria,orientacion',
         },
         {
@@ -829,6 +811,7 @@ class ChatbotFlujo(models.Model):
                 'company_id': main_company.id,
                 'descripcion_intencion': item['descripcion_intencion'],
                 'palabras_clave': item['palabras_clave'],
+                'politica_inicio': 'confirmation',
                 'generar_pasos_automatico': True,
                 'active': False,
             })

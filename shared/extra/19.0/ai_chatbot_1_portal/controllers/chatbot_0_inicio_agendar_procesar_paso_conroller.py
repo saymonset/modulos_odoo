@@ -28,28 +28,6 @@ class InicioAgendarController(http.Controller):
         ], limit=1)
         if not flow:
             return None
-        # Special-case: flujo_agendamiento_precios is informational and should
-        # present pricing info first instead of immediately requesting phone.
-        if flow.name == 'flujo_agendamiento_precios':
-            return {
-                'flow_id': flow.id,
-                'flow_name': flow.name,
-                'company_id': flow.company_id.id if flow.company_id else None,
-                'steps': [
-                    {
-                        'id': None,
-                        'secuencia': 1,
-                        'nombre_interno': 'informar_precios',
-                        'nombre_mostrar': 'Información de precios',
-                        'tipo_dato': 'text',
-                        'mensaje_prompt': 'Conoce nuestros planes. ¿Deseas que te enviemos una cotización? Responde "Sí" para continuar.',
-                        'mensaje_error': '',
-                        'es_requerido': False,
-                        'campo_destino': 'informacion_precios',
-                        'es_paso_telefono': False,
-                    }
-                ],
-            }
         steps = []
         for paso in flow.paso_ids.sorted('secuencia'):
             if not paso.active:
@@ -94,12 +72,22 @@ class InicioAgendarController(http.Controller):
                 _logger.info("Cliente encontrado: %s (ID: %s)", partner.name, partner.id)
                 
                 datos_precargados = {
+                    # Nomenclatura solicitar_* (legacy)
                     'solicitar_name': partner.name or '',
                     'solicitar_vat': partner.vat or '',
                     'solicitar_phone': partner.phone or '',
                     'solicitar_birthdate': partner.birthdate.strftime('%d/%m/%Y') if partner.birthdate else '',
                     'solicitar_email': partner.email or '',
                     'consentimiento': partner.consentimiento_whatsapp or False,
+                    # Nomenclatura canónica / campo_destino de los pasos
+                    'name': partner.name or '',
+                    'vat': partner.vat or '',
+                    'phone': partner.phone or '',
+                    'birthdate': partner.birthdate.strftime('%d/%m/%Y') if partner.birthdate else '',
+                    'email': partner.email or '',
+                    'nombre_completo': partner.name or '',
+                    'telefono': partner.phone or '',
+                    'consentimiento_whatsapp': partner.consentimiento_whatsapp or False,
                     'cliente_existente': True,
                     'cliente_id': partner.id
                 }

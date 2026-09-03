@@ -41,6 +41,15 @@
                             <field name="active"/>
                         </group>
                         <group string="Instrucciones para el agente">
+                            <div class="alert alert-info" role="alert">
+                                <b>Tip:</b> redacta la <b>Descripción para el
+                                agente</b> como <b>confirmación explícita</b>
+                                del usuario (p. ej. "El usuario CONFIRMA que
+                                quiere una cotización formal o dejar sus
+                                datos"). Evita "cuando pregunte por precios":
+                                eso hace que el bot dispare el flujo ante una
+                                simple consulta informativa.
+                            </div>
                             <field name="descripcion_intencion" widget="text"/>
                             <field name="condiciones_no_inicio" widget="text"/>
                             <field name="palabras_clave" widget="text"/>
