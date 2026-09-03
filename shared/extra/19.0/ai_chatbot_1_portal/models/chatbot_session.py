@@ -553,6 +553,7 @@ class SessionState(models.Model):
 
         # Auto‑rellenado por teléfono
         utils = ChatBotUtils()
+        autorelleno = False
         if es_paso_telefono:
             _logger.info("Paso de teléfono detectado. Buscando partner para: %s", valor)
             partner = utils.find_partner_by_phone(self.env, valor)
@@ -592,7 +593,9 @@ class SessionState(models.Model):
                 
                 viejos_pasos_count = len(nuevos_pasos)
                 nuevos_pasos = [p for p in nuevos_pasos if p.get('campo_destino') not in auto_map]
-                _logger.info("Auto-relleno completado. Pasos eliminados: %d", viejos_pasos_count - len(nuevos_pasos))
+                saltados = viejos_pasos_count - len(nuevos_pasos)
+                autorelleno = saltados > 0
+                _logger.info("Auto-relleno completado. Pasos eliminados: %d", saltados)
             else:
                 _logger.info("No se encontró partner para el teléfono: %s", valor)
                 estado_actual['datos_paciente']['solicitar_es_paciente_nuevo'] = 'si'
@@ -604,6 +607,10 @@ class SessionState(models.Model):
             pregunta_amigable = self._generar_pregunta_amigable(
                 nombre_real, tipo=siguiente.get('tipo_dato'),
                 mensaje_prompt_original=siguiente.get('mensaje_prompt'))
+            if autorelleno:
+                pregunta_amigable = (
+                    '¡Genial! Ya tengo varios de tus datos registrados 😉 '
+                    + pregunta_amigable)
             siguiente['mensaje_prompt'] = pregunta_amigable
             # Conservar el nombre real del paso (no sobrescribirlo con el prompt).
             siguiente['nombre_mostrar'] = nombre_real

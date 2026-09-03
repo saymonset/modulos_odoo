@@ -72,12 +72,22 @@ class InicioAgendarController(http.Controller):
                 _logger.info("Cliente encontrado: %s (ID: %s)", partner.name, partner.id)
                 
                 datos_precargados = {
+                    # Nomenclatura solicitar_* (legacy)
                     'solicitar_name': partner.name or '',
                     'solicitar_vat': partner.vat or '',
                     'solicitar_phone': partner.phone or '',
                     'solicitar_birthdate': partner.birthdate.strftime('%d/%m/%Y') if partner.birthdate else '',
                     'solicitar_email': partner.email or '',
                     'consentimiento': partner.consentimiento_whatsapp or False,
+                    # Nomenclatura canónica / campo_destino de los pasos
+                    'name': partner.name or '',
+                    'vat': partner.vat or '',
+                    'phone': partner.phone or '',
+                    'birthdate': partner.birthdate.strftime('%d/%m/%Y') if partner.birthdate else '',
+                    'email': partner.email or '',
+                    'nombre_completo': partner.name or '',
+                    'telefono': partner.phone or '',
+                    'consentimiento_whatsapp': partner.consentimiento_whatsapp or False,
                     'cliente_existente': True,
                     'cliente_id': partner.id
                 }
