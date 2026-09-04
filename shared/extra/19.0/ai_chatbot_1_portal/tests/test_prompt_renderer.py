@@ -91,6 +91,7 @@ class TestPromptRenderer(BaseChatbotTestCase):
 
         from odoo.addons.ai_chatbot_1_portal.services.prompt_renderer import render_prompt
         prompt = render_prompt(config)
+        prompt_plano = ' '.join(prompt.split())
 
         # Escalera obligatoria antes de declarar que no puede responder.
         self.assertIn('ANTES DE DECLARAR QUE NO PUEDES RESPONDER', prompt)
@@ -98,8 +99,8 @@ class TestPromptRenderer(BaseChatbotTestCase):
         self.assertIn('compara lo que tienes con', prompt)
         # Protocolo "NO SÉ": admisión honesta + confirmación + flujo destino.
         self.assertIn('PROTOCOLO "NO SÉ"', prompt)
-        self.assertIn('No tengo esa información precisa en este momento', prompt)
-        self.assertIn('¿Quieres que un asesor de la empresa te contacte para asesorarte?', prompt)
+        self.assertIn('No tengo esa información precisa en este momento', prompt_plano)
+        self.assertIn('¿Quieres que un asesor de la empresa te contacte para asesorarte?', prompt_plano)
         self.assertIn('flujo_agendamiento_otra_consulta', prompt)
 
     def test_05_pregunta_nunca_es_confirmacion(self):
