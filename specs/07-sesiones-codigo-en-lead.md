@@ -1,6 +1,6 @@
 # SPEC 07 — Sesiones de código en lead: prod solo lectura/pull para código
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** (ninguno)
 > **Date:** 2026-09-04
 > **Objective:** Dejar explícito en AGENTS.md que las sesiones de edición de código
