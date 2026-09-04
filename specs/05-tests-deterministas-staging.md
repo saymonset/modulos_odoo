@@ -1,6 +1,6 @@
 # SPEC 05 — Tests deterministas: eliminar los 3 fallos preexistentes en staging
 
-> **Status:** aprobado
+> **Status:** Implemented
 > **Depends on:** SPEC 04 (cierra su criterio 8 pendiente), SPEC 03 (params legacy de marca)
 > **Date:** 2026-09-04
 > **Objective:** Hacer deterministas los 3 tests preexistentes que fallan en staging por depender del estado del DB, dejando la cadena completa `--test-enable` en verde.
