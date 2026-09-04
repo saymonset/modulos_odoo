@@ -37,6 +37,13 @@ class TestBrandSettings(BaseChatbotTestCase):
     def test_03_helper_sin_config_y_sin_params_devuelve_defaults(self):
         self.env['chatbot.config'].with_context(active_test=False).search([]).write(
             {'active': False})
+        self.env['ir.config_parameter'].sudo().search([
+            ('key', 'in', [
+                'ai_chatbot_1_portal.brand_name',
+                'ai_chatbot_1_portal.platform_promotion_enabled',
+                'ai_chatbot_1_portal.platform_promotion_text',
+            ]),
+        ]).unlink()
 
         brand, enabled, text = self.env['chatbot.config']._get_brand_settings()
 
