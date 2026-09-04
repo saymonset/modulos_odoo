@@ -347,7 +347,7 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
         prompt = render_prompt(config)
         self.assertIn('NUNCA dispara un flujo', prompt,
                       'El guardrail de flujos debe estar en el prompt')
-        self.assertIn('solo se activan cuando el usuario CONFIRMA', prompt)
+        self.assertIn('SOLO se activan cuando el usuario CONFIRMA', prompt)
 
     def test_11_desvincula_flujos_de_contenido(self):
         """El botón de 1 clic quita el flujo de las intenciones de contenido."""
