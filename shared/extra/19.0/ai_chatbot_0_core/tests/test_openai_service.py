@@ -18,6 +18,8 @@ class TestOpenAIService(TransactionCase):
             mail_notrack=True,
             tracking_disable=True,
         ))
+        cls.env['openai.config'].with_context(active_test=False).search([]).write(
+            {'active': False})
         cls.config = cls.env['openai.config'].create({
             'name': 'Test Config',
             'api_key': 'sk-test-key-12345',

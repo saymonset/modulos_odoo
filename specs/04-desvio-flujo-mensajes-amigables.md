@@ -1,6 +1,6 @@
 # SPEC 04 — Desvío del túnel de flujos y mensajes de validación amigables
 
-> **Status:** Aprobado
+> **Status:** Implemented
 > **Depends on:** SPEC 01 (motor de flujos y use cases que se extienden)
 > **Date:** 2026-09-04
 > **Objective:** Humanizar el túnel de flujos del chatbot: mensajes de error de validación en lenguaje de cliente final (sin jerga técnica) y explicación amable del túnel con repetición de la pregunta pendiente cuando el usuario hace preguntas fuera del flujo.
