@@ -12,6 +12,7 @@ from odoo.addons.ai_chatbot_1_portal.chatbot_prompt_normalizer import (
     normalizar_business_prompt,
     reformatear_prompt_aplanado,
 )
+from odoo.addons.ai_chatbot_0_core.uses_cases.mensajes_validacion import MENSAJES_VALIDACION
 
 _logger = logging.getLogger(__name__)
 
@@ -1238,21 +1239,21 @@ class ChatBotUtils:
         """Valida un valor según el tipo de dato del paso."""
         if paso in ('solicitar_phone', 'phone', 'telefono'):
             if not valor:
-                return False, "El teléfono no puede estar vacío"
+                return False, MENSAJES_VALIDACION["phone_empty"]
             valor_str = str(valor).strip()
             digits = ''.join(filter(str.isdigit, valor_str))
             if not digits:
-                return False, "El teléfono debe contener al menos un dígito"
+                return False, MENSAJES_VALIDACION["phone_digits"]
             if len(digits) < 7:
-                return False, "El teléfono debe tener al menos 7 dígitos (ej: +584141234567)"
+                return False, MENSAJES_VALIDACION["phone_short"]
             if len(digits) > 15:
-                return False, "El número de teléfono es muy largo. Ingresa un número válido (ej: +584141234567)"
+                return False, MENSAJES_VALIDACION["phone_long"]
             # Validar que no sea un número inválido (todo ceros, todo el mismo dígito)
             if len(set(digits)) == 1:
-                return False, "El número de teléfono no es válido. Ingresa un número real (ej: +584141234567)"
+                return False, MENSAJES_VALIDACION["phone_invalid"]
             # Validar que no sean patrones secuenciales obvios
             if digits in ['0123456789', '1234567890', '9876543210']:
-                return False, "El número de teléfono no es válido. Ingresa un número real (ej: +584141234567)"
+                return False, MENSAJES_VALIDACION["phone_invalid"]
             return True, valor_str
 
         if tipo_dato == 'text':
@@ -1261,12 +1262,12 @@ class ChatBotUtils:
             try:
                 return True, int(valor)
             except:
-                return False, "Debe ser un número entero"
+                return False, MENSAJES_VALIDACION["integer"]
         elif tipo_dato == 'float':
             try:
                 return True, float(valor)
             except:
-                return False, "Debe ser un número decimal"
+                return False, MENSAJES_VALIDACION["float"]
         elif tipo_dato == 'date':
             formatos = ['%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%d.%m.%Y', '%m/%d/%Y']
             valor_str = str(valor).strip()
@@ -1276,13 +1277,13 @@ class ChatBotUtils:
                     return True, fecha.isoformat()
                 except ValueError:
                     continue
-            return False, "Fecha inválida. Use formato DD/MM/YYYY o YYYY-MM-DD"
+            return False, MENSAJES_VALIDACION["date"]
         elif tipo_dato == 'datetime':
             try:
                 dt = fields.Datetime.from_string(valor)
                 return True, dt.isoformat()
             except:
-                return False, "Fecha y hora inválida"
+                return False, MENSAJES_VALIDACION["datetime"]
         elif tipo_dato == 'boolean':
             if isinstance(valor, bool):
                 return True, valor
@@ -1292,13 +1293,13 @@ class ChatBotUtils:
                     return True, True
                 elif v in ['false', '0', 'no']:
                     return True, False
-            return False, "Debe ser un booleano (sí/no)"
+            return False, MENSAJES_VALIDACION["boolean"]
         elif tipo_dato == 'image':
             ok, info = ChatBotUtils._is_image_url(valor)
             if ok:
                 return True, valor
-            return False, f"No se detectó imagen válida: {info}. Reenvía la foto o escribe 'saltar' para omitir."
+            return False, f"{MENSAJES_VALIDACION['image_url']} Detalle: {info}."
         elif tipo_dato == 'selection':
             return True, valor
         else:
-            return False, f"Tipo de dato no soportado: {tipo_dato}"
+            return False, MENSAJES_VALIDACION["unsupported"]

@@ -4,6 +4,7 @@ import logging
 import json
 from datetime import datetime
 from odoo import models, api, fields
+from odoo.addons.ai_chatbot_0_core.uses_cases.mensajes_validacion import MENSAJES_VALIDACION
 
 _logger = logging.getLogger(__name__)
 
@@ -78,13 +79,13 @@ class ValidacionAmigableUseCase(models.TransientModel):
         # Validaciones especiales por paso
         if paso == 'solicitar_phone':
             if not valor:
-                return False, "El teléfono no puede estar vacío"
+                return False, MENSAJES_VALIDACION["phone_empty"]
             valor_str = str(valor).strip()
             digits = ''.join(filter(str.isdigit, valor_str))
             if not digits:
-                return False, "El teléfono debe contener al menos un dígito"
+                return False, MENSAJES_VALIDACION["phone_digits"]
             if len(digits) < 7:
-                return False, "El teléfono debe tener al menos 7 dígitos (incluyendo código de área)"
+                return False, MENSAJES_VALIDACION["phone_short"]
             return True, valor_str
 
         # Si no hay paso especial, validar según tipo_dato
@@ -94,12 +95,12 @@ class ValidacionAmigableUseCase(models.TransientModel):
             try:
                 return True, int(valor)
             except:
-                return False, "Debe ser un número entero"
+                return False, MENSAJES_VALIDACION["integer"]
         elif tipo_dato == 'float':
             try:
                 return True, float(valor)
             except:
-                return False, "Debe ser un número decimal"
+                return False, MENSAJES_VALIDACION["float"]
         elif tipo_dato == 'date':
             formatos = [
                 '%Y-%m-%d',
@@ -115,13 +116,13 @@ class ValidacionAmigableUseCase(models.TransientModel):
                     return True, fecha.isoformat()
                 except ValueError:
                     continue
-            return False, "Fecha inválida. Use formato DD/MM/YYYY o YYYY-MM-DD"
+            return False, MENSAJES_VALIDACION["date"]
         elif tipo_dato == 'datetime':
             try:
                 dt = fields.Datetime.from_string(valor)
                 return True, dt.isoformat()
             except:
-                return False, "Fecha y hora inválida"
+                return False, MENSAJES_VALIDACION["datetime"]
         elif tipo_dato == 'boolean':
             if isinstance(valor, bool):
                 return True, valor
@@ -131,20 +132,20 @@ class ValidacionAmigableUseCase(models.TransientModel):
                     return True, True
                 elif v in ['false', '0', 'no']:
                     return True, False
-            return False, "Debe ser un booleano (true/false)"
+            return False, MENSAJES_VALIDACION["boolean"]
         elif tipo_dato == 'image':
             if not valor:
-                return False, "No se recibió ninguna imagen"
+                return False, MENSAJES_VALIDACION["image_empty"]
             import re
             valor_str = str(valor).strip()
             # Validación básica de URL
             if not re.match(r'^https?://', valor_str):
-                return False, "El valor proporcionado no parece ser un enlace de imagen válido. Por favor, envía la imagen directamente o asegúrate de que sea un enlace (URL) que comience con http o https."
+                return False, MENSAJES_VALIDACION["image_url"]
             return True, valor_str
         elif tipo_dato == 'selection':
             return True, valor
         else:
-            return False, f"Tipo de dato no soportado: {tipo_dato}"
+            return False, MENSAJES_VALIDACION["unsupported"]
 
     # ------------------------------------------------------------
     # Generación de mensaje amigable con IA

@@ -8,6 +8,13 @@ from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import ChatBotUti
 
 _logger = logging.getLogger(__name__)
 
+EXPLICACION_TUNEL = (
+    "Estoy completando un registro breve con unos datos obligatorios y, por "
+    "ahora, solo escucho los pasos de ese registro. Tus otras preguntas las "
+    "podré atender en cuanto terminemos, o si prefieres, escribe \"salir\" "
+    "para cerrar este registro y preguntar lo que necesites.\n\n"
+)
+
 class SessionState(models.Model):
     _name = 'chatbot.session'
     _description = 'Estado de Sesión de Chatbot'
@@ -372,20 +379,21 @@ class SessionState(models.Model):
         tipo = paso_actual.get('tipo_dato', 'text')
         campo_destino = paso_actual.get('campo_destino', '')
 
-        # Detección de salida
+        # Detección de salida / desvío
         es_url_imagen = re.match(r'^https?://', valor) and (tipo == 'image' or any(ext in valor.lower() for ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.svg', '.tiff']))
         es_telefono_claro = re.match(r'^\+?[0-9]{7,15}$', valor.strip())
         es_palabra_flujo = valor.strip().lower() in ['listo', 'no', 'continuar', 'omitir', 'siguiente']
         
         if es_url_imagen or es_telefono_claro or es_palabra_flujo:
-            es_salida, mensaje_salida = False, ""
-            _logger.info("Omitiendo detección de salida por IA (es imagen, teléfono o palabra de control: %s)", valor)
+            es_salida, es_desvio, mensaje_salida = False, False, ""
+            _logger.info("Omitiendo detección de salida/desvío por IA (es imagen, teléfono o palabra de control: %s)", valor)
         else:
-            es_salida, mensaje_salida = self._detectar_intencion_salida(valor)
+            es_salida, es_desvio, mensaje_salida = self._detectar_intencion_salida(valor)
         
-        if es_salida and (tipo in ['image', 'file'] or 'foto' in campo_destino or 'imagen' in campo_destino):
-            _logger.info("Protección: suprimiendo intención de salida en paso de fotos/archivos")
+        if (es_salida or es_desvio) and (tipo in ['image', 'file'] or 'foto' in campo_destino or 'imagen' in campo_destino):
+            _logger.info("Protección: suprimiendo intención de salida/desvío en paso de fotos/archivos")
             es_salida = False
+            es_desvio = False
             mensaje_salida = ""
             
         if es_salida:
@@ -400,6 +408,23 @@ class SessionState(models.Model):
                 'session_id': session_id,
                 'conversation_id': conversation_id,
                 'account_id': account_id,
+                'platform': platform
+            }
+
+        if es_desvio:
+            _logger.info("Desvío detectado en sesión %s: %s", registro.session_id, valor[:120])
+            pregunta_actual = paso_actual.get('mensaje_prompt') or (registro.estado or {}).get('mensaje_prompt', '')
+            return {
+                'success': True,
+                'finalizado': False,
+                'modo': 'FLUJO',
+                'texto_para_usuario': EXPLICACION_TUNEL + pregunta_actual,
+                'text': EXPLICACION_TUNEL + pregunta_actual,
+                'session_id': session_id,
+                'conversation_id': conversation_id,
+                'account_id': account_id,
+                'paso_actual': paso_actual.get('nombre_interno'),
+                'mensaje_prompt': paso_actual.get('mensaje_prompt'),
                 'platform': platform
             }
 
@@ -967,14 +992,19 @@ class SessionState(models.Model):
         service = self._get_gpt_service()
         try:
             resultado = service.detectar_intencion_salida(texto_usuario)
-            return resultado.get('es_salida', False), resultado.get('mensaje', '')
+            return (
+                resultado.get('es_salida', False),
+                resultado.get('es_desvio', False),
+                resultado.get('mensaje', ''),
+            )
         except Exception as e:
             _logger.error(f"Error detectando intención de salida: {e}")
-            texto_lower = texto_usuario.lower()
-            palabras_salida = ['salir', 'cancelar', 'terminar', 'menu', 'menú', 'volver']
-            es_salida = any(p in texto_lower for p in palabras_salida)
-            mensaje = "Entendido. Si deseas continuar más tarde, aquí estaremos para ayudarte. ¡Hasta pronto y que tengas un excelente día!" if es_salida else ""
-            return es_salida, mensaje
+            fallback = self.env['detectar.intencion.salida.use.case']._clasificar_fallback(texto_usuario)
+            return (
+                fallback.get('es_salida', False),
+                fallback.get('es_desvio', False),
+                fallback.get('mensaje', ''),
+            )
 
     def _generar_mensaje_finalizacion(self, datos_paciente, lead_resultado=None, equipo_asignado=None):
         service = self._get_gpt_service()

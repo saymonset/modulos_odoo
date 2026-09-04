@@ -6,3 +6,4 @@ from . import test_prompt_renderer
 from . import test_brand_settings
 from . import test_recargar_desde_rag
 from . import test_imagenes_flujo
+from . import test_desvio_flujo
