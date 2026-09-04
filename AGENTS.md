@@ -18,8 +18,9 @@ Monorepo que centraliza módulos de la OCA y desarrollos propios/terceros ("extr
 ## Rutas: OJO con clones y flujo staging→prod
 
 - **Dos clones del mismo repo** (`git@github.com:saymonset/modulos_odoo.git`):
-  - `/home/odoo/lead/modulos_odoo` — **staging/pruebas**. Docker monta este en el contenedor Odoo. Aquí se edita y se prueba; si OK, `git push`.
-  - `/home/odoo/prod/modulos_odoo` — **producción**. Se actualiza solo con `git pull` desde el repo. **No editar directamente**: los cambios saltarían el flujo de prueba y, además, no se reflejarían en el contenedor (que monta `lead`).
+  - `/home/odoo/lead/modulos_odoo` — **staging/pruebas**. El contenedor `odoo-19-web-leads` monta este clon. Aquí se edita, se prueba (`--test-enable` en staging) y se hace `git push`.
+  - `/home/odoo/prod/modulos_odoo` — **producción**. El contenedor `odoo-19-web` monta este clon y sirve la instancia real. Se actualiza **solo con `git pull`** (manual o deploy del CI). **Jamás editar código de módulos aquí**: lo editado en prod no puede probarse en staging (el contenedor de pruebas monta `lead`, no prod), salta el test obligatorio pre-push y toca archivos de un contenedor en vivo.
+- **SESIONES DE CÓDIGO: correr opencode en lead.** Antes de editar código de módulos (`shared/`) o workflows (`.github/`), el agente verifica su working directory: si es `/home/odoo/prod/modulos_odoo`, se detiene y pide al usuario mover la sesión a `/home/odoo/lead/modulos_odoo` (continuar en prod solo ante hotfix de emergencia confirmado explícitamente por el usuario, y con advertencia). Docs y specs (`.md`) se pueden editar en cualquier clon: se sincronizan por push/pull.
 - `opencode.jsonc` apunta con ruta absoluta a `/home/odoo/prod/modulos_odoo/instructions.md` en este clon (y a `/home/odoo/lead/modulos_odoo/instructions.md` en el clon lead); `instructions.md` es idéntico en ambos.
 - README y scripts referencian `/home/odoo/modulos_odoo/` (ruta vieja, **no existe**). Los scripts `3_ver_modulos.sh` y `9_3_mover_destino_aqui.sh` tienen rutas hardcodeadas desactualizadas.
 - Docker: el compose real de PROD es `/home/odoo/prod/odoo19-skeleton/postiz-n8n-chatwoot-pgadmin-odoo_19/docker-compose.odoo.yml` (el `docker-compose.yaml` del mismo dir solo hace `extends` de este). Mapea `/home/odoo/prod/modulos_odoo/shared/...` a `/opt/odoo/custom-addons/{extra,oca}` dentro del contenedor. El clon lead tiene su propio compose `~/lead/odoo19-skeleton/.../docker-compose.leads.yml`.
@@ -71,7 +72,7 @@ Todo módulo de `extra/19.0` modificado debe pasar sus tests (`--test-enable`) a
 
 ## CI/CD (GitHub Actions)
 
-- Workflow: `.github/workflows/deploy-prod.yml`. Trigger: `push` a `main`. Runner: **self-hosted** en el servidor (label `odoo-prod`), instalado como servicio en `/home/odoo/actions-runner`.
+- Workflow: `.github/workflows/deploy-prod.yml`. Trigger: `push` a `main`. Runner: **self-hosted** en el servidor (label `odoo-prod`). **Estado (verificado 2026-09-04): el runner NO está instalado** (`/home/odoo/actions-runner` no existe); los jobs quedan en cola. Mientras no se reinstale, el deploy es **manual**: `git pull` en prod + upgrade (`-u <cadena>` sin tests) + `docker restart odoo-19-web` + health check `:18069`.
 - Workflow secundario: `.github/workflows/opencode.yml` — corre opencode en GitHub-hosted runners al comentar `/oc` o `/opencode` en issues/PRs (usa `secrets.OPENCODE_API_KEY`).
 - Pipeline serializado (`concurrency: deploy-prod`): `changes` (detecta módulos `extra/19.0` tocados y resuelve la cadena de deps custom en orden topológico) → `lint` (compileall, claves de manifest, anti-patrón `attrs=` en XML) → `test` (rsync de los módulos al clon **lead**, restart `odoo-19-web-leads`, `-u <cadena> --test-enable` contra staging `dbodoo19`; log como artifact) → `deploy` (`git fetch + merge --ff-only` en el clon **prod**, `-u <cadena>` sin tests en `odoo-19-web`, restart + health check :18069).
 - Push sin cambios en `extra/19.0` → lint/test se skipean y deploy solo hace `git pull`.
