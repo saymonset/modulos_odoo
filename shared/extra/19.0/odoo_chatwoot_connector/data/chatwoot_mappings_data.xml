@@ -9,6 +9,9 @@
          - routing_key: nombre del flujo tal como lo envía n8n (equipo_asignado).
          - Los campos de Chatwoot (inbox_id, agent_id, agent_email, tags) se
            dejan VACIOS: cada cliente los completa según su propio agente.
+         - forcecreate="false": el flujo vinculado es opcional (flujos
+           verticales que ya no se siembran en ai_chatbot_1_portal); si el
+           xmlid no existe se omite el mapping sin romper la instalación.
          noupdate="1": se crean solo la primera vez; las personalizaciones de
            cada cliente nunca se sobrescriben al actualizar el módulo. -->
 
@@ -60,14 +63,14 @@
         <field name="routing_key">flujo_citas_medios_propios</field>
     </record>
 
-    <record id="mapping_citas_seguro" model="chatwoot.mapping">
+    <record id="mapping_citas_seguro" model="chatwoot.mapping" forcecreate="false">
         <field name="name">Citas Seguros (default)</field>
         <field name="flow_id" ref="ai_chatbot_1_portal.flujo_citas_seguro"/>
         <field name="equipo_asignado">CITAS_SEGUROS</field>
         <field name="routing_key">flujo_citas_seguro</field>
     </record>
 
-    <record id="mapping_resultados_laboratorio" model="chatwoot.mapping">
+    <record id="mapping_resultados_laboratorio" model="chatwoot.mapping" forcecreate="false">
         <field name="name">Resultados Laboratorio (default)</field>
         <field name="flow_id" ref="ai_chatbot_1_portal.flujo_resultados_laboratorio"/>
         <field name="equipo_asignado">RESULTADOS_LAB</field>
