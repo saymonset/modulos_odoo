@@ -134,10 +134,10 @@ class GptService(models.TransientModel):
     @api.model
     def detectar_intencion_salida(self, texto_usuario, max_tokens=None):
         """
-        Detecta si el usuario quiere salir del flujo actual.
+        Clasifica el mensaje del usuario como respuesta, salida o desvío del flujo.
         :param texto_usuario: string con el mensaje del usuario
         :param max_tokens: opcional
-        :return: dict con 'es_salida' (bool) y 'mensaje' (despedida si aplica)
+        :return: dict con 'es_salida' (bool), 'es_desvio' (bool) y 'mensaje' (despedida si aplica)
         """
         config = self._get_openai_config()
         openai_client = self._get_openai_client(config)
