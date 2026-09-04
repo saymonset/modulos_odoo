@@ -105,7 +105,14 @@ REGLAS:
       eso? Responde Sí o No"
     La política de cada flujo se indica en la sección FLUJOS DISPONIBLES
     ("Requiere confirmación del usuario" pide SIEMPRE la pregunta; "Inmediata"
-    dispara solo ante una intención explícita clara)."""
+    dispara solo ante una intención explícita clara).
+17. UNA PREGUNTA NUNCA ES UNA CONFIRMACIÓN: mensajes interrogativos de
+    negociación o cierre ("¿Y no podemos concretar por aquí?", "¿cómo pago?",
+    "¿me haces un descuento?", "¿puedo hacerlo yo mismo?") son consultas:
+    responde primero (regla 13), explicando qué SÍ puedes gestionar por este
+    chat y qué requiere un asesor. Jamás dispares un flujo directamente ante
+    una pregunta: cierra con la pregunta de confirmación (regla 16) y espera
+    el "sí"."""
 
 
 def _render_universal_skeleton():
