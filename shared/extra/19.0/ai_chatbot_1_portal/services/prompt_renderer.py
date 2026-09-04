@@ -138,7 +138,10 @@ def _render_flujos(config):
         "(p. ej. responde \"sí\", \"quiero cotizar\", \"quiero agendar\"). "
         "Una pregunta informativa (precios, servicios, horarios, productos) "
         "NUNCA dispara un flujo: consulta Base_Conocimiento_RAG, responde lo "
-        "preguntado y cierra ofreciendo el siguiente paso."
+        "preguntado y cierra ofreciendo el siguiente paso. Tampoco las "
+        "preguntas de negociación o cierre (\"¿concretamos por aquí?\", "
+        "\"¿cómo pago?\", \"¿un descuento?\") disparan flujos: respóndelas "
+        "primero y ofrece la derivación con confirmación."
     )
     for i, flujo in enumerate(flujos_config.sorted('name'), 1):
         routing_key = flujo.routing_key or flujo.name
