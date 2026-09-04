@@ -82,6 +82,45 @@ class TestPromptRenderer(BaseChatbotTestCase):
         self.assertIn('flujo_clinica_consultas', prompt)
         self.assertIn('"timestamp_actividad"', prompt)
 
+    def test_04_escalera_rag_y_protocolo_no_se(self):
+        flujo = self._crear_flujo('flujo_agendamiento_otra_consulta')
+        config = self.env['chatbot.config'].create({
+            'name': 'Cliente Escalera',
+            'flujo_ids': [(6, 0, [flujo.id])],
+        })
+
+        from odoo.addons.ai_chatbot_1_portal.services.prompt_renderer import render_prompt
+        prompt = render_prompt(config)
+        prompt_plano = ' '.join(prompt.split())
+
+        # Escalera obligatoria antes de declarar que no puede responder.
+        self.assertIn('ANTES DE DECLARAR QUE NO PUEDES RESPONDER', prompt)
+        self.assertIn('intenta CALCULAR o razonar la respuesta', prompt)
+        self.assertIn('compara lo que tienes con', prompt)
+        # Protocolo "NO SÉ": admisión honesta + confirmación + flujo destino.
+        self.assertIn('PROTOCOLO "NO SÉ"', prompt)
+        self.assertIn('No tengo esa información precisa en este momento', prompt_plano)
+        self.assertIn('¿Quieres que un asesor de la empresa te contacte para asesorarte?', prompt_plano)
+        self.assertIn('flujo_agendamiento_otra_consulta', prompt)
+
+    def test_05_pregunta_nunca_es_confirmacion(self):
+        flujo = self._crear_flujo('flujo_agendamiento_otra_consulta')
+        config = self.env['chatbot.config'].create({
+            'name': 'Cliente Preguntas',
+            'flujo_ids': [(6, 0, [flujo.id])],
+        })
+
+        from odoo.addons.ai_chatbot_1_portal.services.prompt_renderer import render_prompt
+        prompt = render_prompt(config)
+
+        # Regla 17: una pregunta (negociación/cierre) nunca dispara un flujo.
+        self.assertIn('UNA PREGUNTA NUNCA ES UNA CONFIRMACIÓN', prompt)
+        self.assertIn('¿Y no podemos concretar por aquí?', prompt)
+        self.assertIn('¿cómo pago?', prompt)
+        # Refuerzo en el bloque IMPORTANTE de los flujos.
+        self.assertIn('Tampoco las preguntas de negociación o cierre', prompt)
+        self.assertIn('ofrece la derivación con confirmación', prompt)
+
     def test_03_deteccion_de_flujos_desde_config(self):
         flujo = self._crear_flujo('flujo_clinica_citas')
         config = self.env['chatbot.config'].create({
