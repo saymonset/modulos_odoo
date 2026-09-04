@@ -1,6 +1,6 @@
 # SPEC 06 — Protocolo "no sé": RAG primero y derivación a asesor solo con confirmación
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 01 (esqueleto universal del prompt), SPEC 03 (única fuente de configuración / RAG)
 > **Date:** 2026-09-04
 > **Objective:** Endurecer el prompt universal para que toda pregunta del cliente se
