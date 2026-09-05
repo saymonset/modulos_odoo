@@ -277,3 +277,29 @@ class TestMenuPorRol(BaseChatbotTestCase):
         self.assertIn('Te saluda *Negocio Sin Brand*', menu_texto)
         self.assertNotIn('\u00bfQu\u00e9 necesitas hoy?', menu_texto)
         self.assertIn('cu\u00e9ntame con tus palabras qu\u00e9 buscas', menu_texto)
+
+    def test_13_ia_marca_en_texto_plano_se_pone_en_negrita(self):
+        """Si la IA pone la marca sin asteriscos, Odoo la envuelve en *MARCA*."""
+        flujo_p = self._crear_flujo(
+            'flujo_agendamiento_precios', 'precio')
+        config = self.env['chatbot.config'].create({
+            'name': 'Karla Campoverde',
+            'brand_name': 'Karla Campoverde',
+            'role': 'T\u00da ERES: Vendedora de inmuebles.',
+            'flujo_ids': [(6, 0, [flujo_p.id])],
+        })
+
+        with patch.object(
+            GptService, 'generar_menu_por_rol',
+            return_value={
+                'header': '¡Hola! 👋 Te saluda Karla Campoverde. Encantados de ayudarte 😊',
+                'labels': {'flujo_agendamiento_precios': 'Precios'},
+            }):
+            resultado = config._generar_menu_desde_flujos(config.flujo_ids)
+            menu_texto = resultado['texto']
+
+        self.assertEqual(resultado['modo'], 'ia')
+        self.assertIn('*Karla Campoverde*', menu_texto)
+        self.assertNotIn('Te saluda Karla Campoverde. Encantados',
+                         menu_texto.replace('*Karla Campoverde*', ''))
+        self.assertTrue(menu_texto.startswith('¡Hola! 👋 Te saluda *Karla Campoverde*'))
