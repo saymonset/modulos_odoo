@@ -153,5 +153,17 @@ console.log('Scenario 5: intención de flujo sin regresión (flujo preservado)')
   check('flow_name = flujo_agendamiento_precios', r.flow_name === 'flujo_agendamiento_precios', r.flow_name);
 }
 
+console.log('Scenario 6: texto ultra-corto (≤2 chars) fuerza menú determinista');
+{
+  const out = runNode(
+    [baseItem('k', '{"output":"No entendí tu mensaje.","isMenu":false,"tipoPregunta":"FALLBACK"}')],
+    agentConfig,
+  );
+  const r = out[0].json;
+  check('output = menú con marca', r.output === menuText, r.output);
+  check('isMenu = true', r.isMenu === true, r.isMenu);
+  check('tipoPregunta = MENU', r.tipoPregunta === 'MENU', r.tipoPregunta);
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
