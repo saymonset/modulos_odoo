@@ -9,3 +9,4 @@ from . import test_imagenes_flujo
 from . import test_desvio_flujo
 from . import test_menu_por_rol
 from . import test_menu_determinista
+from . import test_marca_dinamica
