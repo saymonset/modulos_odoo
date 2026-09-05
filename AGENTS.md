@@ -89,6 +89,7 @@ Todo módulo de `extra/19.0` modificado debe pasar sus tests (`--test-enable`) a
 2. Upgrade CLI (más confiable que la UI): `docker exec odoo-19-web odoo -d dbodoo19 -u <modulo> --stop-after-init`. Para staging usar `odoo-19-web-leads`.
 3. `Registry.new(db, update_module=True)` como one-liner **no carga** los `addons_path` custom → las vistas XML custom no se procesan. Para forzar recarga de vistas: subir `version` en `__manifest__.py` (ej. `19.0.1.0.5` → `19.0.1.0.6`), reiniciar contenedor y Upgradar desde la UI.
 4. Snippets Python vía `docker exec ... python3 -c "..."` siempre en **una sola línea**; el shell conserva indentación multi-línea → `IndentationError`.
+5. Token del chatbot (n8n ↔ Odoo): el nodo `Obtener_configuracion_agente` de los workflows n8n envía `$env.CHATBOT_API_TOKEN` (definido en `docker-compose.n8n.yml` de n8n) y solo `/ai_chatbot_1_portal/configuracion_agente` lo valida contra `ir.config_parameter` clave `ai_chatbot_1_portal.api_token` (Ajustes → "Chat bot API token") de la BD que sirve cada dominio (lead.integraia.lat → leads/dbodoo19; integraia.lat → prod/dbodoo19). Tras cambiar el token en cualquiera de los lados, verificar que el valor coincida en TODAS las BDs servidas antes de re-ejecutar flujos (401 "Token inválido" = desalineado).
 
 ## Odoo 19 específico (lecciones verificadas en este repo)
 
