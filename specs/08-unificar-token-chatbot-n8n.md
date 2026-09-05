@@ -1,6 +1,6 @@
 # SPEC 08 — Unificar token del chatbot: BD leads alineada al CHATBOT_API_TOKEN de n8n
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** (ninguno)
 > **Date:** 2026-09-05
 > **Objective:** Eliminar el 401 "Token inválido" del nodo `Obtener_configuracion_agente` igualando el `ai_chatbot_1_portal.api_token` de la BD leads (`dbodoo19`) al `CHATBOT_API_TOKEN` de n8n — vía UI de Ajustes — y documentar en AGENTS.md dónde vive el token para evitar re-desalineaciones.
