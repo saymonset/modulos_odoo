@@ -1,6 +1,6 @@
 # SPEC 10 — Visibilidad del estado de generación del menú (IA vs genérico vs obsoleto)
 
-> **Status:** Aopproved
+> **Status:** Approved
 > **Depends on:** SPEC 09 (menú redactado según el rol del negocio)
 > **Date:** 2026-09-05
 > **Objective:** Hacer observable el estado del menú del bot — notificación y ficha que distingan si el menú se generó con IA o fallback, cuándo, y si quedó desactualizado — eliminando la confusión "menú genérico sin saber por qué".
