@@ -601,14 +601,18 @@ class ChatbotConfig(models.Model):
             lineas.append(numeracion[len(lineas)] + etiqueta)
 
         # Bienvenida humana con marca (SPEC 14). Si la IA dio un tagline de tono
-        # humano se usa (garantizando que nombre la marca); si no, saludo
-        # determinista cálido que identifica a la empresa. Nunca el robótico
-        # "¿Qué necesitas hoy?".
+        # humano se usa; si no, saludo determinista cálido que identifica a la
+        # empresa. La marca SIEMPRE va en negrita *MARCA* aunque la IA la haya
+        # puesto en texto plano. Nunca el robótico "¿Qué necesitas hoy?".
         marca = (self.brand_name or self.name or '').strip()
         if header_ia.strip():
             welcome = header_ia.strip()
-            if marca and f'*{marca}*' not in welcome and marca not in welcome:
-                welcome = f'¡Hola! 👋 Te saluda *{marca}*. {welcome}'
+            if marca:
+                if f'*{marca}*' not in welcome:
+                    if marca in welcome:
+                        welcome = welcome.replace(marca, f'*{marca}*', 1)
+                    else:
+                        welcome = f'¡Hola! 👋 Te saluda *{marca}*. {welcome}'
         else:
             welcome = (
                 f'¡Hola! 👋 Te saluda *{marca}*. Encantados de ayudarte 😊'

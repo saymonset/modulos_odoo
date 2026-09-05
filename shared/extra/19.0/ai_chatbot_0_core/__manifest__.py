@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'ai_chatbot_0_core',
-    'version': '19.0.1.0.5',
+    'version': '19.0.1.0.6',
     'summary': """ ai_chatbot_0_core Summary """,
     'description': """Módulo Core para Chatbot de IA. Contiene la lógica y modelos core para el Chatbot de Inteligencia Artificial.""",
     'author': '',
     'website': '',
     'category': '',
     'depends': ['base', 'web'],
+    'external_dependencies': {'python': ['openai']},
     "data": [
         "security/ir.model.access.csv",
         "views/OpenAIConfig_views.xml"
