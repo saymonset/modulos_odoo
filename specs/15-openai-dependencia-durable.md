@@ -1,6 +1,6 @@
 # SPEC 15 — Dependencia `openai` durable para instalaciones de cero
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 10, SPEC 14
 > **Date:** 2026-09-05
 > **Objective:** Que cualquier instalación de cero tenga el paquete Python `openai` instalado (y que el módulo se niegue a instalarse sin él), eliminando la degradación silenciosa "IA no disponible".
