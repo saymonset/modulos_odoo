@@ -61,7 +61,7 @@ Catálogo de flujos (respeta EXACTAMENTE este orden y cantidad):
 
 REGLAS OBLIGATORIAS:
 1. Genera un encabezado (header): un saludo cálido y humano que nombre la
-   empresa de forma natural (ej. "¡Hola! 👋 Te saluda *{brand}*. Encantados de
+   empresa de forma natural (ej. "¡Hola! 👋 Te saluda *MARCA*. Encantados de
    ayudarte 😊"), con tono de asesor cercano. NUNCA uses "¿Qué necesitas hoy?"
    ni un tono de catálogo frío. Máximo {_HEADER_MAX_LEN} caracteres, una línea.
 2. Genera EXACTAMENTE una etiqueta por cada flujo, en el MISMO orden que el
