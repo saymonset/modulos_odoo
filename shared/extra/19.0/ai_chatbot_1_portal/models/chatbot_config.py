@@ -3,6 +3,7 @@ import re
 import unicodedata
 
 from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -302,6 +303,24 @@ class ChatbotConfig(models.Model):
         if menu_relevant & set(vals.keys()) and not self.env.context.get('_menu_regeneration'):
             self.sudo().write({'menu_stale': True})
         return res
+
+    @api.constrains('brand_name', 'role')
+    def _check_brand_in_role(self):
+        """La marca debe referirse a la empresa del rol (misma empresa).
+
+        Evita incoherencias tipo "saluda *Karla Campoverde* pero responde
+        INTEGRAIA": la marca y el rol deben nombrar al mismo negocio.
+        """
+        for config in self:
+            marca = (config.brand_name or '').strip()
+            if not marca:
+                continue
+            marca_norm = _normalizar(marca)
+            role_norm = _normalizar(config.role or '')
+            if role_norm and marca_norm and marca_norm not in role_norm:
+                raise ValidationError(_(
+                    'La marca "%s" no aparece en el rol del negocio. La marca '
+                    'y el rol deben referirse a la misma empresa.' % marca))
 
     @api.depends('intencion_ids', 'intencion_ids.flow_id',
                  'intencion_ids.es_auto_rag', 'intencion_ids.nombre')
@@ -641,6 +660,38 @@ class ChatbotConfig(models.Model):
             f'{welcome}\n\nNo entendí tu mensaje 🤔, aquí te dejo el menú '
             f'para que me orientes:\n\n{menu_texto}')
 
+    def _preparar_marca(self):
+        """Si brand_name está vacío, lo extrae del rol (IA + fallback) y lo
+        guarda, siempre que aparezca en el rol. Nunca se escribe a mano ni se
+        copia de otro contexto (SPEC 16).
+
+        :return: str marca final (extraída y guardada, o la ya existente).
+        """
+        self.ensure_one()
+        if (self.brand_name or '').strip():
+            return self.brand_name
+        if not (self.role or '').strip():
+            return self.brand_name or ''
+        try:
+            gpt_service = self.env['gpt.service'].sudo()
+            marca = gpt_service.extraer_marca_del_rol(self.role)
+        except Exception as e:
+            _logger.warning('_preparar_marca: falló la extracción (%s)', e)
+            return self.brand_name or ''
+        marca = (marca or '').strip()
+        if not marca:
+            return self.brand_name or ''
+        marca_norm = _normalizar(marca)
+        role_norm = _normalizar(self.role)
+        if marca_norm and marca_norm in role_norm:
+            self.with_context(_menu_regeneration=True).write(
+                {'brand_name': marca})
+            return marca
+        _logger.warning(
+            '_preparar_marca: marca extraída "%s" no está en el rol; no se '
+            'guarda.', marca)
+        return self.brand_name or ''
+
     def _refrescar_desde_rag(self):
         """
         Lee n8n_vectors, actualiza role/contacto/bloque_conocimiento de la
@@ -925,6 +976,8 @@ class ChatbotConfig(models.Model):
         """
         self.ensure_one()
 
+        self._preparar_marca()
+
         resumen_rag = self._refrescar_desde_rag()
         if not resumen_rag['ok']:
             return self._notificar(
@@ -1044,6 +1097,7 @@ class ChatbotConfig(models.Model):
     def action_regenerar_menu(self):
         """Regenera el menú según el rol del negocio (sin re-sincronizar RAG)."""
         self.ensure_one()
+        self._preparar_marca()
         flujos = self.flujo_ids
         if not flujos:
             return self._notificar(
