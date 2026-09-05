@@ -16,6 +16,9 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
             self.patch(
                 type(gpt), 'detectar_flujos_por_prompt',
                 staticmethod(lambda *args, **kwargs: []))
+            self.patch(
+                type(gpt), 'extraer_marca_del_rol',
+                staticmethod(lambda *args, **kwargs: ''))
 
     def _crear_tabla_n8n_vectors(self):
         self.env.cr.execute("DROP TABLE IF EXISTS public.n8n_vectors")

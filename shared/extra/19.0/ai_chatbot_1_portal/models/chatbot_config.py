@@ -306,21 +306,24 @@ class ChatbotConfig(models.Model):
 
     @api.constrains('brand_name', 'role')
     def _check_brand_in_role(self):
-        """La marca debe referirse a la empresa del rol (misma empresa).
+        """La marca no debe contradecir a la empresa que nombra el rol.
 
-        Evita incoherencias tipo "saluda *Karla Campoverde* pero responde
-        INTEGRAIA": la marca y el rol deben nombrar al mismo negocio.
+        Si el rol nombra explícitamente a la empresa (patrón 'BOT X.') y esa X
+        no coincide con la marca, se bloquea. Así se atrapa el bug real (rol
+        'BOT INTEGRAIA' + marca 'Karla Campoverde') sin bloquear configs
+        legítimas donde el rol es genérico y no repite la marca.
         """
         for config in self:
             marca = (config.brand_name or '').strip()
             if not marca:
                 continue
-            marca_norm = _normalizar(marca)
-            role_norm = _normalizar(config.role or '')
-            if role_norm and marca_norm and marca_norm not in role_norm:
+            empresa_rol = config._extraer_nombre_cliente(config.role or '')
+            if empresa_rol and empresa_rol != 'Cliente RAG' \
+                    and _normalizar(empresa_rol) != _normalizar(marca):
                 raise ValidationError(_(
-                    'La marca "%s" no aparece en el rol del negocio. La marca '
-                    'y el rol deben referirse a la misma empresa.' % marca))
+                    'La marca "%s" no coincide con la empresa "%s" que nombra '
+                    'el rol del negocio. Revisa la marca o el rol.' % (
+                        marca, empresa_rol)))
 
     @api.depends('intencion_ids', 'intencion_ids.flow_id',
                  'intencion_ids.es_auto_rag', 'intencion_ids.nombre')

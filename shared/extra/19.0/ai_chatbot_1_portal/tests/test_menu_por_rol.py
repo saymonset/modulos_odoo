@@ -14,6 +14,9 @@ class TestMenuPorRol(BaseChatbotTestCase):
         self.patch(
             GptService, 'generar_menu_por_rol',
             staticmethod(lambda *args, **kwargs: {}))
+        self.patch(
+            GptService, 'extraer_marca_del_rol',
+            staticmethod(lambda *args, **kwargs: ''))
 
     def _crear_flujo(self, name, palabras_clave=''):
         return self.env['chatbot.flujo'].create({
