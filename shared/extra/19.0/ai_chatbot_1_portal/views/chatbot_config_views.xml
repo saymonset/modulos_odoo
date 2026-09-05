@@ -37,6 +37,10 @@
                                 string="Refrescar solo intenciones (no toca flujos)"
                                 class="btn-secondary"
                                 confirm="Actualiza solo rol/contacto/base de conocimiento e intenciones desde n8n_vectors. NO modifica flujos ni Chatwoot Mappings. Si la tabla n8n_vectors está vacía o no existe, no se cambia nada: verás un aviso. ¿Continuar?"/>
+                        <button name="action_regenerar_menu" type="object"
+                                string="Regenerar menú según rol"
+                                class="btn-secondary"
+                                confirm="Regenera el menú (encabezado + etiquetas de opciones) desde el rol del negocio usando IA, sin re-sincronizar RAG. Los flujos marcados en 'Flujos de este cliente' determinan las opciones. ¿Continuar?"/>
                     </header>
                     <sheet>
                         <group string="Onboarding (primera vez)">

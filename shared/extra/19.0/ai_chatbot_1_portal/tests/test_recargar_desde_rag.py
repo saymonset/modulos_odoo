@@ -1,4 +1,7 @@
+from unittest.mock import patch
+
 from odoo.tests import tagged
+from odoo.addons.ai_chatbot_0_core.services.gpt_service import GptService
 
 from .common import BaseChatbotTestCase
 
@@ -302,7 +305,11 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
         self.assertFalse(config.role, 'No se debe tocar el role')
 
     def test_09_menu_dinamico_desde_flujos_detectados(self):
-        """El menú se genera de los flujos detectados, no queda literal."""
+        """El menú se genera de los flujos detectados, no queda literal.
+
+        Se mockea generar_menu_por_rol para forzar el camino determinista y
+        que un API key en staging no rompa el assert.
+        """
         self._crear_tabla_n8n_vectors()
         self._insertar_documento(
             'demo', "TÚ ERES:\nBOT PANADERIA TEST.", 1)
@@ -315,7 +322,12 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
         flujo_precios = self._crear_flujo(
             'flujo_agendamiento_precios', 'precio,costo,tarifa')
         config = self.env['chatbot.config'].create({'name': 'Panadería Test'})
-        config.action_recargar_todo_desde_rag()
+
+        gpt = self.env.get('gpt.service')
+        with patch.object(
+            GptService, 'generar_menu_por_rol',
+            return_value={}):
+            config.action_recargar_todo_desde_rag()
 
         menu = config.intencion_ids.filtered(
             lambda i: i.nombre == 'MENU' and i.es_auto_rag)

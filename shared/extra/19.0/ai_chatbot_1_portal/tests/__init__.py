@@ -7,3 +7,4 @@ from . import test_brand_settings
 from . import test_recargar_desde_rag
 from . import test_imagenes_flujo
 from . import test_desvio_flujo
+from . import test_menu_por_rol
