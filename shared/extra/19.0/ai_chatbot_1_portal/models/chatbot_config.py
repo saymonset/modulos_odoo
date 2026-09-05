@@ -548,6 +548,10 @@ class ChatbotConfig(models.Model):
         (sin API key, excepción), usa las etiquetas de _MENU_LABELS o la
         descripción del flujo (fallback determinista idéntico al anterior).
 
+        El menú siempre abre con la marca del negocio (brand_name o name)
+        en negrita WhatsApp, seguida del tagline del rol (IA) o saludo
+        genérico (fallback).
+
         Devuelve el texto de output_largo de la intención MENU o '' si no hay
         flujos con los que armar un menú útil.
         """
@@ -594,8 +598,12 @@ class ChatbotConfig(models.Model):
             etiqueta = labels_ia.get(f.name, etiqueta_det)
             lineas.append(numeracion[len(lineas)] + etiqueta)
 
-        header = header_ia.strip() if header_ia else (
+        # Línea de marca determinista (con o sin IA)
+        marca = (self.brand_name or self.name or '').strip()
+        linea_marca = f'*{marca}*' if marca else ''
+        tagline = header_ia.strip() if header_ia else (
             '¡Hola! 👋 ¿Qué necesitas hoy?')
+        header = f'{linea_marca}\n{tagline}' if linea_marca else tagline
         modo = 'ia' if (labels_ia or header_ia) else 'fallback'
         return {
             'texto': (
@@ -969,7 +977,7 @@ class ChatbotConfig(models.Model):
             if modo_menu == 'ia':
                 mensaje += "\nMenú: generado con IA desde el rol del negocio."
             else:
-                mensaje += "\nMenú: generado con etiquetas estándar (IA no disponible)."
+                mensaje += "\nMenú: generado con marca, sin tagline del rol (IA no disponible)."
         if archivados:
             mensaje += f"\nFlujos archivados: {', '.join(archivados)}"
         if mappings_activos:
@@ -1038,6 +1046,6 @@ class ChatbotConfig(models.Model):
                 'success')
         return self._notificar(
             'Regenerar menú',
-            'IA no disponible: menú genérico con etiquetas estándar. '
+            'IA no disponible: menú con marca, sin tagline del rol. '
             'Revisa la API key de OpenAI (openai.config) e reintenta.',
             'warning')

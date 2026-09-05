@@ -8,6 +8,7 @@ from odoo import models, api
 _logger = logging.getLogger(__name__)
 
 _LABEL_MAX_LEN = 40
+_HEADER_MAX_LEN = 60
 
 
 class GenerarMenuPorRolUseCase(models.TransientModel):
@@ -18,16 +19,12 @@ class GenerarMenuPorRolUseCase(models.TransientModel):
     def execute(self, options):
         """Genera encabezado y etiquetas del menú adaptados al rol del negocio.
 
-        :param options: dict con:
-            - 'role_text': str, el contenido de chatbot.config.role (TÚ ERES)
-            - 'brand_name': str, nombre de marca (opcional)
-            - 'flujos_info': lista de dicts
-              [{name, descripcion_intencion, label_actual}]
-            - 'openai_client': cliente OpenAI
-            - 'model': modelo a usar
-            - 'max_tokens': opcional, default 300
-        :return: dict {'header': str, 'labels': {flow_name: label}}
-                 vacío si falla
+        options debe contener: role_text (str), brand_name (str, opcional),
+        flujos_info (lista de dicts), openai_client, model, max_tokens.
+
+        Devuelve dict ``{'header': str, 'labels': {flow_name: label}}``
+        donde header es el tagline del rol (sin marca; Odoo la antepone).
+        Vacío si falla.
         """
         role_text = options.get('role_text', '')
         brand_name = options.get('brand_name', '')
@@ -46,12 +43,15 @@ class GenerarMenuPorRolUseCase(models.TransientModel):
             for f in flujos_info
         )
 
-        brand_line = f"El nombre de marca del negocio es: {brand_name}." \
+        brand_line = (
+            f"El nombre de marca del negocio es: {brand_name}. "
+            "Odoo la antepone automáticamente en el menú; NO la repitas en el header."
             if brand_name else "No se proporcionó nombre de marca."
+        )
 
         system_content = f"""
 Eres un asistente que genera el menú principal de un chatbot de WhatsApp para
-un negocio. Debes crear un saludo breve y una etiqueta por cada flujo.
+un negocio. Debes crear un tagline del rol y una etiqueta por cada flujo.
 
 {brand_line}
 
@@ -59,9 +59,11 @@ Catálogo de flujos (respeta EXACTAMENTE este orden y cantidad):
 {catalogo}
 
 REGLAS OBLIGATORIAS:
-1. Genera un encabezado (header): un saludo breve que incluya el nombre de marca
-   si se proporcionó, y una frase corta tipo "¿Qué necesitas hoy?".
-   Máximo 1 línea, sin emojis al final.
+1. Genera un encabezado (header): un tagline corto que describa el rol del negocio
+   (ej. "Tu asesor inmobiliario de confianza") seguido de una invitación breve
+   tipo "¿Qué necesitas hoy?". Máximo {_HEADER_MAX_LEN} caracteres, una línea,
+   sin emojis al final. NO repitas el nombre de marca (Odoo lo antepone
+   automáticamente antes de este tagline).
 2. Genera EXACTAMENTE una etiqueta por cada flujo, en el MISMO orden que el
    catálogo. NO agregues, quites ni reordenes flujos.
 3. Cada etiqueta: máximo {_LABEL_MAX_LEN} caracteres, una línea, SIN números
@@ -75,7 +77,7 @@ REGLAS OBLIGATORIAS:
 
 Responde ÚNICAMENTE con un JSON válido con esta estructura:
 {{
-  "header": "Saludo breve con marca si aplica",
+  "header": "Tagline del rol + invitación (sin marca)",
   "labels": {{
     "nombre_flujo_1": "Etiqueta del flujo 1",
     "nombre_flujo_2": "Etiqueta del flujo 2"
@@ -112,12 +114,15 @@ Responde ÚNICAMENTE con un JSON válido con esta estructura:
 
     @api.model
     def _sanitizar_header(self, header):
-        """Limpia el header: una línea, sin saltos de carro extremos."""
+        """Limpia el header: ≤60 chars, una línea, sin saltos de carro extremos."""
         if not header or not isinstance(header, str):
             return ''
         header = header.strip()
-        # Una sola línea: unir y quedarse con la primera
+        # Una sola línea: quedarse con la primera
         header = re.split(r'[\n\r]+', header)[0].strip()
+        # Recortar a longitud máxima
+        if len(header) > _HEADER_MAX_LEN:
+            header = header[:_HEADER_MAX_LEN].rsplit(' ', 1)[0]
         return header
 
     @api.model
