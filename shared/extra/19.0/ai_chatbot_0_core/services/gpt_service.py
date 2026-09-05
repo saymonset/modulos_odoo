@@ -111,8 +111,25 @@ class GptService(models.TransientModel):
         }
         return use_case.execute(options)
 
+    @api.model
+    def extraer_marca_del_rol(self, role_text, max_tokens=None):
+        """Extrae el nombre de la empresa/marca desde el rol del negocio.
 
-    
+        :param role_text: chatbot.config.role (TÚ ERES / objetivo)
+        :param max_tokens: opcional
+        :return: str marca extraída ('' si falla y no hay patrón determinista)
+        """
+        config = self._get_openai_config()
+        openai_client = self._get_openai_client(config)
+        use_case = self.env['extraer.marca.del.rol.use.case']
+        options = {
+            "role_text": role_text,
+            "openai_client": openai_client,
+            "model": config.default_model,
+            "max_tokens": max_tokens or 100,
+        }
+        return use_case.execute(options).get('brand', '')
+
     @api.model
     def GenerarPreguntaIntegraia(self, prompt, max_tokens=None):
         """Verificación ortográfica usando el caso de uso"""
