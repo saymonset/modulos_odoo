@@ -1,6 +1,6 @@
 # SPEC 13 — Menú determinista por empresa de turno y salida IA sin JSON anidado
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 09, SPEC 10, SPEC 11, SPEC 12
 > **Date:** 2026-09-05
 > **Objective:** Que el saludo/menú del bot se sirva siempre determinista desde la intención MENU de la config activa (con marca, SPEC 11) — sin depender de la IA ni de RAG — y que la salida de la IA nunca llegue anidada (JSON dentro de `output`) ni con `isMenu=false` en intención MENU, para que el menú represente a la empresa de turno en cada VPS.
