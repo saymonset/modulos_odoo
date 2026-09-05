@@ -1,6 +1,6 @@
 # SPEC 12 — Cerrar el gap prod: upgrade del chatbot tras SPEC 10/11
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 10, SPEC 11
 > **Date:** 2026-09-05
 > **Objective:** Que el endpoint `/ai_chatbot_1_portal/configuracion_agente` funcione en prod (`integraia.lat` / `dbodoo19`) aplicando el código ya testado de SPEC 10/11, sin escribir código nuevo.
