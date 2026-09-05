@@ -41,8 +41,10 @@ class TestMenuPorRol(BaseChatbotTestCase):
 
         self.assertTrue(menu_texto)
         self.assertEqual(resultado['modo'], 'fallback')
-        self.assertIn('*Fallback Test*', menu_texto)
-        self.assertTrue(menu_texto.startswith('*Fallback Test*'))
+        self.assertIn('Te saluda *Fallback Test*', menu_texto)
+        self.assertTrue(menu_texto.startswith('¡Hola! 👋 Te saluda *Fallback Test*'))
+        self.assertNotIn('¿Qué necesitas hoy?', menu_texto)
+        self.assertIn('cuéntame con tus palabras qué buscas', menu_texto)
         self.assertIn('Precios y cotizaciones', menu_texto)
         self.assertIn('Servicios del negocio', menu_texto)
         self.assertIn('Agendar una cita o asesor\u00eda', menu_texto)
@@ -66,7 +68,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         with patch.object(
             GptService, 'generar_menu_por_rol',
             return_value={
-                'header': 'Tu asesor inmobiliario. \u00bfQu\u00e9 necesitas hoy?',
+                'header': 'Tu asesora inmobiliaria de confianza, aquí para ayudarte 😊',
                 'labels': {
                     'flujo_agendamiento_precios': 'Inmuebles y cotizaciones',
                     'flujo_agendamiento_directo': 'Agendar visita',
@@ -77,10 +79,11 @@ class TestMenuPorRol(BaseChatbotTestCase):
 
         self.assertTrue(menu_texto)
         self.assertEqual(resultado['modo'], 'ia')
-        self.assertTrue(menu_texto.startswith('*Inmobiliaria XYZ*'))
-        self.assertIn('Tu asesor inmobiliario. \u00bfQu\u00e9 necesitas hoy?', menu_texto)
-        tagline_parte = menu_texto.split('\n')[1]
-        self.assertNotIn('Inmobiliaria XYZ', tagline_parte)
+        self.assertTrue(menu_texto.startswith(
+            '¡Hola! 👋 Te saluda *Inmobiliaria XYZ*'))
+        self.assertIn('Tu asesora inmobiliaria de confianza, aquí para ayudarte 😊',
+                      menu_texto)
+        self.assertNotIn('¿Qué necesitas hoy?', menu_texto)
         self.assertIn('Inmuebles y cotizaciones', menu_texto)
         self.assertIn('Agendar visita', menu_texto)
         self.assertNotIn('Precios y cotizaciones', menu_texto)
@@ -174,7 +177,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         with patch.object(
             GptService, 'generar_menu_por_rol',
             return_value={
-                'header': 'Tu asesor. \u00bfQu\u00e9 necesitas hoy?',
+                'header': 'Tu asesor, listo para ayudarte 😊',
                 'labels': {'flujo_agendamiento_precios': 'Precios IA'},
             }):
             result = config.action_regenerar_menu()
@@ -186,7 +189,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         menu = self.env['chatbot.intencion'].search([
             ('config_id', '=', config.id), ('nombre', '=', 'MENU')
         ], limit=1)
-        self.assertTrue(menu.output_largo.startswith('*IA Test*'))
+        self.assertTrue(menu.output_largo.startswith('¡Hola! 👋 Te saluda *IA Test*'))
 
     def test_08_stale_despues_de_editar(self):
         """Si se edita la config despu\u00e9s de generar, menu_stale = True."""
@@ -233,7 +236,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         resultado = config._generar_menu_desde_flujos(config.flujo_ids)
         menu_texto = resultado['texto']
 
-        self.assertTrue(menu_texto.startswith('*Solo Name*'))
+        self.assertIn('Te saluda *Solo Name*', menu_texto)
 
     def test_11_marca_no_duplicada_en_ia(self):
         """El tagline IA no duplica la marca que Odoo antepone."""
@@ -248,15 +251,15 @@ class TestMenuPorRol(BaseChatbotTestCase):
         with patch.object(
             GptService, 'generar_menu_por_rol',
             return_value={
-                'header': 'Tu experto en soluciones. \u00bfQu\u00e9 necesitas hoy?',
+                'header': 'Tu experto en soluciones, encantado de ayudarte 😊',
                 'labels': {'flujo_agendamiento_precios': 'Precios'},
             }):
             resultado = config._generar_menu_desde_flujos(config.flujo_ids)
             menu_texto = resultado['texto']
 
         self.assertEqual(menu_texto.count('*Mi Marca*'), 1)
-        tagline = menu_texto.split('\n')[1]
-        self.assertNotIn('Mi Marca', tagline)
+        self.assertIn('Te saluda *Mi Marca*', menu_texto)
+        self.assertNotIn('¿Qué necesitas hoy?', menu_texto)
 
     def test_12_sin_brand_name_usa_name(self):
         """Si brand_name vac\u00edo, la marca es el name de la config."""
@@ -271,5 +274,6 @@ class TestMenuPorRol(BaseChatbotTestCase):
         menu_texto = resultado['texto']
 
         self.assertTrue(menu_texto)
-        self.assertTrue(menu_texto.startswith('*Negocio Sin Brand*'))
-        self.assertIn('\u00bfQu\u00e9 necesitas hoy?', menu_texto)
+        self.assertIn('Te saluda *Negocio Sin Brand*', menu_texto)
+        self.assertNotIn('\u00bfQu\u00e9 necesitas hoy?', menu_texto)
+        self.assertIn('cu\u00e9ntame con tus palabras qu\u00e9 buscas', menu_texto)
