@@ -77,17 +77,40 @@ class GptService(models.TransientModel):
         
     @api.model
     def audioToText(self, file_path, prompt=''):
-            config = self._get_openai_config()
-            openai_client = self._get_openai_client(config)
-            use_case = self.env['audio_to_text.use.case']
-            options = {"prompt": prompt,
-                    "file_path": file_path,
-                    "openai_client": openai_client
-                    }
-            
-            # Implementa aquí la lógica real de verificación ortográfica
-            # Por ahora devolvemos un ejemplo básaico
-            return use_case.execute(options)
+        config = self._get_openai_config()
+        openai_client = self._get_openai_client(config)
+        use_case = self.env['audio_to_text.use.case']
+        options = {"prompt": prompt,
+                   "file_path": file_path,
+                   "openai_client": openai_client
+                   }
+        return use_case.execute(options)
+
+    @api.model
+    def generar_menu_por_rol(self, role_text, brand_name, flujos_info,
+                             max_tokens=None):
+        """Genera encabezado y etiquetas del menú desde el rol del negocio.
+
+        :param role_text: chatbot.config.role (TÚ ERES / objetivo)
+        :param brand_name: chatbot.config.brand_name (nombre de marca)
+        :param flujos_info: [{'name', 'descripcion_intencion', 'label_actual'}]
+        :param max_tokens: opcional
+        :return: dict {'header': str, 'labels': {flow_name: label}}
+                 vacío si falla
+        """
+        config = self._get_openai_config()
+        openai_client = self._get_openai_client(config)
+        use_case = self.env['generar.menu.por.rol.use.case']
+        options = {
+            "role_text": role_text,
+            "brand_name": brand_name or '',
+            "flujos_info": flujos_info,
+            "openai_client": openai_client,
+            "model": config.default_model,
+            "max_tokens": max_tokens or 300,
+        }
+        return use_case.execute(options)
+
 
     
     @api.model

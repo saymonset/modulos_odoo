@@ -1,6 +1,6 @@
 # SPEC 09 — Menú del bot redactado según el rol del negocio
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 01 (config/intenciones y menú dinámico), SPEC 03 (única fuente de configuración / vista ficha)
 > **Date:** 2026-09-05
 > **Objective:** Que el menú que el bot muestra por WhatsApp se redacte en el lenguaje del negocio (IA desde el rol: etiquetas por flujo + encabezado con marca), dejando de ser el menú genérico "Precios y cotizaciones / Servicios del negocio / ...", con la misma estructura una-opción-por-flujo para no romper el ruteo de números en n8n.

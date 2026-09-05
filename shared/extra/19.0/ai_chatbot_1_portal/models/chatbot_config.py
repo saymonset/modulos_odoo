@@ -521,25 +521,60 @@ class ChatbotConfig(models.Model):
     def _generar_menu_desde_flujos(self, flujos):
         """Construye el menú del cliente a partir de los flujos detectados.
 
+        Intenta generar etiquetas por IA (desde el rol del negocio). Si falla
+        (sin API key, excepción), usa las etiquetas de _MENU_LABELS o la
+        descripción del flujo (fallback determinista idéntico al anterior).
+
         Devuelve el texto de output_largo de la intención MENU o '' si no hay
         flujos con los que armar un menú útil.
         """
         numeracion = ['1️⃣ ', '2️⃣ ', '3️⃣ ', '4️⃣ ', '5️⃣ ', '6️⃣ ', '7️⃣ ', '8️⃣ ']
-        lineas = []
+        flujo_items = []
         for f in flujos.sorted('name'):
             if f.name == 'flujo_agendamiento_default':
                 continue
-            if len(lineas) >= len(numeracion):
+            if len(flujo_items) >= len(numeracion):
                 break
-            etiqueta = self._MENU_LABELS.get(f.name)
-            if not etiqueta:
-                etiqueta = (f.descripcion_intencion or '').strip() or (
-                    f.name.replace('flujo_', '').replace('_', ' ').title())
-            lineas.append(numeracion[len(lineas)] + etiqueta)
-        if not lineas:
+            etiqueta_det = self._MENU_LABELS.get(f.name) or (
+                f.descripcion_intencion or '').strip() or (
+                f.name.replace('flujo_', '').replace('_', ' ').title())
+            flujo_items.append((f, etiqueta_det))
+
+        if not flujo_items:
             return ''
+
+        # Intento IA: generar etiquetas desde el rol del negocio
+        header_ia = ''
+        labels_ia = {}
+        try:
+            if self.role:
+                gpt_service = self.env['gpt.service']
+                flujos_info = [
+                    {'name': f.name,
+                     'descripcion_intencion': f.descripcion_intencion or '',
+                     'label_actual': etiqueta}
+                    for f, etiqueta in flujo_items
+                ]
+                resultado = gpt_service.sudo().generar_menu_por_rol(
+                    self.role, self.brand_name or '', flujos_info)
+                if resultado and resultado.get('labels'):
+                    header_ia = resultado.get('header', '')
+                    labels_ia = resultado['labels']
+        except Exception as e:
+            _logger.warning(
+                '_generar_menu_desde_flujos: falló la IA de menú (%s). '
+                'Usando etiquetas deterministas.', e)
+
+        # Ensamblado: IA labels o fallback determinista
+        lineas = []
+        for f, etiqueta_det in flujo_items:
+            etiqueta = labels_ia.get(f.name, etiqueta_det)
+            lineas.append(numeracion[len(lineas)] + etiqueta)
+
+        header = header_ia.strip() if header_ia else (
+            '¡Hola! 👋 ¿Qué necesitas hoy?')
         return (
-            '¡Hola! 👋 ¿Qué necesitas hoy?\n'
+            header + '\n'
             + '\n'.join(lineas)
             + '\n\nResponde con el número de la opción o escríbeme lo que '
             'necesitas. 😊'
@@ -928,3 +963,31 @@ class ChatbotConfig(models.Model):
                 'sticky': True,
             },
         }
+
+    def action_regenerar_menu(self):
+        """Regenera el menú según el rol del negocio (sin re-sincronizar RAG)."""
+        self.ensure_one()
+        flujos = self.flujo_ids
+        if not flujos:
+            return self._notificar(
+                'Regenerar menú',
+                'No hay flujos marcados. Marca los flujos primero en la ficha.',
+                'warning')
+        menu = self.intencion_ids.filtered(lambda i: i.nombre == 'MENU')
+        if not menu:
+            return self._notificar(
+                'Regenerar menú',
+                'No existe la intención MENU. Ejecuta "Sincronizar todo desde '
+                'RAG" primero.',
+                'warning')
+        menu_texto = self._generar_menu_desde_flujos(flujos)
+        if not menu_texto:
+            return self._notificar(
+                'Regenerar menú',
+                'No se pudo generar el menú (sin flujos válidos).',
+                'warning')
+        menu[0].write({'output_largo': menu_texto})
+        return self._notificar(
+            'Regenerar menú',
+            'Menú regenerado según el rol del negocio.',
+            'success')
