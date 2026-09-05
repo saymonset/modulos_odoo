@@ -37,9 +37,11 @@ class TestMenuPorRol(BaseChatbotTestCase):
             'flujo_ids': [(6, 0, [flujo_p.id, flujo_s.id, flujo_d.id])],
         })
 
-        menu_texto = config._generar_menu_desde_flujos(config.flujo_ids)
+        resultado = config._generar_menu_desde_flujos(config.flujo_ids)
+        menu_texto = resultado['texto']
 
         self.assertTrue(menu_texto)
+        self.assertEqual(resultado['modo'], 'fallback')
         self.assertIn('Precios y cotizaciones', menu_texto)
         self.assertIn('Servicios del negocio', menu_texto)
         self.assertIn('Agendar una cita o asesoría', menu_texto)
@@ -70,9 +72,11 @@ class TestMenuPorRol(BaseChatbotTestCase):
                     'flujo_agendamiento_directo': 'Agendar visita',
                 },
             }):
-            menu_texto = config._generar_menu_desde_flujos(config.flujo_ids)
+            resultado = config._generar_menu_desde_flujos(config.flujo_ids)
+            menu_texto = resultado['texto']
 
         self.assertTrue(menu_texto)
+        self.assertEqual(resultado['modo'], 'ia')
         self.assertIn('¡Hola! Soy tu asesor inmobiliario.', menu_texto)
         self.assertIn('Inmuebles y cotizaciones', menu_texto)
         self.assertIn('Agendar visita', menu_texto)
@@ -92,7 +96,8 @@ class TestMenuPorRol(BaseChatbotTestCase):
             'flujo_ids': [(6, 0, [flujo_d.id, flujo_p.id])],
         })
 
-        menu_texto = config._generar_menu_desde_flujos(config.flujo_ids)
+        resultado = config._generar_menu_desde_flujos(config.flujo_ids)
+        menu_texto = resultado['texto']
 
         # directo primero (alphabetical), precios después
         pos_directo = menu_texto.index('Agendar una cita')
@@ -119,10 +124,14 @@ class TestMenuPorRol(BaseChatbotTestCase):
 
         result = config.action_regenerar_menu()
 
-        self.assertEqual(result['params']['type'], 'success')
+        # Mock retorna {} → fallback → warning
+        self.assertEqual(result['params']['type'], 'warning')
+        self.assertIn('IA no disponible', result['params']['message'])
         menu.invalidate_recordset(['output_largo'])
         self.assertIn('Precios y cotizaciones', menu.output_largo)
         self.assertNotEqual(menu.output_largo, 'Menú viejo')
+        self.assertEqual(config.menu_generated_mode, 'fallback')
+        self.assertTrue(config.menu_generated_at)
 
     def test_05_boton_sin_flujos_warning(self):
         """Sin flujo_ids, el botón devuelve warning."""
@@ -142,3 +151,69 @@ class TestMenuPorRol(BaseChatbotTestCase):
         })
         result = config.action_regenerar_menu()
         self.assertEqual(result['params']['type'], 'warning')
+
+    def test_07_boton_ia_exitosa_escribe_modo_ia(self):
+        """Con IA mockeada que retorna labels, el botón escribe mode='ia'."""
+        flujo_p = self._crear_flujo(
+            'flujo_agendamiento_precios', 'precio')
+        config = self.env['chatbot.config'].create({
+            'name': 'IA Test',
+            'role': 'TÚ ERES: Vendedor de prueba.',
+            'flujo_ids': [(6, 0, [flujo_p.id])],
+        })
+        self.env['chatbot.intencion'].create({
+            'config_id': config.id,
+            'nombre': 'MENU',
+            'prioridad': 10,
+            'es_menu': True,
+            'output_largo': 'Menú viejo',
+        })
+
+        with patch.object(
+            GptService, 'generar_menu_por_rol',
+            return_value={
+                'header': '¡Hola! Soy tu asesor.',
+                'labels': {'flujo_agendamiento_precios': 'Precios IA'},
+            }):
+            result = config.action_regenerar_menu()
+
+        self.assertEqual(result['params']['type'], 'success')
+        self.assertIn('IA', result['params']['message'])
+        self.assertEqual(config.menu_generated_mode, 'ia')
+        self.assertTrue(config.menu_generated_at)
+
+    def test_08_stale_despues_de_editar(self):
+        """Si se edita la config después de generar, menu_stale = True."""
+        flujo_p = self._crear_flujo(
+            'flujo_agendamiento_precios', 'precio')
+        config = self.env['chatbot.config'].create({
+            'name': 'Stale Test',
+            'flujo_ids': [(6, 0, [flujo_p.id])],
+        })
+        self.env['chatbot.intencion'].create({
+            'config_id': config.id,
+            'nombre': 'MENU',
+            'prioridad': 10,
+            'es_menu': True,
+            'output_largo': 'Menú viejo',
+        })
+
+        # Generar menú → stale = False
+        config.action_regenerar_menu()
+        self.assertFalse(config.menu_stale)
+
+        # Editar campo relevante (role) → stale = True
+        config.write({'role': 'Nuevo rol'})
+        self.assertTrue(config.menu_stale)
+
+        # Regenerar → stale = False
+        config.action_regenerar_menu()
+        self.assertFalse(config.menu_stale)
+
+    def test_09_campos_vacios_sin_generar(self):
+        """Sin generación previa, los campos están vacíos."""
+        config = self.env['chatbot.config'].create({
+            'name': 'Sin Generar Test',
+        })
+        self.assertFalse(config.menu_generated_mode)
+        self.assertFalse(config.menu_generated_at)

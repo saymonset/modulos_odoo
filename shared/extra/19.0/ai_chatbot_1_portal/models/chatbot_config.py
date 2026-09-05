@@ -277,6 +277,29 @@ class ChatbotConfig(models.Model):
         compute="_compute_diagnostico",
         store=False,
     )
+    menu_generated_mode = fields.Selection(
+        [('ia', 'IA (rol del negocio)'),
+         ('fallback', 'Genérico (IA no disponible)')],
+        string="Último menú generado con",
+        copy=False,
+    )
+    menu_generated_at = fields.Datetime(
+        string="Último menú generado el",
+        copy=False,
+    )
+    menu_stale = fields.Boolean(
+        string="Menú posiblemente desactualizado",
+        default=False,
+        copy=False,
+    )
+
+    def write(self, vals):
+        res = super().write(vals)
+        # Si cambian campos que afectan el menú, marcar stale
+        menu_relevant = {'role', 'brand_name', 'flujo_ids'}
+        if menu_relevant & set(vals.keys()) and not self.env.context.get('_menu_regeneration'):
+            self.sudo().write({'menu_stale': True})
+        return res
 
     @api.depends('intencion_ids', 'intencion_ids.flow_id',
                  'intencion_ids.es_auto_rag', 'intencion_ids.nombre')
@@ -541,7 +564,7 @@ class ChatbotConfig(models.Model):
             flujo_items.append((f, etiqueta_det))
 
         if not flujo_items:
-            return ''
+            return {'texto': '', 'modo': 'fallback'}
 
         # Intento IA: generar etiquetas desde el rol del negocio
         header_ia = ''
@@ -573,12 +596,15 @@ class ChatbotConfig(models.Model):
 
         header = header_ia.strip() if header_ia else (
             '¡Hola! 👋 ¿Qué necesitas hoy?')
-        return (
-            header + '\n'
-            + '\n'.join(lineas)
-            + '\n\nResponde con el número de la opción o escríbeme lo que '
-            'necesitas. 😊'
-        )
+        modo = 'ia' if (labels_ia or header_ia) else 'fallback'
+        return {
+            'texto': (
+                header + '\n'
+                + '\n'.join(lineas)
+                + '\n\nResponde con el número de la opción o escríbeme lo '
+                'que necesitas. 😊'),
+            'modo': modo,
+        }
 
     def _refrescar_desde_rag(self):
         """
@@ -895,11 +921,17 @@ class ChatbotConfig(models.Model):
 
         # Menú dinámico por cliente: se regenera desde los flujos detectados
         # (un mecánico no muestra el mismo menú que una panadería).
-        menu_texto = self._generar_menu_desde_flujos(flujos_detectados)
+        resultado_menu = self._generar_menu_desde_flujos(flujos_detectados)
+        menu_texto = resultado_menu['texto']
         if menu_texto:
             self.intencion_ids.filtered(
                 lambda i: i.nombre == 'MENU' and i.es_auto_rag
             ).write({'output_largo': menu_texto})
+            self.with_context(_menu_regeneration=True).write({
+                'menu_generated_mode': resultado_menu['modo'],
+                'menu_generated_at': fields.Datetime.now(),
+                'menu_stale': False,
+            })
 
         vinculadas = self._vincular_flow_id_en_intenciones(flujos_detectados)
 
@@ -932,6 +964,12 @@ class ChatbotConfig(models.Model):
             f"Detección: {metodo}. Vinculadas a flujo: {vinculadas}.\n"
             f"Flujos activados: {', '.join(activados) or 'ninguno'}."
         )
+        if menu_texto:
+            modo_menu = resultado_menu['modo']
+            if modo_menu == 'ia':
+                mensaje += "\nMenú: generado con IA desde el rol del negocio."
+            else:
+                mensaje += "\nMenú: generado con etiquetas estándar (IA no disponible)."
         if archivados:
             mensaje += f"\nFlujos archivados: {', '.join(archivados)}"
         if mappings_activos:
@@ -980,14 +1018,26 @@ class ChatbotConfig(models.Model):
                 'No existe la intención MENU. Ejecuta "Sincronizar todo desde '
                 'RAG" primero.',
                 'warning')
-        menu_texto = self._generar_menu_desde_flujos(flujos)
+        resultado_menu = self._generar_menu_desde_flujos(flujos)
+        menu_texto = resultado_menu['texto']
         if not menu_texto:
             return self._notificar(
                 'Regenerar menú',
                 'No se pudo generar el menú (sin flujos válidos).',
                 'warning')
         menu[0].write({'output_largo': menu_texto})
+        self.with_context(_menu_regeneration=True).write({
+            'menu_generated_mode': resultado_menu['modo'],
+            'menu_generated_at': fields.Datetime.now(),
+            'menu_stale': False,
+        })
+        if resultado_menu['modo'] == 'ia':
+            return self._notificar(
+                'Regenerar menú',
+                'Menú generado con IA desde el rol del negocio.',
+                'success')
         return self._notificar(
             'Regenerar menú',
-            'Menú regenerado según el rol del negocio.',
-            'success')
+            'IA no disponible: menú genérico con etiquetas estándar. '
+            'Revisa la API key de OpenAI (openai.config) e reintenta.',
+            'warning')

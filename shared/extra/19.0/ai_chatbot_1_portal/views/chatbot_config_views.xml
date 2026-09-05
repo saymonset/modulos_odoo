@@ -41,6 +41,20 @@
                                 string="Regenerar menú según rol"
                                 class="btn-secondary"
                                 confirm="Regenera el menú (encabezado + etiquetas de opciones) desde el rol del negocio usando IA, sin re-sincronizar RAG. Los flujos marcados en 'Flujos de este cliente' determinan las opciones. ¿Continuar?"/>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <field name="menu_generated_mode" widget="badge"/>
+                            <field name="menu_generated_at"
+                                   widget="datetime"
+                                   invisible="not menu_generated_at"/>
+                            <span class="text-warning"
+                                  invisible="not menu_stale">
+                                posiblemente desactualizado
+                            </span>
+                            <span class="text-muted"
+                                  invisible="menu_generated_at">
+                                Menú sin generar
+                            </span>
+                        </div>
                     </header>
                     <sheet>
                         <group string="Onboarding (primera vez)">
