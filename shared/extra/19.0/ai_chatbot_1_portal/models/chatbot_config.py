@@ -113,7 +113,9 @@ def _extract_keywords(texto, limite=12):
 # complete (pinceladas). El contenido nunca trae marca de una demo.
 _SYSTEM_INTENCIONES = {
     'MENU': {
-        'nombre': 'MENU', 'keywords': 'menu,menu_principal,menú,opciones,ayuda',
+        'nombre': 'MENU',
+        'keywords': 'menu,menu_principal,menú,opciones,ayuda,hola,buenas,'
+                    'buenos días,buenas tardes',
         'prioridad': 10, 'es_menu': True, 'tipo_pregunta': '',
         # Guion por defecto: si el RAG no trae la sección MENÚ (lo habitual),
         # el menú nunca queda vacío. Al detectar flujos se regenera un menú
@@ -598,21 +600,42 @@ class ChatbotConfig(models.Model):
             etiqueta = labels_ia.get(f.name, etiqueta_det)
             lineas.append(numeracion[len(lineas)] + etiqueta)
 
-        # Línea de marca determinista (con o sin IA)
+        # Bienvenida humana con marca (SPEC 14). Si la IA dio un tagline de tono
+        # humano se usa (garantizando que nombre la marca); si no, saludo
+        # determinista cálido que identifica a la empresa. Nunca el robótico
+        # "¿Qué necesitas hoy?".
         marca = (self.brand_name or self.name or '').strip()
-        linea_marca = f'*{marca}*' if marca else ''
-        tagline = header_ia.strip() if header_ia else (
-            '¡Hola! 👋 ¿Qué necesitas hoy?')
-        header = f'{linea_marca}\n{tagline}' if linea_marca else tagline
+        if header_ia.strip():
+            welcome = header_ia.strip()
+            if marca and f'*{marca}*' not in welcome and marca not in welcome:
+                welcome = f'¡Hola! 👋 Te saluda *{marca}*. {welcome}'
+        else:
+            welcome = (
+                f'¡Hola! 👋 Te saluda *{marca}*. Encantados de ayudarte 😊'
+                if marca else '¡Hola! 👋 Encantados de ayudarte 😊')
         modo = 'ia' if (labels_ia or header_ia) else 'fallback'
         return {
             'texto': (
-                header + '\n'
+                welcome + '\n'
                 + '\n'.join(lineas)
-                + '\n\nResponde con el número de la opción o escríbeme lo '
-                'que necesitas. 😊'),
+                + '\n\nEscríbeme el número de lo que necesitas o cuéntame con '
+                'tus palabras qué buscas 😊'),
             'modo': modo,
         }
+
+    def _generar_fallback_con_marca(self, menu_texto):
+        """Arma el FALLBACK con bienvenida humana + menú completo (SPEC 14).
+
+        El mensaje "no entendí" identifica a la empresa y ofrece el menú para
+        que el cliente se oriente sin ida y vuelta.
+        """
+        marca = (self.brand_name or self.name or '').strip()
+        welcome = (
+            f'¡Hola! 👋 Te saluda *{marca}*. Encantados de ayudarte 😊'
+            if marca else '¡Hola! 👋 Encantados de ayudarte 😊')
+        return (
+            f'{welcome}\n\nNo entendí tu mensaje 🤔, aquí te dejo el menú '
+            f'para que me orientes:\n\n{menu_texto}')
 
     def _refrescar_desde_rag(self):
         """
@@ -935,6 +958,10 @@ class ChatbotConfig(models.Model):
             self.intencion_ids.filtered(
                 lambda i: i.nombre == 'MENU' and i.es_auto_rag
             ).write({'output_largo': menu_texto})
+            fallback = self.intencion_ids.filtered(lambda i: i.nombre == 'FALLBACK')
+            if fallback:
+                fallback[0].write({
+                    'output_largo': self._generar_fallback_con_marca(menu_texto)})
             self.with_context(_menu_regeneration=True).write({
                 'menu_generated_mode': resultado_menu['modo'],
                 'menu_generated_at': fields.Datetime.now(),
@@ -1034,6 +1061,10 @@ class ChatbotConfig(models.Model):
                 'No se pudo generar el menú (sin flujos válidos).',
                 'warning')
         menu[0].write({'output_largo': menu_texto})
+        fallback = self.intencion_ids.filtered(lambda i: i.nombre == 'FALLBACK')
+        if fallback:
+            fallback[0].write({
+                'output_largo': self._generar_fallback_con_marca(menu_texto)})
         self.with_context(_menu_regeneration=True).write({
             'menu_generated_mode': resultado_menu['modo'],
             'menu_generated_at': fields.Datetime.now(),

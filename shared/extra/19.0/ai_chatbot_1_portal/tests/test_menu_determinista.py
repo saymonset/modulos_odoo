@@ -32,7 +32,8 @@ class TestMenuDeterminista(BaseChatbotTestCase):
         self.env['chatbot.intencion'].create({
             'config_id': config.id,
             'nombre': 'MENU',
-            'keywords': 'hola,menu,menu_principal,menú,opciones,ayuda',
+            'keywords': 'menu,menu_principal,menú,opciones,ayuda,hola,buenas,'
+                        'buenos días,buenas tardes',
             'prioridad': 10,
             'es_menu': True,
             'output_largo': menu_texto,
@@ -66,11 +67,13 @@ class TestMenuDeterminista(BaseChatbotTestCase):
         self.assertIn('*KARLA CAMPOVERDE*', prompt)
 
     def test_02_intencion_menu_keywords_y_marcador(self):
-        """La intención MENU expone keywords y el marcador (muestra el menú)."""
+        """La intención MENU expone keywords (con saludos) y el marcador."""
         config, _ = self._crear_config()
         prompt = render_prompt(config)
 
-        self.assertIn('hola,menu,menu_principal,menú,opciones,ayuda', prompt)
+        self.assertIn('menu,menu_principal,menú,opciones,ayuda,hola,buenas,'
+                      'buenos días,buenas tardes', prompt)
+        self.assertIn('hola', prompt)
         self.assertIn('(muestra el menú)', prompt)
 
     def test_03_menu_no_dispara_flujo(self):
@@ -83,3 +86,38 @@ class TestMenuDeterminista(BaseChatbotTestCase):
         self.assertFalse(menu.flow_id)
         self.assertFalse(precios.flow_id)
         self.assertTrue(cita.flow_id)
+
+    def test_04_fallback_con_marca_y_menu(self):
+        """Tras regenerar, el FALLBACK identifica la empresa y ofrece el menú."""
+        config, _ = self._crear_config()
+        self.env['chatbot.intencion'].create({
+            'config_id': config.id,
+            'nombre': 'FALLBACK',
+            'prioridad': 99,
+            'output_largo': 'Disculpa, no entendí.',
+        })
+        config.action_regenerar_menu()
+
+        fallback = config.intencion_ids.filtered(lambda i: i.nombre == 'FALLBACK')
+        texto = fallback.output_largo
+        self.assertIn('*KARLA CAMPOVERDE*', texto)
+        self.assertIn('No entendí tu mensaje 🤔', texto)
+        self.assertIn('cuéntame con tus palabras qué buscas', texto)
+
+    def test_05_menu_fallback_sin_ia_humano(self):
+        """Menú sin IA: bienvenida humana con marca, sin '¿Qué necesitas hoy?'."""
+        flujo = self._crear_flujo('flujo_agendamiento_precios')
+        config = self.env['chatbot.config'].create({
+            'name': 'Bienvenida Test',
+            'brand_name': 'INMOBILIARIA KARLA CAMPOVERDE',
+            'flujo_ids': [(6, 0, [flujo.id])],
+        })
+
+        resultado = config._generar_menu_desde_flujos(config.flujo_ids)
+        menu_texto = resultado['texto']
+
+        self.assertEqual(resultado['modo'], 'fallback')
+        self.assertTrue(menu_texto.startswith(
+            '¡Hola! 👋 Te saluda *INMOBILIARIA KARLA CAMPOVERDE*'))
+        self.assertNotIn('¿Qué necesitas hoy?', menu_texto)
+        self.assertIn('cuéntame con tus palabras qué buscas', menu_texto)

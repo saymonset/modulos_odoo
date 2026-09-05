@@ -8,7 +8,7 @@ from odoo import models, api
 _logger = logging.getLogger(__name__)
 
 _LABEL_MAX_LEN = 40
-_HEADER_MAX_LEN = 60
+_HEADER_MAX_LEN = 90
 
 
 class GenerarMenuPorRolUseCase(models.TransientModel):
@@ -45,7 +45,8 @@ class GenerarMenuPorRolUseCase(models.TransientModel):
 
         brand_line = (
             f"El nombre de marca del negocio es: {brand_name}. "
-            "Odoo la antepone automáticamente en el menú; NO la repitas en el header."
+            "Nómbralo de forma natural y cálida en el encabezado "
+            "(ej. \"¡Hola! 👋 Te saluda *{brand}*. Encantados de ayudarte 😊\")."
             if brand_name else "No se proporcionó nombre de marca."
         )
 
@@ -59,11 +60,10 @@ Catálogo de flujos (respeta EXACTAMENTE este orden y cantidad):
 {catalogo}
 
 REGLAS OBLIGATORIAS:
-1. Genera un encabezado (header): un tagline corto que describa el rol del negocio
-   (ej. "Tu asesor inmobiliario de confianza") seguido de una invitación breve
-   tipo "¿Qué necesitas hoy?". Máximo {_HEADER_MAX_LEN} caracteres, una línea,
-   sin emojis al final. NO repitas el nombre de marca (Odoo lo antepone
-   automáticamente antes de este tagline).
+1. Genera un encabezado (header): un saludo cálido y humano que nombre la
+   empresa de forma natural (ej. "¡Hola! 👋 Te saluda *{brand}*. Encantados de
+   ayudarte 😊"), con tono de asesor cercano. NUNCA uses "¿Qué necesitas hoy?"
+   ni un tono de catálogo frío. Máximo {_HEADER_MAX_LEN} caracteres, una línea.
 2. Genera EXACTAMENTE una etiqueta por cada flujo, en el MISMO orden que el
    catálogo. NO agregues, quites ni reordenes flujos.
 3. Cada etiqueta: máximo {_LABEL_MAX_LEN} caracteres, una línea, SIN números
