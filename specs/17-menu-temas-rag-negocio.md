@@ -1,6 +1,6 @@
 # SPEC 17 — Menú e intenciones desde los temas reales del RAG
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 13, SPEC 14, SPEC 16
 > **Date:** 2026-09-06
 > **Objective:** Que el menú generado por "Sincronizar todo desde RAG" liste un ítem por tema real del RAG (inmobiliaria, panadería, etc.) más solo las acciones de flujo que apliquen al negocio — eliminando el menú genérico (agendar/cotizar/confirmar compra) y la mala vinculación intención→flujo del contenido RAG.
