@@ -1,6 +1,6 @@
 # SPEC 20 — "Convertir" visible solo con método de pago y pre-llenado en Bs
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** — (módulo `pos_venezuela_dual_currency`)
 > **Date:** 2026-09-06
 > **Objective:** Que en la pantalla de pago del POS el bloque "Convertir" esté oculto hasta que se seleccione un método de pago, y al aparecer el input venga pre-llenado en Bs con el restante por pagar, para que el usuario entienda su función.
