@@ -38,9 +38,12 @@ export class CustomPaymentLines extends Component {
         onWillUpdateProps((nextProps) => {
             const prevLen = (this.props.paymentLines || []).length;
             const nextLen = (nextProps.paymentLines || []).length;
-            if (nextLen > prevLen) {
-                this.state.selectedCurrency = "bs";
-                this.state.inputAmount = "";
+            if (nextLen !== prevLen) {
+                if (nextLen > 0) {
+                    this.prefillFromRemaining();
+                } else {
+                    this.state.inputAmount = "";
+                }
             }
         });
     }
@@ -121,6 +124,18 @@ export class CustomPaymentLines extends Component {
         } catch (_) {
             return "";
         }
+    }
+
+    // Restante por pagar en Bs (moneda base)
+    get remainingInBs() {
+        const order = this.pos.getOrder();
+        return order ? order.remainingDue : 0;
+    }
+
+    // Pre-llenar el input con el restante, siempre en Bs
+    prefillFromRemaining() {
+        this.state.selectedCurrency = "bs";
+        this.state.inputAmount = this._formatInput(this.remainingInBs);
     }
 
     // ── Actions ──
