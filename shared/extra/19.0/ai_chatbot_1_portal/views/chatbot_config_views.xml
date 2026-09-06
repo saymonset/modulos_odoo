@@ -40,8 +40,10 @@
                         <button name="action_regenerar_menu" type="object"
                                 string="Regenerar menú según rol"
                                 class="btn-secondary"
+                                invisible="not menu_enabled"
                                 confirm="Regenera el menú (encabezado + etiquetas de opciones) desde el rol del negocio usando IA, sin re-sincronizar RAG. Los flujos marcados en 'Flujos de este cliente' determinan las opciones. ¿Continuar?"/>
-                        <div class="d-flex align-items-center gap-2 mt-1">
+                        <div class="d-flex align-items-center gap-2 mt-1"
+                             invisible="not menu_enabled">
                             <field name="menu_generated_mode" widget="badge"/>
                             <field name="menu_generated_at"
                                    widget="datetime"
@@ -55,6 +57,11 @@
                                 Menú sin generar
                             </span>
                         </div>
+                        <span class="text-muted" invisible="menu_enabled">
+                            Modo conversacional (SPEC 18): sin menú; el RAG
+                            responde primero y los flujos se disparan tras una
+                            sugerencia aceptada.
+                        </span>
                     </header>
                     <sheet>
                         <group string="Onboarding (primera vez)">
@@ -98,6 +105,7 @@
                                    invisible="attribution_enabled == False"/>
                             <field name="cta_url"/>
                             <field name="output_instagram"/>
+                            <field name="menu_enabled"/>
                             <field name="active"/>
                         </group>
                         <group string="Contenido del agente">

@@ -47,7 +47,7 @@ REGLAS:
    Ejemplo: "¡Perfecto! Voy a hacerle unas preguntas rápidas para continuar.
    (flujo_agendamiento_directo)"
 9. "tipoPregunta" usa solo un valor configurado en las intenciones.
-10. Si el usuario escribe "menu", "cancelar" o "salir", muestra el menú.
+10. {menu_rule}
 11. Si image_url no está vacío y empieza con "http", no dispares el flujo de
     inmediato: responde preguntando si realmente desea que la imagen/archivo sea
     revisada por el departamento (tipoPregunta "CONFIRMACION_IMAGEN",
@@ -118,10 +118,27 @@ REGLAS:
      competidor ni nombre de terceros como si fueran propios, aunque aparezcan
      en la conversación o en la base de conocimiento."""
 
+_MENU_RULE_ON = ('Si el usuario escribe "menu", "cancelar" o "salir", muestra '
+                 'el menú.')
 
-def _render_universal_skeleton(brand=''):
+_MENU_RULE_OFF = (
+    'MODO CONVERSACIONAL (sin menú): NUNCA presentes listas numeradas de '
+    'opciones ni menciones un menú. Saluda con una introducción breve y '
+    'humana de lo que ofrece la empresa (apóyate en Base_Conocimiento_RAG y '
+    'en el CONOCIMIENTO DEL NEGOCIO) e invita al usuario a preguntar con sus '
+    'propias palabras. Ante cualquier pregunta, responde PRIMERO con la '
+    'información disponible (regla 13) y solo al final sugiere de forma '
+    'discreta el siguiente paso (regla 16). Si el usuario escribe "cancelar" '
+    'o "salir", responde con las intenciones CANCELAR/SALIR.')
+
+
+def _render_universal_skeleton(brand='', menu_enabled=True):
     json_block = ",\n".join("  " + k for k in _JSON_KEYS)
-    return _UNIVERSAL_SKELETON.format(json=json_block, brand=brand or 'el negocio')
+    return _UNIVERSAL_SKELETON.format(
+        json=json_block,
+        brand=brand or 'el negocio',
+        menu_rule=_MENU_RULE_ON if menu_enabled else _MENU_RULE_OFF,
+    )
 
 
 _POLITICA_TEXTO = {
@@ -260,10 +277,14 @@ def render_prompt(config):
     lines.append('')
     lines.append(_render_respuestas(config))
     lines.append('')
-    lines.append(_render_menu(config))
-    lines.append('')
+    if config.menu_enabled:
+        lines.append(_render_menu(config))
+        lines.append('')
     lines.append(_render_flujos(config))
     lines.append('')
-    lines.append(_render_universal_skeleton(config.brand_name or config.name or ''))
+    lines.append(_render_universal_skeleton(
+        config.brand_name or config.name or '',
+        menu_enabled=config.menu_enabled,
+    ))
 
     return '\n'.join(lines)

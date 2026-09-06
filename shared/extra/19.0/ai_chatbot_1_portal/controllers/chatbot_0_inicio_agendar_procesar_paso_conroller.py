@@ -411,6 +411,10 @@ class InicioAgendarController(http.Controller):
             data['system_prompt'] = system_prompt or fallback_message
             data['fallback_message'] = fallback_message
             data['flow_map'] = request.env['chatbot.flujo'].sudo()._get_flow_routing_map()
+            # SPEC 18: True = modo menú determinista (SPEC 13/17); False =
+            # modo conversacional sin menú (el RAG responde primero).
+            data['menu_enabled'] = bool(
+                request.env['chatbot.config'].sudo()._get_active_config().menu_enabled)
             return Response(
                 json.dumps(data, default=str),
                 status=200,

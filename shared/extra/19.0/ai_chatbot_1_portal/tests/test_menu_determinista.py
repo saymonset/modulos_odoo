@@ -20,6 +20,7 @@ class TestMenuDeterminista(BaseChatbotTestCase):
         flujo_directo = self._crear_flujo(
             'flujo_agendamiento_directo', routing_key='Agendamiento_Directo')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Cliente Test',
             'brand_name': 'KARLA CAMPOVERDE',
             'role': 'TÚ ERES:\nBOT KARLA CAMPOVERDE. Vendedora oficial.',
@@ -108,6 +109,7 @@ class TestMenuDeterminista(BaseChatbotTestCase):
         """Menú sin IA: bienvenida humana con marca, sin '¿Qué necesitas hoy?'."""
         flujo = self._crear_flujo('flujo_agendamiento_precios')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Bienvenida Test',
             'brand_name': 'INMOBILIARIA KARLA CAMPOVERDE',
             'flujo_ids': [(6, 0, [flujo.id])],

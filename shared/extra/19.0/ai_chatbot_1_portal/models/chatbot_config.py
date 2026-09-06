@@ -188,6 +188,12 @@ _SYSTEM_INTENCIONES = {
     },
 }
 
+# FALLBACK del modo conversacional (menu_enabled=False): sin referencias al
+# menú, invita a preguntar con sus palabras (SPEC 18).
+_FALLBACK_CONVERSACIONAL = (
+    'Disculpa, no entendí 🤔 ¿Me lo cuentas con otras palabras? Con gusto te '
+    'respondo con la información del negocio.')
+
 # Ranuras esenciales que siempre se crean (vacías si el RAG no las trae).
 # Incluye las de manejo de imágenes/archivos: todo cliente puede enviar fotos,
 # logos o comprobantes por WhatsApp, así que sus intenciones y flujo deben
@@ -294,6 +300,16 @@ class ChatbotConfig(models.Model):
         string="Menú posiblemente desactualizado",
         default=False,
         copy=False,
+    )
+    menu_enabled = fields.Boolean(
+        string="Modo menú (SPEC 13/17)",
+        default=False,
+        help=(
+            "False (default): modo conversacional — sin menú numerado, el "
+            "RAG responde primero y los flujos se disparan tras una "
+            "sugerencia aceptada (SPEC 18). True: modo menú determinista "
+            "de las SPEC 13/17 (rollback)."
+        ),
     )
 
     def write(self, vals):
@@ -787,7 +803,10 @@ class ChatbotConfig(models.Model):
 
         for v in vals_sistema:
             if v.get('nombre') == 'FALLBACK' and not (v.get('output_largo') or '').strip():
-                v['output_largo'] = _SYSTEM_INTENCIONES['FALLBACK']['output_default']
+                if self.menu_enabled:
+                    v['output_largo'] = _SYSTEM_INTENCIONES['FALLBACK']['output_default']
+                else:
+                    v['output_largo'] = _FALLBACK_CONVERSACIONAL
 
         # Collectar títulos de contenido para keywords IA (una sola llamada)
         titulos_contenido = []
@@ -1059,10 +1078,14 @@ class ChatbotConfig(models.Model):
                 'aplicables. Se conservó el estado actual.',
                 'warning')
 
-        # Menú dinámico: temas RAG + acciones de flujos detectados
-        resultado_menu = self._generar_menu_desde_flujos(
-            flujos_detectados, temas_rag=temas_rag)
-        menu_texto = resultado_menu['texto']
+        # Menú dinámico: temas RAG + acciones de flujos detectados.
+        # En modo conversacional (menu_enabled=False, SPEC 18) no se genera
+        # ni se sirve menú; la sync regenera intenciones/keywords igual.
+        menu_texto = ''
+        if self.menu_enabled:
+            resultado_menu = self._generar_menu_desde_flujos(
+                flujos_detectados, temas_rag=temas_rag)
+            menu_texto = resultado_menu['texto']
         if menu_texto:
             self.intencion_ids.filtered(
                 lambda i: i.nombre == 'MENU' and i.es_auto_rag
@@ -1149,6 +1172,12 @@ class ChatbotConfig(models.Model):
     def action_regenerar_menu(self):
         """Regenera el menú según el rol del negocio (sin re-sincronizar RAG)."""
         self.ensure_one()
+        if not self.menu_enabled:
+            return self._notificar(
+                'Regenerar menú',
+                'El modo conversacional está activo (sin menú). Activa '
+                '"Modo menú" en la ficha para regenerarlo.',
+                'info')
         self._preparar_marca()
         flujos = self.flujo_ids
         if not flujos:
