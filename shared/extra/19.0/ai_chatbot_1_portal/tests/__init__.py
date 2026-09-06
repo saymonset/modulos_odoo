@@ -12,3 +12,4 @@ from . import test_menu_determinista
 from . import test_marca_dinamica
 from . import test_menu_tema_rag
 from . import test_modo_conversacional
+from . import test_salir_limpia_sesion
