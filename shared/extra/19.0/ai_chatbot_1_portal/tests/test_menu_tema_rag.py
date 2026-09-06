@@ -22,6 +22,9 @@ class TestMenuTemaRag(BaseChatbotTestCase):
             self.patch(
                 type(gpt), 'generar_keywords_por_tema',
                 staticmethod(lambda *args, **kwargs: {}))
+            self.patch(
+                type(gpt), 'generar_menu_por_rol',
+                staticmethod(lambda *args, **kwargs: {}))
 
     def _crear_tabla_n8n_vectors(self):
         self.env.cr.execute("DROP TABLE IF EXISTS public.n8n_vectors")
@@ -156,7 +159,8 @@ class TestMenuTemaRag(BaseChatbotTestCase):
         """RAG con solo rol (sin temas) genera menú mínimo con marca."""
         self._crear_tabla_n8n_vectors()
         self._insertar_documento(
-            'demo', "TÚ ERES:\nBOT INTEGRAL. Vendedor de todo.", 1)
+            'demo', "TÚ ERES:\nMI EMPRESA. Vendedor de todo tipo de "
+            "productos para el hogar y la oficina.", 1)
 
         config = self.env['chatbot.config'].create({
             'name': 'Sin Temas',
@@ -201,7 +205,8 @@ class TestMenuTemaRag(BaseChatbotTestCase):
             'demo', "TÚ ERES:\nBOT TEST.", 1)
         self._insertar_documento(
             'demo',
-            "PRECIOS:\nLista de precios actualizada.", 2)
+            "PRECIOS:\nLista de precios actualizada de todos los productos "
+            "y servicios del negocio.", 2)
 
         config = self.env['chatbot.config'].create({'name': 'Test'})
         config.action_recargar_todo_desde_rag()
@@ -217,7 +222,8 @@ class TestMenuTemaRag(BaseChatbotTestCase):
                             'Pre-condición: flow_id escrito manualmente')
             # Re-sync: el flow_id residual debe limpiarse
             config.action_recargar_todo_desde_rag()
-            precios.refresh()
+            precios = config.intencion_ids.filtered(
+                lambda i: i.nombre == 'PRECIOS')
             self.assertFalse(
                 precios.flow_id,
                 'Tras sync, el flow_id residual se limpió')
