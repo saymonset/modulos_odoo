@@ -1,6 +1,6 @@
 # SPEC 19 — "Salir" limpia sesión y el siguiente mensaje va a bienvenida
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 14, SPEC 18
 > **Date:** 2026-09-06
 > **Objective:** Que tras "salir" (o expiración/sesión inexistente) el backend `procesar_paso` no devuelva el mensaje IA genérico "no tenemos una conversación activa", sino un estado limpio `MENU_PRINCIPAL` que deja a n8n servir su saludo conversacional real.
