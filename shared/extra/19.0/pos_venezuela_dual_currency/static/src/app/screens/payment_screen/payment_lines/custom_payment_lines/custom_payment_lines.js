@@ -27,6 +27,9 @@ export class CustomPaymentLines extends Component {
         });
 
         onMounted(() => {
+            if ((this.props.paymentLines || []).length > 0) {
+                this.prefillFromRemaining();
+            }
             this.loadRate();
             this._rateInterval = setInterval(() => this.loadRate(), 60000);
         });
