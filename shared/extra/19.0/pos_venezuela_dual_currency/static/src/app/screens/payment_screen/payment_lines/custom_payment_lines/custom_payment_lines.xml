@@ -2,7 +2,8 @@
 <templates id="template" xml:space="preserve">
 
     <t t-name="pos_venezuela_dual_currency.CustomPaymentLines">
-        <div class="currency-converter d-flex flex-column gap-2 mb-1">
+        <div t-if="props.paymentLines and props.paymentLines.length > 0"
+            class="currency-converter d-flex flex-column gap-2 mb-1">
             <!-- Header: título + tasa -->
             <div class="d-flex align-items-center justify-content-between currency-converter-header">
                 <span class="fw-bold small text-uppercase converter-title">Convertir</span>
@@ -65,13 +66,8 @@
                         <i class="fa fa-eraser me-1"/> Limpiar
                     </button>
                 </div>
-                <div class="payment-target-hint text-center text-muted">
-                    <t t-if="selectedPaymentName">
-                        Monto para: <strong><t t-esc="selectedPaymentName"/></strong>
-                    </t>
-                    <t t-else="">
-                        Selecciona un método de pago
-                    </t>
+                <div t-if="selectedPaymentName" class="payment-target-hint text-center text-muted">
+                    Monto para: <strong><t t-esc="selectedPaymentName"/></strong>
                 </div>
             </div>
         </div>
