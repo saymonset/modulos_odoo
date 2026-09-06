@@ -63,6 +63,7 @@ class TestMenuTemaRag(BaseChatbotTestCase):
         self._crear_flujo('flujo_resultados_imagenes', 'imagen,foto')
 
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Inmobiliaria Test',
         })
         config.action_recargar_todo_desde_rag()
@@ -91,7 +92,8 @@ class TestMenuTemaRag(BaseChatbotTestCase):
 
         self._crear_flujo('flujo_ventas', 'venta,cotizar')
 
-        config = self.env['chatbot.config'].create({'name': 'Test'})
+        config = self.env['chatbot.config'].create({
+            'menu_enabled': True,'name': 'Test'})
         config.action_recargar_todo_desde_rag()
 
         # Todas las intenciones de contenido RAG deben tener flow_id=False
@@ -115,7 +117,8 @@ class TestMenuTemaRag(BaseChatbotTestCase):
             "PAN DULCE ARTESANAL:\nConchas, cuernos, orejas, garibaldi, "
             "poncha de nata. Horario 6am-2pm.", 2)
 
-        config = self.env['chatbot.config'].create({'name': 'Panadería'})
+        config = self.env['chatbot.config'].create({
+            'menu_enabled': True,'name': 'Panadería'})
         config.action_recargar_todo_desde_rag()
 
         pan = config.intencion_ids.filtered(
@@ -138,7 +141,8 @@ class TestMenuTemaRag(BaseChatbotTestCase):
             'demo',
             "EDIFICIO DE OFICINAS:\nOficinas, galpón, data center.", 2)
 
-        config = self.env['chatbot.config'].create({'name': 'Test'})
+        config = self.env['chatbot.config'].create({
+            'menu_enabled': True,'name': 'Test'})
 
         gpt = self.env.get('gpt.service')
         with patch.object(
@@ -163,6 +167,7 @@ class TestMenuTemaRag(BaseChatbotTestCase):
             "productos para el hogar y la oficina.", 1)
 
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Sin Temas',
             'brand_name': 'MI EMPRESA',
         })
@@ -187,7 +192,8 @@ class TestMenuTemaRag(BaseChatbotTestCase):
         # Solo crear flujo de imágenes (no de ventas ni agendamiento)
         self._crear_flujo('flujo_resultados_imagenes', 'imagen,foto')
 
-        config = self.env['chatbot.config'].create({'name': 'Mecánico'})
+        config = self.env['chatbot.config'].create({
+            'menu_enabled': True,'name': 'Mecánico'})
         config.action_recargar_todo_desde_rag()
 
         menu = config.intencion_ids.filtered(
@@ -208,7 +214,8 @@ class TestMenuTemaRag(BaseChatbotTestCase):
             "PRECIOS:\nLista de precios actualizada de todos los productos "
             "y servicios del negocio.", 2)
 
-        config = self.env['chatbot.config'].create({'name': 'Test'})
+        config = self.env['chatbot.config'].create({
+            'menu_enabled': True,'name': 'Test'})
         config.action_recargar_todo_desde_rag()
 
         precios = config.intencion_ids.filtered(

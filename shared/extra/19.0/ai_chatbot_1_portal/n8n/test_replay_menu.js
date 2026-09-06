@@ -55,6 +55,19 @@ const agentConfig = {
     system_prompt: systemPrompt,
     fallback_message: 'Disculpa, no entendí.',
     flow_map: { Agendamiento_Precios: 'flujo_agendamiento_precios' },
+    menu_enabled: true,
+  },
+};
+
+// Mock del modo conversacional (SPEC 18): menu_enabled=false, sin sección
+// de menú en el system prompt.
+const agentConfigConversacional = {
+  Obtener_configuracion_agente: {
+    system_prompt: buildSystemPrompt(brand, '').replace(
+      '=== MENÚ DE OPCIONES ===\n\n=== FLUJOS', '=== FLUJOS'),
+    fallback_message: 'Disculpa, no entendí.',
+    flow_map: { Agendamiento_Precios: 'flujo_agendamiento_precios' },
+    menu_enabled: false,
   },
 };
 
@@ -163,6 +176,52 @@ console.log('Scenario 6: texto ultra-corto (≤2 chars) fuerza menú determinist
   check('output = menú con marca', r.output === menuText, r.output);
   check('isMenu = true', r.isMenu === true, r.isMenu);
   check('tipoPregunta = MENU', r.tipoPregunta === 'MENU', r.tipoPregunta);
+}
+
+console.log('Scenario 7 (SPEC 18): modo conversacional — saludo no fuerza menú');
+{
+  const iaOutput = '¡Hola! 👋 Te saluda *KARLA CAMPOVERDE*. Nos dedicamos a... ¿qué te gustaría saber?';
+  const out = runNode(
+    [baseItem('hola', JSON.stringify({ output: iaOutput, isMenu: false, tipoPregunta: 'INFO' }))],
+    agentConfigConversacional,
+  );
+  const r = out[0].json;
+  check('output = introducción de la IA (sin menú)', r.output === iaOutput, r.output);
+  check('isMenu = false', r.isMenu === false, r.isMenu);
+  check('tipoPregunta ≠ MENU', r.tipoPregunta !== 'MENU', r.tipoPregunta);
+}
+
+console.log('Scenario 8 (SPEC 18): texto ultra-corto NO fuerza menú');
+{
+  const iaOutput = 'Respuesta conversacional de la IA.';
+  const out = runNode(
+    [baseItem('k', JSON.stringify({ output: iaOutput, isMenu: false, tipoPregunta: 'FALLBACK' }))],
+    agentConfigConversacional,
+  );
+  const r = out[0].json;
+  check('output = IA (sin menú forzado)', r.output === iaOutput, r.output);
+  check('isMenu = false', r.isMenu === false, r.isMenu);
+}
+
+console.log('Scenario 9 (SPEC 18): flujo se dispara intacto en conversacional');
+{
+  const out = runNode(
+    [baseItem('sí, agéndame', '{"output":"¡Perfecto! Voy a hacerte unas preguntas. (flujo_agendamiento_precios)","isMenu":false,"tipoPregunta":"Agendamiento_Precios","flow_name":"Agendamiento_Precios"}')],
+    agentConfigConversacional,
+  );
+  const r = out[0].json;
+  check('isMenu = false', r.isMenu === false, r.isMenu);
+  check('flow_name = flujo_agendamiento_precios', r.flow_name === 'flujo_agendamiento_precios', r.flow_name);
+}
+
+console.log('Scenario 10 (SPEC 18): fallback por defecto sin mención de menú');
+{
+  const out = runNode(
+    [baseItem('xyz', '{"output":"   ","isMenu":false,"tipoPregunta":"FALLBACK"}')],
+    agentConfigConversacional,
+  );
+  const r = out[0].json;
+  check('sin "menu" en el fallback', !(r.output || '').includes('menu'), r.output);
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

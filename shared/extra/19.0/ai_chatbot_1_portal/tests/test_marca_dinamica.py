@@ -19,6 +19,7 @@ class TestMarcaDinamica(BaseChatbotTestCase):
 
     def test_01_constrains_marca_no_en_rol(self):
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'IntegraIA',
             'role': 'BOT INTEGRAIA. Asistente virtual.',
         })
@@ -27,6 +28,7 @@ class TestMarcaDinamica(BaseChatbotTestCase):
 
     def test_02_constrains_marca_en_rol_ok(self):
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Ventas Sillas Paper',
             'role': 'BOT VENTAS SILLAS PAPER. Vendemos sillas.',
         })
@@ -36,6 +38,7 @@ class TestMarcaDinamica(BaseChatbotTestCase):
     def test_03_preparar_marca_extrae_si_vacio(self):
         flujo_p = self._crear_flujo('flujo_agendamiento_precios', 'precio')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Config Sin Marca',
             'role': 'BOT INTEGRAIA. Asistente virtual y vendedor.',
             'flujo_ids': [(6, 0, [flujo_p.id])],
@@ -49,6 +52,7 @@ class TestMarcaDinamica(BaseChatbotTestCase):
     def test_04_preparar_marca_respeta_marca_manual(self):
         flujo_p = self._crear_flujo('flujo_agendamiento_precios', 'precio')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Config Con Marca',
             'brand_name': 'Mi Marca',
             'role': 'BOT MI MARCA. Vendedor.',
@@ -62,6 +66,7 @@ class TestMarcaDinamica(BaseChatbotTestCase):
     def test_05_regenerar_menu_extrae_marca(self):
         flujo_p = self._crear_flujo('flujo_agendamiento_precios', 'precio')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Regen Marca',
             'role': 'BOT INTEGRAIA. Vendedor.',
             'flujo_ids': [(6, 0, [flujo_p.id])],
@@ -87,6 +92,7 @@ class TestMarcaDinamica(BaseChatbotTestCase):
         from odoo.addons.ai_chatbot_1_portal.services.prompt_renderer import render_prompt
         flujo_p = self._crear_flujo('flujo_agendamiento_precios', 'precio')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'IntegraIA',
             'brand_name': 'IntegraIA',
             'role': 'BOT INTEGRAIA. Asistente virtual.',

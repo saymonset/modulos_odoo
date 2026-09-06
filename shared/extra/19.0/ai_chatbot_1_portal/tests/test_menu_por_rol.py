@@ -34,6 +34,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         flujo_d = self._crear_flujo(
             'flujo_agendamiento_directo', 'cita,agendar,visita')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Fallback Test',
             'role': 'T\u00da ERES: Vendedor de prueba.',
             'flujo_ids': [(6, 0, [flujo_p.id, flujo_s.id, flujo_d.id])],
@@ -62,6 +63,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         flujo_d = self._crear_flujo(
             'flujo_agendamiento_directo', 'cita,agendar')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Inmobiliaria Test',
             'role': 'T\u00da ERES: Vendedor de inmuebles comerciales.',
             'brand_name': 'Inmobiliaria XYZ',
@@ -101,6 +103,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         flujo_p = self._crear_flujo(
             'flujo_agendamiento_precios', 'precio,costo')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Orden Test',
             'flujo_ids': [(6, 0, [flujo_d.id, flujo_p.id])],
         })
@@ -118,6 +121,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         flujo_p = self._crear_flujo(
             'flujo_agendamiento_precios', 'precio')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Boton Test',
             'flujo_ids': [(6, 0, [flujo_p.id])],
         })
@@ -144,6 +148,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
     def test_05_boton_sin_flujos_warning(self):
         """Sin flujo_ids, el bot\u00f3n devuelve warning."""
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Sin Flujos Test',
         })
         result = config.action_regenerar_menu()
@@ -154,6 +159,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         flujo_p = self._crear_flujo(
             'flujo_agendamiento_precios', 'precio')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Sin MENU Test',
             'flujo_ids': [(6, 0, [flujo_p.id])],
         })
@@ -165,6 +171,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         flujo_p = self._crear_flujo(
             'flujo_agendamiento_precios', 'precio')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'IA Test',
             'role': 'T\u00da ERES: Vendedor de prueba.',
             'flujo_ids': [(6, 0, [flujo_p.id])],
@@ -199,6 +206,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         flujo_p = self._crear_flujo(
             'flujo_agendamiento_precios', 'precio')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Stale Test',
             'flujo_ids': [(6, 0, [flujo_p.id])],
         })
@@ -222,6 +230,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
     def test_09_campos_vacios_sin_generar(self):
         """Sin generaci\u00f3n previa, los campos est\u00e1n vac\u00edos."""
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Sin Generar Test',
         })
         self.assertFalse(config.menu_generated_mode)
@@ -232,6 +241,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         flujo_p = self._crear_flujo(
             'flujo_agendamiento_precios', 'precio')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Solo Name',
             'flujo_ids': [(6, 0, [flujo_p.id])],
         })
@@ -246,6 +256,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         flujo_p = self._crear_flujo(
             'flujo_agendamiento_precios', 'precio')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'No Dup Test',
             'brand_name': 'Mi Marca',
             'flujo_ids': [(6, 0, [flujo_p.id])],
@@ -269,6 +280,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         flujo_p = self._crear_flujo(
             'flujo_agendamiento_precios', 'precio')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Negocio Sin Brand',
             'flujo_ids': [(6, 0, [flujo_p.id])],
         })
@@ -286,6 +298,7 @@ class TestMenuPorRol(BaseChatbotTestCase):
         flujo_p = self._crear_flujo(
             'flujo_agendamiento_precios', 'precio')
         config = self.env['chatbot.config'].create({
+            'menu_enabled': True,
             'name': 'Karla Campoverde',
             'brand_name': 'Karla Campoverde',
             'role': 'T\u00da ERES: Vendedora de inmuebles.',
