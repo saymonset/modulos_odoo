@@ -1,6 +1,6 @@
 # SPEC 18 — Bot conversacional RAG sin menú (mini-buscador)
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 13, SPEC 16, SPEC 17
 > **Date:** 2026-09-06
 > **Objective:** Eliminar el menú numerado del chatbot y reemplazarlo por una introducción conversacional generada por IA desde los temas del RAG, con los mensajes del cliente yendo directo al RAG como un mini-buscador (responde siempre primero, como humano) y los flujos de intención disparándose de forma invisible solo cuando el cliente acepta una sugerencia o pide la acción explícitamente — cambiando código Odoo (`ai_chatbot_0_core`, `ai_chatbot_1_portal`) y los 2 workflows n8n.
