@@ -129,7 +129,10 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
         self._insertar_documento('demo', "PRODUCTOS Y PRECIOS:\nVenta de artículos, ofrecemos cotizar.", 3)
 
         flujo_ventas = self._crear_flujo('flujo_ventas_test', 'venta,cotizar,pedido')
-        config = self.env['chatbot.config'].create({'name': 'Cliente Test'})
+        config = self.env['chatbot.config'].create({
+            'name': 'Cliente Test',
+            'menu_enabled': True,
+        })
         config.action_recargar_todo_desde_rag()
 
         intenciones = config.intencion_ids.filtered(lambda i: i.es_auto_rag)
@@ -327,7 +330,10 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
         flujo_ventas = self._crear_flujo('flujo_ventas', 'venta,cotizar,pedido')
         flujo_precios = self._crear_flujo(
             'flujo_agendamiento_precios', 'precio,costo,tarifa')
-        config = self.env['chatbot.config'].create({'name': 'Panadería Test'})
+        config = self.env['chatbot.config'].create({
+            'name': 'Panadería Test',
+            'menu_enabled': True,
+        })
 
         gpt = self.env.get('gpt.service')
         with patch.object(

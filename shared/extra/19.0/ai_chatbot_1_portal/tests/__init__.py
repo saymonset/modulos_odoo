@@ -11,3 +11,4 @@ from . import test_menu_por_rol
 from . import test_menu_determinista
 from . import test_marca_dinamica
 from . import test_menu_tema_rag
+from . import test_modo_conversacional

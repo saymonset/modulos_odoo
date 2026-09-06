@@ -359,7 +359,7 @@ class ChatbotConfig(models.Model):
                     'una simple pregunta. Pulsa "Desvincular flujos de '
                     'contenido" para que responda con el RAG.'
                     % len(mal))
-            if menu and not (menu.output_largo or '').strip():
+            if menu and not (menu.output_largo or '').strip() and self.menu_enabled:
                 lineas.append(
                     '⚠️ El menú está vacío: pulsa "Sincronizar todo desde RAG".')
             if not intenciones:
@@ -536,6 +536,11 @@ class ChatbotConfig(models.Model):
                 # con guion por defecto: no quedan vacías, el humano puede
                 # editarlas luego.
                 output = cfg['output_default']
+            if norm_key == 'MENU' and not self.menu_enabled:
+                # SPEC 18: en modo conversacional el slot MENU existe pero
+                # nunca muestra una lista numerada (el agente saluda
+                # conversacionalmente desde el RAG).
+                output = ''
             vals.append({
                 'config_id': self.id,
                 'nombre': cfg['nombre'],
@@ -802,11 +807,11 @@ class ChatbotConfig(models.Model):
         vals_sistema, procesadas = self._generar_intenciones_sistema(conocimiento)
 
         for v in vals_sistema:
-            if v.get('nombre') == 'FALLBACK' and not (v.get('output_largo') or '').strip():
-                if self.menu_enabled:
-                    v['output_largo'] = _SYSTEM_INTENCIONES['FALLBACK']['output_default']
-                else:
-                    v['output_largo'] = _FALLBACK_CONVERSACIONAL
+            if v.get('nombre') == 'FALLBACK' and not self.menu_enabled:
+                # SPEC 18: FALLBACK conversacional sin mención de menú.
+                v['output_largo'] = _FALLBACK_CONVERSACIONAL
+            elif v.get('nombre') == 'FALLBACK' and not (v.get('output_largo') or '').strip():
+                v['output_largo'] = _SYSTEM_INTENCIONES['FALLBACK']['output_default']
 
         # Collectar títulos de contenido para keywords IA (una sola llamada)
         titulos_contenido = []
