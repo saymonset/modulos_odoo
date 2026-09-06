@@ -779,6 +779,27 @@ class ChatbotConfig(models.Model):
             if v.get('nombre') == 'FALLBACK' and not (v.get('output_largo') or '').strip():
                 v['output_largo'] = _SYSTEM_INTENCIONES['FALLBACK']['output_default']
 
+        # Collectar títulos de contenido para keywords IA (una sola llamada)
+        titulos_contenido = []
+        for nombre, texto in conocimiento:
+            if _normalizar(nombre) in procesadas:
+                continue
+            nombre_limpio = (nombre or '').upper().strip()
+            if nombre_limpio and len(texto.strip()) >= 40:
+                titulos_contenido.append(nombre_limpio)
+
+        # Keywords IA batch: una sola llamada para todos los temas
+        keywords_ia = {}
+        if titulos_contenido:
+            try:
+                gpt_service = self.env['gpt.service']
+                keywords_ia = gpt_service.sudo().generar_keywords_por_tema(
+                    titulos_contenido) or {}
+            except Exception as e:
+                _logger.warning(
+                    '_refrescar_desde_rag: keywords IA fallaron (%s). '
+                    'Usando fallback determinista.', e)
+
         vals = list(vals_sistema)
         vistos = set()
         indice = 0
@@ -793,19 +814,17 @@ class ChatbotConfig(models.Model):
             if clave in vistos:
                 continue
             vistos.add(clave)
+            # Keywords: IA si está disponible, fallback a tokens del texto
+            kws = keywords_ia.get(nombre, '') or _extract_keywords(texto)
             vals.append({
                 'config_id': self.id,
                 'nombre': nombre,
-                'keywords': _extract_keywords(texto),
+                'keywords': kws,
                 'prioridad': 60 + indice * 10,
                 'tipo_pregunta': self._mapear_tipo_pregunta(nombre, texto),
-                # RAG-first: sin respuestas enlatadas. El contenido vive en la
-                # herramienta Base_Conocimiento_RAG; la respuesta la redacta el
-                # agente con el resultado de la consulta.
                 'output_largo': '',
                 'es_auto_rag': True,
                 # Regla dura: contenido RAG NUNCA dispara flujo.
-                # Solo intenciones de ACCIÓN llevan flow_id.
             })
             indice += 1
         if vals:

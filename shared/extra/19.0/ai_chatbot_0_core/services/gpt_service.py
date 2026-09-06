@@ -131,6 +131,25 @@ class GptService(models.TransientModel):
         return use_case.execute(options).get('brand', '')
 
     @api.model
+    def generar_keywords_por_tema(self, titles, max_tokens=None):
+        """Genera keywords específicas para cada tema del RAG (batch).
+
+        :param titles: lista de str con los nombres de las secciones
+        :param max_tokens: opcional
+        :return: dict {titulo_normalizado: str_keywords} o dict vacío
+        """
+        config = self._get_openai_config()
+        openai_client = self._get_openai_client(config)
+        use_case = self.env['generar.keywords.por.tema.use.case']
+        options = {
+            "titles": titles,
+            "openai_client": openai_client,
+            "model": config.default_model,
+            "max_tokens": max_tokens or 500,
+        }
+        return use_case.execute(options)
+
+    @api.model
     def GenerarPreguntaIntegraia(self, prompt, max_tokens=None):
         """Verificación ortográfica usando el caso de uso"""
         config = self._get_openai_config()
