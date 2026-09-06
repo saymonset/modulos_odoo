@@ -327,33 +327,13 @@ class SessionState(models.Model):
         registro = self.sudo().search([('session_id', '=', session_id)], limit=1)
         
         if not registro:
-            _logger.info("Sesión no encontrada: %s. Generando mensaje sin sesión.", session_id)
-            mensaje = self._generar_mensaje_sin_sesion(valor)
-            return {
-                'success': True,
-                'texto_para_usuario': mensaje,
-                'text': mensaje,
-                'modo': 'COMPLETADO',
-                'session_id': session_id,
-                'conversation_id': conversation_id,
-                'account_id': account_id,
-                'platform': platform
-            }
+            _logger.info("Sesión no encontrada: %s. Respuesta limpia MENU_PRINCIPAL.", session_id)
+            return self._respuesta_menu_sin_sesion(session_id, conversation_id, account_id, platform)
 
         if registro.modo == 'COMPLETADO':
             _logger.info("Sesión previa 'COMPLETADO' encontrada. Eliminando para iniciar proceso limpio.")
             registro.sudo().unlink()
-            mensaje = self._generar_mensaje_sin_sesion(valor)
-            return {
-                'success': True,
-                'texto_para_usuario': mensaje,
-                'text': mensaje,
-                'modo': 'MENU_PRINCIPAL',
-                'session_id': session_id,
-                'conversation_id': conversation_id,
-                'account_id': account_id,
-                'platform': platform
-            }
+            return self._respuesta_menu_sin_sesion(session_id, conversation_id, account_id, platform)
         
         _logger.info("Sesión encontrada (ID: %s). Modo actual: %s", registro.id, registro.modo)
 
@@ -361,19 +341,8 @@ class SessionState(models.Model):
         delta = fields.Datetime.now() - registro.last_activity
         if delta.total_seconds() > 600:
             _logger.info("Sesión expirada por inactividad: %s (última actividad hace %d segundos)", session_id, delta.total_seconds())
-            mensaje = self._generar_mensaje_expirado(valor)
             registro.unlink()
-            return {
-                'success': True,
-                'finalizado': False,
-                'modo': 'COMPLETADO',
-                'texto_para_usuario': mensaje,
-                'text': mensaje,
-                'session_id': session_id,
-                'conversation_id': conversation_id,
-                'account_id': account_id,
-                'platform': platform
-            }
+            return self._respuesta_menu_sin_sesion(session_id, conversation_id, account_id, platform)
 
         paso_actual = registro.pasos_pendientes[0] if registro.pasos_pendientes else {}
         tipo = paso_actual.get('tipo_dato', 'text')
@@ -397,8 +366,8 @@ class SessionState(models.Model):
             mensaje_salida = ""
             
         if es_salida:
-            _logger.info("Marcando sesión como COMPLETADO (por intención de salida): %s", registro.session_id)
-            registro.sudo().write({'modo': 'COMPLETADO'})
+            _logger.info("Salida detectada, eliminando sesión: %s", registro.session_id)
+            registro.sudo().unlink()
             return {
                 'success': True,
                 'finalizado': True,
@@ -977,16 +946,23 @@ class SessionState(models.Model):
             _logger.error("Error en capturar_lead: %s", str(e), exc_info=True)
             return {'success': False, 'error': str(e)}   
     
+    def _respuesta_menu_sin_sesion(self, session_id, conversation_id, account_id, platform):
+        # Sin sesión activa: estado limpio para que n8n sirva su saludo conversacional
+        return {
+            'success': True,
+            'finalizado': False,
+            'modo': 'MENU_PRINCIPAL',
+            'texto_para_usuario': '',
+            'text': '',
+            'session_id': session_id,
+            'conversation_id': conversation_id,
+            'account_id': account_id,
+            'platform': platform
+        }
+
     def _generar_mensaje_sin_sesion(self, texto_usuario):
-        service = self._get_gpt_service()
-        try:
-            resultado = service.generar_mensaje_personalizado(
-                contexto="sin_sesion",
-                texto_usuario=texto_usuario
-            )
-            return resultado.get('mensaje', 'Hola, no tengo una conversación activa en este momento. ¿Te gustaría iniciar un nuevo proceso? Estoy aquí para ayudarte.')
-        except Exception:
-            return "Hola, no tengo una conversación activa en este momento. ¿Te gustaría iniciar un nuevo proceso? Estoy aquí para ayudarte."
+        # Respaldo determinista, sin llamada a GPT
+        return "Hola, no tengo una conversación activa en este momento. ¿Te gustaría iniciar un nuevo proceso? Estoy aquí para ayudarte."
 
     def _detectar_intencion_salida(self, texto_usuario):
         service = self._get_gpt_service()

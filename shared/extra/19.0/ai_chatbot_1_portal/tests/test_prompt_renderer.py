@@ -68,7 +68,9 @@ class TestPromptRenderer(BaseChatbotTestCase):
             'prioridad': 1,
             'tipo_pregunta': 'CITA_DIRECTA',
             'output_largo': '¿Te gustaría agendar una consulta?',
-            'es_menu': True,
+            # SPEC 18: con menu_enabled=False (default) las intenciones
+            # es_menu=True no se renderizan en el prompt.
+            'es_menu': False,
         })
 
         from odoo.addons.ai_chatbot_1_portal.services.prompt_renderer import render_prompt
