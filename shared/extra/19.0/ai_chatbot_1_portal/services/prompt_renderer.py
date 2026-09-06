@@ -179,6 +179,10 @@ def _render_flujos(config):
 
 def _render_intenciones(config):
     intenciones = config.intencion_ids.sorted('prioridad')
+    if not config.menu_enabled:
+        # SPEC 18: en modo conversacional la intención MENU (y su marcador
+        # "muestra el menú") no se sirve: el agente saluda conversacionalmente.
+        intenciones = intenciones.filtered(lambda i: not i.es_menu)
     if not intenciones:
         return "(Sin intenciones configuradas.)"
     lines = ["=== INTENCIONES (clasifica en este orden de prioridad) ==="]
@@ -198,6 +202,9 @@ def _render_intenciones(config):
 
 def _render_respuestas(config):
     intenciones = config.intencion_ids.sorted('prioridad')
+    if not config.menu_enabled:
+        # SPEC 18: sin la respuesta enlatada del menú en el prompt.
+        intenciones = intenciones.filtered(lambda i: not i.es_menu)
     lines = ["=== RESPUESTAS POR INTENCIÓN ==="]
     for intencion in intenciones:
         lines.append(f"INTENCIÓN {intencion.nombre}:")
