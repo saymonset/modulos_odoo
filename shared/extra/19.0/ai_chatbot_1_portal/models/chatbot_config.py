@@ -565,67 +565,77 @@ class ChatbotConfig(models.Model):
         'flujo_agendamiento_otra_consulta': 'Otra consulta',
     }
 
-    def _generar_menu_desde_flujos(self, flujos):
-        """Construye el menú del cliente a partir de los flujos detectados.
+    def _generar_menu_desde_flujos(self, flujos, temas_rag=None):
+        """Construye el menú del cliente: temas RAG + acciones detectadas.
 
-        Intenta generar etiquetas por IA (desde el rol del negocio). Si falla
-        (sin API key, excepción), usa las etiquetas de _MENU_LABELS o la
-        descripción del flujo (fallback determinista idéntico al anterior).
+        Si se proveen temas_rag (intenciones de contenido), se listan primero
+        como consultables. Luego se añaden las acciones de los flujos detectados.
+        Si no hay temas RAG ni flujos, menú mínimo con marca.
 
-        El menú siempre abre con la marca del negocio (brand_name o name)
-        en negrita WhatsApp, seguida del tagline del rol (IA) o saludo
-        genérico (fallback).
-
-        Devuelve el texto de output_largo de la intención MENU o '' si no hay
-        flujos con los que armar un menú útil.
+        :param flujos: recordset de chatbot.flujo detectados
+        :param temas_rag: lista de dicts [{'nombre': str}] (intenciones de
+                         contenido RAG) u omitido para comportamiento anterior
+        :return: dict {'texto': str, 'modo': str}
         """
         numeracion = ['1️⃣ ', '2️⃣ ', '3️⃣ ', '4️⃣ ', '5️⃣ ', '6️⃣ ', '7️⃣ ', '8️⃣ ']
-        flujo_items = []
+        lineas = []
+
+        # --- Temas del RAG (contenido informativo) ---
+        rag_items = []
+        if temas_rag:
+            for t in temas_rag:
+                nombre = (t.get('nombre') or '').strip()
+                if nombre and len(rag_items) < len(numeracion):
+                    rag_items.append(nombre)
+
+        for nombre in rag_items:
+            lineas.append(numeracion[len(lineas)] + nombre)
+
+        # --- Acciones de flujos detectados ---
+        accion_flujos = []
         for f in flujos.sorted('name'):
             if f.name == 'flujo_agendamiento_default':
                 continue
-            if len(flujo_items) >= len(numeracion):
+            if len(lineas) >= len(numeracion):
                 break
             etiqueta_det = self._MENU_LABELS.get(f.name) or (
                 f.descripcion_intencion or '').strip() or (
                 f.name.replace('flujo_', '').replace('_', ' ').title())
-            flujo_items.append((f, etiqueta_det))
+            accion_flujos.append((f, etiqueta_det))
 
-        if not flujo_items:
+        # Si no hay temas RAG, comportamiento anterior (solo flujos)
+        if not rag_items and not accion_flujos:
             return {'texto': '', 'modo': 'fallback'}
 
-        # Intento IA: generar etiquetas desde el rol del negocio
+        # Intento IA: generar etiquetas solo para flujos de acción
         header_ia = ''
         labels_ia = {}
-        try:
-            if self.role:
-                gpt_service = self.env['gpt.service']
-                flujos_info = [
-                    {'name': f.name,
-                     'descripcion_intencion': f.descripcion_intencion or '',
-                     'label_actual': etiqueta}
-                    for f, etiqueta in flujo_items
-                ]
-                resultado = gpt_service.sudo().generar_menu_por_rol(
-                    self.role, self.brand_name or '', flujos_info)
-                if resultado and resultado.get('labels'):
-                    header_ia = resultado.get('header', '')
-                    labels_ia = resultado['labels']
-        except Exception as e:
-            _logger.warning(
-                '_generar_menu_desde_flujos: falló la IA de menú (%s). '
-                'Usando etiquetas deterministas.', e)
+        if accion_flujos:
+            try:
+                if self.role:
+                    gpt_service = self.env['gpt.service']
+                    flujos_info = [
+                        {'name': f.name,
+                         'descripcion_intencion': f.descripcion_intencion or '',
+                         'label_actual': etiqueta}
+                        for f, etiqueta in accion_flujos
+                    ]
+                    resultado = gpt_service.sudo().generar_menu_por_rol(
+                        self.role, self.brand_name or '', flujos_info)
+                    if resultado and resultado.get('labels'):
+                        header_ia = resultado.get('header', '')
+                        labels_ia = resultado['labels']
+            except Exception as e:
+                _logger.warning(
+                    '_generar_menu_desde_flujos: falló la IA de menú (%s). '
+                    'Usando etiquetas deterministas.', e)
 
-        # Ensamblado: IA labels o fallback determinista
-        lineas = []
-        for f, etiqueta_det in flujo_items:
+        # Añadir flujos de acción al menú
+        for f, etiqueta_det in accion_flujos:
             etiqueta = labels_ia.get(f.name, etiqueta_det)
             lineas.append(numeracion[len(lineas)] + etiqueta)
 
-        # Bienvenida humana con marca (SPEC 14). Si la IA dio un tagline de tono
-        # humano se usa; si no, saludo determinista cálido que identifica a la
-        # empresa. La marca SIEMPRE va en negrita *MARCA* aunque la IA la haya
-        # puesto en texto plano. Nunca el robótico "¿Qué necesitas hoy?".
+        # Bienvenida humana con marca (SPEC 14)
         marca = (self.brand_name or self.name or '').strip()
         if header_ia.strip():
             welcome = header_ia.strip()
@@ -1027,20 +1037,31 @@ class ChatbotConfig(models.Model):
         flujos_detectados = deteccion['flujos']
         metodo = deteccion['metodo']
 
-        if not flujos_detectados:
+        if flujos_detectados:
+            self.write({'flujo_ids': [(6, 0, flujos_detectados.ids)]})
+
+        # Recoger temas de contenido RAG para el menú
+        accion_nombres_menu = {_normalizar(n) for n in _INTENCIONES_ACCION}
+        accion_nombres_menu.update({_normalizar('MENU'), _normalizar('CANCELAR'),
+                                    _normalizar('SALIR'), _normalizar('FALLBACK')})
+        temas_rag = [
+            {'nombre': i.nombre}
+            for i in self.intencion_ids.filtered(
+                lambda i: i.es_auto_rag
+                and _normalizar(i.nombre or '') not in accion_nombres_menu)
+        ]
+
+        if not flujos_detectados and not temas_rag:
             return self._notificar(
                 'Recargar desde RAG',
                 f"Intenciones RAG regeneradas ({resumen_rag['intenciones']}), "
-                'pero no se detectaron flujos aplicables '
-                '(sin keywords y sin recomendación IA). Se conservó el estado '
-                'actual de los flujos.',
+                'pero no se detectaron flujos ni temas de contenido '
+                'aplicables. Se conservó el estado actual.',
                 'warning')
 
-        self.write({'flujo_ids': [(6, 0, flujos_detectados.ids)]})
-
-        # Menú dinámico por cliente: se regenera desde los flujos detectados
-        # (un mecánico no muestra el mismo menú que una panadería).
-        resultado_menu = self._generar_menu_desde_flujos(flujos_detectados)
+        # Menú dinámico: temas RAG + acciones de flujos detectados
+        resultado_menu = self._generar_menu_desde_flujos(
+            flujos_detectados, temas_rag=temas_rag)
         menu_texto = resultado_menu['texto']
         if menu_texto:
             self.intencion_ids.filtered(
