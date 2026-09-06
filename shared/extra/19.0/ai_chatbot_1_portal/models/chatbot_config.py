@@ -804,6 +804,8 @@ class ChatbotConfig(models.Model):
                 # agente con el resultado de la consulta.
                 'output_largo': '',
                 'es_auto_rag': True,
+                # Regla dura: contenido RAG NUNCA dispara flujo.
+                # Solo intenciones de ACCIÓN llevan flow_id.
             })
             indice += 1
         if vals:
@@ -939,12 +941,19 @@ class ChatbotConfig(models.Model):
         """
         # Intenciones sistema que representan una acción de captura/confirmación.
         accion_nombres = {_normalizar(n) for n in _INTENCIONES_ACCION}
+
+        # Regla dura: contenido NUNCA lleva flow_id. Se limpia primero para
+        # cubrir cualquier caso residual de sincs anteriores.
+        contenido = self.intencion_ids.filtered(
+            lambda i: i.es_auto_rag
+            and _normalizar(i.nombre or '') not in accion_nombres
+            and i.flow_id)
+        if contenido:
+            contenido.write({'flow_id': False})
+
         vinculadas = 0
         for intencion in self.intencion_ids.filtered(lambda i: i.es_auto_rag):
             if _normalizar(intencion.nombre or '') not in accion_nombres:
-                # Contenido / menú / salir / fallback: sin flujo de captura.
-                if intencion.flow_id:
-                    intencion.flow_id = False
                 continue
             texto_i = _normalizar(' '.join(filter(None, [
                 intencion.nombre or '',
