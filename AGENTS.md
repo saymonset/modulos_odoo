@@ -72,7 +72,7 @@ Todo módulo de `extra/19.0` modificado debe pasar sus tests (`--test-enable`) a
 
 ## CI/CD (GitHub Actions)
 
-- Workflow: `.github/workflows/deploy-prod.yml`. Trigger: `push` a `main`. Runner: **self-hosted** en el servidor (label `odoo-prod`). **Estado (verificado 2026-09-04): el runner NO está instalado** (`/home/odoo/actions-runner` no existe); los jobs quedan en cola. Mientras no se reinstale, el deploy es **manual**: `git pull` en prod + upgrade (`-u <cadena>` sin tests) + `docker restart odoo-19-web` + health check `:18069`.
+- Workflow: `.github/workflows/deploy-prod.yml`. Trigger: `push` a `main`. Runner: **self-hosted** en el servidor (label `odoo-prod`). **Estado (verificado 2026-09-07): el runner SÍ está instalado y corriendo** como servicio systemd `actions.runner.saymonset-modulos_odoo.vmi2870902.service` (`/home/odoo/actions-runner`). Si un job queda en cola, verificar: `systemctl status actions.runner.saymonset-modulos_odoo.vmi2870902.service`. Fallback manual si el runner cae: `git pull` en prod + upgrade (`-u <cadena>` sin tests) + `docker restart odoo-19-web` + health check `:18069`.
 - Workflow secundario: `.github/workflows/opencode.yml` — corre opencode en GitHub-hosted runners al comentar `/oc` o `/opencode` en issues/PRs (usa `secrets.OPENCODE_API_KEY`).
 - Pipeline serializado (`concurrency: deploy-prod`): `changes` (detecta módulos `extra/19.0` tocados y resuelve la cadena de deps custom en orden topológico) → `lint` (compileall, claves de manifest, anti-patrón `attrs=` en XML) → `test` (rsync de los módulos al clon **lead**, restart `odoo-19-web-leads`, `-u <cadena> --test-enable` contra staging `dbodoo19`; log como artifact) → `deploy` (`git fetch + merge --ff-only` en el clon **prod**, `-u <cadena>` sin tests en `odoo-19-web`, restart + health check :18069).
 - Push sin cambios en `extra/19.0` → lint/test se skipean y deploy solo hace `git pull`.
@@ -104,9 +104,19 @@ Todo módulo de `extra/19.0` modificado debe pasar sus tests (`--test-enable`) a
 
 - `opencode.jsonc` carga `instructions.md` (respuestas cortas, código en inglés, comentarios en español solo si aportan, clean code/SOLID/DRY) y el skill `~/.agents/skills/odoo-19`. No repetir esas reglas aquí.
 
+## Specs y flujo de features
+
+- Especificaciones numeradas en `specs/NN-*.md` con estado (ej. "implemented"); features grandes se desarrollan vía los skills `spec` / `spec-impl` (el skill impl crea una rama `spec-NN-*` y trabaja en ella; al terminar se mergea a `main` vía PR).
+
 ## Notas de git
 
 - `session-ses_*.md` están en `.gitignore` (no commitear).
 - Tags: usar anotados (`git tag -a <nombre> -m "..."`); `git push origin <tag>` es necesario — un `git push` normal no sube tags.
 - Commits convencionales (`feat:`, `chore:`, `fix:`...). Branches remotas por cliente: `aristosoluciones_client`, `horebplus`, `lead`, `unisa`.
 - Flujo: editar/probar en `lead` → `push` → `pull` en `prod`. Rama default: `main` en ambos clones.
+## MPC
+ - odoo-server : este mcp para trabajar con odoo
+ - playwright : screenshots and Playwright output go in
+## Spec Driven Development
+-/spec Usaremos esa habilidad para crear las especificaciones
+-/spec-impl Usaremos esta skillls para hacer las implementaciones

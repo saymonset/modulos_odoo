@@ -27,6 +27,9 @@ export class CustomPaymentLines extends Component {
         });
 
         onMounted(() => {
+            if ((this.props.paymentLines || []).length > 0) {
+                this.prefillFromRemaining();
+            }
             this.loadRate();
             this._rateInterval = setInterval(() => this.loadRate(), 60000);
         });
@@ -38,9 +41,12 @@ export class CustomPaymentLines extends Component {
         onWillUpdateProps((nextProps) => {
             const prevLen = (this.props.paymentLines || []).length;
             const nextLen = (nextProps.paymentLines || []).length;
-            if (nextLen > prevLen) {
-                this.state.selectedCurrency = "bs";
-                this.state.inputAmount = "";
+            if (nextLen !== prevLen) {
+                if (nextLen > 0) {
+                    this.prefillFromRemaining();
+                } else {
+                    this.state.inputAmount = "";
+                }
             }
         });
     }
@@ -121,6 +127,26 @@ export class CustomPaymentLines extends Component {
         } catch (_) {
             return "";
         }
+    }
+
+    // Restante por pagar en Bs (moneda base). Core auto-llena la línea nueva
+    // con el restante completo, por eso el fallback al monto de la última línea.
+    get remainingInBs() {
+        const order = this.pos.getOrder();
+        const remaining = order ? order.remainingDue : 0;
+        if (remaining > 0) return remaining;
+        const lines = this.props.paymentLines || [];
+        const last = lines[lines.length - 1];
+        const amount = last
+            ? (last.getAmount ? last.getAmount() : (last.get_amount ? last.get_amount() : 0))
+            : 0;
+        return amount || 0;
+    }
+
+    // Pre-llenar el input con el restante, siempre en Bs
+    prefillFromRemaining() {
+        this.state.selectedCurrency = "bs";
+        this.state.inputAmount = this._formatInput(this.remainingInBs);
     }
 
     // ── Actions ──
