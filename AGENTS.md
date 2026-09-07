@@ -120,3 +120,10 @@ Todo módulo de `extra/19.0` modificado debe pasar sus tests (`--test-enable`) a
 ## Spec Driven Development
 -/spec Usaremos esa habilidad para crear las especificaciones
 -/spec-impl Usaremos esta skillls para hacer las implementaciones
+
+## Reglas de codigo
+
+- Usar còdigo limpio, nombres, funciones y variables en ingles en ingles
+
+## Reglas de comunicacion
+- Hbla en espanol en tus sal

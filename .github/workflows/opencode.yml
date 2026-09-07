@@ -23,7 +23,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          ref: main
           persist-credentials: false
 
       - name: Run opencode
@@ -31,4 +30,4 @@ jobs:
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
-          model: opencode-go/glm-5.2
+          model: opencode/deepseek-v4-flash-free
