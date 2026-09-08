@@ -24,6 +24,9 @@ export class CustomPaymentLines extends Component {
             selectedCurrency: "bs",
             inputAmount: "",
             inputFocused: false,
+            _rawDigits: "0",
+            _trailingComma: false,
+            remainingAtSelection: 0,
         });
 
         onMounted(() => {
@@ -45,7 +48,8 @@ export class CustomPaymentLines extends Component {
                 if (nextLen > 0) {
                     this.prefillFromRemaining();
                 } else {
-                    this.state.inputAmount = "";
+                    this.state.inputAmount = "0";
+                    this.state._rawDigits = "0";
                 }
             }
         });
@@ -69,7 +73,7 @@ export class CustomPaymentLines extends Component {
     }
 
     get convertedBs() {
-        const val = parseFloat(this.state.inputAmount) || 0;
+        const val = this._parseEsVE(this.state.inputAmount);
         if (this.state.selectedCurrency === "bs") return val;
         if (this.state.selectedCurrency === "cop") {
             const usdVal = this.state.copRate > 0 ? val / this.state.copRate : 0;
@@ -79,7 +83,7 @@ export class CustomPaymentLines extends Component {
     }
 
     get displayConversion() {
-        const val = parseFloat(this.state.inputAmount) || 0;
+        const val = this._parseEsVE(this.state.inputAmount);
         if (val === 0) return null;
         const rate = this.state.rate || 1;
         const copRate = this.state.copRate || 1;
@@ -113,7 +117,7 @@ export class CustomPaymentLines extends Component {
     }
 
     get canApply() {
-        return parseFloat(this.state.inputAmount) > 0
+        return this._parseEsVE(this.state.inputAmount) > 0
             && this.props.paymentLines
             && this.props.paymentLines.length > 0;
     }
@@ -137,10 +141,20 @@ export class CustomPaymentLines extends Component {
         return order ? Math.max(order.remainingDue, 0) : 0;
     }
 
-    // Pre-llenar el input con el restante, siempre en Bs
+    // Pre-llenar el input con el restante, siempre en Bs.
+    // Si pendingPrefillDue tiene un valor (capturado antes de agregar la línea),
+    // usarlo; si no, caer a remainingInBs (remainingDue actual).
+    // Guarda remainingAtSelection para reutilizar al cambiar de moneda.
     prefillFromRemaining() {
         this.state.selectedCurrency = "bs";
-        this.state.inputAmount = this._formatInput(this.remainingInBs);
+        const due = posState.pendingPrefillDue != null
+            ? Math.max(posState.pendingPrefillDue, 0)
+            : this.remainingInBs;
+        posState.pendingPrefillDue = null;
+        this.state.remainingAtSelection = due;
+        this.state._rawDigits = String(due);
+        this.state._trailingComma = false;
+        this.state.inputAmount = this._formatDisplay(due, false);
     }
 
     // ── Actions ──
@@ -148,21 +162,45 @@ export class CustomPaymentLines extends Component {
     selectCurrency(currencyId) {
         if (currencyId === this.state.selectedCurrency) return;
         this.state.selectedCurrency = currencyId;
-        this.state.inputAmount = "";
+        this._prefillForCurrency();
+    }
+
+    // Pre-llenar con el deudor en la moneda seleccionada
+    _prefillForCurrency() {
+        const bsAmount = this.state.remainingAtSelection || this.remainingInBs;
+        const rate = this.state.rate || 1;
+        const copRate = this.state.copRate || 1;
+        let value;
+        if (this.state.selectedCurrency === "usd") {
+            value = rate > 0 ? bsAmount / rate : 0;
+        } else if (this.state.selectedCurrency === "cop") {
+            value = rate > 0 && copRate > 0 ? (bsAmount / rate) * copRate : 0;
+        } else {
+            value = bsAmount;
+        }
+        const formatted = this._formatDisplay(value, false);
+        this.state._rawDigits = String(Math.round(value * 100) / 100);
+        this.state._trailingComma = false;
+        this.state.inputAmount = formatted;
     }
 
     onInputChange(ev) {
         const raw = ev.target.value;
         if (raw === "") {
             this.state.inputAmount = "";
+            this.state._rawDigits = "0";
             return;
         }
-        let sanitized = raw.replace(/,/g, "").replace(/^0+(\d)/, "$1");
-        if (sanitized === ".") sanitized = "0.";
-        if (sanitized.startsWith(".")) sanitized = "0" + sanitized;
-        if (/^-?\d*\.?\d*$/.test(sanitized)) {
-            this.state.inputAmount = sanitized;
-        }
+        // Parse es-VE: quitar puntos de miles, coma→punto
+        const stripped = raw.replace(/\./g, "").replace(",", ".");
+        this.state._trailingComma = raw.endsWith(",");
+        const digitsOnly = stripped.replace(/[^0-9.]/g, "");
+        let value = parseFloat(digitsOnly);
+        if (!isFinite(value) || value < 0) return;
+        value = Math.round(value * 100) / 100;
+        this.state._rawDigits = String(value);
+        const showDecimals = raw.includes(",");
+        this.state.inputAmount = this._formatDisplay(value, showDecimals);
     }
 
     applyToPaymentLine() {
@@ -193,9 +231,9 @@ export class CustomPaymentLines extends Component {
             target.currency_type = this.state.selectedCurrency;
             target.rate_applied = this.state.selectedCurrency === "cop" ? this.state.copRate : this.state.rate;
             if (this.state.selectedCurrency === "usd") {
-                target.amount_foreign = parseFloat(this.state.inputAmount) || 0;
+                target.amount_foreign = this._parseEsVE(this.state.inputAmount);
             } else if (this.state.selectedCurrency === "cop") {
-                const usdVal = this.state.copRate > 0 ? (parseFloat(this.state.inputAmount) || 0) / this.state.copRate : 0;
+                const usdVal = this.state.copRate > 0 ? this._parseEsVE(this.state.inputAmount) / this.state.copRate : 0;
                 target.amount_foreign = Math.round(usdVal * 100) / 100;
             } else {
                 target.amount_foreign = this.state.rate > 0
@@ -204,7 +242,10 @@ export class CustomPaymentLines extends Component {
             }
         }
 
-        this.state.inputAmount = "";
+        this.state.inputAmount = "0";
+        this.state._rawDigits = "0";
+        this.state._trailingComma = false;
+        this.state.remainingAtSelection = 0;
     }
 
     onKeydown(ev) {
@@ -230,20 +271,39 @@ export class CustomPaymentLines extends Component {
         } else {
             value = remainingBs;
         }
-        this.state.inputAmount = this._formatInput(value);
+        this.state.inputAmount = this._formatDisplay(value, false);
+        this.state._rawDigits = String(Math.round(value * 100) / 100);
+        this.state._trailingComma = false;
         this.applyToPaymentLine();
     }
 
     clearInput() {
-        this.state.inputAmount = "";
+        this.state.inputAmount = "0";
+        this.state._rawDigits = "0";
+        this.state._trailingComma = false;
     }
 
-    _formatInput(value) {
-        if (!isFinite(value) || value <= 0) return "";
+    // ── Formatting helpers (es-VE) ──
+
+    // Parsear formato es-VE: quitar puntos de miles, coma→punto decimal
+    _parseEsVE(raw) {
+        if (raw == null || raw === "" || raw === "0") return 0;
+        const stripped = raw.replace(/\./g, "").replace(",", ".");
+        const val = parseFloat(stripped);
+        return isFinite(val) ? val : 0;
+    }
+
+    // Formatear número con estilo es-VE: puntos de miles, coma decimal.
+    // decimals=true siempre muestra 2 decimales; decimals=false solo si los tiene.
+    _formatDisplay(value, { decimals = false } = {}) {
+        if (!isFinite(value) || value < 0) return "0";
         const rounded = Math.round(value * 100) / 100;
-        return Number.isInteger(rounded)
-            ? String(rounded)
-            : rounded.toFixed(2).replace(/\.?0+$/, "");
+        const hasDecimals = !Number.isInteger(rounded) || decimals;
+        const formatted = rounded.toLocaleString("es-VE", {
+            minimumFractionDigits: hasDecimals ? 2 : 0,
+            maximumFractionDigits: 2,
+        });
+        return formatted;
     }
 
     // ── Rate ──

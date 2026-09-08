@@ -25,6 +25,8 @@ patch(PaymentScreen.prototype, {
 
         const dueBefore = this.currentOrder?.remainingDue || 0;
 
+        posState.pendingPrefillDue = dueBefore;
+
         const result = await super.addNewPaymentLine(paymentMethod);
 
         if (paymentMethod.is_igtf && dueBefore > 0) {

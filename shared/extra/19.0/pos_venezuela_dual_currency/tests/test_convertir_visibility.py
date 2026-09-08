@@ -36,3 +36,27 @@ class TestConvertirVisibility(TransactionCase):
         # El fallback a la última línea de pago reinyectaba la deuda completa
         self.assertNotIn("getAmount", js)
         self.assertNotIn("get_amount", js)
+
+    def test_04_pending_prefill_due_in_shared_state(self):
+        js = self._read(JS_PATH)
+        self.assertIn("pendingPrefillDue", js)
+
+    def test_05_prefill_consumes_and_resets_pending(self):
+        js = self._read(JS_PATH)
+        self.assertIn("posState.pendingPrefillDue != null", js)
+        self.assertIn('posState.pendingPrefillDue = null', js)
+
+    def test_06_parse_es_ve_removes_thousands_separator(self):
+        js = self._read(JS_PATH)
+        self.assertIn("_parseEsVE", js)
+        self.assertIn("_formatDisplay", js)
+
+    def test_07_select_currency_prefills_converted_remaining(self):
+        js = self._read(JS_PATH)
+        self.assertIn("_prefillForCurrency", js)
+        self.assertIn("remainingAtSelection", js)
+
+    def test_08_restante_zero_shows_zero(self):
+        js = self._read(JS_PATH)
+        self.assertIn('_formatDisplay(due, false)', js)
+        self.assertIn('return "0"', js)
