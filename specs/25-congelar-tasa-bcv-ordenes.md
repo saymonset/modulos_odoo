@@ -1,6 +1,6 @@
 # SPEC 25 — Congelar tasa BCV en órdenes de venta, compra y facturas
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** — (módulo `bcv_rate_update_venezuela` ≥ 19.0)
 > **Date:** 2026-09-08
 > **Objective:** Que cada orden de venta, compra y factura congele la tasa BCV al momento de su creación/confirmación, de modo que los totales Bs, USD y VES sean consistentes entre sí y no cambien cuando la tasa del BCV se actualiza después.
