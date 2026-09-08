@@ -49,6 +49,12 @@ class AccountMove(models.Model):
         ('mercadolibre', 'MercadoLibre'),
     ], string='Nivel de precio', readonly=True)
 
+    bcv_rate_frozen = fields.Float(
+        string='Tasa BCV congelada',
+        digits=(12, 2),
+        default=0.0,
+    )
+
     @api.depends('currency_id')
     def _compute_currency_aux(self):
         usd = self.env.ref('base.USD', raise_if_not_found=False)
@@ -61,10 +67,23 @@ class AccountMove(models.Model):
         for move in self:
             move.currency_aux_cop = cop if cop else move.company_id.currency_id
 
-    @api.depends('company_id', 'amount_total_usd')
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if not vals.get('bcv_rate_frozen'):
+                company = self.env['res.company'].browse(vals.get('company_id', self.env.company.id))
+                rate = self.env['product.template']._get_bcv_rate(company)
+                if rate:
+                    vals['bcv_rate_frozen'] = rate
+        return super().create(vals_list)
+
+    @api.depends('company_id', 'amount_total_usd', 'bcv_rate_frozen')
     def _compute_bcv_rate_value(self):
         for move in self:
-            rate = self.env['product.template']._get_bcv_rate(move.company_id)
+            if move.bcv_rate_frozen > 0:
+                rate = move.bcv_rate_frozen
+            else:
+                rate = self.env['product.template']._get_bcv_rate(move.company_id)
             move.bcv_rate_value = rate if rate else 1.0
             move.amount_total_ves_from_usd = move.amount_total_usd * move.bcv_rate_value if move.amount_total_usd else 0.0
 

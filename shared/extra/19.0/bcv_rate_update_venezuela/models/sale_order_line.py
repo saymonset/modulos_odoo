@@ -66,10 +66,13 @@ class SaleOrderLine(models.Model):
         })
         return res
 
-    @api.depends('price_unit', 'product_uom_qty', 'discount')
+    @api.depends('price_unit', 'product_uom_qty', 'discount', 'order_id.bcv_rate_frozen')
     def _compute_usd_bcv(self):
         for line in self:
-            rate_val = self.env['product.template']._get_bcv_rate(line.order_id.company_id)
+            if line.order_id.bcv_rate_frozen > 0:
+                rate_val = line.order_id.bcv_rate_frozen
+            else:
+                rate_val = self.env['product.template']._get_bcv_rate(line.order_id.company_id)
             cop_rate = self.env['product.template']._get_cop_rate(line.order_id.company_id)
             line.rate_value = rate_val
             line.rate_value_cop = cop_rate
