@@ -29,3 +29,10 @@ class TestConvertirVisibility(TransactionCase):
         self.assertIn("prefillFromRemaining()", js)
         self.assertIn('selectedCurrency = "bs"', js)
         self.assertIn("remainingInBs", js)
+
+    def test_03_remaining_in_bs_uses_remaining_due_without_fallback(self):
+        js = self._read(JS_PATH)
+        self.assertIn("Math.max(order.remainingDue, 0)", js)
+        # El fallback a la última línea de pago reinyectaba la deuda completa
+        self.assertNotIn("getAmount", js)
+        self.assertNotIn("get_amount", js)

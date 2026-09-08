@@ -129,18 +129,12 @@ export class CustomPaymentLines extends Component {
         }
     }
 
-    // Restante por pagar en Bs (moneda base). Core auto-llena la línea nueva
-    // con el restante completo, por eso el fallback al monto de la última línea.
+    // Restante por pagar en Bs (moneda base). Piso en 0 para evitar
+    // pre-llenados negativos (IGTF/cambio) y para que la deuda cubierta
+    // pre-llene vacío en lugar de reinyectar montos de líneas previas.
     get remainingInBs() {
         const order = this.pos.getOrder();
-        const remaining = order ? order.remainingDue : 0;
-        if (remaining > 0) return remaining;
-        const lines = this.props.paymentLines || [];
-        const last = lines[lines.length - 1];
-        const amount = last
-            ? (last.getAmount ? last.getAmount() : (last.get_amount ? last.get_amount() : 0))
-            : 0;
-        return amount || 0;
+        return order ? Math.max(order.remainingDue, 0) : 0;
     }
 
     // Pre-llenar el input con el restante, siempre en Bs
