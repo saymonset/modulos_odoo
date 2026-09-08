@@ -4,6 +4,7 @@ export const posState = {
     currentOrder: null,
     paymentMethodName: '',
     is_igtf: false,
+    pendingPrefillDue: null,
 
     setCurrentOrder(order) {
         this.currentOrder = order;
