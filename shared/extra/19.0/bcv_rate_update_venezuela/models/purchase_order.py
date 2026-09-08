@@ -49,6 +49,12 @@ class PurchaseOrder(models.Model):
         ('mercadolibre', 'MercadoLibre'),
     ], string='Nivel de precio', default='retail')
 
+    bcv_rate_frozen = fields.Float(
+        string='Tasa BCV congelada',
+        digits=(12, 2),
+        default=0.0,
+    )
+
     @api.onchange('price_tier_type')
     def _onchange_price_tier_type(self):
         for order in self:
@@ -73,6 +79,16 @@ class PurchaseOrder(models.Model):
         for order in self:
             order.currency_aux_cop = cop if cop else order.company_id.currency_id
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if not vals.get('bcv_rate_frozen'):
+                company = self.env['res.company'].browse(vals.get('company_id', self.env.company.id))
+                rate = self.env['product.template']._get_bcv_rate(company)
+                if rate:
+                    vals['bcv_rate_frozen'] = rate
+        return super().create(vals_list)
+
     @api.depends('order_line.price_subtotal_usd_bcv', 'order_line.price_subtotal_cop')
     def _compute_amount_total_usd(self):
         for order in self:
@@ -83,9 +99,12 @@ class PurchaseOrder(models.Model):
                 line.price_subtotal_cop for line in order.order_line
             )
 
-    @api.depends('company_id', 'amount_total_usd')
+    @api.depends('company_id', 'amount_total_usd', 'bcv_rate_frozen')
     def _compute_bcv_rate_value(self):
         for order in self:
-            rate = self.env['product.template']._get_bcv_rate(order.company_id)
+            if order.bcv_rate_frozen > 0:
+                rate = order.bcv_rate_frozen
+            else:
+                rate = self.env['product.template']._get_bcv_rate(order.company_id)
             order.bcv_rate_value = rate if rate else 1.0
             order.amount_total_ves_from_usd = order.amount_total_usd * order.bcv_rate_value if order.amount_total_usd else 0.0
