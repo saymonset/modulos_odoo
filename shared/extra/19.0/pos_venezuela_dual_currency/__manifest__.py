@@ -1,7 +1,7 @@
 {
     'name': 'POS Venezuela Dual Currency + IGTF',
     'summary': 'Referencias USD en POS, conversión Bs/USD e IGTF usando tasa BCV',
-    'version': '19.0.1.5.0',
+    'version': '19.0.1.6.0',
     'category': 'Sales/Point of Sale',
     'author': 'Simon Alberto Rodriguez Pacheco',
     'website': 'https://github.com/simonrodriguezpacheco',
@@ -18,6 +18,7 @@
         'views/pos_session_views.xml',
         'views/pos_order_views.xml',
         'views/pos_config_kanban_views.xml',
+        'views/product_template_pos_views.xml',
     ],
     'assets': {
         'point_of_sale._assets_pos': [
