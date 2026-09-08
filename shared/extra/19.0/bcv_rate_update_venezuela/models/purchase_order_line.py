@@ -67,11 +67,13 @@ class PurchaseOrderLine(models.Model):
             if tier and tier.price_ves:
                 self.price_unit = tier.price_ves
 
-    @api.depends('price_unit', 'product_qty')
+    @api.depends('price_unit', 'product_qty', 'order_id.bcv_rate_frozen')
     def _compute_usd_bcv(self):
         for line in self:
             company = line.order_id.company_id
-            if company.bcv_manual_rate_active and company.bcv_manual_rate > 0:
+            if line.order_id.bcv_rate_frozen > 0:
+                rate_val = line.order_id.bcv_rate_frozen
+            elif company.bcv_manual_rate_active and company.bcv_manual_rate > 0:
                 rate_val = company.bcv_manual_rate
             else:
                 main_provider = self.env['currency.rate.provider'].sudo().search([
