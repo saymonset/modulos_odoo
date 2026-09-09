@@ -13,7 +13,7 @@
       "template": "Carga y sigue la skill spec-impl en .agents/skills/spec-impl/SKILL.md.\n\nFeature: $ARGUMENTS"
     }
   },
-  "instructions": ["/home/odoo/prod/modulos_odoo/instructions.md"],
+  "instructions": ["instructions.md"],
   "mcp": {
     "odoo-server": {
       "type": "local",

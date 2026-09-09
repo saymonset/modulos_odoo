@@ -33,6 +33,9 @@ Bind mounts:
 4. Snippets Python vía `docker exec ... python3 -c "..."` siempre en **una sola línea**.
 5. Token chatbot (n8n ↔ Odoo): verificar que coincida en TODAS las BDs (lead.integraia.lat → leads/dbodoo19; integraia.lat → prod/dbodoo19).
 
-## Scripts con rutas desactualizadas
+## Scripts del repo
 
-README y scripts referencian `/home/odoo/modulos_odoo/` (ruta vieja, **no existe**). Scripts `3_ver_modulos.sh` y `9_3_mover_destino_aqui.sh` tienen rutas hardcodeadas desactualizadas.
+Los scripts raíz (`3_ver_modulos.sh`, `mover_modulos_aqui.sh`, `actualizar_modulos.sh`)
+son portables: detectan la raíz del repo con `git rev-parse --show-toplevel`.
+`actualizar_modulos.sh` es el reemplazo del deploy manual en VPS sin runner (usa
+`PROD_WEB=odoo-19-web`, `PROD_DB=dbodoo19`, health `:18069` por convención).
