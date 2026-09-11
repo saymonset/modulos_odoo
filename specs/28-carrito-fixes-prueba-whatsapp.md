@@ -10,6 +10,7 @@
 **In:**
 
 - Fix 1 — `controllers/chatbot_cart_controller.py`: la acción `BUSCAR` guarda los resultados en `carrito['ultima_busqueda']` (vía `session._guardar_carrito`) para que "responde el número" resuelva el producto.
+- Fix 1b — `services/product_buscar.py`: devuelve el id de la variante (`tmpl.product_variant_id.id`) en vez del id del template, para que la referencia numérica y la búsqueda por nombre agreguen el producto correcto (el carrito opera sobre `product.product`).
 - Fix 2 — `models/sale_order.py`: `_resolver_partner(session_id, phone=None, conversation_id=None)` recibe `conversation_id`; si no hay teléfono, lo recupera del `estado` de la sesión (`datos_paciente.phone/solicitar_phone/telefono`); se elimina el lookup global de `whatsapp.history` (tomaba el último mensaje entrante de cualquier conversación). Sin teléfono en ningún lado → partner genérico "Cliente Chatbot {session_id}".
 - Tests nuevos para ambos fixes; los 46 existentes siguen en verde.
 - Bump `__manifest__.py` de `chatbot_cart` a `19.0.1.1.0`.
@@ -53,6 +54,7 @@ Esta feature no introduce estructuras nuevas. Reutiliza:
 ## Decisions
 
 - **Sí:** arreglar solo los 2 defectos conocidos; el resto del módulo ya pasa 46 tests.
+- **Sí:** `product_buscar` devuelve `product.product` (variante por defecto) y no el id del template: el carrito y `agregar` operan sobre `product.product`, así la referencia numérica y la búsqueda por nombre agregan el producto correcto.
 - **Sí:** resolver el partner por la sesión (`estado`) antes que crear genérico; elimina el bug del partner aleatorio global.
 - **Sí:** eliminar el lookup de `whatsapp.history` en vez de filtrarlo: el modelo no tiene `conversation_id`, así que no hay forma correcta de filtrar.
 - **Sí:** probar WhatsApp en staging con el mismo número redirigiendo n8n; prod no tiene `chatbot_cart` aún.

@@ -34,16 +34,17 @@ class ProductBuscarService:
         rates = CartService._get_rates_info(env)
         productos = []
         for tmpl in templates:
+            product = tmpl.product_variant_id
             price_ves, price_usd, price_cop = CartService._precios_producto(env, tmpl)
             productos.append({
-                'product_id': tmpl.id,
+                'product_id': product.id,
                 'name': tmpl.name,
                 'default_code': tmpl.default_code or '',
                 'price_ves': price_ves,
                 'price_usd': price_usd,
                 'price_cop': price_cop if rates[_COP_SHOW_KEY] else 0.0,
                 'show_cop': rates[_COP_SHOW_KEY],
-                'image_url': f'/web/image/product.template/{tmpl.id}/image_128',
+                'image_url': f'/web/image/product.product/{product.id}/image_128',
                 'has_image': bool(tmpl.image_128),
             })
 
