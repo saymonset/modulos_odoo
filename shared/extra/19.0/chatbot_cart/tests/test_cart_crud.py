@@ -167,3 +167,58 @@ class TestMaterializarOrden(BaseChatbotCartTestCase):
             self.session_id, phone='+584121234567')
         self.assertTrue(order)
         self.assertEqual(order.partner_id.phone, '+584121234567')
+
+
+@tagged("-at_install", "post_install")
+class TestUltimaBusqueda(BaseChatbotCartTestCase):
+    """Fix: buscar guarda ultima_busqueda para resolver por número."""
+
+    def test_20_buscar_guarda_ultima_busqueda(self):
+        self._configurar_tasas(bcv_rate=20.0)
+        from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import ChatbotCartController
+        from odoo.addons.chatbot_cart.services.cart_service import CartService
+        ChatbotCartController()._ejecutar(
+            self.env, self.session_id, None, None, 'whatsapp',
+            'BUSCAR', 'CAM-R', 0, [])
+        carrito = CartService().consultar(self.env, self.session_id)
+        self.assertEqual(len(carrito['ultima_busqueda']), 1)
+        self.assertEqual(carrito['ultima_busqueda'][0]['product_id'], self.product_a.id)
+        self.assertEqual(carrito['ultima_busqueda'][0]['name'], 'Camisa Roja')
+
+    def test_21_referencia_numerica_resuelve_producto(self):
+        ultima_busqueda = [
+            {'product_id': self.product_a.id, 'name': 'Camisa Roja', 'price_usd': 6.50},
+            {'product_id': self.product_b.id, 'name': 'Camisa Azul', 'price_usd': 7.00},
+        ]
+        from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import ChatbotCartController
+        product_id, mensaje = ChatbotCartController()._resolver_producto(
+            self.env, self.session_id, '2', ultima_busqueda)
+        self.assertEqual(product_id, self.product_b.id)
+        self.assertEqual(mensaje, '')
+
+
+@tagged("-at_install", "post_install")
+class TestResolverPartner(BaseChatbotCartTestCase):
+    """Fix: resolver partner por sesión, nunca por historial global."""
+
+    def test_22_partner_generico_sin_telefono(self):
+        partner = self.env['sale.order'].sudo()._resolver_partner(self.session_id)
+        self.assertEqual(partner.name, f'Cliente Chatbot {self.session_id}')
+        self.assertFalse(partner.phone)
+
+    def test_23_partner_desde_telefono_capturado_en_sesion(self):
+        self.env['chatbot.session'].sudo().create({
+            'session_id': self.session_id,
+            'estado': {'datos_paciente': {'solicitar_phone': '+584121234567'}},
+        })
+        partner = self.env['sale.order'].sudo()._resolver_partner(self.session_id)
+        self.assertEqual(partner.phone, '+584121234567')
+
+    def test_24_telefono_explicito_gana_al_de_sesion(self):
+        self.env['chatbot.session'].sudo().create({
+            'session_id': self.session_id,
+            'estado': {'datos_paciente': {'solicitar_phone': '+584120000000'}},
+        })
+        partner = self.env['sale.order'].sudo()._resolver_partner(
+            self.session_id, phone='+584121234567')
+        self.assertEqual(partner.phone, '+584121234567')
