@@ -1,6 +1,6 @@
 # SPEC 27 — Carrito de compra por WhatsApp con IA
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** módulos `ai_chatbot_1_portal`, `whatsapp_cloud_integration`, `bcv_rate_update_venezuela`
 > **Date:** 2026-09-11
 > **Objective:** Permitir comprar por WhatsApp: el usuario consulta productos (con imagen), arma un carrito con operaciones fáciles (ver, agregar, quitar, modificar, volver, cancelar) y paga enviando el vaucher, reutilizando los módulos de chatbot, WhatsApp y bcv.
