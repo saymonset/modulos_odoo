@@ -1,6 +1,6 @@
 # SPEC 29 — Flujo de carrito universal creado inactivo, activación manual
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 28 (fixes carrito + prueba WhatsApp)
 > **Date:** 2026-09-11
 > **Objective:** Que el flujo del carrito se cree siempre con el nombre `flujo_carrito_compra`, nacido **inactivo** y sin pasos; solo se activa manualmente si la empresa lo desea, y el prompt del agente solo lo menciona cuando el negocio tiene productos vendibles con precio y el flujo está activo.

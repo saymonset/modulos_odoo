@@ -222,3 +222,34 @@ class TestResolverPartner(BaseChatbotCartTestCase):
         partner = self.env['sale.order'].sudo()._resolver_partner(
             self.session_id, phone='+584121234567')
         self.assertEqual(partner.phone, '+584121234567')
+
+
+@tagged("-at_install", "post_install")
+class TestGateCarrito(BaseChatbotCartTestCase):
+    """SPEC 29: gate de disponibilidad del carrito (productos + flujo activo)."""
+
+    def test_25_disponible_true_con_productos(self):
+        from odoo.addons.chatbot_cart.services.cart_service import CartService
+        self.assertTrue(CartService.disponible(self.env))
+
+    def test_26_gate_false_si_flujo_inactivo(self):
+        from odoo.addons.chatbot_cart.controllers.configuracion_agente_controller import (
+            ConfiguracionAgenteCartController,
+        )
+        flujo = self.env['chatbot.flujo'].sudo().with_context(
+            active_test=False).search(
+            [('name', '=', 'flujo_carrito_compra')], limit=1)
+        self.assertTrue(flujo, 'flujo_carrito_compra debe existir')
+        flujo.sudo().write({'active': False})
+        self.assertFalse(ConfiguracionAgenteCartController._carrito_disponible(self.env))
+
+    def test_27_gate_true_si_flujo_activo(self):
+        from odoo.addons.chatbot_cart.controllers.configuracion_agente_controller import (
+            ConfiguracionAgenteCartController,
+        )
+        flujo = self.env['chatbot.flujo'].sudo().with_context(
+            active_test=False).search(
+            [('name', '=', 'flujo_carrito_compra')], limit=1)
+        self.assertTrue(flujo, 'flujo_carrito_compra debe existir')
+        flujo.sudo().write({'active': True})
+        self.assertTrue(ConfiguracionAgenteCartController._carrito_disponible(self.env))

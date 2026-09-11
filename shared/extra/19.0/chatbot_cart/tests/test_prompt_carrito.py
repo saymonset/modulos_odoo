@@ -12,13 +12,14 @@ class TestPromptCarrito(BaseChatbotCartTestCase):
             render_instrucciones_carrito,
         )
         bloque = render_instrucciones_carrito()
-        self.assertIn('flujo_carrito', bloque)
+        self.assertIn('flujo_carrito_compra', bloque)
         self.assertIn('/chatbot_cart/procesar', bloque)
+        self.assertNotIn('flujo_carrito\n', bloque)
 
         prompt = '=== ESQUELETO ==='
         nuevo = append_cart_instructions(prompt)
         self.assertIn('CARRITO DE COMPRAS', nuevo)
-        self.assertIn('flujo_carrito', nuevo)
+        self.assertIn('flujo_carrito_compra', nuevo)
 
     def test_02_append_no_duplica(self):
         from odoo.addons.chatbot_cart.services.prompt_carrito import append_cart_instructions
