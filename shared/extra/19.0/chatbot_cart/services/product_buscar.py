@@ -3,7 +3,7 @@
 
 from odoo import fields
 
-from .cart_service import CartService
+from .cart_service import CartService, _RATE_BCV_KEY, _RATE_COP_KEY, _COP_SHOW_KEY
 
 
 class ProductBuscarService:
@@ -41,8 +41,8 @@ class ProductBuscarService:
                 'default_code': tmpl.default_code or '',
                 'price_ves': price_ves,
                 'price_usd': price_usd,
-                'price_cop': price_cop if rates[CartService._COP_SHOW_KEY] else 0.0,
-                'show_cop': rates[CartService._COP_SHOW_KEY],
+                'price_cop': price_cop if rates[_COP_SHOW_KEY] else 0.0,
+                'show_cop': rates[_COP_SHOW_KEY],
                 'image_url': f'/web/image/product.template/{tmpl.id}/image_128',
                 'has_image': bool(tmpl.image_128),
             })
@@ -52,9 +52,9 @@ class ProductBuscarService:
             'query': q,
             'productos': productos,
             'count': len(productos),
-            'bcv_rate': rates[CartService._RATE_BCV_KEY],
-            'cop_rate': rates[CartService._RATE_COP_KEY] if rates[CartService._COP_SHOW_KEY] else 0.0,
-            'show_cop': rates[CartService._COP_SHOW_KEY],
+            'bcv_rate': rates[_RATE_BCV_KEY],
+            'cop_rate': rates[_RATE_COP_KEY] if rates[_COP_SHOW_KEY] else 0.0,
+            'show_cop': rates[_COP_SHOW_KEY],
         }
 
     def formato_lista_productos(self, result):

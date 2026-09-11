@@ -1,6 +1,6 @@
 from odoo import http
 from odoo.http import request
-from odoo.tools import Markup
+from markupsafe import Markup
 import json
 import logging
 import base64
@@ -54,7 +54,6 @@ class WhatsappWebhook(http.Controller):
 
                             # Buscar el partner por teléfono (debes manejar el formato)
                             partner = request.env['res.partner'].sudo().search([
-                                '|', ('mobile', 'ilike', from_number),
                                 ('phone', 'ilike', from_number)
                             ], limit=1)
 
@@ -62,7 +61,6 @@ class WhatsappWebhook(http.Controller):
                                 # Si no existe, podrías crearlo automáticamente (opcional)
                                 partner = request.env['res.partner'].sudo().create({
                                     'name': from_number,
-                                    'mobile': from_number,
                                     'phone': from_number,
                                 })
 

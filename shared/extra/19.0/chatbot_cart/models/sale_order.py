@@ -59,7 +59,6 @@ class SaleOrder(models.Model):
             partner_vals = {
                 'name': phone,
                 'phone': phone,
-                'mobile': phone,
             }
             return self.env['res.partner'].sudo().create(partner_vals)
 
