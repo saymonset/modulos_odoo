@@ -1,6 +1,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 import requests
+import base64
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -53,3 +54,40 @@ class WABAAccount(models.Model):
                 raise UserError(_(f'❌ Error {response.status_code}: {error_msg}'))
         except requests.exceptions.RequestException as e:
             raise UserError(_(f'❌ Error de red: {e}'))
+
+    def download_media(self, media_id):
+        """Descarga un archivo de media de WhatsApp (imagen, video, etc.).
+
+        Meta devuelve la URL real del media en una primera llamada; luego se
+        descarga con el access_token de la cuenta.
+
+        :return: (datos_base64, mimetype, filename) o (None, None, None) si falla.
+        """
+        self.ensure_one()
+        headers = {'Authorization': f'Bearer {self.access_token}'}
+        try:
+            # 1) Obtener la URL real del media
+            url_resp = requests.get(
+                f"https://graph.facebook.com/v25.0/{media_id}",
+                headers=headers, timeout=15)
+            url_resp.raise_for_status()
+            media_info = url_resp.json()
+            media_url = media_info.get('url')
+            mime_type = media_info.get('mime_type', 'application/octet-stream')
+            if not media_url:
+                _logger.error(f"Media {media_id} sin URL en la respuesta de Meta")
+                return None, None, None
+
+            # 2) Descargar el binario
+            file_resp = requests.get(media_url, headers=headers, timeout=30)
+            file_resp.raise_for_status()
+            file_bytes = file_resp.content
+
+            ext = mime_type.split('/')[-1].split(';')[0] or 'bin'
+            if ext == 'jpeg':
+                ext = 'jpg'
+            filename = f"whatsapp_media_{media_id}.{ext}"
+            return base64.b64encode(file_bytes).decode('utf-8'), mime_type, filename
+        except Exception as e:
+            _logger.error(f"Error descargando media {media_id}: {e}")
+            return None, None, None
