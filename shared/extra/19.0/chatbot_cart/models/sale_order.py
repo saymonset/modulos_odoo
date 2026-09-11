@@ -27,7 +27,7 @@ class SaleOrder(models.Model):
         if not items:
             return False
 
-        partner = self._resolver_partner(session_id, phone)
+        partner = self._resolver_partner(session_id, phone, conversation_id)
         order_vals = {
             'partner_id': partner.id,
             'company_id': self.env.company.id,
@@ -49,30 +49,38 @@ class SaleOrder(models.Model):
         session._limpiar_carrito(session_id)
         return order
 
-    def _resolver_partner(self, session_id, phone=None):
-        """Resuelve el partner del carrito por teléfono; si no existe, lo crea."""
+    def _resolver_partner(self, session_id, phone=None, conversation_id=None):
+        """Resuelve el partner del carrito por teléfono; si no existe, lo crea.
+
+        Prioridad: teléfono recibido → teléfono capturado en la sesión →
+        partner genérico. Nunca usa el historial global de WhatsApp (podría
+        pertenecer a otra conversación).
+
+        conversation_id se conserva en la firma para compatibilidad; la
+        resolución por sesión cubre el caso sin teléfono.
+        """
+        phone = phone or self._phone_de_sesion(session_id)
         if phone:
             from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import ChatBotUtils
             partner = ChatBotUtils.find_partner_by_phone(self.env, phone)
             if partner:
                 return partner
-            partner_vals = {
+            return self.env['res.partner'].sudo().create({
                 'name': phone,
                 'phone': phone,
-            }
-            return self.env['res.partner'].sudo().create(partner_vals)
-
-        # Sin teléfono: reusar el partner del historial de WhatsApp más reciente
-        # de esta conversación (si existe), si no crear uno genérico.
-        history = self.env['whatsapp.history'].sudo().search([
-            ('direction', '=', 'incoming'),
-            ('recipient_number', '!=', False),
-        ], order='create_date desc', limit=1)
-        if history and history.partner_id:
-            return history.partner_id
+            })
 
         partner_vals = {
             'name': f'Cliente Chatbot {session_id}',
             'comment': f'Sesión chatbot sin teléfono: {session_id}',
         }
         return self.env['res.partner'].sudo().create(partner_vals)
+
+    def _phone_de_sesion(self, session_id):
+        """Recupera el teléfono capturado en el estado de la sesión, si existe."""
+        session = self.env['chatbot.session'].sudo().search(
+            [('session_id', '=', session_id)], limit=1)
+        if not session:
+            return ''
+        datos = (session.estado or {}).get('datos_paciente') or {}
+        return datos.get('phone') or datos.get('solicitar_phone') or datos.get('telefono') or ''
