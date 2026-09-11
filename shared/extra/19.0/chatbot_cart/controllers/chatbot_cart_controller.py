@@ -148,6 +148,19 @@ class ChatbotCartController(http.Controller):
 
         if accion == 'BUSCAR':
             result = self.SEARCH_SERVICE.buscar(env, producto_ref, limit=5)
+            if result.get('success'):
+                carrito = session._get_carrito(session_id)
+                carrito['ultima_busqueda'] = [
+                    {
+                        'product_id': p['product_id'],
+                        'name': p['name'],
+                        'default_code': p.get('default_code', ''),
+                        'price_usd': p.get('price_usd', 0.0),
+                        'image_url': p.get('image_url', ''),
+                    }
+                    for p in result.get('productos', [])
+                ]
+                session._guardar_carrito(session_id, carrito)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
                 self.SEARCH_SERVICE.formato_lista_productos(result),
