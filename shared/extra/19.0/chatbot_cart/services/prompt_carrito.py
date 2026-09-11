@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Instrucciones del carrito de compra inyectadas en el system prompt del agente."""
 
-_FLOW_CARTO = 'flujo_carrito'
+_FLOW_CARTO = 'flujo_carrito_compra'
 
-_CART_INSTRUCTIONS = """=== CARRITO DE COMPRAS (flujo_carrito) ===
+_CART_INSTRUCTIONS = """=== CARRITO DE COMPRAS (flujo_carrito_compra) ===
 Cuando el usuario CONFIRME que quiere comprar (responde "sí" a tu pregunta de
 confirmación de compra, o dice "quiero comprar", "quiero pedir"), activa el
-flujo flujo_carrito con equipo_asignado={flow_name} y flow_name="{flow_name}".
+flujo flujo_carrito_compra con equipo_asignado={flow_name} y flow_name="{flow_name}".
 UNA VEZ ACTIVADO, el manejo del carrito (buscar productos, agregar, quitar,
 modificar cantidades, ver el carrito, pagar, cancelar) lo gestiona Odoo a
 través del endpoint /chatbot_cart/procesar. NO respondas tú a las operaciones
@@ -17,7 +17,7 @@ Reglas:
 - El endpoint muestra productos con imagen y precio (VES/USD/COP si aplica).
 - Si el usuario pregunta por un producto SIN confirmar compra, respóndele con
   Base_Conocimiento_RAG (regla 13) y cierra ofreciendo hacer el pedido.
-- Si el usuario confirma el pedido pero NO has activado aún flujo_carrito,
+- Si el usuario confirma el pedido pero NO has activado aún flujo_carrito_compra,
   haz la pregunta de confirmación (regla 16) antes de activarlo.
 - "cancelar" dentro del carrito lo gestiona el endpoint (ofrece guardar,
   vaciar o seguir); no lo trates como salida del chatbot.

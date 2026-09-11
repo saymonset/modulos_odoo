@@ -44,7 +44,7 @@ class ConfiguracionAgenteCartController(http.Controller):
                         {'success': False, 'error': 'Token inválido'}, status=401)
 
             system_prompt = ChatBotUtils.build_agent_system_prompt(request.env)
-            if CartService.disponible(request.env):
+            if self._carrito_disponible(request.env):
                 system_prompt = append_cart_instructions(system_prompt)
             fallback_message = request.env['ir.config_parameter'].sudo().get_param(
                 'ai_chatbot_1_portal.fallback_message',
@@ -69,3 +69,12 @@ class ConfiguracionAgenteCartController(http.Controller):
                      ('Access-Control-Allow-Origin', '*')],
             status=status,
         )
+
+    @staticmethod
+    def _carrito_disponible(env):
+        """Gate del carrito: hay productos vendibles con precio y el flujo activo."""
+        if not CartService.disponible(env):
+            return False
+        flujo = env['chatbot.flujo'].sudo().search(
+            [('name', '=', 'flujo_carrito_compra')], limit=1)
+        return bool(flujo and flujo.active)
