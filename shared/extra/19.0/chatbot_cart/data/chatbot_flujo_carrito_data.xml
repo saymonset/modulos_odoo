@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Flujo carrito: activa el modo CARRITO del chatbot -->
+        <record id="flujo_carrito" model="chatbot.flujo">
+            <field name="name">flujo_carrito</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="active">True</field>
+            <field name="politica_inicio">confirmation</field>
+            <field name="descripcion_intencion">El usuario CONFIRMA que quiere comprar o armar un carrito de productos (responde "sí" a la oferta de comprar). Una simple consulta de producto NO activa el carrito: se responde con Base_Conocimiento_RAG.</field>
+            <field name="palabras_clave">carrito,compra,comprar,pedido,pedidos,producto,productos,agregar,canasta,tienda,domicilio,delivery,orden</field>
+        </record>
+
+    </data>
+</odoo>
