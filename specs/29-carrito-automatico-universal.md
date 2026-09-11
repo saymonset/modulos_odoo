@@ -1,6 +1,6 @@
 # SPEC 29 — Carrito automático universal con gate de productos
 
-> **Status:** Implemented
+> **Status:** Approved
 > **Depends on:** SPEC 28 (fixes carrito + prueba WhatsApp), SPEC 17, SPEC 18
 > **Date:** 2026-09-11
 > **Objective:** Que el flujo `flujo_carrito` se active automáticamente para todo cliente en cada sincronización desde RAG — sin pasos manuales — con gate bloqueante: si el módulo no está instalado o el negocio no tiene productos vendibles con precio, nunca se activa ni se inyecta en el prompt.
