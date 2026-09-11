@@ -35,6 +35,7 @@
                             <field name="routing_key"/>
                             <field name="politica_inicio"/>
                             <field name="generar_pasos_automatico"/>
+                            <field name="mostrar_nombre_en_aviso"/>
                             <field name="grupo_asignado"/>
                             <field name="team_id"/>
                             <field name="company_id"/>
