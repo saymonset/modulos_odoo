@@ -105,6 +105,14 @@ class ChatbotFlujo(models.Model):
              'Desactívalo para crear los pasos manualmente según el cliente.',
     )
 
+    mostrar_nombre_en_aviso = fields.Boolean(
+        string="Mostrar nombre del flujo en el aviso",
+        default=False,
+        help="Si está activo, el aviso inicial muestra el nombre técnico "
+             "del flujo (p. ej. (flujo_agendamiento_precios)). "
+             "Por defecto se oculta para no causar ruido al cliente.",
+    )
+
     # ============================================================
     # MÉTODOS BASE PARA OBTENER LOS PASOS OBLIGATORIOS
     # ============================================================
