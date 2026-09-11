@@ -238,7 +238,14 @@ class SessionState(models.Model):
             mensaje_prompt_original=primer_paso.get('mensaje_prompt'))
         # Anteponer aviso de flujo al primer paso: n8n envía solo steps[0].nombre_mostrar
         # cuando se dispara un flujo, así que el aviso debe viajar dentro del primer paso.
-        aviso_flujo = f"¡Excelente! Para continuar, le haré unas breves preguntas y un asesor de la empresa lo contactará. ({flow_name})\nSi no desea continuar, escriba \"salir\".\n\n"
+        # El nombre técnico del flujo se oculta por defecto para no causar ruido al cliente;
+        # solo se muestra si el flujo activa "mostrar_nombre_en_aviso".
+        flujo = self.env['chatbot.flujo'].search([('name', '=', flow_name)], limit=1)
+        mostrar_nombre = flujo.mostrar_nombre_en_aviso if flujo else False
+        sufijo_nombre = f" ({flow_name})" if mostrar_nombre else ""
+        aviso_flujo = (f"¡Excelente! Para continuar, le haré unas breves preguntas y "
+                       f"un asesor de la empresa lo contactará.{sufijo_nombre}\n"
+                       f"Si no desea continuar, escriba \"salir\".\n\n")
         primer_paso['mensaje_prompt'] = aviso_flujo + pregunta_amigable
         primer_paso['nombre_mostrar'] = aviso_flujo + pregunta_amigable
         steps_filtrados[0] = primer_paso
