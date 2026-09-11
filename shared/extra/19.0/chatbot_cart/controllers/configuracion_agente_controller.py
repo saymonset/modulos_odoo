@@ -5,6 +5,7 @@ import json
 import logging
 
 from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import ChatBotUtils
+from odoo.addons.chatbot_cart.services.cart_service import CartService
 from odoo.addons.chatbot_cart.services.prompt_carrito import append_cart_instructions
 
 _logger = logging.getLogger(__name__)
@@ -43,7 +44,8 @@ class ConfiguracionAgenteCartController(http.Controller):
                         {'success': False, 'error': 'Token inválido'}, status=401)
 
             system_prompt = ChatBotUtils.build_agent_system_prompt(request.env)
-            system_prompt = append_cart_instructions(system_prompt)
+            if CartService.disponible(request.env):
+                system_prompt = append_cart_instructions(system_prompt)
             fallback_message = request.env['ir.config_parameter'].sudo().get_param(
                 'ai_chatbot_1_portal.fallback_message',
                 'No pudimos procesar tu solicitud en este momento. Por favor intenta más tarde.')

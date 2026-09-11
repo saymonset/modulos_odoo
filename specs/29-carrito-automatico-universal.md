@@ -1,86 +1,82 @@
-# SPEC 29 — Carrito automático universal con gate de productos
+# SPEC 29 — Flujo de carrito universal creado inactivo, activación manual
 
 > **Status:** Approved
-> **Depends on:** SPEC 28 (fixes carrito + prueba WhatsApp), SPEC 17, SPEC 18
+> **Depends on:** SPEC 28 (fixes carrito + prueba WhatsApp)
 > **Date:** 2026-09-11
-> **Objective:** Que el flujo `flujo_carrito` se active automáticamente para todo cliente en cada sincronización desde RAG — sin pasos manuales — con gate bloqueante: si el módulo no está instalado o el negocio no tiene productos vendibles con precio, nunca se activa ni se inyecta en el prompt.
+> **Objective:** Que el flujo del carrito se cree siempre con el nombre `flujo_carrito_compra`, nacido **inactivo** y sin pasos; solo se activa manualmente si la empresa lo desea, y el prompt del agente solo lo menciona cuando el negocio tiene productos vendibles con precio y el flujo está activo.
 
 ## Por qué existe esta spec
 
-Caso real (2026-09-11, bot Karla Campoverde): el usuario preguntó "tienes pizza" y el bot desvió a "no ofrecemos pizzas…". `flujo_carrito` existe y está activo en la BD, pero no está en `flujo_ids` de la `chatbot.config` del cliente, así que ni el prompt del agente ni el `flow_map` lo incluyen tras la sync. El onboarding deja un paso manual (marcar flujos por cliente). El carrito es una **capacidad universal** (como `flujo_agendamiento_default`), no un flujo de negocio, y debe encenderse solo: siempre que haya productos; nunca si no los hay o el módulo no está.
+Caso real (2026-09-11, bot Karla Campoverde): `flujo_carrito` existía activo por defecto pero fuera de la config del cliente, y el bot respondía consultas de producto con el RAG del negocio ("no ofrecemos pizzas"). Decisión del usuario: el carrito debe estar **siempre creado** (para que exista y se pueda activar fácil), pero **inactivo por defecto** — la empresa decide si lo enciende. Y con gate: sin productos o sin módulo, ni se dispara ni se inyecta en el prompt.
 
 ## Scope
 
 **In:**
 
-- **Universal con gate (en `ai_chatbot_1_portal`):** `aplicar_deteccion_automatica`, `_aplicar_deteccion_desde_config` y `action_recargar_todo_desde_rag` incluyen `flujo_carrito` en el set de flujos activos del cliente SIEMPRE que el gate pase, aunque la detección por keywords/IA no lo mencione. Es una capacidad, no depende del texto del negocio.
-- **Gate de disponibilidad (en `chatbot_cart`):** helper `CartService.disponible(env)` → `∃ product.template` con `sale_ok=True` **y** `list_price > 0`. Lo llaman ambos módulos. Si `chatbot_cart` no está instalado, el gate devuelve `False` y la inclusión se omite limpiamente (guard, sin romper el sync).
-- **Gate de prompt:** `configuracion_agente` (chatbot_cart) solo inyecta el bloque `=== CARRITO DE COMPRAS ===` si `disponible(env)` es `True`. Sin productos vendibles o sin módulo, el agente no menciona el carrito.
-- **Carrito sin pasos genéricos:** en `data/chatbot_flujo_carrito_data.xml`, `flujo_carrito` nace con `generar_pasos_automatico = False`; la migración elimina los 13 pasos genéricos ya creados (`paso_ids`). El carrito lo gestiona `/chatbot_cart/procesar`, no la captura clásica (`inicioagendar`).
-- **Resumen de sync visible:** el mensaje del botón "Sincronizar todo desde RAG" registra el estado del carrito: `"Carrito: activado"` / `"Carrito: omitido (sin productos vendibles)"` / `"Carrito: omitido (módulo chatbot_cart no disponible)"`.
-- Bump de versiones (`chatbot_cart` → `19.0.1.2.0`, `ai_chatbot_1_portal` → `19.0.1.0.36`) + tests deterministas.
+- **Renombre:** el flujo pasa a llamarse `flujo_carrito_compra` (data file, `prompt_carrito.py`, tests, n8n Switch y docs). El record XML existente `flujo_carrito` se renombra por migración.
+- **Creado inactivo y sin pasos:** en `data/chatbot_flujo_carrito_data.xml`, el record nace con `active = False` y `generar_pasos_automatico = False`; la migración borra los 13 pasos genéricos existentes y desactiva el flujo ya creado.
+- **Activación manual:** sin código nuevo — la empresa activa `flujo_carrito_compra` en "Flujos de este cliente" (mecanismo existente). Documentado en la guía.
+- **Gate de prompt:** `configuracion_agente` inyecta el bloque `=== CARRITO DE COMPRAS ===` solo si `CartService.disponible(env)` (∃ `product.template` con `sale_ok=True` y `list_price > 0`) **y** `flujo_carrito_compra` está activo. Con el flujo inactivo o sin productos, el agente no lo menciona.
+- **n8n:** el valor del Switch del carrito pasa de `flujo_carrito` a `flujo_carrito_compra` (solo el valor de comparación; URLs y tokens intactos).
+- Bump de versión de `chatbot_cart` → `19.0.1.2.0` + tests deterministas actualizados.
 
 **Out of scope (para futuras specs):**
 
-- Cambios en n8n (el Switch del carrito del SPEC 28 queda intacto; el `flow_map` ya entrega `flujo_carrito` si el flujo queda activo).
+- Auto-activación del carrito en la sync desde RAG (descartada: activación manual por empresa).
 - Deploy a producción.
-- Alta/baja automática del catálogo (una vez registrados los productos, entran al gate).
-- Carrito para Instagram/Messenger.
+- Alta/baja automática del catálogo.
+- Otros canales (Instagram/Messenger), carrusel o catálogo iterativo.
 
 ## Data model
 
 Sin campos nuevos. Cambios de comportamiento sobre datos existentes:
 
 ```
-chatbot.flujo 'flujo_carrito':
-  generar_pasos_automatico: True → False
-  paso_ids: se eliminan los 13 genéricos actuales (migración)
-
-'Sincronizar todo desde RAG' / activaciones por config:
-  flujo_ids: incluye flujo_carrito cuando el gate pasa (universal)
+chatbot.flujo:
+  antes: flujo_carrito (active=True, 13 pasos genéricos)
+  después: flujo_carrito_compra (active=False, paso_ids vacío, generar_pasos_automatico=False)
 ```
 
 ## Implementation plan
 
-1. `chatbot_cart`: `CartService.disponible(env)` (gate) y su uso en `configuracion_agente_controller` (no inyectar el bloque sin gate). Test manual: prompt sin productos → sin bloque CARRITO; con productos → lo incluye.
-2. `chatbot_cart`: `data/chatbot_flujo_carrito_data.xml` con `generar_pasos_automatico=False` + migración que borre `paso_ids` de `flujo_carrito`. Test: el flujo no tiene pasos tras upgrade.
-3. `ai_chatbot_1_portal`: universal con gate en `_aplicar_deteccion_desde_config` y `aplicar_deteccion_automatica`. Test manual: `flujo_carrito` activo con config que no lo marca, si hay productos.
-4. `ai_chatbot_1_portal`: en `action_recargar_todo_desde_rag`, mezclar `flujo_carrito` (gated) en `flujos_detectados` antes del `write flujo_ids` y añadir la línea de resumen del carrito. Test manual: sync en bot Karla → mensaje dice "Carrito: activado".
-5. Tests deterministas (sync con/sin productos, prompt con/sin gate, flujo sin pasos) + bump de versiones + suite completa en verde.
+1. `CartService.disponible(env)` (gate) + `configuracion_agente`: inyectar el bloque solo si gate y flujo activo.
+2. Renombrar a `flujo_carrito_compra` y crear inactivo sin pasos: data file + migración `19.0.1.2.0/post-migrate.py` (renombra `flujo_carrito` → `flujo_carrito_compra`, `active=False`, borra `paso_ids`, `generar_pasos_automatico=False`).
+3. `prompt_carrito.py`: `_FLOW_CARTO='flujo_carrito_compra'` y texto del bloque actualizado.
+4. n8n: actualizar el valor del Switch a `flujo_carrito_compra` en `ycloud_create_lead_0_con_menu_whatsapp.json`.
+5. Tests deterministas actualizados (prompt, gate, migración) + bump versión + suite completa en verde.
 
 ## Acceptance criteria
 
-- [ ] Tras "Sincronizar todo desde RAG" en cliente con productos vendibles (sale_ok y precio > 0), `chatbot.config.flujo_ids` incluye `flujo_carrito` — sin marcarlo a mano.
-- [ ] Tras sync en cliente sin productos vendibles, `flujo_carrito` queda desactivado y fuera de `flujo_ids`, y el resumen dice `"Carrito: omitido (sin productos vendibles)"`.
-- [ ] Si `chatbot_cart` no está instalado, el sync funciona igual y el resumen lo indica, sin error.
-- [ ] Tras cada activación por config (sync o botón "Activar solo los flujos marcados"), `flujo_carrito` queda activo si el gate pasa.
-- [ ] El `system_prompt` del agente incluye el bloque CARRITO solo cuando el gate pasa; con un negocio sin productos, el prompt no lo menciona.
-- [ ] `flujo_carrito` tiene `paso_ids` vacío tras el upgrade y `generar_pasos_automatico=False`.
-- [ ] Con `flujo_carrito` activo: las operaciones del carrito ("agrega", "ver carrito", "pagar") pasan por `/chatbot_cart/procesar`; las consultas de producto siguen por `Base_Conocimiento_RAG` (regla 13).
-- [ ] Suites deterministas en verde para `chatbot_cart` (55) y `ai_chatbot_1_portal` (incluyendo los tests nuevos).
+- [ ] Instalación del módulo crea `flujo_carrito_compra` **inactivo**, con `paso_ids` vacío y `generar_pasos_automatico=False`.
+- [ ] Upgrade desde `19.0.1.1.0`: el `flujo_carrito` existente queda renombrado a `flujo_carrito_compra`, inactivo y sin pasos.
+- [ ] Con el flujo inactivo (estado por defecto), el `system_prompt` del agente NO incluye el bloque CARRITO, aunque haya productos.
+- [ ] Con el flujo activo y productos vendibles con precio, el bloque CARRITO se inyecta.
+- [ ] Con el flujo activo pero sin productos vendibles con precio, el bloque NO se inyecta.
+- [ ] El prompt del carrito usa el nombre `flujo_carrito_compra` (no `flujo_carrito`).
+- [ ] n8n Switch compara con `flujo_carrito_compra` (sin tocar URLs/tokens).
+- [ ] Suite completa de `chatbot_cart` en verde con tests actualizados.
+- [ ] Versión del manifest = `19.0.1.2.0`.
 
 ## Decisions
 
-- **Sí:** carrito como capacidad universal con gate, no como flujo detectado por keywords/IA: la sync de una inmobiliaria nunca menciona "pizza", pero el cliente con catálogo debe poder comprar.
-- **Sí:** gate = `∃ product.template` con `sale_ok=True` **y** `list_price > 0`. Evita activarlo por productos residuales de precio 0 (Tips/Anticipo) que son solo de pago en PDV.
-- **Sí:** el gate se evalúa en cada sync/activación — al quitarse los productos, el carrito se desactiva solo en la próxima sync (comportamiento reversible, sin estado extra).
-- **Sí:** `flujo_carrito` sin pasos: n8n delega directo a `/chatbot_cart/procesar`; la captura clásica (`inicioagendar`) no aplica.
-- **Sí:** prompt de agente y flujo con el mismo gate (coherencia: nunca prometer algo que el endpoint no puede ofrecer).
-- **No:** flag por cliente ("habilitar carrito") — el gate por productos ya decide; un flag añadiría una configuración más que olvidar.
-- **No:** desactivar el bloque n8n del carrito — SPEC 28 sigue siendo la rama funcional.
+- **Sí:** flujo siempre creado e **inactivo por defecto**; activación manual por empresa (mecanismo existente de "Flujos de este cliente").
+- **Sí:** renombrar a `flujo_carrito_compra` — nombre más claro y evita colisión conceptual con el endpoint `/chatbot_cart/procesar`.
+- **Sí:** gate de prompt = productos vendibles con precio **y** flujo activo: ni se promete el carrito sin catálogo ni se sugiere cuando la empresa no lo activó.
+- **Sí:** eliminar los pasos genéricos: el carrito lo gestiona el endpoint, no la captura clásica (`inicioagendar`).
+- **No:** auto-activación universal en la sync (descartada por el usuario).
+- **No:** flag adicional por cliente — la activación manual del flujo ya es el control.
 
 ## Risks
 
 | Riesgo | Mitigación |
 |---|---|
-| Productos placeholder con precio ≠ 0 (Tips, Anticipo) activan el carrito en un cliente sin catálogo real | El gate exige venta con precio; el resumen de sync lo hace visible y, si hace falta, un criterio más estricto (stock/imagen) va en otra spec |
-| El agente multicliente insiste en los CTAs del negocio (ej. inmobiliaria) en vez de activar el carrito | El bloque CARRITO se inyecta al final del prompt (tras el rol del cliente) y se valida post-sync; la regla de activación es "usuario confirma que quiere comprar" |
-| `chatbot_cart` desinstalado a mitad de vida | Odoo elimina el flujo con la desinstalación; el sync con guard no rompe; el prompt deja de inyectarlo |
-| Doble escritura de `flujo_ids` (sync + activación por config) | El write está centralizado en `action_recargar_todo_desde_rag` y la inclusión universal en `_aplicar_deteccion_desde_config`; se testea el set resultante |
+| Productos placeholder con precio ≠ 0 (Tips, Anticipo) | El gate exige venta con precio; el flujo además está inactivo hasta que la empresa lo active a propósito |
+| Renombrado rompe la rama n8n del SPEC 28 | Se actualiza el valor del Switch al mismo tiempo que el prompt/data (mismo commit) |
+| `chatbot_cart` desinstalado a mitad de vida | Odoo elimina el flujo con la desinstalación; el prompt deja de inyectarlo |
 
 ## What is **not** in this spec
 
-- Deploy a producción (rama/pipeline normal).
-- Nuevos nodos o workflows de n8n.
-- Otros canales (Instagram/Messenger), carrusel o catálogo iterativo.
-- Gestión del catálogo en sí (carga/import de productos) — los productos ya viven en `product.template`.
+- Auto-activación del carrito por sync o detección.
+- Deploy a producción.
+- Nuevos nodos o workflows de n8n (solo el valor de comparación del Switch).
+- Otros canales, carrusel o gestión del catálogo.

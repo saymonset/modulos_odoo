@@ -12,6 +12,21 @@ class CartService:
     """Operaciones CRUD y resumen sobre el carrito JSON de la sesión."""
 
     # ==================================================================
+    #  GATE DE DISPONIBILIDAD
+    # ==================================================================
+    @staticmethod
+    def disponible(env):
+        """True si el negocio tiene productos vendibles con precio.
+
+        Gate del carrito: solo se activa/inyecta si hay al menos un
+        product.template con sale_ok=True y list_price > 0.
+        """
+        return bool(env['product.template'].sudo().search([
+            ('sale_ok', '=', True),
+            ('list_price', '>', 0.0),
+        ], limit=1))
+
+    # ==================================================================
     #  PRECIOS
     # ==================================================================
     @staticmethod
