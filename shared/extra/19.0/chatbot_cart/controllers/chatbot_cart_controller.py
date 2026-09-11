@@ -252,3 +252,48 @@ class ChatbotCartController(http.Controller):
         )
         return self._respuesta(session_id, conversation_id, account_id, platform, texto,
                                finalizado=True, extra={'order_id': order.id, 'order_name': order.name})
+
+    # ==================================================================
+    #  ENDPOINTS DE CONSULTA
+    # ==================================================================
+    @http.route('/chatbot_cart/consultar', type='json', auth='public', methods=['GET', 'POST'], csrf=False, cors='*')
+    def consultar(self, session_id=None, conversation_id=None, account_id=None, platform='whatsapp', **kw):
+        """Devuelve el resumen del carrito de la sesión."""
+        params = self._params()
+        session_id = session_id or params.get('session_id')
+        conversation_id = conversation_id or params.get('conversation_id')
+        account_id = account_id or params.get('account_id')
+        platform = platform or params.get('platform', 'whatsapp')
+        env = request.env
+        resumen = self.CART_SERVICE.resumen(env, session_id)
+        texto = self.CART_SERVICE.formato_resumen_amigable(env, session_id)
+        return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                               extra={'resumen': resumen})
+
+    @http.route('/chatbot_cart/buscar', type='json', auth='public', methods=['GET', 'POST'], csrf=False, cors='*')
+    def buscar(self, query=None, session_id=None, conversation_id=None, account_id=None, platform='whatsapp', **kw):
+        """Busca productos y devuelve la lista con imagen y precios."""
+        params = self._params()
+        query = query or params.get('query') or params.get('valor') or ''
+        session_id = session_id or params.get('session_id')
+        conversation_id = conversation_id or params.get('conversation_id')
+        account_id = account_id or params.get('account_id')
+        platform = platform or params.get('platform', 'whatsapp')
+        env = request.env
+        result = self.SEARCH_SERVICE.buscar(env, query, limit=5)
+        texto = self.SEARCH_SERVICE.formato_lista_productos(result)
+        return self._respuesta(
+            session_id, conversation_id, account_id, platform,
+            texto,
+            imagenes=self._imagenes_de_productos(result.get('productos', [])) if result.get('success') else [],
+            extra={'resultado': result})
+
+    @http.route('/chatbot_cart/pagar', type='json', auth='public', methods=['POST'], csrf=False, cors='*')
+    def pagar(self, session_id=None, conversation_id=None, account_id=None, platform='whatsapp', **kw):
+        """Materializa la orden desde el carrito y devuelve el resumen de pago."""
+        params = self._params()
+        session_id = session_id or params.get('session_id')
+        conversation_id = conversation_id or params.get('conversation_id')
+        account_id = account_id or params.get('account_id')
+        platform = platform or params.get('platform', 'whatsapp')
+        return self._pagar(request.env, session_id, conversation_id, account_id, platform)
