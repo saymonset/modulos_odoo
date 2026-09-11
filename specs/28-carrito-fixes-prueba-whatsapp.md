@@ -1,6 +1,6 @@
 # SPEC 28 — Fixes del carrito y prueba end-to-end por WhatsApp
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 27 (chatbot-carrito-whatsapp)
 > **Date:** 2026-09-11
 > **Objective:** Corregir los dos defectos conocidos de `chatbot_cart` y habilitar la prueba end-to-end del carrito por WhatsApp real en staging, con guía actualizada.

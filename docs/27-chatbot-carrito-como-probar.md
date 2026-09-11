@@ -1,7 +1,7 @@
 # Cómo probar `chatbot_cart` (staging)
 
 > **Módulo:** `shared/extra/19.0/chatbot_cart`
-> **Spec:** `specs/27-chatbot-carrito-whatsapp.md`
+> **Spec:** `specs/27-chatbot-carrito-whatsapp.md` (implementación) y `specs/28-carrito-fixes-prueba-whatsapp.md` (fixes + prueba WhatsApp)
 > **Entorno de pruebas:** contenedor `odoo-19-web-leads`, base `dbodoo19`, URL `http://localhost:28069`
 
 ## 1. Cómo encaja (30 segundos)
@@ -29,12 +29,13 @@ docker exec odoo-19-web-leads python3 /opt/odoo/odoo-core/odoo-bin \
 Resultado esperado:
 
 ```
-chatbot_cart: 46 tests 3.82s 1120 queries
+chatbot_cart: 55 tests 4.93s 1345 queries
 ```
 
 Sin errores (`ERROR:`/`FAILED`). Los tests cubren: CRUD del carrito, resumen
 VES/USD/COP, búsqueda de productos, materialización de `sale.order`, clasificador
-determinista y prompt del carrito.
+determinista, prompt del carrito, guardado de `ultima_busqueda` y resolución de
+partner por teléfono/sesión (SPEC 28).
 
 ## 3. Nivel 2 — Prueba manual por HTTP
 
@@ -57,12 +58,15 @@ curl -s -X POST http://localhost:28069/chatbot_cart/buscar \
 
 Devuelve `texto_para_usuario` (lista numerada con precios VES/USD) + `imagenes`.
 
-### b) Agregar al carrito (usa el nombre, no el número)
+### b) Agregar al carrito (por nombre o por número de la lista)
 
 ```bash
 curl -s -X POST http://localhost:28069/chatbot_cart/procesar \
   -H 'Content-Type: application/json' -d '{"session_id":"demo-001","valor":"agrega 2 pizzas"}'
 ```
+
+También funciona la referencia numérica tras una búsqueda (`ultima_busqueda` se guarda
+automáticamente): busca "pizza", y luego `"valor":"agrega 1"` añade el primer resultado.
 
 Respuesta esperada:
 
@@ -120,9 +124,29 @@ docker exec odoo-db19-leads psql -U odoo -d dbodoo19 -c \
 
 El JSON de `estado` debe contener `"modo": "CARRITO"` y el `carrito` con los `items`.
 
-## 4. Nivel 3 — Flujo WhatsApp real (opcional, requiere infra n8n)
+## 4. Nivel 3 — Flujo WhatsApp real (end-to-end, staging)
 
-1. Verificar que el prompt del agente incluye el carrito:
+El objetivo es probar el flujo completo con el WhatsApp real del negocio, pero
+**apuntando n8n a staging** para no tocar prod.
+
+**Prerrequisitos (verificados en staging):**
+
+- Cuenta `waba.account` "whatsapp 0412" activa con `access_token` y `phone_number_id`.
+- `flujo_carrito` activo en `chatbot.flujo` (routing_key `flujo_carrito`).
+- Módulo `chatbot_cart` instalado y la tasa BCV auto-fetcheada.
+
+### a) Redirigir n8n a staging (temporal)
+
+Meta sigue enviando los mensajes del mismo número a n8n. Lo único que cambia es a qué
+Odoo llama n8n:
+
+1. En el workflow de n8n, cambiar la **URL base de Odoo** de los nodos HTTP de prod
+   (`http://<prod>:18069` o el dominio) a staging (`http://<staging>:28069`).
+2. Verificar con `curl` que staging responde: `curl -s -o /dev/null -w "%{http_code}" http://localhost:28069/web/login` → `200`.
+3. **Importante:** esto desvía el tráfico real de prod. Usa una ventana corta de prueba y
+   revierte el paso (f) al terminar.
+
+### b) Verificar el prompt del agente
 
 ```bash
 curl -s -X POST http://localhost:28069/ai_chatbot_1_portal/configuracion_agente \
@@ -133,26 +157,110 @@ curl -s -X POST http://localhost:28069/ai_chatbot_1_portal/configuracion_agente 
 El `system_prompt` devuelto debe contener `=== CARRITO DE COMPRAS (flujo_carrito) ===`.
 (El token está en `ir_config_parameter.ai_chatbot_1_portal.api_token`.)
 
-2. Escribir al WhatsApp del negocio, pedir un producto y confirmar la compra → n8n activa
-`flujo_carrito` y delega a `/chatbot_cart/procesar`. Requiere `waba.account` configurado y
-webhook `/whatsapp/webhook` verificado en Meta.
+> **Token staging:** al redirigir n8n a staging, el `CHATBOT_API_TOKEN` de n8n debe
+> coincidir con `ai_chatbot_1_portal.api_token` de la **BD de staging** (`dbodoo19`),
+> o `Obtener_configuracion_agente` devolverá 401 "Token inválido" (gotcha de la spec 08).
+
+### c) Configuración en n8n (única modificación requerida)
+
+**No se edita ningún prompt.** El prompt ya se baja automático en el nodo
+`Obtener_configuracion_agente`. Lo único que falta es la **rama de ruteo** para
+`flujo_carrito`, porque `/chatbot_cart/procesar` es un endpoint nuevo que el workflow
+actual no conoce:
+
+```
+[Obtener_configuracion_agente]            ← sin cambios (prompt + flow_map)
+        ↓
+[Agente OpenAI]                           ← sin cambios (responde JSON con flow_name)
+        ↓
+[Switch/IF: flow_name == 'flujo_carrito'] ← NUEVO
+   ├─ true  → [HTTP POST /chatbot_cart/procesar]  ← NUEVO
+   │            body: {session_id, conversation_id, account_id, platform, valor}
+   │          → [Enviar texto_para_usuario (+ imagenes) por WhatsApp]  ← NUEVO
+   └─ false → [camino actual: inicioagendar / respuesta normal]
+```
+
+Config del nodo **HTTP Request** (rama `true`):
+
+- **Method:** `POST`
+- **URL:** `http://<staging>:28069/chatbot_cart/procesar` (sin token; endpoint `auth='public'`)
+- **Body (JSON):**
+
+```json
+{
+  "session_id": "{{ $('Recibir mensaje').item.json.session_id }}",
+  "conversation_id": "{{ $('Recibir mensaje').item.json.conversation_id }}",
+  "account_id": "{{ $('Recibir mensaje').item.json.account_id }}",
+  "platform": "whatsapp",
+  "valor": "{{ $('Agente OpenAI').item.json.input }}"
+}
+```
+
+(Ajusta los nombres de los nodos a los de tu workflow; `session_id`, `conversation_id`
+y `account_id` salen del webhook de WhatsApp que n8n ya procesa.)
+
+Respuesta del endpoint: `texto_para_usuario` (lo envías por WhatsApp) y `imagenes`
+(lista de URLs `/web/image/...` que puedes descargar y mandar como media si quieres
+mostrar la foto del producto).
+
+El camino `false` (ningún flujo o flujos normales) sigue como hoy.
+
+### d) Ejecutar el flujo por WhatsApp
+
+Fases y criterio de éxito:
+
+1. **Activación por el agente.** Escribe al WhatsApp del negocio pidiendo un producto
+   (ej. "tienen pizza?") y confirma la compra cuando el bot la ofrezca (ej. "sí quiero
+   comprar"). El agente debe activar `flujo_carrito` (política `confirmation`). Si no
+   activa, prueba con frases más directas: "quiero pedir", "quiero comprar".
+2. **Operaciones del carrito.** Con el carrito activo: "agrega 2 pizzas", "ver carrito",
+   "cambia la pizza a 3", "quita la pizza", "ayuda", "cancelar". Cada respuesta debe
+   confirmar la acción y mostrar el mini-estado (items + total).
+3. **Pago.** Escribe "pagar". Debe responder `✅ Pedido SO… confirmado!`. En BD, la orden
+   debe quedar `state=sale` con el **partner resuelto por el teléfono** del mensaje (ya no
+   usa historial global).
+4. **Vaucher por imagen.** Envía una foto del vaucher por WhatsApp. Debe descargarse
+   (`waba.account.download_media`) y quedar adjunta como `ir.attachment` a esa orden.
+
+### e) Verificar en BD (tras la prueba)
+
+```bash
+# Orden + partner
+docker exec odoo-db19-leads psql -U odoo -d dbodoo19 -c \
+  "SELECT so.name, so.state, rp.name AS partner, rp.phone \
+     FROM sale_order so JOIN res_partner rp ON rp.id = so.partner_id \
+    WHERE so.client_order_ref IS NOT NULL ORDER BY so.id DESC LIMIT 5;"
+
+# Vaucher adjunto a la orden
+docker exec odoo-db19-leads psql -U odoo -d dbodoo19 -c \
+  "SELECT name, res_model, res_id, mimetype FROM ir_attachment \
+    WHERE res_model='sale.order' ORDER BY id DESC LIMIT 5;"
+```
+
+### f) Revertir la redirección
+
+Al terminar, volver a apuntar los nodos HTTP de n8n a prod y confirmar que el WhatsApp
+del negocio responde normal.
 
 ## 5. Limitaciones actuales (importantes al probar)
 
-- **"Responde el número" no funciona aún:** `ultima_busqueda` no se guarda al buscar, así
-  que la referencia numérica de la lista no resuelve. **Usa el nombre del producto.**
-- **Partner genérico al pagar sin teléfono:** `_resolver_partner` sin teléfono toma el
-  último `whatsapp.history` entrante global (sin filtrar por conversación) o crea
-  "Cliente Chatbot {session_id}".
 - **COP desactivado** en esta BD (`cop_show_fields=False`); para probar COP hay que
   activarlo en la compañía y re-fetchear la tasa.
+- **Partner sin teléfono en la sesión:** si ni el mensaje ni `estado['datos_paciente']`
+  tienen teléfono, el pago crea el partner genérico "Cliente Chatbot {session_id}". Con
+  teléfono (recibido o capturado en la sesión), se resuelve/crea por ese número.
+- **La clasificación IA depende de OpenAI:** si `openai.config` falla, `procesar` cae al
+  clasificador determinista por palabras clave; los comandos base ("agrega", "ver
+  carrito", "pagar", etc.) funcionan igual.
 
 ## 6. Mapa de criterios de aceptación del spec
 
 | Criterio | Cómo probarlo |
 |---|---|
 | Búsqueda devuelve imagen + precio VES/USD | `buscar` con "pizza" |
+| "Responde el número" agrega el producto correcto | `buscar` "pizza" y luego `procesar` "agrega 1" |
 | Agregar / modificar / quitar | `procesar` con "agrega 2 pizzas", "cambia la pizza a 3", "quita la pizza" |
+| Partner por teléfono (recibido o de la sesión) | `pagar` con/sin `phone` y consultar `res_partner` de la orden |
 | "ver carrito" con totales consistentes | `procesar` con "ver carrito" o `consultar` |
 | COP según `cop_show_fields` | activar/desactivar el flag en la compañía y repetir `consultar` |
 | "cancelar" no destruye el carrito | `procesar` con "cancelar" (ofrece guardar/vaciar/seguir) |
