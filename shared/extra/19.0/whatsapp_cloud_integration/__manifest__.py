@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'WhatsApp Cloud API Integration',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.1.0',
     'category': 'Sales/WhatsApp',
     'summary': 'Integrate Odoo with Meta WhatsApp Cloud API',
     'author': 'Simon Alberto Rodriguez Pacheco',
