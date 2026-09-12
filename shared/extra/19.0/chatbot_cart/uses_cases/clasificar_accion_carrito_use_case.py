@@ -14,6 +14,15 @@ _PALABRAS_AYUDA = {
 _PALABRAS_CANCELAR = {'cancelar', 'salir', 'salirme', 'abandonar', 'déjalo', 'dejalo'}
 _PALABRAS_VACIAR = {'vaciar', 'quitar todo', 'eliminar todo', 'borrar todo', 'limpiar carrito'}
 _PALABRAS_CONSULTAR = {'carrito', 'ver carrito', 'mi carrito', 'ver mi carrito', 'que tengo', 'qué tengo'}
+_PALABRAS_CATALOGO = {
+    'catálogo', 'catalogo', 'catálogo de productos', 'catalogo de productos',
+    'que tienen', 'qué tienen', 'que venden', 'qué venden', 'que venden ustedes',
+    'qué venden ustedes', 'que productos', 'qué productos', 'productos',
+    'ver productos', 'muéstrame los productos', 'muestrame los productos',
+    'lista de productos', 'listado de productos', 'productos disponibles',
+    'catálogo por favor', 'catalogo por favor',
+}
+_PALABRAS_MAS = {'ver más', 'ver mas', 'más productos', 'mas productos', 'siguientes', 'siguiente'}
 _PALABRAS_PAGAR = {'pagar', 'pago', 'finalizar', 'finalizar compra', 'proceder al pago', 'comprar',
                    'confirmar pedido', 'confirmar compra'}
 _PALABRAS_QUITAR = {'quitar', 'quita', 'eliminar', 'elimina', 'saca', 'remover', 'borrar', 'borra',
@@ -69,6 +78,7 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
         - MODIFICAR: quiere cambiar la cantidad de un producto ("cambia la camisa a 5", "pon 3 del chocolate").
         - CONSULTAR: quiere ver su carrito o resumen ("ver carrito", "qué tengo", "carrito").
         - BUSCAR: quiere buscar/ver productos sin agregarlos todavía ("muéstrame camisas", "qué venden").
+        - CATALOGO: quiere ver el catálogo general de productos del negocio ("catálogo", "qué productos tienen", "qué venden", "productos", "catálogo de productos").
         - PAGAR: quiere pagar o finalizar la compra ("pagar", "finalizar compra").
         - AYUDA: pide ayuda u opciones ("ayuda", "qué puedo hacer").
         - CANCELAR: quiere cancelar o salir del carrito ("cancelar", "salir").
@@ -133,6 +143,10 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
             return {"accion": "AGREGAR", "producto": t, "cantidad": cantidad}
         if any(p in t for p in _PALABRAS_CONSULTAR):
             return {"accion": "CONSULTAR", "producto": "", "cantidad": 0}
+        if any(p in t for p in _PALABRAS_CATALOGO):
+            return {"accion": "CATALOGO", "producto": "", "cantidad": 0}
+        if re.search(r'\b(ver\s+)?m[áa]s\b', t) or any(p in t for p in _PALABRAS_MAS):
+            return {"accion": "CATALOGO", "producto": "MAS", "cantidad": 0}
 
         tokens = set(re.findall(r'[a-záéíóúñü]+', t))
         if tokens & {'buscar', 'busca', 'muestrame', 'muéstrame', 'mostrar', 'ver', 'lista', 'catalogo', 'catálogo', 'que', 'qué'}:
