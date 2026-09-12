@@ -1,6 +1,6 @@
 # SPEC 34 — Aislamiento total de modos: carrito vs. negocio
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 29 (exclusión auto-detección), SPEC 31 (gate carrito), SPEC 32 (JSON plano), SPEC 33 (catálogo amigable)
 > **Date:** 2026-09-12
 > **Objective:** Que el modo carrito y el modo negocio estén 100% aislados: en carrito el usuario solo ve lógica de compra (sin LLM de negocio ni RAG), con salida explícita ("salir/cancelar") que regresa al negocio, y sin que el agente de negocio confunda preguntas de compra con preguntas del negocio.
