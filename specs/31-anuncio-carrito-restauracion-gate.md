@@ -1,6 +1,6 @@
 # SPEC 31 — Restauración del gate del carrito y anuncio de compra vía prompt
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 29 (exclusión de auto-detección), SPEC 30 (botón "Activar carrito")
 > **Date:** 2026-09-12
 > **Objective:** Que el anuncio 💡 "Escribe «carrito»…" y el disparo del flujo del carrito vuelvan a funcionar restaurando la cadena del gate (flujo recreado + sync que preserva la marca manual), sin tocar n8n ni el mecanismo del RAG.
