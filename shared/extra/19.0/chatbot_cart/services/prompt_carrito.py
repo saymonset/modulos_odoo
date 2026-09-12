@@ -5,25 +5,25 @@ from odoo.addons.chatbot_cart.services.cart_service import CartService
 
 _FLOW_CARTO = 'flujo_carrito_compra'
 
-_CART_INSTRUCTIONS = """=== CARRITO DE COMPRAS (flujo_carrito_compra) ===
-Cuando el usuario CONFIRME que quiere comprar (responde "sí" a tu pregunta de
-confirmación de compra, o dice "quiero comprar", "quiero pedir"), activa el
-flujo flujo_carrito_compra con equipo_asignado={flow_name} y flow_name="{flow_name}".
-UNA VEZ ACTIVADO, el manejo del carrito (buscar productos, agregar, quitar,
-modificar cantidades, ver el carrito, pagar, cancelar) lo gestiona Odoo a
-través del endpoint /chatbot_cart/procesar. NO respondas tú a las operaciones
-del carrito: entrega el flujo al endpoint y deja que Odoo devuelva el texto.
-Reglas:
-- El usuario opera por texto natural: "agrega 2 camisas", "quita el pan",
-  "cambia la camisa a 3", "ver carrito", "pagar", "ayuda", "cancelar".
-- El endpoint muestra productos con imagen y precio (VES/USD/COP si aplica).
-- Si el usuario pregunta por un producto SIN confirmar compra, respóndele con
-  Base_Conocimiento_RAG (regla 13) y cierra ofreciendo hacer el pedido.
-- Si el usuario confirma el pedido pero NO has activado aún flujo_carrito_compra,
-  haz la pregunta de confirmación (regla 16) antes de activarlo.
-- "cancelar" dentro del carrito lo gestiona el endpoint (ofrece guardar,
-  vaciar o seguir); no lo trates como salida del chatbot.
-""".format(flow_name=_FLOW_CARTO)
+_ANUNCIO_CARRITO = '💡 Escribe «carrito» para ver nuestro catálogo y comprar por WhatsApp.'
+
+_CART_INSTRUCTIONS = """=== CARRITO DE COMPRA ===
+La palabra "carrito" en el mensaje del usuario activa INMEDIATAMENTE
+flow_name="flujo_carrito_compra" y equipo_asignado="flujo_carrito_compra",
+en cualquier turno y para cualquier negocio, sin confirmación previa y
+sin Base_Conocimiento_RAG. Tiene PRIORIDAD sobre la REGLA 3 y el modo
+conversacional.
+
+Tras la activación, las operaciones del carrito las gestiona Odoo
+(/chatbot_cart/procesar): NO las respondas tú, regresa el flujo al endpoint.
+En cualquier otra respuesta normal, termina SIEMPRE con esta línea exacta:
+{anuncio}
+
+Salida al activar (frase corta): "¡Perfecto! 🛒 Entro al carrito de compra:
+te muestro productos con precio y pagas aquí mismo. ({flow_name})"
+""".format(flow_name=_FLOW_CARTO, anuncio=_ANUNCIO_CARRITO)
+
+_MARKER = '=== CARRITO DE COMPRA ==='
 
 
 def carrito_disponible(env):
@@ -41,9 +41,9 @@ def render_instrucciones_carrito():
 
 
 def append_cart_instructions(system_prompt):
-    """Anexa las instrucciones del carrito al system prompt si no están."""
+    """Prepone el bloque del carrito al system prompt si no está."""
     if not system_prompt:
         return system_prompt
-    if _FLOW_CARTO in system_prompt and 'CARRITO DE COMPRAS' in system_prompt:
+    if _MARKER in system_prompt:
         return system_prompt
-    return system_prompt + '\n\n' + _CART_INSTRUCTIONS
+    return _CART_INSTRUCTIONS + '\n\n' + system_prompt
