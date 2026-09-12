@@ -1067,15 +1067,19 @@ class ChatbotConfig(models.Model):
         flujos_detectados = deteccion['flujos']
         metodo = deteccion['metodo']
 
-        if flujos_detectados:
-            self.write({'flujo_ids': [(6, 0, flujos_detectados.ids)]})
-        # SPEC 29: preservar la marca manual de flujos no-autodetectados (ej.
-        # flujo_carrito_compra) que el cliente haya marcado; la sync no los
-        # agrega ni los quita.
+        # SPEC 29/31: capturar ANTES del replace la marca manual de flujos
+        # no-autodetectados (ej. flujo_carrito_compra) para que la sync no los
+        # desmarque ni los archive; la detección nunca los agrega ni los quita.
         marcados_manuales = self.flujo_ids.filtered(
             lambda f: f.name in _FLUJOS_NO_AUTODETECTADOS)
-        if marcados_manuales:
-            self.write({'flujo_ids': [(4, f.id) for f in marcados_manuales]})
+
+        flujos_ids = flujos_detectados.ids
+        if flujos_ids:
+            flujos_ids = list(flujos_ids) + [
+                f.id for f in marcados_manuales if f.id not in flujos_ids]
+            self.write({'flujo_ids': [(6, 0, flujos_ids)]})
+        elif marcados_manuales:
+            self.write({'flujo_ids': [(6, 0, marcados_manuales.ids)]})
 
         # Recoger temas de contenido RAG para el menú
         accion_nombres_menu = {_normalizar(n) for n in _INTENCIONES_ACCION}
