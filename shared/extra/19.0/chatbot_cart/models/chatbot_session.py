@@ -10,6 +10,7 @@ class ChatbotSession(models.Model):
     _description = 'Carrito de compra del chatbot'
 
     MODE_CART = 'CARRITO'
+    MODE_BUSINESS = 'NEGOCIO'
     KEY_CART = 'carrito'
 
     # ==================================================================
@@ -52,6 +53,32 @@ class ChatbotSession(models.Model):
     def _esta_en_modo_carrito(self, session_id):
         registro = self.sudo().search([('session_id', '=', session_id)], limit=1)
         return bool(registro and (registro.estado or {}).get('modo') == self.MODE_CART)
+
+    def _salir_modo_carrito(self, session_id, vaciar=False):
+        """Sale del modo carrito: vuelve a modo negocio.
+
+        Si `vaciar` es True, limpia los items; si es False, conserva el
+        carrito guardado para que el usuario lo retome al volver a entrar.
+        """
+        registro = self.sudo().search([('session_id', '=', session_id)], limit=1)
+        estado = registro.estado if registro else {}
+        if not isinstance(estado, dict):
+            estado = {}
+        if vaciar:
+            estado[self.KEY_CART] = {'items': [], 'ultima_busqueda': []}
+        estado['modo'] = self.MODE_BUSINESS
+        estado['timestamp'] = fields.Datetime.now().isoformat()
+        if not registro:
+            registro = self.sudo().create({
+                'session_id': session_id,
+                'estado': estado,
+            })
+        else:
+            registro.write({
+                'estado': estado,
+                'last_activity': fields.Datetime.now(),
+            })
+        return registro
 
     def _limpiar_carrito(self, session_id):
         """Vacía items y última búsqueda pero conserva la sesión en modo CARRITO."""
