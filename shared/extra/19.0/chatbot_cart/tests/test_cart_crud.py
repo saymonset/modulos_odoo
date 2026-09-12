@@ -253,3 +253,76 @@ class TestGateCarrito(BaseChatbotCartTestCase):
         self.assertTrue(flujo, 'flujo_carrito_compra debe existir')
         flujo.sudo().write({'active': True})
         self.assertTrue(ConfiguracionAgenteCartController._carrito_disponible(self.env))
+
+
+@tagged("-at_install", "post_install")
+class TestBottonCarrito(BaseChatbotCartTestCase):
+    """SPEC 30: toggle 'Activar/Desactivar carrito' en la ficha del cliente."""
+
+    def _flujo_carrito(self):
+        return self.env['chatbot.flujo'].sudo().with_context(
+            active_test=False).search(
+            [('name', '=', 'flujo_carrito_compra')], limit=1)
+
+    def test_28_activa_y_marca_en_flujo_ids(self):
+        flujo = self._flujo_carrito()
+        self.assertTrue(flujo, 'flujo_carrito_compra debe existir')
+        flujo.write({'active': False})
+        config = self.env['chatbot.config'].sudo().create(
+            {'name': 'Cliente Test Boton'})
+        config.action_activar_carrito()
+        self.assertTrue(flujo.active)
+        self.assertIn(flujo, config.flujo_ids)
+
+    def test_29_desactiva_y_desmarca(self):
+        flujo = self._flujo_carrito()
+        self.assertTrue(flujo)
+        config = self.env['chatbot.config'].sudo().create({
+            'name': 'Cliente Test Boton Off',
+            'flujo_ids': [(6, 0, flujo.ids)],
+        })
+        flujo.write({'active': True})
+        config.action_activar_carrito()
+        self.assertFalse(flujo.active)
+        self.assertNotIn(flujo, config.flujo_ids)
+
+    def test_30_gate_sin_productos_aborta(self):
+        from unittest.mock import patch
+        flujo = self._flujo_carrito()
+        self.assertTrue(flujo)
+        flujo.write({'active': False})
+        config = self.env['chatbot.config'].sudo().create(
+            {'name': 'Cliente Test Sin Prod'})
+        with patch(
+                'odoo.addons.chatbot_cart.services.cart_service.'
+                'CartService.disponible',
+                return_value=False):
+            res = config.action_activar_carrito()
+        self.assertFalse(flujo.active)
+        self.assertNotIn(flujo, config.flujo_ids)
+        self.assertEqual(res['params']['type'], 'warning')
+
+    def test_31_flujo_inexistente_se_recrea(self):
+        flujo = self._flujo_carrito()
+        if flujo:
+            flujo.unlink()
+        config = self.env['chatbot.config'].sudo().create(
+            {'name': 'Cliente Test Recrea'})
+        config.action_activar_carrito()
+        flujo = self._flujo_carrito()
+        self.assertTrue(flujo)
+        self.assertTrue(flujo.active)
+        self.assertFalse(flujo.generar_pasos_automatico)
+        self.assertEqual(flujo.politica_inicio, 'confirmation')
+
+    def test_32_computed_activo_correcto(self):
+        flujo = self._flujo_carrito()
+        self.assertTrue(flujo)
+        config = self.env['chatbot.config'].sudo().create(
+            {'name': 'Cliente Test Computed'})
+        flujo.write({'active': False})
+        config.invalidate_recordset()
+        self.assertFalse(config.carrito_compra_activo)
+        flujo.write({'active': True})
+        config.invalidate_recordset()
+        self.assertTrue(config.carrito_compra_activo)
