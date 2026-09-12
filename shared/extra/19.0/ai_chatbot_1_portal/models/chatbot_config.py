@@ -1059,6 +1059,9 @@ class ChatbotConfig(models.Model):
         # (archivados) para que la detección tenga candidatos.
         flujo_model = self.env['chatbot.flujo'].sudo()
         flujo_model._ensure_catalogo_flujos()
+        # SPEC 32: el flujo del carrito también se auto-recupera si se borró
+        # a mano (inactivo; la activación sigue siendo manual).
+        flujo_model._ensure_flujo_carrito()
         flujos = flujo_model.with_context(active_test=False).search([])
 
         texto = "\n\n".join(filter(None, [

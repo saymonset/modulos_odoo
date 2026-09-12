@@ -231,7 +231,7 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
                 'flujo_agendamiento_otra_consulta', 'flujo_agendamiento_default',
                 'flujo_citas_medios_propios', 'flujo_resultados_imagenes',
             ])])
-        catalogo.with_context(active_test=False).unlink()
+        catalogo.with_context(active_test=False, force_delete=True).unlink()
 
         config = self.env['chatbot.config'].create({'name': 'Cliente Test'})
         resultado = config.action_recargar_todo_desde_rag()
@@ -266,7 +266,7 @@ class TestRecargarDesdeRag(BaseChatbotTestCase):
         Flujo = self.env['chatbot.flujo'].sudo()
         Mapping = self.env['chatwoot.mapping'].sudo()
         Flujo.with_context(active_test=False).search([]).with_context(
-            active_test=False).unlink()
+            active_test=False, force_delete=True).unlink()
         Mapping.with_context(active_test=False).search([]).unlink()
 
         # Huérfano creado ANTES de recargar: el pipeline debe adoptarlo en vez

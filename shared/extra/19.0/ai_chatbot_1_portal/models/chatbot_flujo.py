@@ -2,6 +2,7 @@ import logging
 import re
 
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
@@ -33,6 +34,21 @@ _FLUJOS_SIEMPRE_ACTIVOS = (
 # (chatbot_cart) es el caso actual: la sync no debe encenderlo ni apagarlo.
 _FLUJOS_NO_AUTODETECTADOS = (
     'flujo_carrito_compra',
+)
+
+# Flujos del sistema que NO se pueden borrar desde la UI (SPEC 32): si el
+# cliente quiere "quitarlos", se desactivan (botón/archivados), nunca se
+# eliminan. Evita que una limpieza manual rompa el gate del prompt (caso
+# real 12/9: se borró flujo_carrito_compra 3 veces y el bot quedó sin anuncio
+# ni disparo). Solo se permite borrar con context.force_delete (shell/migración).
+_FLUJOS_PROTEGIDOS = _FLUJOS_NO_AUTODETECTADOS + (
+    'flujo_agendamiento_default',
+    'flujo_resultados_imagenes',
+    'flujo_agendamiento_directo',
+    'flujo_agendamiento_precios',
+    'flujo_agendamiento_servicios',
+    'flujo_ventas',
+    'flujo_agendamiento_otra_consulta',
 )
 
 
@@ -724,6 +740,24 @@ class ChatbotFlujo(models.Model):
                     '(flujo=%s). El mapping NO se sincronizó.', self.ids)
         return res
 
+    def unlink(self):
+        """Bloquea el borrado de flujos del sistema (SPEC 32).
+
+        Los flujos protegidos no se eliminan: se desactivan (botón o
+        archivados). Un borrado legítimo (shell/migración) usa
+        context.force_delete=True.
+        """
+        protegidos = self.filtered(
+            lambda f: f.name in _FLUJOS_PROTEGIDOS and not self.env.context.get(
+                'force_delete'))
+        if protegidos:
+            nombres = ', '.join(sorted(protegidos.mapped('name')))
+            raise UserError(
+                'Los flujos del sistema no se pueden borrar: %s. Desactívalos '
+                'desde la ficha del cliente (botón "Activar/Desactivar carrito") '
+                'o el filtro Archivados.' % nombres)
+        return super().unlink()
+
     _MAPEO_CHATWOOT_POR_FLUJO = {
         'flujo_agendamiento_directo': ('Agendamiento Directo', 'Agendamiento_Directo'),
         'flujo_agendamiento_precios': ('Agendamiento Precios', 'Agendamiento_Precios'),
@@ -843,6 +877,29 @@ class ChatbotFlujo(models.Model):
                 '_ensure_catalogo_flujos: recreados %d flujo(s) base (archivados).',
                 creados)
         return creados
+
+    def _ensure_flujo_carrito(self):
+        """(Re)crea flujo_carrito_compra inactivo y sin pasos si falta (SPEC 32).
+
+        El flujo del carrito se borra con facilidad en limpiezas manuales de la
+        UI (caso 12/9) y la sync de base no lo rearma. Se crea con los mismos
+        valores que la data de chatbot_cart (SPEC 29): inactivo, sin pasos; la
+        activación queda en manos del cliente (botón/marca manual).
+        """
+        existente = self.sudo().with_context(active_test=False).search(
+            [('name', '=', 'flujo_carrito_compra')], limit=1)
+        if existente:
+            return False
+        main_company = self.env.ref('base.main_company')
+        self.sudo().with_context(force_delete=True).create({
+            'name': 'flujo_carrito_compra',
+            'company_id': main_company.id,
+            'politica_inicio': 'confirmation',
+            'generar_pasos_automatico': False,
+            'active': False,
+        })
+        _logger.info('_ensure_flujo_carrito: recreado flujo_carrito_compra (inactivo).')
+        return True
 
     def _ensure_mappings_for_flujos(self, flujos):
         """

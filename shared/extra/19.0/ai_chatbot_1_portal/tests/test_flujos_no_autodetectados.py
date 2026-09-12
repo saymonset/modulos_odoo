@@ -127,3 +127,63 @@ class TestFlujosNoAutodetectados(BaseChatbotTestCase):
                          'La sync no debe agregar el carrito sin marca manual')
         self.assertFalse(flujo_carrito.active,
                          'La sync no debe activar el carrito sin marca manual')
+
+    def test_07_unlink_flujo_protegido_bloqueado(self):
+        """SPEC 32: borrar un flujo del sistema lanza UserError informativo."""
+        from odoo.exceptions import UserError
+        flujo = self._flujo_carrito()
+        self.assertTrue(flujo)
+        with self.assertRaises(UserError) as ctx:
+            flujo.unlink()
+        self.assertIn('no se pueden borrar', ctx.exception.args[0])
+        self.assertTrue(
+            self.env['chatbot.flujo'].sudo().with_context(
+                active_test=False).search_count(
+                [('name', '=', 'flujo_carrito_compra')]) == 1,
+            'El flujo debe seguir existiendo tras el intento de borrado')
+
+    def test_08_unlink_flujo_protegido_force_delete(self):
+        """SPEC 32: con context.force_delete el borrado legítimo es posible."""
+        flujo = self._flujo_carrito()
+        self.assertTrue(flujo)
+        nuevo = self.env['chatbot.flujo'].sudo().with_context(
+            force_delete=True).create({
+                'name': 'flujo_agendamiento_otra_consulta_test',
+                'company_id': self.env.ref('base.main_company').id,
+            })
+        nuevo.with_context(force_delete=True).unlink()
+        self.assertFalse(
+            self.env['chatbot.flujo'].sudo().with_context(
+                active_test=False).search_count(
+                [('name', '=', 'flujo_agendamiento_otra_consulta_test')]),
+            'force_delete debe permitir borrar')
+
+    def test_09_sync_recrea_carrito_borrado_inactivo(self):
+        """SPEC 32: la sync recrea flujo_carrito_compra inactivo si fue borrado."""
+        self._crear_tabla_n8n_vectors()
+        self._insertar_documento(
+            'demo', "TÚ ERES:\nBOT CLIENTE TEST.\n"
+            "PRODUCTOS:\nVenta de artículos, ofrecemos cotizar y pedidos.", 1)
+        flujo_carrito = self._flujo_carrito()
+        self.assertTrue(flujo_carrito)
+        flujo_carrito.with_context(force_delete=True).unlink()
+        self.assertFalse(
+            self.env['chatbot.flujo'].sudo().with_context(
+                active_test=False).search(
+                [('name', '=', 'flujo_carrito_compra')], limit=1),
+            'Precondición: el carrito no existe')
+
+        config = self.env['chatbot.config'].sudo().create({
+            'name': 'Cliente Test Recupera Carrito',
+        })
+        resultado = config.action_recargar_todo_desde_rag()
+
+        self.assertEqual(resultado.get('params', {}).get('type'), 'success')
+        recreado = self.env['chatbot.flujo'].sudo().with_context(
+            active_test=False).search(
+            [('name', '=', 'flujo_carrito_compra')], limit=1)
+        self.assertTrue(recreado, 'La sync debe recrear el flujo del carrito')
+        self.assertFalse(recreado.active,
+                         'Debe nacer inactivo; la activación es manual')
+        self.assertFalse(recreado.paso_ids,
+                         'Debe nacer sin pasos (SPEC 29)')
