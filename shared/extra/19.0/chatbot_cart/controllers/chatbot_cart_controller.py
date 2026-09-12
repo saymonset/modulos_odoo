@@ -104,6 +104,14 @@ class ChatbotCartController(http.Controller):
         carrito = session._get_carrito(session_id)
         ultima_busqueda = carrito.get('ultima_busqueda', [])
 
+        # Esperando decisión de salida: "1"/"2"/"3" (o palabras) resuelven
+        # el guardar/vaciar/seguir pendiente sin pasar por el clasificador.
+        if carrito.get('pendiente_salida'):
+            resolucion = self._resolver_salida_pendiente(
+                env, session_id, conversation_id, account_id, platform, valor)
+            if resolucion:
+                return self._json_response(resolucion)
+
         # Clasificación de la acción (IA + fallback determinista)
         use_case = env['clasificar.accion.carrito.use.case']
         clasificacion = self._clasificar(env, use_case, valor)
@@ -209,21 +217,97 @@ class ChatbotCartController(http.Controller):
             texto = "🧹 Carrito vaciado. Escribe *carrito* para ver las opciones o el nombre de un producto para agregarlo."
             return self._respuesta(session_id, conversation_id, account_id, platform, texto)
 
-        if accion == 'CANCELAR':
-            texto = (
-                "¿Qué hacemos con tu carrito?\n"
-                "1️⃣ *Lo guardo* y vuelvo al menú principal\n"
-                "2️⃣ *Lo vacío* (pide confirmación)\n"
-                "3️⃣ *Sigo comprando*\n\n"
-                "Responde 1, 2 o 3."
-            )
-            return self._respuesta(session_id, conversation_id, account_id, platform, texto)
+        if accion == 'SALIR':
+            return self._salir_carrito(
+                env, session_id, conversation_id, account_id, platform)
 
         if accion == 'PAGAR':
             return self._pagar(env, session_id, conversation_id, account_id, platform)
 
-        texto = "No entendí esa acción. Escribe *ayuda* para ver las opciones del carrito."
+        texto = (
+            "🛒 Estás de compras. Puedo ayudarte con el carrito: escribe "
+            "*catálogo*, *ver carrito* o el nombre de un producto.\n"
+            "Para preguntas del negocio escribe *salir* y te atiendo."
+        )
         return self._respuesta(session_id, conversation_id, account_id, platform, texto)
+
+    def _salir_carrito(self, env, session_id, conversation_id, account_id, platform):
+        """Inicia o completa la salida del modo carrito hacia el negocio."""
+        session = env['chatbot.session'].sudo()
+        resumen = self.CART_SERVICE.resumen(env, session_id)
+
+        if not resumen['items']:
+            # Carrito vacío: salir directo (SPEC 34)
+            session._salir_modo_carrito(session_id, vaciar=False)
+            texto = (
+                "👋 Saliste del carrito. ¿En qué más te puedo ayudar del negocio? "
+                "Escribe *carrito* cuando quieras volver a comprar."
+            )
+            return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                                   finalizado=True)
+
+        # Carrito con items: guardar pendiente de decisión (una sola vez)
+        carrito = session._get_carrito(session_id)
+        carrito['pendiente_salida'] = True
+        session._guardar_carrito(session_id, carrito)
+        texto = (
+            "¿Qué hacemos con tu carrito?\n"
+            "1️⃣ *Lo guardo* y salgo del carrito\n"
+            "2️⃣ *Lo vacío* y salgo del carrito\n"
+            "3️⃣ *Sigo comprando*\n\n"
+            "Responde 1, 2 o 3."
+        )
+        return self._respuesta(session_id, conversation_id, account_id, platform, texto)
+
+    def _resolver_salida_pendiente(self, env, session_id, conversation_id, account_id, platform, valor):
+        """Resuelve la respuesta 1/2/3 pendiente de salida.
+
+        Devuelve la respuesta si el valor coincide con una opción pendiente;
+        None en caso contrario (se sigue con el clasificador normal).
+        """
+        t = valor.strip().lower()
+        opcion = None
+        if re.fullmatch(r'[1-3]', t):
+            opcion = int(t)
+        elif any(p in t for p in ('guardar', 'guardo', 'lo guardo', 'guardar y salir', 'guardar y salgo')):
+            opcion = 1
+        elif any(p in t for p in ('vaciar', 'vacio', 'lo vacío', 'lo vacio', 'vaciar y salir', 'vaciar y salgo')):
+            opcion = 2
+        elif any(p in t for p in ('seguir', 'sigo comprando', 'continuar', 'seguir comprando')):
+            opcion = 3
+
+        if opcion is None:
+            return None
+
+        session = env['chatbot.session'].sudo()
+        carrito = session._get_carrito(session_id)
+        carrito.pop('pendiente_salida', None)
+
+        if opcion == 1:
+            session._salir_modo_carrito(session_id, vaciar=False)
+            texto = (
+                "👋 Saliste del carrito y guardé tus productos. "
+                "¿En qué más te puedo ayudar del negocio? "
+                "Escribe *carrito* cuando quieras retomar tu compra."
+            )
+            return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                                   finalizado=True)
+
+        if opcion == 2:
+            session._salir_modo_carrito(session_id, vaciar=True)
+            texto = (
+                "🧹 Carrito vaciado y saliste del modo compra. "
+                "¿En qué más te puedo ayudar del negocio? "
+                "Escribe *carrito* para volver a comprar."
+            )
+            return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                                   finalizado=True)
+
+        # opcion == 3: seguir comprando
+        session._guardar_carrito(session_id, carrito)
+        texto = "¡Perfecto! Sigues en el carrito 🛒. ¿Qué producto quieres ver o agregar?"
+        return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                               extra={'botones': self.BOTONES_CARRITO})
 
     def _ejecutar_item(self, env, session_id, conversation_id, account_id, platform,
                        accion, producto_ref, cantidad, ultima_busqueda):

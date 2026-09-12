@@ -40,6 +40,25 @@ def render_instrucciones_carrito():
     return _CART_INSTRUCTIONS
 
 
+def render_prompt_carrito_solo():
+    """Prompt aislado del modo carrito (SPEC 34).
+
+    Sin contenido de negocio ni RAG: el usuario está de compras y todas las
+    operaciones las gestiona Odoo (/chatbot_cart/procesar). Se usa como
+    system_prompt cuando la sesión está en modo CARRITO.
+    """
+    return (
+        "=== CARRITO DE COMPRA (modo aislado) ===\n"
+        "El usuario está realizando una compra por WhatsApp.\n"
+        "Todas las operaciones del carrito (buscar, agregar, ver carrito, "
+        "pagar, salir) las gestiona Odoo a través de /chatbot_cart/procesar.\n"
+        "No respondas contenido del negocio. Devuelve "
+        'flow_name="flujo_carrito_compra" y '
+        'equipo_asignado="flujo_carrito_compra" para que Odoo procese la '
+        "acción del carrito."
+    )
+
+
 def append_cart_instructions(system_prompt):
     """Prepone el bloque del carrito al system prompt si no está."""
     if not system_prompt:

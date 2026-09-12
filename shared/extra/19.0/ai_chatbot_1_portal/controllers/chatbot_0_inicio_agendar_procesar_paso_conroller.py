@@ -404,12 +404,21 @@ class InicioAgendarController(http.Controller):
                     )
 
             system_prompt = ChatBotUtils.build_agent_system_prompt(request.env)
+            modo_carrito = False
             try:
                 from odoo.addons.chatbot_cart.services.prompt_carrito import (
                     append_cart_instructions,
                     carrito_disponible,
+                    render_prompt_carrito_solo,
                 )
-                if carrito_disponible(request.env):
+                session_id = data.get('session_id', '')
+                session = request.env['chatbot.session'].sudo()
+                if session_id and session._esta_en_modo_carrito(session_id):
+                    # SPEC 34: aislamiento total — en modo carrito el agente
+                    # solo recibe instrucciones del carrito (sin negocio ni RAG).
+                    modo_carrito = True
+                    system_prompt = render_prompt_carrito_solo()
+                elif carrito_disponible(request.env):
                     system_prompt = append_cart_instructions(system_prompt)
             except ImportError:
                 pass
@@ -418,6 +427,7 @@ class InicioAgendarController(http.Controller):
                 'No pudimos procesar tu solicitud en este momento. Por favor intenta más tarde.')
 
             data['system_prompt'] = system_prompt or fallback_message
+            data['modo_carrito'] = modo_carrito
             data['fallback_message'] = fallback_message
             data['flow_map'] = request.env['chatbot.flujo'].sudo()._get_flow_routing_map()
             # SPEC 18: True = modo menú determinista (SPEC 13/17); False =
