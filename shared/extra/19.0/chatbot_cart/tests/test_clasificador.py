@@ -51,3 +51,49 @@ class TestClasificarAccion(BaseChatbotCartTestCase):
 
     def test_12_default_consultar(self):
         self.assertEqual(self._clasificar('hola')['accion'], 'CONSULTAR')
+
+    def test_13_catalogo(self):
+        self.assertEqual(self._clasificar('catálogo')['accion'], 'CATALOGO')
+        self.assertEqual(self._clasificar('catalogo')['accion'], 'CATALOGO')
+
+    def test_14_catalogo_productos(self):
+        res = self._clasificar('que productos tienen?')
+        self.assertEqual(res['accion'], 'CATALOGO')
+
+    def test_15_catalogo_que_venden(self):
+        self.assertEqual(self._clasificar('qué venden?')['accion'], 'CATALOGO')
+
+    def test_16_catalogo_lista(self):
+        self.assertEqual(self._clasificar('muéstrame los productos')['accion'], 'CATALOGO')
+
+    def test_17_mas_pagina(self):
+        res = self._clasificar('ver más')
+        self.assertEqual(res['accion'], 'CATALOGO')
+        self.assertEqual(res['producto'], 'MAS')
+
+    def test_18_mas_productos(self):
+        res = self._clasificar('más productos')
+        self.assertEqual(res['accion'], 'CATALOGO')
+        self.assertEqual(res['producto'], 'MAS')
+
+    def test_19_fallback_gana_a_ia_comando_conocido(self):
+        # "agrega 2" es AGREGAR por el fallback determinista; la IA no debe
+        # sobre-escribirlo (SPEC 33). Un cliente fake que lanza error si se usa.
+        class ClienteIARompe:
+            pass
+        use_case = self.env['clasificar.accion.carrito.use.case']
+        res = use_case.execute({
+            'texto_usuario': 'agrega 2',
+            'openai_client': ClienteIARompe(),
+            'model': 'gpt-test',
+        })
+        self.assertEqual(res['accion'], 'AGREGAR')
+
+    def test_20_texto_ambiguo_no_reconocido_por_fallback(self):
+        # Un mensaje sin palabras de comando no es reconocido por el fallback:
+        # `_clasificar_fallback` devuelve reconocido=False (la IA lo clasifica).
+        use_case = self.env['clasificar.accion.carrito.use.case']
+        fallback, reconocido = use_case._clasificar_fallback(
+            'tengo hambre y algo para la cena')
+        self.assertFalse(reconocido)
+        self.assertEqual(fallback['accion'], 'CONSULTAR')

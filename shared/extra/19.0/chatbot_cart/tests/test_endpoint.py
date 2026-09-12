@@ -12,12 +12,15 @@ class TestProcesarEndpoint(BaseChatbotCartTestCase):
     """
 
     def test_01_ruta_es_http_no_json(self):
+        # Odoo 19 expone el routing original del endpoint; type=http responde
+        # JSON plano (REST) y no JSON-RPC, lo que requiere Unificar_salida_carrito.
         from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (
             ChatbotCartController,
         )
-        self.assertEqual(
-            ChatbotCartController.procesar.routing.get('type'), 'http',
-            'La ruta debe ser type=http para responder JSON plano (REST)')
+        routing = getattr(ChatbotCartController.procesar, 'original_routing', None)
+        self.assertTrue(routing, 'El endpoint debe exponer original_routing')
+        self.assertEqual(routing.get('type'), 'http')
+        self.assertIn('/chatbot_cart/procesar', routing.get('routes', []))
 
     def test_02_texto_para_usuario_en_raiz(self):
         from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (

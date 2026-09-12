@@ -45,6 +45,12 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
     def execute(self, options):
         """Clasifica el mensaje en una acción de carrito con argumentos.
 
+        Orden de prioridad (SPEC 33): el fallback determinista se consulta
+        PRIMERO y gana para los comandos conocidos ("carrito", "catálogo",
+        "más", "agrega N", etc.). La IA solo clasifica cuando el fallback no
+        reconoce el mensaje (intención ambigua), evitando que la IA malclasifique
+        comandos claros como "agrega 2".
+
         :param options: dict con:
             - 'texto_usuario': string
             - 'openai_client': cliente OpenAI (opcional)
@@ -60,13 +66,17 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
         if not texto:
             return {"accion": "CONSULTAR", "producto": "", "cantidad": 0}
 
+        fallback, reconocido = self._clasificar_fallback(texto)
+        if reconocido:
+            return fallback
+
         if openai_client:
             try:
                 return self._clasificar_con_ia(texto, openai_client, model, max_tokens)
             except Exception as e:
                 _logger.error(f"Error clasificando acción de carrito con IA: {str(e)}")
 
-        return self._clasificar_fallback(texto)
+        return fallback
 
     @api.model
     def _clasificar_con_ia(self, texto, openai_client, model, max_tokens):
@@ -86,6 +96,12 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
 
         REGLAS:
         - "quiero N producto" (sin verbo) es AGREGAR (ej. "quiero 2 camisas rojas").
+        - "agrega N" o "agrega el N" con N número se refiere a un producto de la
+          lista mostrada: es AGREGAR, NUNCA CATALOGO.
+        - "más" o "ver más" tras ver productos es CATALOGO (siguiente página).
+        - CATALOGO es SOLO cuando pide el catálogo general: "catálogo",
+          "qué productos tienen", "qué venden", "productos". No confundas
+          agregar un producto por su número con pedir el catálogo.
         - Un número suelto se interpreta como MODIFICAR cantidad si hay contexto de producto previo, si no como CONSULTAR.
         - Extrae el nombre del producto y la cantidad cuando sea posible.
 
@@ -123,33 +139,38 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
 
     @staticmethod
     def _clasificar_fallback(texto):
-        """Clasificación determinista sin IA."""
+        """Clasificación determinista sin IA.
+
+        Devuelve (resultado, reconocido): `reconocido` es True cuando el
+        mensaje coincide con un comando conocido (la IA no debe sobre-escribirlo);
+        False cuando el mensaje es ambiguo (la IA puede clasificarlo).
+        """
         t = texto.lower().strip()
         cantidad = ClasificarAccionCarritoUseCase._extraer_cantidad(t)
 
         if any(p in t for p in _PALABRAS_VACIAR):
-            return {"accion": "VACIAR", "producto": "", "cantidad": 0}
+            return {"accion": "VACIAR", "producto": "", "cantidad": 0}, True
         if any(p in t for p in _PALABRAS_PAGAR):
-            return {"accion": "PAGAR", "producto": "", "cantidad": 0}
+            return {"accion": "PAGAR", "producto": "", "cantidad": 0}, True
         if any(p in t for p in _PALABRAS_CANCELAR):
-            return {"accion": "CANCELAR", "producto": "", "cantidad": 0}
+            return {"accion": "CANCELAR", "producto": "", "cantidad": 0}, True
         if any(p in t for p in _PALABRAS_AYUDA):
-            return {"accion": "AYUDA", "producto": "", "cantidad": 0}
+            return {"accion": "AYUDA", "producto": "", "cantidad": 0}, True
         if any(p in t for p in _PALABRAS_QUITAR):
-            return {"accion": "QUITAR", "producto": t, "cantidad": cantidad}
+            return {"accion": "QUITAR", "producto": t, "cantidad": cantidad}, True
         if any(p in t for p in _PALABRAS_MODIFICAR):
-            return {"accion": "MODIFICAR", "producto": t, "cantidad": cantidad}
+            return {"accion": "MODIFICAR", "producto": t, "cantidad": cantidad}, True
         if any(p in t for p in _PALABRAS_AGREGAR):
-            return {"accion": "AGREGAR", "producto": t, "cantidad": cantidad}
+            return {"accion": "AGREGAR", "producto": t, "cantidad": cantidad}, True
         if any(p in t for p in _PALABRAS_CONSULTAR):
-            return {"accion": "CONSULTAR", "producto": "", "cantidad": 0}
-        if any(p in t for p in _PALABRAS_CATALOGO):
-            return {"accion": "CATALOGO", "producto": "", "cantidad": 0}
+            return {"accion": "CONSULTAR", "producto": "", "cantidad": 0}, True
         if re.search(r'\b(ver\s+)?m[áa]s\b', t) or any(p in t for p in _PALABRAS_MAS):
-            return {"accion": "CATALOGO", "producto": "MAS", "cantidad": 0}
+            return {"accion": "CATALOGO", "producto": "MAS", "cantidad": 0}, True
+        if any(p in t for p in _PALABRAS_CATALOGO):
+            return {"accion": "CATALOGO", "producto": "", "cantidad": 0}, True
 
         tokens = set(re.findall(r'[a-záéíóúñü]+', t))
         if tokens & {'buscar', 'busca', 'muestrame', 'muéstrame', 'mostrar', 'ver', 'lista', 'catalogo', 'catálogo', 'que', 'qué'}:
-            return {"accion": "BUSCAR", "producto": t, "cantidad": 0}
+            return {"accion": "BUSCAR", "producto": t, "cantidad": 0}, True
 
-        return {"accion": "CONSULTAR", "producto": "", "cantidad": 0}
+        return {"accion": "CONSULTAR", "producto": "", "cantidad": 0}, False

@@ -301,7 +301,9 @@ class TestBottonCarrito(BaseChatbotCartTestCase):
     def test_31_flujo_inexistente_se_recrea(self):
         flujo = self._flujo_carrito()
         if flujo:
-            flujo.unlink()
+            # SPEC 32 protege el flujo del sistema; force_delete permite
+            # simular el borrado legítimo (shell/migración).
+            flujo.with_context(force_delete=True).unlink()
         config = self.env['chatbot.config'].sudo().create(
             {'name': 'Cliente Test Recrea'})
         config.action_activar_carrito()

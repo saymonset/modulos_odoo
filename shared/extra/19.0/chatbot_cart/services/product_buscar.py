@@ -12,6 +12,20 @@ class ProductBuscarService:
     DEFAULT_LIMIT = 5
     CATALOG_LIMIT = 5
 
+    @staticmethod
+    def _descripcion_producto(tmpl):
+        """Devuelve la descripción de venta del producto como texto plano.
+
+        En Odoo 19 `description_sale` es un JSON de traducciones y el ORM
+        solo lo traduce cuando el contexto trae `lang`. Se fuerza el idioma
+        de la compañía (o es_VE como respaldo) para leer el texto correcto.
+        """
+        lang = tmpl.env.company.partner_id.lang or 'es_VE'
+        desc = tmpl.with_context(lang=lang).description_sale
+        if not desc:
+            return ''
+        return str(desc).strip()
+
     def _producto_dict(self, env, tmpl, rates):
         """Construye el dict de producto con precios, imagen y descripción."""
         product = tmpl.product_variant_id
@@ -20,7 +34,7 @@ class ProductBuscarService:
             'product_id': product.id,
             'name': tmpl.name,
             'default_code': tmpl.default_code or '',
-            'description': (tmpl.description_sale or '').strip(),
+            'description': self._descripcion_producto(tmpl),
             'price_ves': price_ves,
             'price_usd': price_usd,
             'price_cop': price_cop if rates[_COP_SHOW_KEY] else 0.0,

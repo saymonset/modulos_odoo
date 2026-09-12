@@ -19,6 +19,10 @@ class ChatbotCartController(http.Controller):
     CART_SERVICE = CartService()
     SEARCH_SERVICE = ProductBuscarService()
 
+    # Botones interactivos de navegación (SPEC 33). n8n los envía como
+    # interactive reply buttons si la respuesta los marca; si falla, texto plano.
+    BOTONES_CARRITO = ['catálogo', 'ver carrito', 'pagar']
+
     # ==================================================================
     #  HELPERS
     # ==================================================================
@@ -159,8 +163,20 @@ class ChatbotCartController(http.Controller):
             return self._respuesta(session_id, conversation_id, account_id, platform, texto)
 
         if accion == 'CONSULTAR':
+            resumen = self.CART_SERVICE.resumen(env, session_id)
+            if not resumen['items']:
+                # Carrito vacío: mostrar el catálogo en vez de solo "está vacío" (SPEC 33)
+                return self._mostrar_catalogo(
+                    env, session_id, conversation_id, account_id, platform, offset=0)
             texto = self.CART_SERVICE.formato_resumen_amigable(env, session_id)
-            return self._respuesta(session_id, conversation_id, account_id, platform, texto)
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform, texto,
+                extra={'botones': self.BOTONES_CARRITO})
+
+        if accion == 'CATALOGO':
+            return self._mostrar_catalogo(
+                env, session_id, conversation_id, account_id, platform,
+                offset=self._offset_catalogo(env, session_id, producto_ref))
 
         if accion == 'BUSCAR':
             result = self.SEARCH_SERVICE.buscar(env, producto_ref, limit=5)
@@ -180,7 +196,8 @@ class ChatbotCartController(http.Controller):
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
                 self.SEARCH_SERVICE.formato_lista_productos(result),
-                imagenes=self._imagenes_de_productos(result.get('productos', [])))
+                imagenes=self._imagenes_de_productos(result.get('productos', [])),
+                extra={'botones': self.BOTONES_CARRITO})
 
         if accion in ('AGREGAR', 'QUITAR', 'MODIFICAR'):
             return self._ejecutar_item(
@@ -227,7 +244,8 @@ class ChatbotCartController(http.Controller):
             resumen = service.resumen(env, session_id)
             texto = (f"✅ Agregué *{cantidad} x {producto.name}* al carrito. "
                      f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}")
-            return self._respuesta(session_id, conversation_id, account_id, platform, texto)
+            return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                                   extra={'botones': self.BOTONES_CARRITO})
 
         if accion == 'QUITAR':
             resultado = service.quitar(env, session_id, product_id)
@@ -237,7 +255,8 @@ class ChatbotCartController(http.Controller):
             resumen = service.resumen(env, session_id)
             texto = (f"🗑️ Producto eliminado. "
                      f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}")
-            return self._respuesta(session_id, conversation_id, account_id, platform, texto)
+            return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                                   extra={'botones': self.BOTONES_CARRITO})
 
         # MODIFICAR
         if not cantidad:
@@ -250,7 +269,46 @@ class ChatbotCartController(http.Controller):
         resumen = service.resumen(env, session_id)
         texto = (f"✏️ Cantidad actualizada a *{cantidad}*. "
                  f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}")
-        return self._respuesta(session_id, conversation_id, account_id, platform, texto)
+        return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                               extra={'botones': self.BOTONES_CARRITO})
+
+    def _offset_catalogo(self, env, session_id, producto_ref):
+        """Devuelve el offset del catálogo según la paginación guardada.
+
+        "más" (producto_ref == 'MAS') avanza una página; cualquier otro
+        comando reinicia el catálogo desde la primera página.
+        """
+        session = env['chatbot.session'].sudo()
+        carrito = session._get_carrito(session_id)
+        if producto_ref == 'MAS':
+            pagina = carrito.get('pagina_catalogo', 0)
+            if pagina <= 0:
+                return 0
+            return pagina + self.SEARCH_SERVICE.CATALOG_LIMIT
+        return 0
+
+    def _mostrar_catalogo(self, env, session_id, conversation_id, account_id, platform, offset=0):
+        """Muestra una página del catálogo y guarda la paginación + últimos productos."""
+        session = env['chatbot.session'].sudo()
+        result = self.SEARCH_SERVICE.catalogo(env, offset=offset)
+        carrito = session._get_carrito(session_id)
+        carrito['pagina_catalogo'] = offset
+        carrito['ultima_busqueda'] = [
+            {
+                'product_id': p['product_id'],
+                'name': p['name'],
+                'default_code': p.get('default_code', ''),
+                'price_usd': p.get('price_usd', 0.0),
+                'image_url': p.get('image_url', ''),
+            }
+            for p in result.get('productos', [])
+        ]
+        session._guardar_carrito(session_id, carrito)
+        return self._respuesta(
+            session_id, conversation_id, account_id, platform,
+            self.SEARCH_SERVICE.formato_lista_catalogo(result),
+            imagenes=self._imagenes_de_productos(result.get('productos', [])),
+            extra={'botones': self.BOTONES_CARRITO})
 
     def _imagenes_de_productos(self, productos):
         """Devuelve las URLs de imagen de los productos que tienen imagen."""

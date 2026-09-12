@@ -242,7 +242,32 @@ docker exec odoo-db19-leads psql -U odoo -d dbodoo19 -c \
 Al terminar, volver a apuntar los nodos HTTP de n8n a prod y confirmar que el WhatsApp
 del negocio responde normal.
 
-## 5. Limitaciones actuales (importantes al probar)
+## 5. Comando catálogo (SPEC 33)
+
+Desde cualquier turno del carrito, el usuario puede pedir el catálogo general:
+
+```bash
+# Catálogo (primeros 5 productos vendibles)
+curl -s -X POST http://localhost:28069/chatbot_cart/procesar \
+  -H 'Content-Type: application/json' -d '{"session_id":"demo-001","valor":"catálogo"}'
+```
+
+También responden a "qué tienen?", "productos", "qué venden?". La respuesta lista
+hasta 5 productos con **precio + descripción** (`description_sale`) y la mini-guía
+persistente. Para la siguiente página:
+
+```bash
+... -d '{"session_id":"demo-001","valor":"más"}'
+```
+
+Notas:
+
+- La paginación vive en `carrito.pagina_catalogo` de la sesión.
+- Con el carrito vacío, "ver carrito" muestra el catálogo en vez de "está vacío" (SPEC 33).
+- La respuesta marca `botones` (`catálogo` / `ver carrito` / `pagar`); n8n los envía como
+  interactive buttons si la plataforma lo soporta, con fallback a texto plano.
+
+## 6. Limitaciones actuales (importantes al probar)
 
 - **COP desactivado** en esta BD (`cop_show_fields=False`); para probar COP hay que
   activarlo en la compañía y re-fetchear la tasa.
@@ -253,7 +278,7 @@ del negocio responde normal.
   clasificador determinista por palabras clave; los comandos base ("agrega", "ver
   carrito", "pagar", etc.) funcionan igual.
 
-## 6. Mapa de criterios de aceptación del spec
+## 7. Mapa de criterios de aceptación del spec
 
 | Criterio | Cómo probarlo |
 |---|---|
@@ -270,3 +295,7 @@ del negocio responde normal.
 | Mini-estado tras cada operación | observar `texto_para_usuario` tras agregar/quitar |
 | Pagar materializa `sale.order` | `pagar` + consulta en BD (`sale_order`) |
 | Carrito persiste entre mensajes | repetir llamadas con el mismo `session_id` |
+| "catálogo" muestra 5 productos con precio+descripción | `procesar` con "catálogo"; "más" pagina (SPEC 33) |
+| "ver carrito" con carrito vacío muestra catálogo | `procesar` con "ver carrito" sin items (SPEC 33) |
+| Respuestas del carrito marcan `botones` | inspeccionar `botones` en el JSON de `procesar` (SPEC 33) |
+| Descripción vacía no rompe la tarjeta | producto sin `description_sale` en el catálogo (SPEC 33) |
