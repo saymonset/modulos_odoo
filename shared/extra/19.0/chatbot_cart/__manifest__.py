@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Chatbot Cart',
-    'version': '19.0.1.5.0',
+    'version': '19.0.1.6.0',
     'category': 'Sales/WhatsApp',
     'summary': 'Carrito de compra por WhatsApp con IA',
     'description': """Carrito de compra por WhatsApp: el usuario consulta productos (con imagen),

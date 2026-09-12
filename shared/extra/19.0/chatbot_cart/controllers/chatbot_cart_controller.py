@@ -61,6 +61,30 @@ class ChatbotCartController(http.Controller):
             return productos[0]['product_id'], ""
         return None, self.SEARCH_SERVICE.formato_lista_productos(result)
 
+    @staticmethod
+    def _es_seleccion_numerica(valor):
+        """SPEC 38: devuelve el dígito si `valor` es una selección numérica de
+        la lista mostrada ("2", "el 2", "EL 2"); None en caso contrario."""
+        m = re.match(r'^(?:el\s+)?(\d{1,2})$', (valor or '').strip(), re.IGNORECASE)
+        return m.group(1) if m else None
+
+    @classmethod
+    def _decision_seleccion_numerica(cls, valor, ultima_busqueda):
+        """SPEC 38: qué hacer con un número suelto según la lista mostrada.
+
+        Devuelve ('AGREGAR', dígito), ('SIN_LISTA', None),
+        ('FUERA_RANGO', len(ultima_busqueda)) o None si `valor` no es un
+        número suelto.
+        """
+        numero = cls._es_seleccion_numerica(valor)
+        if not numero:
+            return None
+        if not ultima_busqueda:
+            return ('SIN_LISTA', None)
+        if int(numero) > len(ultima_busqueda):
+            return ('FUERA_RANGO', len(ultima_busqueda))
+        return ('AGREGAR', numero)
+
     def _respuesta(self, session_id, conversation_id, account_id, platform, texto, imagenes=None, finalizado=False, extra=None):
         texto = truncate_for_platform(texto, platform)
         resp = {
@@ -112,9 +136,31 @@ class ChatbotCartController(http.Controller):
             if resolucion:
                 return self._json_response(resolucion)
 
-        # Clasificación de la acción (IA + fallback determinista)
-        use_case = env['clasificar.accion.carrito.use.case']
-        clasificacion = self._clasificar(env, use_case, valor)
+        # SPEC 38: "responde el número" del catálogo/búsqueda agrega el item
+        # mostrado, sin pasar por el clasificador (que interpreta un número
+        # suelto como CONSULTAR y el carrito queda vacío).
+        decision = self._decision_seleccion_numerica(valor, ultima_busqueda)
+        if decision:
+            tipo, ref = decision
+            if tipo == 'SIN_LISTA':
+                resp = self._respuesta(
+                    session_id, conversation_id, account_id, platform,
+                    "Selecciona primero un producto con *catálogo* o escribiendo su nombre.",
+                    extra={'botones': self.BOTONES_CARRITO})
+                return self._json_response(resp)
+            if tipo == 'FUERA_RANGO':
+                resp = self._respuesta(
+                    session_id, conversation_id, account_id, platform,
+                    f"Ese número no está en la lista (1-{ref}). "
+                    "Responde el número o escribe el nombre.",
+                    extra={'botones': self.BOTONES_CARRITO})
+                return self._json_response(resp)
+            clasificacion = {'accion': 'AGREGAR', 'producto': ref, 'cantidad': 1}
+        else:
+            # Clasificación de la acción (IA + fallback determinista)
+            use_case = env['clasificar.accion.carrito.use.case']
+            clasificacion = self._clasificar(env, use_case, valor)
+
         accion = clasificacion.get('accion', 'CONSULTAR')
         producto_ref = clasificacion.get('producto', '')
         cantidad = clasificacion.get('cantidad', 0)
