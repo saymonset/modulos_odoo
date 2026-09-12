@@ -233,26 +233,22 @@ class TestGateCarrito(BaseChatbotCartTestCase):
         self.assertTrue(CartService.disponible(self.env))
 
     def test_26_gate_false_si_flujo_inactivo(self):
-        from odoo.addons.chatbot_cart.controllers.configuracion_agente_controller import (
-            ConfiguracionAgenteCartController,
-        )
+        from odoo.addons.chatbot_cart.services.prompt_carrito import carrito_disponible
         flujo = self.env['chatbot.flujo'].sudo().with_context(
             active_test=False).search(
             [('name', '=', 'flujo_carrito_compra')], limit=1)
         self.assertTrue(flujo, 'flujo_carrito_compra debe existir')
         flujo.sudo().write({'active': False})
-        self.assertFalse(ConfiguracionAgenteCartController._carrito_disponible(self.env))
+        self.assertFalse(carrito_disponible(self.env))
 
     def test_27_gate_true_si_flujo_activo(self):
-        from odoo.addons.chatbot_cart.controllers.configuracion_agente_controller import (
-            ConfiguracionAgenteCartController,
-        )
+        from odoo.addons.chatbot_cart.services.prompt_carrito import carrito_disponible
         flujo = self.env['chatbot.flujo'].sudo().with_context(
             active_test=False).search(
             [('name', '=', 'flujo_carrito_compra')], limit=1)
         self.assertTrue(flujo, 'flujo_carrito_compra debe existir')
         flujo.sudo().write({'active': True})
-        self.assertTrue(ConfiguracionAgenteCartController._carrito_disponible(self.env))
+        self.assertTrue(carrito_disponible(self.env))
 
 
 @tagged("-at_install", "post_install")

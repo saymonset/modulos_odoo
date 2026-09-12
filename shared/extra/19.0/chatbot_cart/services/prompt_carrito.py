@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Instrucciones del carrito de compra inyectadas en el system prompt del agente."""
 
+from odoo.addons.chatbot_cart.services.cart_service import CartService
+
 _FLOW_CARTO = 'flujo_carrito_compra'
 
 _CART_INSTRUCTIONS = """=== CARRITO DE COMPRAS (flujo_carrito_compra) ===
@@ -22,6 +24,15 @@ Reglas:
 - "cancelar" dentro del carrito lo gestiona el endpoint (ofrece guardar,
   vaciar o seguir); no lo trates como salida del chatbot.
 """.format(flow_name=_FLOW_CARTO)
+
+
+def carrito_disponible(env):
+    """Gate del carrito: hay productos vendibles con precio y el flujo activo."""
+    if not CartService.disponible(env):
+        return False
+    flujo = env['chatbot.flujo'].sudo().search(
+        [('name', '=', _FLOW_CARTO), ('active', '=', True)], limit=1)
+    return bool(flujo)
 
 
 def render_instrucciones_carrito():

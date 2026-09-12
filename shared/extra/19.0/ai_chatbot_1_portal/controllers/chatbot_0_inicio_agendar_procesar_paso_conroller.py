@@ -404,6 +404,15 @@ class InicioAgendarController(http.Controller):
                     )
 
             system_prompt = ChatBotUtils.build_agent_system_prompt(request.env)
+            try:
+                from odoo.addons.chatbot_cart.services.prompt_carrito import (
+                    append_cart_instructions,
+                    carrito_disponible,
+                )
+                if carrito_disponible(request.env):
+                    system_prompt = append_cart_instructions(system_prompt)
+            except ImportError:
+                pass
             fallback_message = request.env['ir.config_parameter'].sudo().get_param(
                 'ai_chatbot_1_portal.fallback_message',
                 'No pudimos procesar tu solicitud en este momento. Por favor intenta más tarde.')
