@@ -1,6 +1,6 @@
 # SPEC 36 — Recuperación del texto plano de la IA: fin del 400 de YCloud en el camino de error
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** — (toca el mismo workflow que SPEC 35 pero no depende de él)
 > **Date:** 2026-09-12
 > **Objective:** Que cuando la IA incumpla el formato JSON, el usuario reciba igualmente respuesta por WhatsApp (el texto plano de la IA o el fallback) en vez del 400 `PARAM_MISSING` actual, reinyectando los campos de ruteo desde `Obtener_configuracion_agente` en los items de recuperación.
@@ -94,6 +94,12 @@ Sin estructuras nuevas. El item de recuperación gana las claves `session_id`,
 - **Descartado:** output parser estructurado (fuera de scope; cambia comportamiento del agente).
 - **Descartado:** tocar la variante chatwoot o `Enviar_mensaje_de_IA2` (rutas con otra fuente
   de ruteo).
+- **Corrección (lección del 12/9):** n8n 2.x usa modelo **draft/versión/publish** — editar
+  `workflow_entity` directo NO llega al runtime (el editor lee la última `workflow_history`
+  y el webhook ejecuta la versión publicada en `workflow_publish_history`). Los cambios
+  quedaron aplicados actualizando la versión publicada `07f87bba` (+ borrar
+  `n8n:cache:collaboration` del workflow en Redis + restart). Mecanismo futuro: editar en
+  el editor y **Publish**, o cirugía sobre la versión publicada.
 
 ## Riesgos identificados
 

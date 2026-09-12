@@ -1,6 +1,6 @@
 # SPEC 37 — Botones interactivos de WhatsApp: el título del botón fluye como texto del usuario
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** — (mismo workflow que SPEC 36; su export pendiente queda cubierto por el paso de export de esta spec)
 > **Date:** 2026-09-12
 > **Objective:** Que presionar un botón interactivo del catálogo ("catálogo", "ver carrito", "pagar") responda igual que escribir su texto, mapeando `interactive.button_reply.title` en `Obtener_Info_basica` para que no llegue vacío al subflow.
@@ -75,8 +75,12 @@ Sin estructuras nuevas. Para mensajes `type=interactive` el item entrante gana c
   id en otros formatos; id=title en nuestros botones).
 - **Tomado:** solo workflow ycloud — **descartado** la variante chatwoot (el incidente es YCloud).
 - **Descartado:** catch-all del subflow para tipos desconocidos (scope mínimo; propia spec si llega).
-- **Tomado:** edición en vivo vía BD + restart con validación determinista pre-aplicación
-  (patrón SPEC 36 ya probado).
+- **Corrección (lección del 12/9):** n8n 2.x usa modelo **draft/versión/publish** — editar
+  `workflow_entity` directo NO llega al runtime (el editor lee la última `workflow_history`
+  y el webhook ejecuta la versión publicada en `workflow_publish_history`). Los cambios
+  quedaron aplicados actualizando la versión publicada `07f87bba` (+ borrar
+  `n8n:cache:collaboration` del workflow en Redis + restart). Mecanismo futuro: editar en
+  el editor y **Publish**, o cirugía sobre la versión publicada.
 
 ## Riesgos identificados
 

@@ -1,6 +1,6 @@
 # SPEC 38 — Seleccionar producto por número desde el catálogo agrega al carrito
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** — (mismo módulo `chatbot_cart` que SPEC 33/34; independiente de SPEC 37)
 > **Date:** 2026-09-12
 > **Objective:** Que responder el número de un producto del catálogo o de la búsqueda agregue ese producto al carrito (hoy "2" se interpreta como CONSULTAR y el carrito queda vacío).

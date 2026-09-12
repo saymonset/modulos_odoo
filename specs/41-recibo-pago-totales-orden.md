@@ -1,6 +1,6 @@
 # SPEC 41 — Recibo de pago real: totales desde la orden + datos de depósito configurables
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 38 (selección por número — validada por este mismo incidente: S00242 tiene la pizza)
 > **Date:** 2026-09-12
 > **Objective:** Que "pagar" entregue un recibo fiel del pedido (items y totales reales de la orden) con los datos de depósito del negocio, en vez del actual "0 item(s) — Bs. 0.00 / $0.00" con instrucciones que prometen datos bancarios que nunca llegan.
