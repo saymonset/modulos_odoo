@@ -38,8 +38,11 @@ class TestClasificarAccion(BaseChatbotCartTestCase):
     def test_08_ayuda(self):
         self.assertEqual(self._clasificar('ayuda')['accion'], 'AYUDA')
 
-    def test_09_cancelar(self):
-        self.assertEqual(self._clasificar('cancelar')['accion'], 'CANCELAR')
+    def test_09_salir(self):
+        self.assertEqual(self._clasificar('cancelar')['accion'], 'SALIR')
+        self.assertEqual(self._clasificar('salir')['accion'], 'SALIR')
+        self.assertEqual(self._clasificar('menú principal')['accion'], 'SALIR')
+        self.assertEqual(self._clasificar('volver')['accion'], 'SALIR')
 
     def test_10_vaciar(self):
         self.assertEqual(self._clasificar('vaciar el carrito')['accion'], 'VACIAR')

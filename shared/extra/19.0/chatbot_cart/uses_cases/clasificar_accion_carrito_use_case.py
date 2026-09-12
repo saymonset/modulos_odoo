@@ -11,7 +11,11 @@ _PALABRAS_AYUDA = {
     'ayuda', 'ayudame', 'opciones', 'menu', 'menú', 'qué puedo hacer', 'que puedo hacer',
     'instrucciones', 'como funciona', 'cómo funciona',
 }
-_PALABRAS_CANCELAR = {'cancelar', 'salir', 'salirme', 'abandonar', 'déjalo', 'dejalo'}
+_PALABRAS_SALIR = {
+    'salir', 'salirme', 'cancelar', 'abandonar', 'déjalo', 'dejalo',
+    'menú principal', 'menu principal', 'volver', 'volver al menú',
+    'volver al menu', 'dejar carrito', 'salir del carrito', 'salir del chat',
+}
 _PALABRAS_VACIAR = {'vaciar', 'quitar todo', 'eliminar todo', 'borrar todo', 'limpiar carrito'}
 _PALABRAS_CONSULTAR = {'carrito', 'ver carrito', 'mi carrito', 'ver mi carrito', 'que tengo', 'qué tengo'}
 _PALABRAS_CATALOGO = {
@@ -91,7 +95,8 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
         - CATALOGO: quiere ver el catálogo general de productos del negocio ("catálogo", "qué productos tienen", "qué venden", "productos", "catálogo de productos").
         - PAGAR: quiere pagar o finalizar la compra ("pagar", "finalizar compra").
         - AYUDA: pide ayuda u opciones ("ayuda", "qué puedo hacer").
-        - CANCELAR: quiere cancelar o salir del carrito ("cancelar", "salir").
+        - SALIR: quiere salir o cancelar del carrito para volver al negocio
+          ("salir", "cancelar", "menú principal", "volver").
         - VACIAR: quiere vaciar todo el carrito ("vaciar carrito", "quitar todo").
 
         REGLAS:
@@ -152,8 +157,8 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
             return {"accion": "VACIAR", "producto": "", "cantidad": 0}, True
         if any(p in t for p in _PALABRAS_PAGAR):
             return {"accion": "PAGAR", "producto": "", "cantidad": 0}, True
-        if any(p in t for p in _PALABRAS_CANCELAR):
-            return {"accion": "CANCELAR", "producto": "", "cantidad": 0}, True
+        if any(p in t for p in _PALABRAS_SALIR):
+            return {"accion": "SALIR", "producto": "", "cantidad": 0}, True
         if any(p in t for p in _PALABRAS_AYUDA):
             return {"accion": "AYUDA", "producto": "", "cantidad": 0}, True
         if any(p in t for p in _PALABRAS_QUITAR):
