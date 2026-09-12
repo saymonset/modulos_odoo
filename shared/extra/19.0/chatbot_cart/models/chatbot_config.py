@@ -9,6 +9,13 @@ _FLUJO_CARRITO = 'flujo_carrito_compra'
 class ChatbotConfig(models.Model):
     _inherit = 'chatbot.config'
 
+    payment_instructions = fields.Text(
+        string='Datos para el pago',
+        help=('Datos donde depositar que ve el usuario al pagar por el carrito '
+              '(banco, cuenta, Pago Móvil, alias...). Si está vacío, el recibo '
+              'indica que se coordinará el pago por chat.'),
+    )
+
     carrito_compra_activo = fields.Boolean(
         string='Carrito de compra activo',
         compute='_compute_carrito_compra_activo',

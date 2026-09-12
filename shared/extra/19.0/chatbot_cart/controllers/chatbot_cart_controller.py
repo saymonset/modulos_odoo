@@ -445,7 +445,13 @@ class ChatbotCartController(http.Controller):
         return [p['image_url'] for p in productos if p.get('has_image')]
 
     def _pagar(self, env, session_id, conversation_id, account_id, platform):
-        """Delega el pago al materializador de sale.order (paso 7)."""
+        """Materializa la orden y devuelve un recibo fiel al usuario (SPEC 41)."""
+        # El resumen se captura ANTES de materializar: el materializador vacía
+        # el carrito y un resumen posterior mostraría "0 items / 0.00".
+        resumen = self.CART_SERVICE.resumen(env, session_id)
+        if not resumen['items']:
+            return self._respuesta(session_id, conversation_id, account_id, platform,
+                                   "Tu carrito está vacío. Agrega productos antes de pagar.")
         try:
             order = env['sale.order'].sudo()._materializar_desde_carrito(
                 session_id, conversation_id=conversation_id, platform='whatsapp')
@@ -456,19 +462,35 @@ class ChatbotCartController(http.Controller):
         if not order:
             return self._respuesta(session_id, conversation_id, account_id, platform,
                                    "Tu carrito está vacío. Agrega productos antes de pagar.")
-        resumen = self.CART_SERVICE.resumen(env, session_id)
         total_cop_line = f"Total COP: ${resumen['total_cop']:,.2f}\n" if resumen['show_cop'] else ''
         texto = (
-            f"✅ *Pedido {order.name} confirmado!*\n"
+            f"✅ *Pedido {order.name} recibido!*\n"
             f"🛒 {resumen['count']} item(s) — Total: Bs. {resumen['total_ves']:,.2f} / ${resumen['total_usd']:,.2f}\n"
             f"{total_cop_line}"
-            "*Para completar el pago:*\n"
-            "1. Realiza la transferencia a los datos bancarios que te indicamos.\n"
-            "2. Envía la foto del vaucher aquí mismo.\n\n"
-            "¡Gracias por tu compra! 🎉"
+            f"{self._seccion_pago(env)}\n\n"
+            "¡Gracias por tu compra! 🎉\n"
+            "¿Quieres algo más? Escribe *catálogo*."
         )
         return self._respuesta(session_id, conversation_id, account_id, platform, texto,
                                finalizado=True, extra={'order_id': order.id, 'order_name': order.name})
+
+    @staticmethod
+    def _seccion_pago(env):
+        """SPEC 41: sección 'Para completar el pago' del recibo, con los datos
+        de depósito del negocio (chatbot.config) o fallback si no hay."""
+        config = env['chatbot.config'].sudo()._get_active_config()
+        datos = (config.payment_instructions or '').strip() if config else ''
+        if datos:
+            return (
+                "*Para completar el pago:*\n"
+                "1. Realiza la transferencia a:\n"
+                f"{datos}\n"
+                "2. Envía la foto del vaucher aquí mismo."
+            )
+        return (
+            "*Para completar el pago:*\n"
+            "Te escribiremos aquí mismo para coordinar el pago."
+        )
 
     # ==================================================================
     #  ENDPOINTS DE CONSULTA
