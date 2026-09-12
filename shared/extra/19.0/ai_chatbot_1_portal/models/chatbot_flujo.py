@@ -28,6 +28,13 @@ _FLUJOS_SIEMPRE_ACTIVOS = (
     'flujo_resultados_imagenes',
 )
 
+# Flujos que NUNCA se activan automáticamente por detección (keywords/IA):
+# solo se activan manualmente por la empresa (SPEC 29). El carrito de compra
+# (chatbot_cart) es el caso actual: la sync no debe encenderlo ni apagarlo.
+_FLUJOS_NO_AUTODETECTADOS = (
+    'flujo_carrito_compra',
+)
+
 
 class ChatbotFlujo(models.Model):
     _name = "chatbot.flujo"
@@ -942,7 +949,7 @@ class ChatbotFlujo(models.Model):
         archivados = []
         sin_keywords = []
         for flujo in flujos:
-            if flujo in default_flow:
+            if flujo in default_flow or flujo.name in _FLUJOS_NO_AUTODETECTADOS:
                 continue
             keywords = [k.strip() for k in (flujo.palabras_clave or '').split(',')]
             keywords = [_normalizar_texto(k) for k in keywords if k]
@@ -984,7 +991,9 @@ class ChatbotFlujo(models.Model):
         flujos_info = [{'name': f.name,
                         'descripcion_intencion': f.descripcion_intencion or '',
                         'palabras_clave': f.palabras_clave or ''}
-                       for f in flujos if f.name != 'flujo_agendamiento_default']
+                       for f in flujos
+                       if f.name != 'flujo_agendamiento_default'
+                       and f.name not in _FLUJOS_NO_AUTODETECTADOS]
         try:
             gpt_service = self.env.get('gpt.service')
             if not gpt_service:
@@ -1014,7 +1023,8 @@ class ChatbotFlujo(models.Model):
             lambda f: f.name not in activados_ia
             and f not in default_flow
             and f.name not in sin_keywords
-            and f.name not in _FLUJOS_SIEMPRE_ACTIVOS)
+            and f.name not in _FLUJOS_SIEMPRE_ACTIVOS
+            and f.name not in _FLUJOS_NO_AUTODETECTADOS)
         flujos_act.write({'active': True})
         flujos_arch.write({'active': False})
         self._ensure_mappings_for_flujos(flujos_act)

@@ -5,6 +5,10 @@ import unicodedata
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
+from odoo.addons.ai_chatbot_1_portal.models.chatbot_flujo import (
+    _FLUJOS_NO_AUTODETECTADOS,
+)
+
 _logger = logging.getLogger(__name__)
 
 _STOPWORDS = set("""
@@ -939,6 +943,8 @@ class ChatbotConfig(models.Model):
         candidatos = []
         matched = []
         for flujo in flujos:
+            if flujo.name in _FLUJOS_NO_AUTODETECTADOS:
+                continue
             keywords = [k.strip() for k in (flujo.palabras_clave or '').split(',')]
             keywords = [_normalizar(k) for k in keywords if k]
             if not keywords:
@@ -1063,6 +1069,13 @@ class ChatbotConfig(models.Model):
 
         if flujos_detectados:
             self.write({'flujo_ids': [(6, 0, flujos_detectados.ids)]})
+        # SPEC 29: preservar la marca manual de flujos no-autodetectados (ej.
+        # flujo_carrito_compra) que el cliente haya marcado; la sync no los
+        # agrega ni los quita.
+        marcados_manuales = self.flujo_ids.filtered(
+            lambda f: f.name in _FLUJOS_NO_AUTODETECTADOS)
+        if marcados_manuales:
+            self.write({'flujo_ids': [(4, f.id) for f in marcados_manuales]})
 
         # Recoger temas de contenido RAG para el menú
         accion_nombres_menu = {_normalizar(n) for n in _INTENCIONES_ACCION}

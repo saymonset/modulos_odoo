@@ -16,6 +16,7 @@ Caso real (2026-09-11, bot Karla Campoverde): `flujo_carrito` existía activo po
 - **Renombre:** el flujo pasa a llamarse `flujo_carrito_compra` (data file, `prompt_carrito.py`, tests, n8n Switch y docs). El record XML existente `flujo_carrito` se renombra por migración.
 - **Creado inactivo y sin pasos:** en `data/chatbot_flujo_carrito_data.xml`, el record nace con `active = False` y `generar_pasos_automatico = False`; la migración borra los 13 pasos genéricos existentes y desactiva el flujo ya creado.
 - **Activación manual:** sin código nuevo — la empresa activa `flujo_carrito_compra` en "Flujos de este cliente" (mecanismo existente). Documentado en la guía.
+- **Exclusión de la activación automática (Opción A):** en `ai_chatbot_1_portal`, `flujo_carrito_compra` queda fuera de `_FLUJOS_NO_AUTODETECTADOS`: la detección por keywords/IA (sync y ruta legacy) nunca lo agrega, ni lo activa ni lo archiva. El sync **preserva** la marca manual si el cliente la hizo (`flujo_ids` conserva los flujos excluidos ya marcados). La activación/archivado solo lo decide la config del cliente (marcado/desmarcado + "Activar solo los flujos marcados").
 - **Gate de prompt:** `configuracion_agente` inyecta el bloque `=== CARRITO DE COMPRAS ===` solo si `CartService.disponible(env)` (∃ `product.template` con `sale_ok=True` y `list_price > 0`) **y** `flujo_carrito_compra` está activo. Con el flujo inactivo o sin productos, el agente no lo menciona.
 - **n8n:** el valor del Switch del carrito pasa de `flujo_carrito` a `flujo_carrito_compra` (solo el valor de comparación; URLs y tokens intactos).
 - Bump de versión de `chatbot_cart` → `19.0.1.2.0` + tests deterministas actualizados.
@@ -44,6 +45,7 @@ chatbot.flujo:
 3. `prompt_carrito.py`: `_FLOW_CARTO='flujo_carrito_compra'` y texto del bloque actualizado.
 4. n8n: actualizar el valor del Switch a `flujo_carrito_compra` en `ycloud_create_lead_0_con_menu_whatsapp.json`.
 5. Tests deterministas actualizados (prompt, gate, migración) + bump versión + suite completa en verde.
+6. Exclusión de la auto-detección (Opción A) en `ai_chatbot_1_portal`: constante `_FLUJOS_NO_AUTODETECTADOS`, filtro en `_detectar_flujos_desde_rag` y en `aplicar_deteccion_automatica` (keywords e IA), y preservación de la marca manual en `action_recargar_todo_desde_rag`. Bump `1.0.36` + tests nuevos.
 
 ## Acceptance criteria
 
@@ -54,8 +56,12 @@ chatbot.flujo:
 - [ ] Con el flujo activo pero sin productos vendibles con precio, el bloque NO se inyecta.
 - [ ] El prompt del carrito usa el nombre `flujo_carrito_compra` (no `flujo_carrito`).
 - [ ] n8n Switch compara con `flujo_carrito_compra` (sin tocar URLs/tokens).
+- [ ] La detección desde RAG (keywords o IA) nunca incluye `flujo_carrito_compra` en el resultado, aunque el texto del negocio matchee sus keywords.
+- [ ] `aplicar_deteccion_automatica` no activa ni archiva `flujo_carrito_compra`.
+- [ ] El sync preserva la marca manual: si el cliente marcó `flujo_carrito_compra`, un "Sincronizar todo desde RAG" no se la quita.
+- [ ] Marcado en "Flujos de este cliente" + "Activar solo los flujos marcados" activa `flujo_carrito_compra`; desmarcado, la cascada lo archiva.
 - [ ] Suite completa de `chatbot_cart` en verde con tests actualizados.
-- [ ] Versión del manifest = `19.0.1.2.0`.
+- [ ] Versión del manifest = `19.0.1.2.0` y `ai_chatbot_1_portal` = `1.0.36`.
 
 ## Decisions
 
@@ -63,6 +69,8 @@ chatbot.flujo:
 - **Sí:** renombrar a `flujo_carrito_compra` — nombre más claro y evita colisión conceptual con el endpoint `/chatbot_cart/procesar`.
 - **Sí:** gate de prompt = productos vendibles con precio **y** flujo activo: ni se promete el carrito sin catálogo ni se sugiere cuando la empresa no lo activó.
 - **Sí:** eliminar los pasos genéricos: el carrito lo gestiona el endpoint, no la captura clásica (`inicioagendar`).
+- **Sí:** excluir `flujo_carrito_compra` de toda activación automática (keywords/IA) y preservar la marca manual en las syncs: la sync de un negocio de servicios (ej. inmobiliaria) ya no puede encenderlo por palabras como "venta/productos".
+- **Sí:** `ai_chatbot_1_portal` conoce el nombre del flujo por constante (mismo patrón que `_FLUJOS_SIEMPRE_ACTIVOS`), sin dependencia inversa a `chatbot_cart`.
 - **No:** auto-activación universal en la sync (descartada por el usuario).
 - **No:** flag adicional por cliente — la activación manual del flujo ya es el control.
 
