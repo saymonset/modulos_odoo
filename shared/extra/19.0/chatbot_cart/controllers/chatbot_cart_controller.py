@@ -78,7 +78,7 @@ class ChatbotCartController(http.Controller):
     # ==================================================================
     #  ENDPOINT PRINCIPAL
     # ==================================================================
-    @http.route('/chatbot_cart/procesar', type='json', auth='public', methods=['POST'], csrf=False, cors='*')
+    @http.route('/chatbot_cart/procesar', type='http', auth='public', methods=['POST'], csrf=False, cors='*')
     def procesar(self, session_id=None, conversation_id=None, account_id=None, platform='whatsapp', valor='', **kw):
         """Interpreta el mensaje del usuario y ejecuta la acción de carrito."""
         params = self._params()
@@ -92,8 +92,10 @@ class ChatbotCartController(http.Controller):
         session = env['chatbot.session'].sudo()
         valor = (valor or '').strip()
         if not valor:
-            return self._respuesta(session_id, conversation_id, account_id, platform,
-                                   "Escribe *ver carrito*, *ayuda* o el nombre de un producto para comenzar.")
+            resp = self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                "Escribe *ver carrito*, *ayuda* o el nombre de un producto para comenzar.")
+            return self._json_response(resp)
 
         carrito = session._get_carrito(session_id)
         ultima_busqueda = carrito.get('ultima_busqueda', [])
@@ -105,9 +107,23 @@ class ChatbotCartController(http.Controller):
         producto_ref = clasificacion.get('producto', '')
         cantidad = clasificacion.get('cantidad', 0)
 
-        return self._ejecutar(
+        return self._json_response(self._ejecutar(
             env, session_id, conversation_id, account_id, platform,
-            accion, producto_ref, cantidad, ultima_busqueda)
+            accion, producto_ref, cantidad, ultima_busqueda))
+
+    @staticmethod
+    def _json_response(resp, status=200):
+        """Envuelve la respuesta en JSON plano (REST), no JSON-RPC (SPEC 32).
+
+        type='http' evita el envoltorio {jsonrpc, result} que rompía el
+        mapeo de Unificar_salida_carrito en n8n ($json.texto_para_usuario).
+        """
+        return request.make_response(
+            json.dumps(resp, default=str),
+            headers=[('Content-Type', 'application/json; charset=utf-8'),
+                     ('Access-Control-Allow-Origin', '*')],
+            status=status,
+        )
 
     def _clasificar(self, env, use_case, valor):
         """Clasifica la acción con IA; si no hay config/API key, fallback determinista."""
