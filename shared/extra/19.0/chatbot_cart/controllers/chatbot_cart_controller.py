@@ -440,9 +440,22 @@ class ChatbotCartController(http.Controller):
             imagenes=self._imagenes_de_productos(result.get('productos', [])),
             extra={'botones': self.BOTONES_CARRITO})
 
-    def _imagenes_de_productos(self, productos):
-        """Devuelve las URLs de imagen de los productos que tienen imagen."""
-        return [p['image_url'] for p in productos if p.get('has_image')]
+    @staticmethod
+    def _imagenes_de_productos(productos):
+        """SPEC 39: imágenes del catálogo/búsqueda como media-messages.
+
+        Devuelve [{link, caption}] solo de productos con imagen y URL
+        absoluta; el caption lleva nombre y precios.
+        """
+        imagenes = []
+        for p in productos:
+            if not p.get('has_image') or not p.get('image_url'):
+                continue
+            caption = f"{p['name']} — Bs. {p['price_ves']:,.2f} / ${p['price_usd']:,.2f}"
+            if p.get('show_cop') and p.get('price_cop'):
+                caption += f" / COP ${p['price_cop']:,.2f}"
+            imagenes.append({'link': p['image_url'], 'caption': caption})
+        return imagenes
 
     def _pagar(self, env, session_id, conversation_id, account_id, platform):
         """Materializa la orden y devuelve un recibo fiel al usuario (SPEC 41)."""

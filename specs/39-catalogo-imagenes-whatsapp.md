@@ -1,6 +1,6 @@
 # SPEC 39 — Miniaturas de producto en WhatsApp: imágenes del catálogo y búsqueda
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 37 (botones ya en vivo), SPEC 38 (número→AGREGAR ya en vivo). Se implementa ANTES que SPEC 40 (decisión del usuario).
 > **Date:** 2026-09-12
 > **Objective:** Que el catálogo y la búsqueda del carrito envíen una imagen por producto como media-message de WhatsApp con caption (nombre + precio), usando URLs públicas absolutas — hoy Odoo las devuelve pero n8n nunca las envía.

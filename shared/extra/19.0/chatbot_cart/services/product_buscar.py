@@ -26,6 +26,20 @@ class ProductBuscarService:
             return ''
         return str(desc).strip()
 
+    @staticmethod
+    def _url_imagen(env, product_id):
+        """SPEC 39: URL absoluta y pública de la imagen del producto.
+
+        WhatsApp/YCloud necesita una URL que Meta pueda descargar sin auth;
+        la base sale del parámetro estándar web.base.url. Sin base, devuelve
+        '' y el consumidor omite la imagen.
+        """
+        base = env['ir.config_parameter'].sudo().get_param('web.base.url', '') or ''
+        base = base.rstrip('/')
+        if not base:
+            return ''
+        return f"{base}/web/image/product.product/{product_id}/image_128"
+
     def _producto_dict(self, env, tmpl, rates):
         """Construye el dict de producto con precios, imagen y descripción."""
         product = tmpl.product_variant_id
@@ -39,7 +53,7 @@ class ProductBuscarService:
             'price_usd': price_usd,
             'price_cop': price_cop if rates[_COP_SHOW_KEY] else 0.0,
             'show_cop': rates[_COP_SHOW_KEY],
-            'image_url': f'/web/image/product.product/{product.id}/image_128',
+            'image_url': self._url_imagen(env, product.id),
             'has_image': bool(tmpl.image_128),
         }
 

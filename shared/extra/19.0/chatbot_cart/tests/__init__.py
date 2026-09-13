@@ -6,3 +6,4 @@ from . import test_endpoint
 from . import test_modo_carrito
 from . import test_numero_agregar
 from . import test_recibo_pago
+from . import test_imagenes_catalogo
