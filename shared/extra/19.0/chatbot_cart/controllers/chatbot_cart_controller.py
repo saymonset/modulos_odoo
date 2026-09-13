@@ -9,6 +9,11 @@ from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import truncate_f
 
 from ..services.cart_service import CartService
 from ..services.product_buscar import ProductBuscarService
+from ..uses_cases.clasificar_accion_carrito_use_case import (
+    _PALABRAS_AGREGAR, _PALABRAS_AYUDA, _PALABRAS_CATALOGO, _PALABRAS_CONSULTAR,
+    _PALABRAS_MAS, _PALABRAS_MODIFICAR, _PALABRAS_PAGAR, _PALABRAS_QUITAR,
+    _PALABRAS_SALIR, _PALABRAS_VACIAR,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -22,6 +27,10 @@ class ChatbotCartController(http.Controller):
     # Botones interactivos de navegación (SPEC 33). n8n los envía como
     # interactive reply buttons si la respuesta los marca; si falla, texto plano.
     BOTONES_CARRITO = ['catálogo', 'ver carrito', 'pagar']
+
+    # SPEC 40: con más productos vendibles que este umbral, el catálogo pasa a
+    # búsqueda-first (prompt + categorías) y la paginación queda de respaldo.
+    UMBRAL_CATALOGO = 10
 
     # ==================================================================
     #  HELPERS
@@ -84,6 +93,80 @@ class ChatbotCartController(http.Controller):
         if int(numero) > len(ultima_busqueda):
             return ('FUERA_RANGO', len(ultima_busqueda))
         return ('AGREGAR', numero)
+
+    # ==================================================================
+    #  CATEGORÍAS (SPEC 40)
+    # ==================================================================
+    _COMANDOS_CLASIFICADOR = set().union(
+        _PALABRAS_AGREGAR, _PALABRAS_AYUDA, _PALABRAS_CATALOGO, _PALABRAS_CONSULTAR,
+        _PALABRAS_MAS, _PALABRAS_MODIFICAR, _PALABRAS_PAGAR, _PALABRAS_QUITAR,
+        _PALABRAS_SALIR, _PALABRAS_VACIAR, {'carrito', 'ver mas', 'mas', 'más', 'menu', 'menú'})
+
+    @classmethod
+    def _categoria_por_nombre(cls, env, valor):
+        """SPEC 40: id de categoría si `valor` coincide con la lista mostrada.
+
+        Compara contra los títulos de la lista (posiblemente recortados a 24
+        chars por el límite de WhatsApp) por igualdad o prefijo en ambos
+        sentidos. Ignora comandos y números para no secuestrarlos. Devuelve
+        el categ_id o None.
+        """
+        nombre = (valor or '').strip().lower()
+        if not nombre or cls._es_seleccion_numerica(nombre):
+            return None
+        if nombre in cls._COMANDOS_CLASIFICADOR:
+            return None
+        for fila in cls.SEARCH_SERVICE.categorias_con_conteo(env):
+            titulo = fila['title'].lower()
+            if nombre == titulo or titulo.startswith(nombre) or nombre.startswith(titulo):
+                return int(fila['id'])
+        return None
+
+    def _mostrar_catalogo_categoria(self, env, session_id, conversation_id,
+                                    account_id, platform, categoria_id, offset=0):
+        """SPEC 40: catálogo paginado restringido a la categoría elegida."""
+        session = env['chatbot.session'].sudo()
+        result = self.SEARCH_SERVICE.catalogo_por_categoria(
+            env, categoria_id, offset=offset)
+        carrito = session._get_carrito(session_id)
+        carrito['pagina_catalogo'] = offset
+        carrito['ultima_busqueda'] = [
+            {
+                'product_id': p['product_id'],
+                'name': p['name'],
+                'default_code': p.get('default_code', ''),
+                'price_usd': p.get('price_usd', 0.0),
+                'image_url': p.get('image_url', ''),
+            }
+            for p in result.get('productos', [])
+        ]
+        session._guardar_carrito(session_id, carrito)
+        return self._respuesta(
+            session_id, conversation_id, account_id, platform,
+            self.SEARCH_SERVICE.formato_lista_catalogo(result),
+            imagenes=self._imagenes_de_productos(result.get('productos', [])),
+            extra={'botones': self.BOTONES_CARRITO})
+
+    def _respuesta_buscador(self, env, session_id, conversation_id, account_id, platform):
+        """SPEC 40: entrada búsqueda-first cuando hay muchos productos.
+
+        Prompt de búsqueda + lista interactiva de categorías (si existen);
+        la paginación clásica queda como respaldo via "más".
+        """
+        total = self.SEARCH_SERVICE.contar_vendibles(env)
+        categorias = self.SEARCH_SERVICE.categorias_con_conteo(env)
+        texto = (
+            f"🛍️ Tenemos {total} productos en {len(categorias)} categorías.\n"
+            "Escribe lo que buscas (ej. *pizza*) y te muestro opciones."
+        )
+        extra = {'botones': self.BOTONES_CARRITO}
+        if categorias:
+            extra['lista_categorias'] = {
+                'button': 'Ver categorías',
+                'sections': [{'title': 'Categorías', 'rows': categorias}],
+            }
+        return self._respuesta(
+            session_id, conversation_id, account_id, platform, texto, extra=extra)
 
     def _respuesta(self, session_id, conversation_id, account_id, platform, texto, imagenes=None, finalizado=False, extra=None):
         texto = truncate_for_platform(texto, platform)
@@ -157,6 +240,12 @@ class ChatbotCartController(http.Controller):
                 return self._json_response(resp)
             clasificacion = {'accion': 'AGREGAR', 'producto': ref, 'cantidad': 1}
         else:
+            # SPEC 40: selección de categoría (list_reply o nombre escrito),
+            # con exclusión de comandos para no secuestrarlos.
+            categoria_id = self._categoria_por_nombre(env, valor)
+            if categoria_id:
+                return self._json_response(self._mostrar_catalogo_categoria(
+                    env, session_id, conversation_id, account_id, platform, categoria_id))
             # Clasificación de la acción (IA + fallback determinista)
             use_case = env['clasificar.accion.carrito.use.case']
             clasificacion = self._clasificar(env, use_case, valor)
@@ -418,8 +507,15 @@ class ChatbotCartController(http.Controller):
         return 0
 
     def _mostrar_catalogo(self, env, session_id, conversation_id, account_id, platform, offset=0):
-        """Muestra una página del catálogo y guarda la paginación + últimos productos."""
+        """Muestra una página del catálogo y guarda la paginación + últimos productos.
+
+        SPEC 40: con más de UMBRAL_CATALOGO productos, la primera entrada
+        (offset=0) pasa a búsqueda-first (prompt + categorías); "más" sigue
+        paginando como respaldo.
+        """
         session = env['chatbot.session'].sudo()
+        if offset == 0 and self.SEARCH_SERVICE.contar_vendibles(env) > self.UMBRAL_CATALOGO:
+            return self._respuesta_buscador(env, session_id, conversation_id, account_id, platform)
         result = self.SEARCH_SERVICE.catalogo(env, offset=offset)
         carrito = session._get_carrito(session_id)
         carrito['pagina_catalogo'] = offset

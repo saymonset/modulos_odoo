@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Búsqueda y catálogo de productos para el carrito de compra del chatbot."""
 
+import re
+
 from odoo import fields
 
 from .cart_service import CartService, _RATE_BCV_KEY, _RATE_COP_KEY, _COP_SHOW_KEY
@@ -60,22 +62,18 @@ class ProductBuscarService:
     def buscar(self, env, query, limit=None):
         """Busca productos por nombre o código de referencia.
 
-        Retorna lista de dicts con name, default_code, precios (VES/USD/COP)
-        e image_url. Respeta la visibilidad de COP de la compañía.
+        SPEC 40: multi-palabra (cada término debe coincidir con nombre o
+        código) e insensible a acentos cuando la extensión unaccent está
+        disponible; sin ella, cae al ilike plano del ORM.
         """
         limit = limit or self.DEFAULT_LIMIT
         q = (query or '').strip()
         if not q:
             return {'success': False, 'error': 'consulta_vacia', 'productos': []}
 
-        domain = [
-            ('sale_ok', '=', True),
-            '|',
-            ('name', 'ilike', q),
-            ('default_code', 'ilike', q),
-        ]
-        templates = env['product.template'].sudo().search(
-            domain, limit=limit, order='name')
+        terminos = [t for t in re.split(r'\s+', q) if t]
+        tmpl_ids, total = self._buscar_templates(env, terminos, limit)
+        templates = env['product.template'].sudo().browse(tmpl_ids)
 
         rates = CartService._get_rates_info(env)
         productos = [self._producto_dict(env, tmpl, rates) for tmpl in templates]
@@ -85,10 +83,85 @@ class ProductBuscarService:
             'query': q,
             'productos': productos,
             'count': len(productos),
+            'total_coincidencias': total,
             'bcv_rate': rates[_RATE_BCV_KEY],
             'cop_rate': rates[_RATE_COP_KEY] if rates[_COP_SHOW_KEY] else 0.0,
             'show_cop': rates[_COP_SHOW_KEY],
         }
+
+    # ---------------------------------------------------------------
+    #  Búsqueda multi-término (SPEC 40)
+    # ---------------------------------------------------------------
+    @staticmethod
+    def _db_tiene_unaccent(cr):
+        """True si la extensión unaccent está instalada en la BD."""
+        try:
+            cr.execute("SELECT 1 FROM pg_extension WHERE extname='unaccent'")
+            return bool(cr.fetchone())
+        except Exception:
+            return False
+
+    def _buscar_templates(self, env, terminos, limit):
+        """Devuelve (ids, total) de templates vendibles que matchean TODOS los
+        términos (nombre o código), ordenados por nombre.
+
+        Con unaccent la comparación ignora acentos (via SQL); si no está
+        disponible o falla, cae al ilike plano del ORM.
+        """
+        cr = env.cr
+        try:
+            cr.execute("CREATE EXTENSION IF NOT EXISTS unaccent")
+        except Exception:
+            pass
+        if self._db_tiene_unaccent(cr):
+            condiciones, args = [], []
+            for t in terminos:
+                patron = f"%{t}%"
+                # name es jsonb de traducciones en Odoo 19: se busca sobre
+                # es_VE con fallback a en_US; default_code es texto plano.
+                condiciones.append(
+                    "(COALESCE(unaccent(lower(pt.name->>'es_VE')), "
+                    "unaccent(lower(pt.name->>'en_US'))) LIKE unaccent(lower(%s)) "
+                    "OR unaccent(lower(pt.default_code)) LIKE unaccent(lower(%s)))")
+                args += [patron, patron]
+            cr.execute(
+                "SELECT pt.id, count(*) OVER() AS total FROM product_template pt "
+                f"WHERE pt.sale_ok AND {' AND '.join(condiciones)} "
+                "ORDER BY COALESCE(pt.name->>'es_VE', pt.name->>'en_US') LIMIT %s",
+                args + [limit])
+            filas = cr.fetchall()
+            ids = [r[0] for r in filas]
+            total = filas[0][1] if filas else 0
+            return ids, total
+        domain = [('sale_ok', '=', True)]
+        for t in terminos:
+            domain += ['|', ('name', 'ilike', t), ('default_code', 'ilike', t)]
+        templates = env['product.template'].sudo().search(domain, limit=limit, order='name')
+        total = env['product.template'].sudo().search_count(domain)
+        return templates.ids, total
+
+    def categorias_con_conteo(self, env, limit=10):
+        """SPEC 40: top categorías de productos vendibles con conteo.
+
+        Devuelve [{id, title, description}] para la lista interactiva de
+        WhatsApp (máx. 10 filas; título ≤24 chars, límite de la fila).
+        Sin categorías asignadas → lista vacía (degrada a búsqueda).
+        """
+        grupos = env['product.template'].sudo().read_group(
+            [('sale_ok', '=', True)], ['id'], ['categ_id'], lazy=False)
+        filas = []
+        for g in grupos:
+            categ = g.get('categ_id')
+            if not categ:
+                continue
+            conteo = int(g.get('__count', 0))
+            filas.append({
+                'id': str(categ[0]),
+                'title': str(categ[1])[:24].rstrip(),
+                'description': f"{conteo} productos",
+            })
+        filas.sort(key=lambda f: -int(f['description'].split()[0]))
+        return filas[:limit]
 
     def catalogo(self, env, offset=0, limit=None):
         """Devuelve una página del catálogo completo de productos vendibles.
@@ -98,6 +171,34 @@ class ProductBuscarService:
         """
         limit = limit or self.CATALOG_LIMIT
         domain = [('sale_ok', '=', True)]
+        total = env['product.template'].sudo().search_count(domain)
+        templates = env['product.template'].sudo().search(
+            domain, limit=limit, offset=offset, order='name')
+
+        rates = CartService._get_rates_info(env)
+        productos = [self._producto_dict(env, tmpl, rates) for tmpl in templates]
+
+        return {
+            'success': True,
+            'productos': productos,
+            'count': len(productos),
+            'total': total,
+            'offset': offset,
+            'has_more': (offset + len(productos)) < total,
+            'bcv_rate': rates[_RATE_BCV_KEY],
+            'cop_rate': rates[_RATE_COP_KEY] if rates[_COP_SHOW_KEY] else 0.0,
+            'show_cop': rates[_COP_SHOW_KEY],
+        }
+
+    @staticmethod
+    def contar_vendibles(env):
+        """SPEC 40: total de productos vendibles (umbral del buscador)."""
+        return env['product.template'].sudo().search_count([('sale_ok', '=', True)])
+
+    def catalogo_por_categoria(self, env, categ_id, offset=0, limit=None):
+        """SPEC 40: página del catálogo restringida a una categoría."""
+        limit = limit or self.CATALOG_LIMIT
+        domain = [('sale_ok', '=', True), ('categ_id', '=', categ_id)]
         total = env['product.template'].sudo().search_count(domain)
         templates = env['product.template'].sudo().search(
             domain, limit=limit, offset=offset, order='name')
@@ -152,7 +253,11 @@ class ProductBuscarService:
         if not result['productos']:
             return (f"😕 No encontré productos que coincidan con \"{result['query']}\". "
                     "Prueba con otra palabra o escribe *ayuda* para ver las opciones.")
-        lines = [f"📦 *Encontré {result['count']} producto(s):*", ""]
+        total = result.get('total_coincidencias', result['count'])
+        header = (f"📦 *Encontré {total} producto(s) (mostrando {result['count']}):*"
+                  if total > result['count']
+                  else f"📦 *Encontré {result['count']} producto(s):*")
+        lines = [header, ""]
         for i, p in enumerate(result['productos'], 1):
             lines.extend(self._lineas_producto(p, result, i))
         lines.append("")
