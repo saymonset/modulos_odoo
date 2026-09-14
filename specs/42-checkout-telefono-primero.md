@@ -1,6 +1,6 @@
 # SPEC 42 — Checkout "teléfono primero": autocompletado de datos por teléfono
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** —
 > **Date:** 2026-09-14
 > **Objective:** En el paso Detalles/Dirección del checkout web, pedir solo el teléfono; si existe en BD autocompletar los datos del usuario (campos ocultos) para evitar duplicados, y si no existe mostrar todos los campos para llenar.
