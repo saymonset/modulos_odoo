@@ -1,32 +1,24 @@
-/* === ADDRESS AUTOFILL - OCULTAR CAMPOS === */
-#shop_checkout form.address_autoformat,
-#shop_checkout .o_address_form {
-    position: relative;
-}
+/* === ADDRESS AUTOFILL - TELÉFONO PRIMERO === */
 
-/* Ocultar todo excepto email y teléfono */
-#shop_checkout input[name="name"],
-#shop_checkout input[name="street"],
-#shop_checkout input[name="street2"],
-#shop_checkout input[name="city"],
-#shop_checkout input[name="zip"],
-#shop_checkout input[name="vat"],
-#shop_checkout select[name="country_id"],
-#shop_checkout select[name="state_id"],
-#shop_checkout label[for*="name"],
-#shop_checkout label[for*="street"],
-#shop_checkout label[for*="city"],
-#shop_checkout label[for*="zip"],
-#shop_checkout label[for*="vat"],
-#shop_checkout label[for*="country_id"],
-#shop_checkout label[for*="state_id"] {
+/* Ocultar todos los campos del formulario de Detalles excepto el teléfono */
+form[name="address_form"] #div_name,
+form[name="address_form"] #div_email,
+form[name="address_form"] #company_name_div,
+form[name="address_form"] #div_vat,
+form[name="address_form"] #div_street,
+form[name="address_form"] #div_street2,
+form[name="address_form"] #div_city,
+form[name="address_form"] #div_zip,
+form[name="address_form"] #div_country,
+form[name="address_form"] #div_state {
     display: none !important;
 }
 
-/* Mostrar solo los que queremos al inicio */
-#shop_checkout input[name="email"],
-#shop_checkout input[name="phone"],
-#shop_checkout label[for*="email"],
-#shop_checkout label[for*="phone"] {
+form[name="address_form"] #div_phone {
     display: block !important;
+}
+
+/* Banner del autocompletado por teléfono */
+#address_autofill_banner {
+    margin-bottom: 1rem;
 }
