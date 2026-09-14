@@ -13,7 +13,7 @@ La base está medio construida en `bcv_rate_update_venezuela`: el CSS de `addres
 
 **In:**
 
-1. **Montaje real del componente** — habilitar `views/website_sale_templates.xml` en el manifest y montar con `<owl-component name="bcv_rate_update_venezuela.AddressAutofill"/>` (patrón de `payment_attachment_templates.xml`) en un inherit de `website_sale.checkout`, antes de `#shop_checkout`.
+1. **Montaje real del componente** — habilitar `views/website_sale_templates.xml` en el manifest y montar con `<owl-component name="bcv_rate_update_venezuela.AddressAutofill"/>` (patrón de `payment_attachment_templates.xml`) en un inherit de `website_sale.address` (pantalla Detalles), antes del formulario `address_form`.
 2. **Ruta `/shop/find_partner_by_phone`** (`type='json'`, `auth='public'`, `website=True`, `csrf=False`) con matching robusto por dígitos (mín. 7 dígitos; estrategias: sufijo 10, `ilike` completo, sufijo 8, comparación manual) copiado de `ChatBotUtils.find_partner_by_phone`. Respuesta `{found, partner:{name, phone, email, company_name, street, street2, city, zip, vat, country_id, state_id}}`. Se reemplaza la ruta antigua (muerta, el componente nunca se montó).
 3. **OWL `AddressAutofill`** — estado inicial solo teléfono visible; disparo en Enter + blur; si existe → rellena campos ocultos + banner "Hola {nombre}, tus datos están cargados" con enlace "¿No eres tú? Completa tus datos"; si no existe → revela todos los campos + banner "No encontramos tu teléfono. Completa tus datos".
 4. **CSS** — ocultar por defecto todos los campos del checkout excepto teléfono (incluye `company_name` y sus labels).
@@ -35,7 +35,7 @@ Sin estructuras nuevas. Reusa `res.partner`. Solo la nueva ruta JSON.
 ## Plan de implementación
 
 1. `controllers/address_autofill.py`: helper `find_partner_by_phone_digits(env, phone)` (copia de estrategias) + ruta nueva `/shop/find_partner_by_phone`; eliminar la ruta antigua. Verificar los ids/names reales del template `website_sale.checkout` en leads antes de seguir.
-2. `__manifest__.py`: descomentar `views/website_sale_templates.xml`; reemplazar el montaje manual del script por `<owl-component>` en inherit de `website_sale.checkout`; bump a `19.0.1.3.0`.
+2. `__manifest__.py`: descomentar `views/website_sale_templates.xml`; reemplazar el montaje manual del script por `<owl-component>` en inherit de `website_sale.address`; bump a `19.0.1.3.0`.
 3. `static/src/css/address_autofill.css`: ocultar todo menos teléfono (base + labels).
 4. `static/src/js/address_autofill.js` + `static/src/xml/address_autofill.xml`: estado phone-only, bind Enter+blur, banners found/not-found, reveal y fill.
 5. Tests `tests/test_address_autofill.py` (helper de matching) en verde.
