@@ -1,6 +1,6 @@
 # SPEC 44 — Subflow de carrito independiente (ycloud)
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 34 (aislamiento modo carrito), SPEC 39 (catálogo imágenes), SPEC 40 (categorías)
 > **Date:** 2026-09-15
 > **Objective:** Extraer la lógica de carrito del workflow principal `ycloud_create_lead_0_con_menu_whatsapp` a un subflow autocontenido `ycloud_carrito_subflow`, dejando dos gates que lo llaman y terminan la rama, de modo que carrito y flujo principal puedan vivir y activarse por separado.
@@ -84,5 +84,5 @@ Esta feature **no introduce estructuras de datos nuevas**. Reusa:
 - Exports en `/home/odoo/lead/odoo19-skeleton/n8n_json/` (SPEC 43).
 - Refactor del flujo Chatwoot.
 - Cambios al endpoint `/chatbot_cart/procesar` ni a `Unificar_salida_carrito` (SPEC 39/40).
-
+/
 Cada uno de esos, si llega, va en su propia spec.
