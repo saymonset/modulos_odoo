@@ -34,6 +34,7 @@ Monorepo OCA + extra para Odoo 18.0 y 19.0. Git: `git@github.com:saymonset/modul
 | `odoo-19` | Desarrollo Python/XML Odoo 19 |
 | `odoo-development` | Desarrollo general Odoo (fuera de v19) |
 | `spec` / `spec-impl` | Feature grande: `/spec` → approve → `/spec-impl` |
+| `spec-verify` | Verificar un spec: `/spec-verify NN` (agente + comando en `opencode.jsonc`, prompt en `.agents/spec-verify.prompt.md`) |
 | `context7-mcp` | Docs de librerías externas |
 
 ## Módulos propios clave (`extra/19.0`)

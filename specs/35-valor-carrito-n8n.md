@@ -55,12 +55,18 @@ Sin estructuras nuevas. Se reusa `chatbot.session.estado['modo']` (valores `'CAR
 
 ## Criterios de aceptación
 
-- [ ] "carrito"/"ver carrito" desde modo negocio NUNCA responden el mensaje genérico de valor vacío.
-- [ ] Tras "carrito", `estado['modo']='CARRITO'` y los mensajes siguientes van por el bypass `¿Modo_carrito?` (sin LLM de negocio).
-- [ ] Texto del usuario con comillas o saltos de línea no rompe el jsonBody (JSON.stringify).
-- [ ] `flujo_carrito_compra` verificado activo en BD lead.
+- [x] "carrito"/"ver carrito" desde modo negocio NUNCA responden el mensaje genérico de valor vacío.
+  Evidencia: en n8n VIVO (`db_n8n`, workflow `ycloud_create_lead_0_con_menu_whatsapp` id `L2r9IMI9lGrERuZq`, nodo `Chatbot_cart_procesar`) el `valor` ya lleva `$('Obtener_configuracion_agente').item.json.text`; la rama genérica solo dispara con `valor` vacío (`chatbot_cart_controller.py:205-209`).
+- [x] Tras "carrito", `estado['modo']='CARRITO'` y los mensajes siguientes van por el bypass `¿Modo_carrito?` (sin LLM de negocio).
+  Evidencia: `_guardar_carrito` setea `estado['modo']='CARRITO'` (`chatbot_session.py:39`); el endpoint de config devuelve `modo_carrito` desde `_esta_en_modo_carrito` (`chatbot_0_inicio_agendar_procesar_paso_conroller.py:407-430`); bypass cableado `Obtener_configuracion_agente → ¿Modo_carrito? → [true] Chatbot_cart_procesar` / `[false] Agente_Informacion_basica`.
+- [x] Texto del usuario con comillas o saltos de línea no rompe el jsonBody (JSON.stringify).
+  Evidencia: jsonBody en vivo y en export usan `JSON.stringify($('Obtener_configuracion_agente').item.json.<campo> || '')` para `valor`, `session_id`, `conversation_id` y `account_id`.
+- [x] `flujo_carrito_compra` verificado activo en BD lead.
+  Evidencia: en `dbodoo19` (DB_NAME real de `odoo-19-web-leads`) `chatbot_flujo` id 32 `flujo_carrito_compra` `active=t`; `carrito_disponible()` confirma el gate (`prompt_carrito.py:29-35`).
 - [ ] Suites `chatbot_cart` + `ai_chatbot_1_portal` en verde en staging.
-- [ ] Export n8n actualizado solo en `/home/odoo/prod/odoo19-skeleton/n8n_json/ycloud/`.
+  No cumplido: `ai_chatbot_1_portal` verde (127 tests), pero `chatbot_cart` tiene 3 FAILs (137 tests): `TestCatalogoEscalable.test_01_umbral_pequeno_catalogo_clasico`, `TestReciboPago.test_04_pago_sin_datos_fallback`, `TestReciboPago.test_06_seccion_pago_directa`. Son data-dependentes (166 productos > umbral 10 → búsqueda-first; datos de pago presentes → sin fallback "te escribiremos aquí mismo"), no regresiones de esta spec (es solo n8n).
+- [x] Export n8n actualizado solo en `/home/odoo/prod/odoo19-skeleton/n8n_json/ycloud/`.
+  Evidencia: `ycloud_create_lead_0_con_menu_whatsapp.json` actualizado (13/9 02:45) en esa ruta; sin `n8n_json/` ni copias del workflow en el repo.
 
 ## Decisiones tomadas y descartadas
 
