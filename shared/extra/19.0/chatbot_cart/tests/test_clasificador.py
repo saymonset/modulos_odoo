@@ -43,6 +43,8 @@ class TestClasificarAccion(BaseChatbotCartTestCase):
         self.assertEqual(self._clasificar('salir')['accion'], 'SALIR')
         self.assertEqual(self._clasificar('menú principal')['accion'], 'SALIR')
         self.assertEqual(self._clasificar('volver')['accion'], 'SALIR')
+        # SPEC 45: label del botón interactivo de salida.
+        self.assertEqual(self._clasificar('🏪 Volver al negocio')['accion'], 'SALIR')
 
     def test_10_vaciar(self):
         self.assertEqual(self._clasificar('vaciar el carrito')['accion'], 'VACIAR')

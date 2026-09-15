@@ -1,6 +1,6 @@
 # SPEC 45 — Botón de salida del carrito visible
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 34 (acción SALIR del carrito), SPEC 37 (mapeo botón→valor), SPEC 44 (subflow carrito)
 > **Date:** 2026-09-15
 > **Objective:** Que el usuario pueda salir del carrito y volver a la información del negocio con un botón interactivo siempre visible, sin depender de escribir "salir" en texto.

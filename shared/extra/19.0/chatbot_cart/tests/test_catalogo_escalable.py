@@ -50,7 +50,8 @@ class TestCatalogoEscalable(BaseChatbotCartTestCase):
         lista = resp['lista_categorias']
         self.assertEqual(lista['button'], 'Ver categorías')
         self.assertTrue(lista['sections'][0]['rows'])
-        self.assertEqual(resp['botones'], self.controller.BOTONES_CARRITO)
+        self.assertEqual(resp['botones'],
+                         ['catálogo', 'ayuda', '🏪 Volver al negocio'])
 
     def test_03_umbral_grande_paginacion_respaldo(self):
         self._crear_productos(11)

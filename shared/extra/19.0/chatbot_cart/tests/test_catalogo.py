@@ -108,8 +108,9 @@ class TestCatalogo(BaseChatbotCartTestCase):
             'CATALOGO', '', 0, [])
         self.assertIn('texto_para_usuario', resp)
         self.assertIn('Catálogo', resp['texto_para_usuario'])
-        # Los botones interactivos se marcan para n8n.
-        self.assertEqual(resp.get('botones'), controller.BOTONES_CARRITO)
+        # Los botones interactivos se marcan para n8n (carrito vacío → SPEC 45).
+        self.assertEqual(resp.get('botones'),
+                         ['catálogo', 'ayuda', '🏪 Volver al negocio'])
 
     def test_09_paginacion_mas_avanza_offset(self):
         from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (

@@ -15,6 +15,7 @@ _PALABRAS_SALIR = {
     'salir', 'salirme', 'cancelar', 'abandonar', 'déjalo', 'dejalo',
     'menú principal', 'menu principal', 'volver', 'volver al menú',
     'volver al menu', 'dejar carrito', 'salir del carrito', 'salir del chat',
+    'volver al negocio',
 }
 _PALABRAS_VACIAR = {'vaciar', 'quitar todo', 'eliminar todo', 'borrar todo', 'limpiar carrito'}
 _PALABRAS_CONSULTAR = {'carrito', 'ver carrito', 'mi carrito', 'ver mi carrito', 'que tengo', 'qué tengo'}

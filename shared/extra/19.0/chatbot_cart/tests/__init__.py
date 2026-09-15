@@ -8,3 +8,4 @@ from . import test_numero_agregar
 from . import test_recibo_pago
 from . import test_imagenes_catalogo
 from . import test_catalogo_escalable
+from . import test_botones_carrito
