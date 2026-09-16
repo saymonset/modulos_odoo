@@ -99,6 +99,9 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
         - SALIR: quiere salir o cancelar del carrito para volver al negocio
           ("salir", "cancelar", "menú principal", "volver").
         - VACIAR: quiere vaciar todo el carrito ("vaciar carrito", "quitar todo").
+        - FALLBACK: mensaje que NO es una operación del carrito ni pide ayuda
+          (consultas del negocio, precios ajenos a la tienda, cortesía,
+          off-topic como "¿cuánto cuesta una reparación?").
 
         REGLAS:
         - "quiero N producto" (sin verbo) es AGREGAR (ej. "quiero 2 camisas rojas").
@@ -110,6 +113,9 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
           agregar un producto por su número con pedir el catálogo.
         - Un número suelto se interpreta como MODIFICAR cantidad si hay contexto de producto previo, si no como CONSULTAR.
         - Extrae el nombre del producto y la cantidad cuando sea posible.
+        - Ante la duda entre una acción del carrito y algo fuera del carrito,
+          prefiere FALLBACK: jamás inventes CONSULTAR para mensajes que no
+          mencionan su carrito.
 
         Responde ÚNICAMENTE JSON: {"accion": "...", "producto": "nombre del producto", "cantidad": n}
         """
