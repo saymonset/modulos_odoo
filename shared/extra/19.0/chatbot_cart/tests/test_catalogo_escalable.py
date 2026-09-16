@@ -41,10 +41,13 @@ class TestCatalogoEscalable(BaseChatbotCartTestCase):
         self.assertIn('Catálogo', resp['texto_para_usuario'])
         self.assertNotIn('lista_categorias', resp)
 
-    def test_02_umbral_grande_buscador_con_categorias(self):
+    def test_02_umbral_grande_buscador_en_activacion(self):
+        # SPEC 49: el buscador-first solo entra por la ACTIVACIÓN
+        # (CONSULTAR vacío → buscador_first=True).
         self._crear_productos(11)
         resp = self.controller._mostrar_catalogo(
-            self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', offset=0)
+            self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
+            offset=0, buscador_first=True)
         self.assertIn('Tenemos', resp['texto_para_usuario'])
         self.assertIn('lista_categorias', resp)
         lista = resp['lista_categorias']
@@ -52,6 +55,15 @@ class TestCatalogoEscalable(BaseChatbotCartTestCase):
         self.assertTrue(lista['sections'][0]['rows'])
         self.assertEqual(resp['botones'],
                          ['catálogo', 'ayuda', '🏪 Volver al negocio'])
+
+    def test_02b_umbral_grande_catalogo_explicito_es_clasico(self):
+        # SPEC 49: "catálogo" explícito nunca muestra el buscador.
+        self._crear_productos(11)
+        resp = self.controller._mostrar_catalogo(
+            self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', offset=0)
+        self.assertIn('Catálogo', resp['texto_para_usuario'])
+        self.assertNotIn('Tenemos', resp['texto_para_usuario'])
+        self.assertNotIn('lista_categorias', resp)
 
     def test_03_umbral_grande_paginacion_respaldo(self):
         self._crear_productos(11)

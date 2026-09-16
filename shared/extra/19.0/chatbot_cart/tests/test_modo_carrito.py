@@ -42,43 +42,55 @@ class TestAislamientoModos(BaseChatbotCartTestCase):
         self.assertEqual(len(carrito['items']), 0)
         self.assertFalse(self._session()._esta_en_modo_carrito(self.session_id))
 
-    def test_05_salir_con_carrito_vacio_sale_directo(self):
+    def test_05_salir_vacio_sale_directo(self):
         from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (
             ChatbotCartController,
         )
         resp = ChatbotCartController()._salir_carrito(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp')
         self.assertTrue(resp['finalizado'])
-        self.assertIn('Saliste del carrito', resp['texto_para_usuario'])
+        self.assertIn('Volvemos al negocio', resp['texto_para_usuario'])
         self.assertFalse(self._session()._esta_en_modo_carrito(self.session_id))
 
-    def test_06_salir_con_items_pide_decision_y_guarda(self):
+    def test_06_salir_con_items_directo_conserva(self):
+        # SPEC 49: salida directa conservando items (sin pregunta 1/2/3).
         self._agregar_producto(self.product_a.id, qty=1)
         from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (
             ChatbotCartController,
         )
         resp = ChatbotCartController()._salir_carrito(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp')
-        self.assertFalse(resp['finalizado'])
-        self.assertIn('1', resp['texto_para_usuario'])
-        carrito = self._session()._get_carrito(self.session_id)
-        self.assertTrue(carrito.get('pendiente_salida'))
-
-        # Resolver opción 1: guardar y salir
-        resp2 = ChatbotCartController()._resolver_salida_pendiente(
-            self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', '1')
-        self.assertTrue(resp2['finalizado'])
+        self.assertTrue(resp['finalizado'])
+        self.assertIn('Volvemos al negocio', resp['texto_para_usuario'])
         self.assertFalse(self._session()._esta_en_modo_carrito(self.session_id))
         carrito = self._session()._get_carrito(self.session_id)
         self.assertEqual(len(carrito['items']), 1)
+        self.assertNotIn('pendiente_salida', carrito)
 
-    def test_07_opcion_2_vacia_y_sale(self):
+    def test_06b_resolver_pendiente_legacy_guarda_y_sale(self):
+        # Salida 1/2/3 solo para sesiones legacy con pendiente_salida.
         self._agregar_producto(self.product_a.id, qty=1)
         from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (
             ChatbotCartController,
         )
-        ChatbotCartController()._salir_carrito(
-            self.env, self.session_id, 'c1', '+58414000000', 'whatsapp')
+        carrito = self._session()._get_carrito(self.session_id)
+        carrito['pendiente_salida'] = True
+        self._session()._guardar_carrito(self.session_id, carrito)
+        resp = ChatbotCartController()._resolver_salida_pendiente(
+            self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', '1')
+        self.assertTrue(resp['finalizado'])
+        self.assertFalse(self._session()._esta_en_modo_carrito(self.session_id))
+        carrito = self._session()._get_carrito(self.session_id)
+        self.assertEqual(len(carrito['items']), 1)
+
+    def test_06c_resolver_pendiente_legacy_vacia(self):
+        self._agregar_producto(self.product_a.id, qty=1)
+        from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (
+            ChatbotCartController,
+        )
+        carrito = self._session()._get_carrito(self.session_id)
+        carrito['pendiente_salida'] = True
+        self._session()._guardar_carrito(self.session_id, carrito)
         resp = ChatbotCartController()._resolver_salida_pendiente(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', '2')
         self.assertTrue(resp['finalizado'])
@@ -86,13 +98,14 @@ class TestAislamientoModos(BaseChatbotCartTestCase):
         carrito = self._session()._get_carrito(self.session_id)
         self.assertEqual(len(carrito['items']), 0)
 
-    def test_08_opcion_3_sigue_comprando(self):
+    def test_06d_resolver_pendiente_legacy_seguir(self):
         self._agregar_producto(self.product_a.id, qty=1)
         from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (
             ChatbotCartController,
         )
-        ChatbotCartController()._salir_carrito(
-            self.env, self.session_id, 'c1', '+58414000000', 'whatsapp')
+        carrito = self._session()._get_carrito(self.session_id)
+        carrito['pendiente_salida'] = True
+        self._session()._guardar_carrito(self.session_id, carrito)
         resp = ChatbotCartController()._resolver_salida_pendiente(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', '3')
         self.assertFalse(resp['finalizado'])

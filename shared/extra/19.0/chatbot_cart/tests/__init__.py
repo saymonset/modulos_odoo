@@ -11,3 +11,4 @@ from . import test_catalogo_escalable
 from . import test_botones_carrito
 from . import test_enlace_tienda
 from . import test_persistencia_modo
+from . import test_mundo_carrito

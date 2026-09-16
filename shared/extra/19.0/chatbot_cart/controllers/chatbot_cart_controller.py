@@ -268,6 +268,12 @@ class ChatbotCartController(http.Controller):
         producto_ref = clasificacion.get('producto', '')
         cantidad = clasificacion.get('cantidad', 0)
 
+        if accion == 'FALLBACK':
+            # SPEC 49: la IA solo-carrito atiende lo que el clasificador
+            # no entiende; si la IA no está disponible, respuesta genérica.
+            return self._json_response(self._atender_fallback_ia(
+                env, session_id, conversation_id, account_id, platform, valor))
+
         return self._json_response(self._ejecutar(
             env, session_id, conversation_id, account_id, platform,
             accion, producto_ref, cantidad, ultima_busqueda))
@@ -361,12 +367,6 @@ class ChatbotCartController(http.Controller):
                 "• *cancelar* — salir del carrito"
             )
             return self._respuesta(session_id, conversation_id, account_id, platform, texto)
-
-        if accion == 'FALLBACK':
-            # SPEC 49: la IA solo-carrito atiende lo que el clasificador
-            # no entiende; si la IA no está disponible, respuesta genérica.
-            return self._atender_fallback_ia(
-                env, session_id, conversation_id, account_id, platform, valor)
 
         if accion == 'CONSULTAR':
             resumen = self.CART_SERVICE.resumen(env, session_id)

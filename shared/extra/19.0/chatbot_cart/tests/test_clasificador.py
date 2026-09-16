@@ -54,8 +54,9 @@ class TestClasificarAccion(BaseChatbotCartTestCase):
         self.assertEqual(res['accion'], 'AGREGAR')
         self.assertEqual(res['cantidad'], 2)
 
-    def test_12_default_consultar(self):
-        self.assertEqual(self._clasificar('hola')['accion'], 'CONSULTAR')
+    def test_12_sin_match_es_fallback(self):
+        # SPEC 49: texto sin palabras de carrito -> FALLBACK (no CONSULTAR...
+        self.assertEqual(self._clasificar('hola')['accion'], 'FALLBACK')
 
     def test_13_catalogo(self):
         self.assertEqual(self._clasificar('catálogo')['accion'], 'CATALOGO')
@@ -101,4 +102,4 @@ class TestClasificarAccion(BaseChatbotCartTestCase):
         fallback, reconocido = use_case._clasificar_fallback(
             'tengo hambre y algo para la cena')
         self.assertFalse(reconocido)
-        self.assertEqual(fallback['accion'], 'CONSULTAR')
+        self.assertEqual(fallback['accion'], 'FALLBACK')
