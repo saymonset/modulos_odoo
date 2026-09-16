@@ -1,6 +1,6 @@
 # SPEC 50 — Vendedor IA del carrito: redacción humanizada y rama de cotización
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 34 (prompt aislado carrito), SPEC 39 (imágenes), SPEC 41 (recibo pago), SPEC 45 (botones), SPEC 47 (cotización IA con MCP), SPEC 49 (mundo carrito)
 > **Date:** 2026-09-16
 > **Objective:** Que el carrito deje de hablar robótico: la IA redacta todos los mensajes como un vendedor humano (productos con foto, total amigable, "¿quieres pagar ya?"), el motor sigue determinista, y si el cliente no paga ahora se le pide el email y se le envía la cotización PDF de SPEC 47.
