@@ -216,6 +216,57 @@ class TestVendedorIA(BaseChatbotCartTestCase):
         self.assertEqual(self._carrito_flags()['items'][0]['product_id'], self.product_a.id)
         self.assertNotIn('pendiente_cotizacion', self._carrito_flags())
 
+    # --- SPEC 51: sanitizador + listado intangible ---
+
+    def test_15_sanitizador_elimina_fuga_router(self):
+        from odoo.addons.chatbot_cart.services.redactar import _sanitizar
+        sucio = ('🛒 Tu carrito listo.\n'
+                 'flow_name="flujo_carrito_compra"\n'
+                 'equipo_asignado="flujo_carrito_compra"\n'
+                 'Texto limpio que queda para el cliente.')
+        limpio = _sanitizar(sucio)
+        self.assertIsNotNone(limpio)
+        self.assertNotIn('flow_name', limpio)
+        self.assertNotIn('equipo_asignado', limpio)
+        self.assertIn('carrito listo', limpio)
+
+    def test_16_redactar_falla_con_solo_fugas(self):
+        """Respuesta IA con solo router: fallback a plantilla (no vacío)."""
+        with self._patch_ia(contenido='flow_name="flujo_carrito_compra"'):
+            from odoo.addons.chatbot_cart.services.redactar import redactar
+            texto = redactar(self.env, '🛒 Tu carrito de compras.', {})
+        self.assertEqual(texto, '🛒 Tu carrito de compras.')
+
+    def test_17_bienvenida_buscador_generica(self):
+        with self._patch_sin_ia():
+            resp = self._controller()._respuesta_buscador(
+                self.env, self.session_id, 'c1', '+58414000000', 'whatsapp')
+        texto = resp['texto_para_usuario']
+        self.assertNotIn('pizza', texto.lower())
+        self.assertNotIn('Quieres pagar ya', texto)
+        self.assertIn('necesites', texto)
+
+    def test_18_que_haces_clasifica_fallback(self):
+        from odoo.addons.chatbot_cart.uses_cases.clasificar_accion_carrito_use_case import (
+            ClasificarAccionCarritoUseCase,
+        )
+        res = ClasificarAccionCarritoUseCase._clasificar_fallback('que haces')
+        self.assertEqual(res[0]['accion'], 'FALLBACK')
+
+    def test_19_que_venden_sigue_catalogo(self):
+        from odoo.addons.chatbot_cart.uses_cases.clasificar_accion_carrito_use_case import (
+            ClasificarAccionCarritoUseCase,
+        )
+        res = ClasificarAccionCarritoUseCase._clasificar_fallback('qué venden')
+        self.assertEqual(res[0]['accion'], 'CATALOGO')
+
+    def test_20_buscar_frase_con_busca(self):
+        from odoo.addons.chatbot_cart.uses_cases.clasificar_accion_carrito_use_case import (
+            ClasificarAccionCarritoUseCase,
+        )
+        res = ClasificarAccionCarritoUseCase._clasificar_fallback('busca perfumes')
+        self.assertEqual(res[0]['accion'], 'BUSCAR')
+
     def test_14_cotizacion_sin_servicio_responde_amable_y_sale(self):
         self._agregar_producto(self.product_a.id, qty=1)
         controller = self._controller()

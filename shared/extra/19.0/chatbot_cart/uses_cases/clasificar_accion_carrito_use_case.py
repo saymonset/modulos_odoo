@@ -191,7 +191,7 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
             return {"accion": "CATALOGO", "producto": "", "cantidad": 0}, True
 
         tokens = set(re.findall(r'[a-záéíóúñü]+', t))
-        if tokens & {'buscar', 'busca', 'muestrame', 'muéstrame', 'mostrar', 'ver', 'lista', 'catalogo', 'catálogo', 'que', 'qué'}:
+        if tokens & {'buscar', 'busca', 'muestrame', 'muéstrame', 'mostrar', 'lista', 'catalogo', 'catálogo'}:
             return {"accion": "BUSCAR", "producto": t, "cantidad": 0}, True
 
         return {"accion": "FALLBACK", "producto": "", "cantidad": 0}, False

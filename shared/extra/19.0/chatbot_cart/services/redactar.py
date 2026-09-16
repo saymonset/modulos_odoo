@@ -7,6 +7,7 @@ disponible o falla, devuelve la plantilla fija tal cual (fallback).
 """
 
 import logging
+import re
 
 from odoo.addons.chatbot_cart.services.prompt_carrito import redact_prompt_vendedor
 
@@ -15,6 +16,32 @@ _logger = logging.getLogger(__name__)
 _TIMEOUT = 8
 _MAX_TOKENS = 160
 _TEMPERATURE = 0.5
+
+# SPEC 51: la IA no puede fugar instrucciones del router ni formato crudo.
+_FUGA_RE = re.compile(
+    r'^.*(?:flow_name\s*=|equipo_asignado\s*=|__flow__|"\s*accion\s*":).*$',
+    re.IGNORECASE)
+
+
+def _sanitizar(texto):
+    """Elimina fugas de instrucciones internas, JSON crudo y markdown.
+
+    Devuelve None si tras limpiar no queda texto legible (caller usa la
+    plantilla original).
+    """
+    if not texto:
+        return None
+    # quitar bloque de código markdown completo
+    texto = re.sub(r'```.*?```', '', texto, flags=re.DOTALL)
+    lineas = [
+        ln for ln in texto.split('\n')
+        if not _FUGA_RE.match(ln.strip())
+        and ln.strip() not in {'{', '}', '[', ']'}
+    ]
+    limpio = '\n'.join(lineas).strip()
+    if len(re.sub(r'[^A-Za-zÁÉÍÓÚáéíóúñÑ¿¡!.,:; ]', '', limpio)) < 12:
+        return None
+    return limpio
 
 
 def _hay_ia(env):
@@ -56,7 +83,7 @@ def redactar(env, plantilla_texto, contexto=None):
             temperature=_TEMPERATURE,
             timeout=_TIMEOUT,
         )
-        texto = (response.choices[0].message.content or '').strip()
+        texto = _sanitizar((response.choices[0].message.content or '').strip())
         return texto or plantilla_texto
     except Exception as e:
         _logger.warning("Redacción IA del carrito no disponible, uso plantilla: %s", e)

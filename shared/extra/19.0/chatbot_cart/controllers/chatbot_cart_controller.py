@@ -186,7 +186,7 @@ class ChatbotCartController(http.Controller):
         texto = (
             f"{linea_tienda}"
             f"🛍️ Tenemos {total} productos en {len(categorias)} categorías.\n"
-            "Escribe lo que buscas (ej. *pizza*) y te muestro opciones."
+            "Escribe lo que necesites y te muestro opciones con foto y precio."
         )
         carrito = env['chatbot.session'].sudo()._get_carrito(session_id)
         # SPEC 48: la entrada búsqueda-first también activa el modo carrito;
@@ -688,14 +688,12 @@ class ChatbotCartController(http.Controller):
             for p in result.get('productos', [])
         ]
         session._guardar_carrito(session_id, carrito)
+        # SPEC 51: el listado numerado va EXACTO del motor (números y
+        # precios); la IA lo reflowaba y truncaba el nombre del 5.º item.
         return self._respuesta(
             session_id, conversation_id, account_id, platform,
-            self._redactar(env, self.SEARCH_SERVICE.formato_lista_catalogo(
+            self.SEARCH_SERVICE.formato_lista_catalogo(
                 result, url_tienda=CartService.obtener_url_tienda_enlace(env) or ''),
-                contexto={
-                    'accion': 'CATALOGO',
-                    'productos': [p['name'] for p in result.get('productos', [])],
-                }),
             imagenes=self._imagenes_de_productos(result.get('productos', [])),
             extra={'botones': self._botones_carrito(carrito)})
 
