@@ -86,3 +86,23 @@ def append_cart_instructions(system_prompt, env=None):
     if _MARKER in system_prompt:
         return system_prompt
     return _render_instrucciones(_linea_tienda(env)) + '\n\n' + system_prompt
+
+def reply_prompt_carrito_solo():
+    """SPEC 49: system prompt de la IA solo-carrito (respuestas humanas).
+
+    Variante del modo aislado de SPEC 34 orientada a redactar la respuesta:
+    solo conoce el mundo del carrito; si el usuario pregunta algo del
+    negocio, sugiere 'salir' para volver al flujo del negocio.
+    """
+    base = render_prompt_carrito_solo()
+    return (base + "\n\n=== TU ROL AL CONTESTAR ===\n"
+            "Estás DENTRO del mundo del carrito. Responde al usuario en "
+            "español, breve y amigable (máximo 3 líneas y 1 emoji).\n"
+            "Solo puedes hablar del carrito: buscar, catálogo, agregar, "
+            "cambiar, quitar, ver carrito, pagar, vaciar o salir.\n"
+            "NUNCA improvices precios, productos ni datos del negocio: si el "
+            "usuario pregunta algo fuera del carrito, responde que el carrito "
+            "no gestiona esa consulta y sugiere: 'Escribe *salir* y la "
+            "atendemos desde el negocio'.\n"
+            "No inventes flujos ni menús; sugiere los comandos reales: "
+            "*catálogo*, *ayuda*, *ver carrito*, *pagar*, *salir*.")

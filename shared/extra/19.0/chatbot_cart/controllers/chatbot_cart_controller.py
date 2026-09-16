@@ -301,6 +301,49 @@ class ChatbotCartController(http.Controller):
             _logger.warning(f"Clasificación IA no disponible, fallback determinista: {e}")
             return use_case.execute({'texto_usuario': valor})
 
+    def _atender_fallback_ia(self, env, session_id, conversation_id, account_id,
+                             platform, valor):
+        """SPEC 49: IA solo-carrito para mensajes que el clasificador no entiende.
+
+        Usa el prompt aislado de SPEC 34 (variante de respuesta). Ante error
+        o falta de configuración responde con el texto genérico actual.
+        """
+        texto_generico = (
+            "🛒 Estás de compras. Puedo ayudarte con el carrito: escribe "
+            "*catálogo*, *ver carrito* o el nombre de un producto.\n"
+            "Para preguntas del negocio escribe *salir* y te atiendo."
+        )
+        carrito = env['chatbot.session'].sudo()._get_carrito(session_id)
+        extra = {'botones': self._botones_carrito(carrito)}
+        try:
+            from odoo.addons.chatbot_cart.services.prompt_carrito import (
+                reply_prompt_carrito_solo,
+            )
+            gpt = env['gpt.service'].sudo()
+            config = gpt._get_openai_config()
+            client = gpt._get_openai_client(config)
+            response = client.chat.completions.create(
+                model=config.default_model,
+                messages=[
+                    {'role': 'system', 'content': reply_prompt_carrito_solo()},
+                    {'role': 'user', 'content': valor},
+                ],
+                max_tokens=200,
+                temperature=0.4,
+            )
+            texto = (response.choices[0].message.content or '').strip()
+            if not texto:
+                return self._respuesta(
+                    session_id, conversation_id, account_id, platform,
+                    texto_generico, extra=extra)
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform, texto, extra=extra)
+        except Exception as e:
+            _logger.warning("IA solo-carrito no disponible (FALLBACK): %s", e)
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                texto_generico, extra=extra)
+
     def _ejecutar(self, env, session_id, conversation_id, account_id, platform,
                   accion, producto_ref, cantidad, ultima_busqueda):
         """Ejecuta la acción clasificada sobre el carrito."""
@@ -319,18 +362,28 @@ class ChatbotCartController(http.Controller):
             )
             return self._respuesta(session_id, conversation_id, account_id, platform, texto)
 
+        if accion == 'FALLBACK':
+            # SPEC 49: la IA solo-carrito atiende lo que el clasificador
+            # no entiende; si la IA no está disponible, respuesta genérica.
+            return self._atender_fallback_ia(
+                env, session_id, conversation_id, account_id, platform, valor)
+
         if accion == 'CONSULTAR':
             resumen = self.CART_SERVICE.resumen(env, session_id)
             if not resumen['items']:
-                # Carrito vacío: mostrar el catálogo en vez de solo "está vacío" (SPEC 33)
+                # Carrito vacío: mostrar el catálogo en vez de solo "está vacío"
+                # (SPEC 33); es la ACTIVACIÓN -> buscador-first (SPEC 40/49).
                 return self._mostrar_catalogo(
-                    env, session_id, conversation_id, account_id, platform, offset=0)
+                    env, session_id, conversation_id, account_id, platform,
+                    offset=0, buscador_first=True)
             texto = self.CART_SERVICE.formato_resumen_amigable(env, session_id)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform, texto,
                 extra={'botones': self._botones_carrito(resumen)})
 
         if accion == 'CATALOGO':
+            # SPEC 49: "catálogo" explícito muestra SIEMPRE la lista paginada
+            # clásica; el buscador-first queda para la activación.
             return self._mostrar_catalogo(
                 env, session_id, conversation_id, account_id, platform,
                 offset=self._offset_catalogo(env, session_id, producto_ref))
@@ -381,32 +434,22 @@ class ChatbotCartController(http.Controller):
         return self._respuesta(session_id, conversation_id, account_id, platform, texto)
 
     def _salir_carrito(self, env, session_id, conversation_id, account_id, platform):
-        """Inicia o completa la salida del modo carrito hacia el negocio."""
+        """Salida directa del modo carrito (SPEC 49).
+
+        Conserva los items y vuelve a modo negocio sin la pregunta 1/2/3:
+        el usuario retoma el carrito escribiendo "carrito".
+        """
         session = env['chatbot.session'].sudo()
         resumen = self.CART_SERVICE.resumen(env, session_id)
-
-        if not resumen['items']:
-            # Carrito vacío: salir directo (SPEC 34)
-            session._salir_modo_carrito(session_id, vaciar=False)
-            texto = (
-                "👋 Saliste del carrito. ¿En qué más te puedo ayudar del negocio? "
-                "Escribe *carrito* cuando quieras volver a comprar."
-            )
-            return self._respuesta(session_id, conversation_id, account_id, platform, texto,
-                                   finalizado=True)
-
-        # Carrito con items: guardar pendiente de decisión (una sola vez)
-        carrito = session._get_carrito(session_id)
-        carrito['pendiente_salida'] = True
-        session._guardar_carrito(session_id, carrito)
+        session._salir_modo_carrito(session_id, vaciar=False)
+        items_linea = (
+            f" (quedan guardados {resumen['count']} item(s))" if resumen['items'] else '')
         texto = (
-            "¿Qué hacemos con tu carrito?\n"
-            "1️⃣ *Lo guardo* y salgo del carrito\n"
-            "2️⃣ *Lo vacío* y salgo del carrito\n"
-            "3️⃣ *Sigo comprando*\n\n"
-            "Responde 1, 2 o 3."
+            f"¡Listo! Volvemos al negocio{items_linea}. "
+            "Escribe *carrito* cuando quieras retomar tu compra."
         )
-        return self._respuesta(session_id, conversation_id, account_id, platform, texto)
+        return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                               finalizado=True)
 
     def _resolver_salida_pendiente(self, env, session_id, conversation_id, account_id, platform, valor):
         """Resuelve la respuesta 1/2/3 pendiente de salida.
@@ -520,15 +563,17 @@ class ChatbotCartController(http.Controller):
             return pagina + self.SEARCH_SERVICE.CATALOG_LIMIT
         return 0
 
-    def _mostrar_catalogo(self, env, session_id, conversation_id, account_id, platform, offset=0):
+    def _mostrar_catalogo(self, env, session_id, conversation_id, account_id, platform, offset=0,
+                          buscador_first=False):
         """Muestra una página del catálogo y guarda la paginación + últimos productos.
 
-        SPEC 40: con más de UMBRAL_CATALOGO productos, la primera entrada
-        (offset=0) pasa a búsqueda-first (prompt + categorías); "más" sigue
-        paginando como respaldo.
+        SPEC 40: con más de UMBRAL_CATALOGO productos, la ENTRADA por
+        activación (buscador_first=True, offset=0) pasa a búsqueda-first;
+        "catálogo" explícito siempre muestra la lista paginada (SPEC 49).
         """
         session = env['chatbot.session'].sudo()
-        if offset == 0 and self.SEARCH_SERVICE.contar_vendibles(env) > self.UMBRAL_CATALOGO:
+        if (buscador_first and offset == 0
+                and self.SEARCH_SERVICE.contar_vendibles(env) > self.UMBRAL_CATALOGO):
             return self._respuesta_buscador(env, session_id, conversation_id, account_id, platform)
         result = self.SEARCH_SERVICE.catalogo(env, offset=offset)
         carrito = session._get_carrito(session_id)

@@ -179,4 +179,4 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
         if tokens & {'buscar', 'busca', 'muestrame', 'muéstrame', 'mostrar', 'ver', 'lista', 'catalogo', 'catálogo', 'que', 'qué'}:
             return {"accion": "BUSCAR", "producto": t, "cantidad": 0}, True
 
-        return {"accion": "CONSULTAR", "producto": "", "cantidad": 0}, False
+        return {"accion": "FALLBACK", "producto": "", "cantidad": 0}, False
