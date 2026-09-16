@@ -1,6 +1,6 @@
 # SPEC 47 — Cotización asistida por IA con MCP de Odoo
 
-> **Status:** Draft
+> **Status:** Approved
 > **Depends on:** SPEC 15 (OpenAI agente), SPEC 43 (workspace n8n lead), SPEC 44 (subflow carrito independiente), SPEC 25 (tasa BCV congelada en órdenes)
 > **Date:** 2026-09-16
 > **Objective:** Que el cliente de WhatsApp pida una cotización, la IA le pregunte qué busca, le muestre productos vía MCP de Odoo, arme la cotización con el módulo BCV (dólares/bolívares) y se la envíe en PDF por correo, todo automático sin intervención humana.
