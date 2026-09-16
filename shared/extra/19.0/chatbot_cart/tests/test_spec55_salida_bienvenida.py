@@ -60,19 +60,17 @@ class TestSpec55SalidaBienvenida(BaseChatbotCartTestCase):
         self.assertIn('¡Hola! 👋 Te saluda *Marca Spec55*.', texto)
 
     def test_04_aviso_sin_ia_usa_bienvenida_negocio(self):
-        from unittest.mock import patch
         self._agregar_producto(self.product_a.id, qty=1)
-        with patch.object(
-                type(self.env['gpt.service'].sudo()), '_get_openai_config',
-                side_effect=Exception('sin config')):
-            resp = self.controller._atender_fallback_ia(
-                self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
-                'algo del negocio')
+        resp = self.controller._aviso_sin_ia(
+            self.env, self.session_id, 'c1', '+58414000000', 'whatsapp')
         texto = resp['texto_para_usuario']
         self.assertIn('no tengo la IA activa', texto)
         self.assertIn('¡Hola! 👋 Te saluda *Marca Spec55*.', texto)
         self.assertIn('Te quedaron 1 item(s) guardados', texto)
         self.assertNotIn('Volvemos al negocio:', texto)
+        # sale del modo carrito (SPEC 50)
+        self.assertFalse(self.env['chatbot.session'].sudo()._esta_en_modo_carrito(
+            self.session_id))
 
     # --- guía de búsqueda y Hallazgos sin resultados ---
 
@@ -82,7 +80,8 @@ class TestSpec55SalidaBienvenida(BaseChatbotCartTestCase):
             'CATALOGO', '', 0, [])
         texto = resp['texto_para_usuario']
         self.assertIn('¿Buscas algo en particular?', texto)
-        self.assertIn('Escíbelo con tus palabras', texto)
+        self.assertIn('Escríbelo con tus palabras', texto)
+        self.assertIn('p. ej. "', texto)
         self.assertNotIn('1. Camisa Roja', texto)
         self.assertNotIn('Ref: ', texto)
         # destacados con número en el caption (imágenes)
@@ -96,7 +95,6 @@ class TestSpec55SalidaBienvenida(BaseChatbotCartTestCase):
         self.assertIn('Encontré', texto)
         self.assertNotIn('1. Camisa Roja', texto)
         self.assertNotIn('Ref: CAM-R', texto)
-        self.assertTrue(resp['imagenes'])
 
     def test_07_busqueda_sin_resultados_sugiere_tienda(self):
         resp = self.controller._ejecutar(

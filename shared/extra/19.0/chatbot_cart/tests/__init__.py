@@ -15,3 +15,4 @@ from . import test_mundo_carrito
 from . import test_vendedor_ia
 from . import test_captura_guiada
 from . import test_ajuste_carrito
+from . import test_spec55_salida_bienvenida
