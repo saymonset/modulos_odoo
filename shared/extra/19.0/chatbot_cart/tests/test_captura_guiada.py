@@ -157,8 +157,8 @@ class TestCapturaGuiada(BaseChatbotCartTestCase):
         self.assertIn('Tu carrito:', texto)
         self.assertIn('1. Camisa Roja x2', texto)
         self.assertIn('Bs. 260.00', texto)
-        self.assertIn('quitar', texto)
-        self.assertIn('cambiar', texto)
+        self.assertIn('1 ➕', texto)
+        self.assertIn('1 ➖', texto)
 
     def test_09_lista_compacta_con_cop(self):
         self._configurar_tasas(bcv_rate=20.0, cop_rate=1200.0, cop_show=True)

@@ -752,6 +752,7 @@ class ChatbotCartController(http.Controller):
                        accion, producto_ref, cantidad, ultima_busqueda):
         """Ejecuta AGREGAR/QUITAR/MODIFICAR sobre un producto del carrito."""
         service = self.CART_SERVICE
+        session = env['chatbot.session'].sudo()
         product_id, mensaje = self._resolver_producto(
             env, session_id, producto_ref, ultima_busqueda, accion=accion)
         if not product_id:
@@ -929,6 +930,21 @@ class ChatbotCartController(http.Controller):
             eleccion.get('tipo', 'AGREGAR'), producto, cantidad,
             carrito.get('ultima_busqueda', []))
 
+    @staticmethod
+    def _stock_libre(product):
+        """SPEC 54: unidades libres para el cap del ➕.
+
+        None = sin límite (consu/servicio). Con módulo stock y `type=='product'`
+        devuelve `free_qty` (disponible menos comprometido).
+        """
+        if product.type != 'product':
+            return None
+        try:
+            free = product.free_qty
+        except Exception:
+            return None
+        return max(int(free or 0), 0)
+
     def _ajustar_cantidad(self, env, session_id, conversation_id, account_id,
                           platform, accion, signo_idx, carrito):
         """SPEC 54: suma/resta 1 unidad del producto referido (índice del
@@ -981,20 +997,19 @@ class ChatbotCartController(http.Controller):
             (it['qty'] for it in items if it['product_id'] == product_id), 0)
 
         if accion == 'SUMAR':
-            if product.type == 'product':
-                libre = max(int(product.free_qty or 0), 0)
-                if actual + 1 > libre:
-                    if libre <= 0:
-                        texto = (f"Sin inventario 😕 de *{product.name}*: no "
-                                 "quedan unidades disponibles ahora mismo.")
-                    else:
-                        texto = (f"Solo quedan {libre} de *{product.name}* "
-                                 "en inventario — te dejo como está.")
-                    return self._respuesta(
-                        session_id, conversation_id, account_id, platform,
-                        self._redactar(env, texto, contexto={
-                            'accion': 'SUMAR', 'producto': product.name,
-                            'resumen': self.CART_SERVICE.resumen(env, session_id)}))
+            libre = self._stock_libre(product)
+            if libre is not None and actual + 1 > libre:
+                if libre <= 0:
+                    texto = (f"Sin inventario 😕 de *{product.name}*: no "
+                             "quedan unidades disponibles ahora mismo.")
+                else:
+                    texto = (f"Solo quedan {libre} de *{product.name}* "
+                             "en inventario — te dejo como está.")
+                return self._respuesta(
+                    session_id, conversation_id, account_id, platform,
+                    self._redactar(env, texto, contexto={
+                        'accion': 'SUMAR', 'producto': product.name,
+                        'resumen': self.CART_SERVICE.resumen(env, session_id)}))
             resultado = self.CART_SERVICE.agregar(env, session_id, product_id, 1)
             if not resultado.get('success'):
                 return self._respuesta(

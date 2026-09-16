@@ -1,6 +1,6 @@
 # SPEC 54 — Carrito ➕/➖ con estado y quitar por número (experiencia para todos)
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 45 (botones), SPEC 50 (vendedor IA), SPEC 52 (selección numérica), SPEC 53 (captura guiada)
 > **Date:** 2026-09-16
 > **Objective:** Que agregar, modificar y eliminar sea responder número + signo desde la foto (`1 ➕`, `1 ➖`) o con botones ➕/➖ sobre el producto seleccionado, mostrando en cada imagen cuántas unidades ya lleva y respetando el inventario al sumar.
@@ -49,15 +49,15 @@ carrito['producto_seleccionado'] = product_id   # último agregado/citado/modifi
 
 ## Criterios de aceptación
 
-- [ ] `quitar 1` con "ver carrito" y sin catálogo previo quita el item 1 del carrito.
-- [ ] Cada imagen de catálogo/búsqueda muestra `🛒 en tu carrito: N` o `(no está en tu carrito)`.
-- [ ] `1 ➕` suma 1 del producto 1 del listado; `1 ➖` resta 1; a 0 lo elimina con aviso.
-- [ ] `➕`/`➖` sin índice operan sobre el producto seleccionado; sin selección piden índice con listado del carrito.
-- [ ] Con `type=='product'` sin stock libre no incrementa; dice "solo quedan X de Y" y respeta el cap.
-- [ ] `consu`/servicio no tienen cap al sumar.
-- [ ] Botones post-carrito: `[➕ Sumar, ➖ Quitar, pagar]` funcionan por palabra/botón.
-- [ ] `1, quiero 3` y `del 2 quiero 5` siguen directo (SPEC 52) y "quiero un 4" sigue preguntando (SPEC 53).
-- [ ] Suite `chatbot_cart` en verde (salvo los 2 FAIL preexistentes `test_recibo_pago`) + E2E lead de los 6 casos.
+- [x] `quitar 1` con "ver carrito" y sin catálogo previo quita el item 1 del carrito.
+- [x] Cada imagen de catálogo/búsqueda muestra `🛒 en tu carrito: N` o `(no está en tu carrito)`.
+- [x] `1 ➕` suma 1 del producto 1 del listado; `1 ➖` resta 1; a 0 lo elimina con aviso.
+- [x] `➕`/`➖` sin índice operan sobre el producto seleccionado; sin selección piden índice con listado del carrito.
+- [x] Con `type=='product'` sin stock libre no incrementa; dice "solo quedan X de Y" y respeta el cap.
+- [x] `consu`/servicio no tienen cap al sumar.
+- [x] Botones post-carrito: `[➕ Sumar, ➖ Quitar, pagar]` funcionan por palabra/botón.
+- [x] `1, quiero 3` y `del 2 quiero 5` siguen directo (SPEC 52) y "quiero un 4" sigue preguntando (SPEC 53).
+- [x] Suite `chatbot_cart` en verde (salvo los 2 FAIL preexistentes `test_recibo_pago`) + E2E lead de los 6 casos.
 
 ## Decisiones tomadas y descartadas
 

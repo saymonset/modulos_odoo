@@ -90,7 +90,7 @@ class TestVendedorIA(BaseChatbotCartTestCase):
         texto = resp['texto_para_usuario']
         self.assertIn('Agregué', texto)
         self.assertIn('¿Quieres pagar ya?', texto)
-        self.assertEqual(resp['botones'], ['pagar', 'cotización', '🏪 Volver al negocio'])
+        self.assertEqual(resp['botones'], ['➕ Sumar', '➖ Quitar', 'pagar'])
         self.assertTrue(self._carrito_flags().get('pendiente_pago'))
 
     def test_06_ver_carrito_con_items_cierra_con_pregunta(self):
@@ -100,7 +100,7 @@ class TestVendedorIA(BaseChatbotCartTestCase):
                 self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
                 'CONSULTAR', '', 0, [])
         self.assertIn('¿Quieres pagar ya?', resp['texto_para_usuario'])
-        self.assertEqual(resp['botones'], ['pagar', 'cotización', '🏪 Volver al negocio'])
+        self.assertEqual(resp['botones'], ['➕ Sumar', '➖ Quitar', 'pagar'])
         self.assertTrue(self._carrito_flags().get('pendiente_pago'))
 
     def test_07_pagar_limpia_pendiente_pago(self):
@@ -335,8 +335,8 @@ class TestVendedorIA(BaseChatbotCartTestCase):
             resp = self._controller()._ejecutar_item(
                 self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
                 'AGREGAR', 'CAM-R', 1, [])
-        self.assertIn('Acciones:', resp['texto_para_usuario'])
-        self.assertIn('cotización', resp['texto_para_usuario'])
+        self.assertIn('Pista:', resp['texto_para_usuario'])
+        self.assertIn('➕', resp['texto_para_usuario'])
 
     def test_24_hint_en_consultar_con_items(self):
         self._agregar_producto(self.product_a.id, qty=1)
@@ -344,7 +344,7 @@ class TestVendedorIA(BaseChatbotCartTestCase):
             resp = self._controller()._ejecutar(
                 self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
                 'CONSULTAR', '', 0, [])
-        self.assertIn('Acciones:', resp['texto_para_usuario'])
+        self.assertIn('Pista:', resp['texto_para_usuario'])
         self.assertIn('vaciar', resp['texto_para_usuario'])
 
     def test_14_cotizacion_sin_servicio_responde_amable_y_sale(self):

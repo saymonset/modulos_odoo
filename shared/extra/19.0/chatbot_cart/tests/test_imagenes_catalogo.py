@@ -65,7 +65,8 @@ class TestImagenesCatalogo(BaseChatbotCartTestCase):
         imagenes = ChatbotCartController._imagenes_de_productos(productos)
         self.assertEqual(len(imagenes), 1)
         self.assertEqual(imagenes[0]['link'], productos[0]['image_url'])
-        self.assertEqual(imagenes[0]['caption'], 'Pizza — Bs. 10,106.48 / $12.00')
+        self.assertEqual(imagenes[0]['caption'],
+                         'Pizza — Bs. 10,106.48 / $12.00\n(no está en tu carrito)')
 
     def test_05_caption_con_cop(self):
         productos = [

@@ -14,3 +14,4 @@ from . import test_persistencia_modo
 from . import test_mundo_carrito
 from . import test_vendedor_ia
 from . import test_captura_guiada
+from . import test_ajuste_carrito
