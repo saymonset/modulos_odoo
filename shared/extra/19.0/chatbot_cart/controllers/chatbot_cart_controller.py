@@ -122,12 +122,25 @@ class ChatbotCartController(http.Controller):
 
         # 1. Referencia numérica a la última lista mostrada
         match = re.search(r'(?<!\d)(\d{1,2})(?!\d)', ref)
+        idx = None
         if match:
             idx = int(match.group(1)) - 1
             if ultima_busqueda and 0 <= idx < len(ultima_busqueda):
                 return ultima_busqueda[idx]['product_id'], ""
             if idx < 0:
                 return None, "El número debe ser mayor que cero."
+
+        # SPEC 54: sin lista previa (o índice fuera de ella), el número alude
+        # al item N del carrito: "quitar 1" / "cambiar 1 a 3" tras ver carrito.
+        if idx is not None and accion in ('QUITAR', 'MODIFICAR'):
+            carrito = env['chatbot.session'].sudo()._get_carrito(session_id)
+            items = carrito.get('items', [])
+            if 0 <= idx < len(items):
+                return items[idx]['product_id'], ""
+            if items:
+                return None, (
+                    f"Ese número no está en tu carrito (llevas {len(items)} "
+                    "producto(s)). Escribe *ver carrito* para revisar.")
 
         # 2. Búsqueda por nombre/código
         result = self.SEARCH_SERVICE.buscar(env, ref, limit=5)
