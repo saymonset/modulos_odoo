@@ -47,6 +47,11 @@ class ChatbotCartController(http.Controller):
         "\nPista: *1 ➕* suma y *1 ➖* quita el producto de la lista · "
         "también *pagar* · *cotización* · *vaciar* · *🏪 Volver al negocio*")
 
+    # SPEC 54: pie del catálogo/búsqueda — regla número + signo.
+    _PISTA_MAS_MENOS = (
+        "\n\nResponde *1 ➕* para sumar ese producto o *1 ➖* para restarlo.\n"
+        "Con carrito: *ver carrito* · *pagar* · *cotización* · *🏪 Volver al negocio*")
+
     @staticmethod
     def _lista_compacta_carrito(resumen):
         """SPEC 53: listado compacto del carrito post-agregar (intangible IA:
@@ -290,8 +295,10 @@ class ChatbotCartController(http.Controller):
         return self._respuesta(
             session_id, conversation_id, account_id, platform,
             self.SEARCH_SERVICE.formato_lista_catalogo(
-                result, url_tienda=CartService.obtener_url_tienda_enlace(env) or ''),
-            imagenes=self._imagenes_de_productos(result.get('productos', [])),
+                result, url_tienda=CartService.obtener_url_tienda_enlace(env) or '')
+            + self._PISTA_MAS_MENOS,
+            imagenes=self._imagenes_de_productos(
+                result.get('productos', []), items_carrito=carrito.get('items')),
             extra={'botones': self._botones_carrito(carrito)})
 
     def _respuesta_buscador(self, env, session_id, conversation_id, account_id, platform):
@@ -609,8 +616,11 @@ class ChatbotCartController(http.Controller):
                 session._guardar_carrito(session_id, carrito)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
-                self.SEARCH_SERVICE.formato_lista_productos(result),
-                imagenes=self._imagenes_de_productos(result.get('productos', [])),
+                self.SEARCH_SERVICE.formato_lista_productos(result)
+                + self._PISTA_MAS_MENOS,
+                imagenes=self._imagenes_de_productos(
+                    result.get('productos', []),
+                    items_carrito=carrito.get('items')),
                 extra={'botones': self._botones_carrito(carrito)})
 
         if accion in ('AGREGAR', 'QUITAR', 'MODIFICAR'):
@@ -1084,20 +1094,25 @@ class ChatbotCartController(http.Controller):
         return self._respuesta(
             session_id, conversation_id, account_id, platform,
             self.SEARCH_SERVICE.formato_lista_catalogo(
-                result, url_tienda=CartService.obtener_url_tienda_enlace(env) or ''),
+                result, url_tienda=CartService.obtener_url_tienda_enlace(env) or '')
+            + self._PISTA_MAS_MENOS,
             imagenes=self._imagenes_de_productos(
-                result.get('productos', []), con_numeros=True),
+                result.get('productos', []), con_numeros=True,
+                items_carrito=carrito.get('items')),
             extra={'botones': self._botones_carrito(carrito)})
 
     @staticmethod
-    def _imagenes_de_productos(productos, con_numeros=False):
-        """SPEC 39/52: imágenes del catálogo/búsqueda como media-messages.
+    def _imagenes_de_productos(productos, con_numeros=False, items_carrito=None):
+        """SPEC 39/52/54: imágenes del catálogo/búsqueda como media-messages.
 
         Devuelve [{link, caption}] solo de productos con imagen y URL
-        absoluta; el caption lleva nombre y precios. SPEC 52: si
-        `con_numeros=True`, el caption incluye el índice de la lista (la
-        foto identificable con el número a responder).
+        absoluta; el caption lleva nombre y precios, el índice de la lista
+        si `con_numeros=True`, y el estado del carrito (SPEC 54): "🛒 en tu
+        carrito: N" o "(no está en tu carrito)".
         """
+        en_carrito = {
+            it['product_id']: it.get('qty', 0) for it in (items_carrito or [])
+        }
         imagenes = []
         for idx, p in enumerate(productos, 1):
             if not p.get('has_image') or not p.get('image_url'):
@@ -1106,6 +1121,10 @@ class ChatbotCartController(http.Controller):
             caption += f" — Bs. {p['price_ves']:,.2f} / ${p['price_usd']:,.2f}"
             if p.get('show_cop') and p.get('price_cop'):
                 caption += f" / COP ${p['price_cop']:,.2f}"
+            qty = en_carrito.get(p.get('product_id'))
+            caption += (
+                f"\n🛒 en tu carrito: {qty}" if qty
+                else "\n(no está en tu carrito)")
             imagenes.append({'link': p['image_url'], 'caption': caption})
         return imagenes
 
@@ -1580,7 +1599,10 @@ class ChatbotCartController(http.Controller):
         return self._respuesta(
             session_id, conversation_id, account_id, platform,
             texto,
-            imagenes=self._imagenes_de_productos(result.get('productos', [])) if result.get('success') else [],
+            imagenes=self._imagenes_de_productos(
+                result.get('productos', []),
+                items_carrito=request.env['chatbot.session'].sudo()._get_carrito(
+                    session_id).get('items')) if result.get('success') else [],
             extra={'resultado': result})
 
     @http.route('/chatbot_cart/pagar', type='json', auth='public', methods=['POST'], csrf=False, cors='*')
