@@ -140,25 +140,50 @@ class ChatbotCartController(http.Controller):
         r'^\s*(?:comprar|dame|existe|hay|necesito|mandame|mándame)\s+'
         r'(\d{1,3})\s*(?:unidades)?\s*(?:del|de la|de los)\s*(?:el\s+)?'
         r'(\d{1,2})\s*$', re.IGNORECASE)
+    # SPEC 53: frases no explícitas — verbo o artículo + número. "quiero un 4"
+    # puede ser "4 unidades de X" o "1 unidad del producto 4": se pregunta.
+    # Un número suelto ("4") NO es ambiguo: es selección de lista (SPEC 38).
+    _RE_AMBIGUO_VERBO = re.compile(
+        r'^\s*(?:dame|quiero|llévame|llevame|manda|necesito|asi|así)\s+'
+        r'(?:un|una)?\s*(\d{1,2})\s*(?:unidades)?\s*$', re.IGNORECASE)
+    _RE_AMBIGUO_ART = re.compile(r'^(?:un|una)\s+(\d{1,2})\s*$', re.IGNORECASE)
+    _QTY_PALABRA = {
+        'un': 1, 'una': 1, 'dos': 2, 'tres': 3, 'cuatro': 4,
+        'cinco': 5, 'seis': 6, 'siete': 7, 'ocho': 8, 'nueve': 9, 'diez': 10,
+    }
 
     @classmethod
     def _decision_seleccion_numerica(cls, valor, ultima_busqueda):
         """SPEC 38/52: qué hacer con un número suelto según la lista mostrada.
 
-        Devuelve ('AGREGAR', dígito, cantidad), ('SIN_LISTA', None, 1),
-        ('FUERA_RANGO', len(ultima_busqueda), 1) o None si `valor` no es un
-        número suelto. SPEC 52: la frase puede traer cantidad —
-        "1, quiero 3" / "del 2 quiero 5" agrega M unidades del producto N.
+        Devuelve ('AGREGAR', dígito, cantidad), ('SIN_LISTA', None, cantidad),
+        ('FUERA_RANGO', len(ultima_busqueda), cantidad),
+        ('AMBIGUO', dígito, cantidad) o None si `valor` no es número/frase
+        numérica. SPEC 52: la frase puede traer cantidad — "1, quiero 3" /
+        "del 2 quiero 5" agrega M unidades del producto N. SPEC 53: las
+        frases no explícitas ("quiero un 4", "quiero cuatro") no agregan.
         """
-        numero = cls._es_seleccion_numerica(valor)
+        limpio = (valor or '').strip().lower()
+        numero = cls._es_seleccion_numerica(limpio)
         cantidad = 1
         if not numero:
-            m = cls._RE_SELEC_QTY.match((valor or '').strip())
+            m = cls._RE_SELEC_QTY.match(limpio)
             if m:
                 numero, cantidad = m.group(1), int(m.group(2))
             else:
-                m = cls._RE_SELEC_QTY_INV.match((valor or '').strip())
+                m = cls._RE_SELEC_QTY_INV.match(limpio)
                 if not m:
+                    # SPEC 53: frase ambigua — verbo/artículo + número
+                    m = (cls._RE_AMBIGUO_VERBO.match(limpio)
+                         or cls._RE_AMBIGUO_ART.match(limpio))
+                    if m:
+                        return ('AMBIGUO', m.group(1), None)
+                    m_qty = re.match(
+                        r'^\s*(?:dame|quiero|necesito|llévame|llevame)\s+'
+                        r'(\w+)\s*(?:unidades)?\s*$', limpio, re.IGNORECASE)
+                    if m_qty and m_qty.group(1) in cls._QTY_PALABRA:
+                        return (
+                            'AMBIGUO', None, cls._QTY_PALABRA[m_qty.group(1)])
                     return None
                 cantidad, numero = int(m.group(1)), m.group(2)
         if not ultima_busqueda:
@@ -332,6 +357,14 @@ class ChatbotCartController(http.Controller):
             return self._json_response(self._cotizacion_turno(
                 env, session_id, conversation_id, account_id, platform, valor))
 
+        # SPEC 53: intención pendiente de confirmación (frases ambiguas).
+        # Toda confirmación se resuelve antes del clasificador.
+        if carrito.get('pendiente_confirmar'):
+            resolucion = self._resolver_pendiente_confirmar(
+                env, session_id, conversation_id, account_id, platform, valor)
+            if resolucion is not None:
+                return self._json_response(resolucion)
+
         # SPEC 50: "no" en el turno del total => cotizar en vez de pagar.
         if carrito.get('pendiente_pago') and self._es_declinacion(valor):
             return self._json_response(self._pedir_email_cotizacion(
@@ -355,6 +388,12 @@ class ChatbotCartController(http.Controller):
                     f"Ese número no está en la lista (1-{ref}). "
                     "Responde el número o escribe el nombre.",
                     extra={'botones': self._botones_carrito(carrito)})
+                return self._json_response(resp)
+            # SPEC 53: frase ambigua — preguntar antes de agregar cualquier cosa
+            if tipo == 'AMBIGUO':
+                resp = self._preguntar_agregado_ambiguo(
+                    env, session_id, conversation_id, account_id, platform,
+                    carrito, ref, qty_num)
                 return self._json_response(resp)
             clasificacion = {'accion': 'AGREGAR', 'producto': ref, 'cantidad': qty_num}
         else:
@@ -704,6 +743,109 @@ class ChatbotCartController(http.Controller):
                 'accion': 'MODIFICAR', 'cantidad': cantidad, 'resumen': resumen}),
             extra={'botones': self._botones_carrito(resumen)})
 
+    def _preguntar_agregado_ambiguo(self, env, session_id, conversation_id,
+                                    account_id, platform, carrito, numero, cantidad):
+        """SPEC 53: frase numérica no explícita — no agrega nada; muestra lo
+        que entendió (2 interpretaciones o claridad) y guarda la elección."""
+        session = env['chatbot.session'].sudo()
+        ultima_busqueda = carrito.get('ultima_busqueda', [])
+        opciones = []
+        # Opción cantidad: N unidades del único producto del carrito, si existe
+        resumen = self.CART_SERVICE.resumen(env, session_id)
+        nombres = sorted({it['name'] for it in resumen['items']})
+        qty_deseada = cantidad or int(numero or 0) or 1
+        solo_producto = (
+            len(nombres) == 1 and
+            (not numero or not ultima_busqueda or
+             int(numero) > len(ultima_busqueda))
+        )
+        if solo_producto:
+            opciones.append({
+                'id': str(len(opciones) + 1),
+                'tipo': 'AGREGAR',
+                'producto': nombres[0],
+                'cantidad': qty_deseada,
+                'etiqueta': f"{qty_deseada} unidades de {nombres[0]}",
+            })
+        # Opción posición de lista: 1 unidad del producto <numero>.
+        if numero and ultima_busqueda and 0 < int(numero) <= len(ultima_busqueda):
+            fila = ultima_busqueda[int(numero) - 1]
+            opciones.append({
+                'id': str(len(opciones) + 1),
+                'tipo': 'AGREGAR',
+                'producto': str(int(numero)),
+                'cantidad': 1,
+                'etiqueta': f"1 unidad del producto {numero}: {fila['name']} "
+                            f"${fila.get('price_usd', 0):,.2f}",
+            })
+        if not opciones:
+            carrito.pop('pendiente_confirmar', None)
+            session._guardar_carrito(session_id, carrito)
+            texto = ("No me quedó claro la cantidad 😅. Escríbelo con "
+                     "claridad: ej. *del 4 quiero 2* o el nombre del "
+                     "producto con la cantidad (*4 jabones*).")
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                self._redactar(env, texto, contexto={
+                    'accion': 'AMBIGUO', 'valor': valor}),
+                extra={'botones': self._botones_carrito(carrito)})
+        lineas = [f"{op['id']}. {op['etiqueta']}" for op in opciones]
+        texto = (f"Espera, ¿qué prefieres? 😊 Escribí *\"{valor}\"* que puede "
+                 "significar\n" + "\n".join(lineas) +
+                 "\nSi no es ninguna, escríbelo con claridad (ej. *del 4 "
+                 "quiero 2* o *4 jabones*).")
+        carrito['pendiente_confirmar'] = {'opciones': opciones, 'pregunta': texto}
+        session._guardar_carrito(session_id, carrito)
+        botones = [f"{op['id']}" for op in opciones] + ['🚫 Cancelar']
+        return self._respuesta(
+            session_id, conversation_id, account_id, platform,
+            self._redactar(env, texto, contexto={
+                'accion': 'AMBIGUO', 'valor': valor, 'opciones': opciones}),
+            extra={'botones': botones})
+
+    def _resolver_pendiente_confirmar(self, env, session_id, conversation_id,
+                                      account_id, platform, valor):
+        """SPEC 53: resuelve la elección pendiente de una frase ambígua.
+
+        Reply de botón alineado a la opción o "sí" ejecuta; otro mensaje
+        reformula la pregunta; cancelar la limpia. None = no resuelto.
+        """
+        session = env['chatbot.session'].sudo()
+        carrito = session._get_carrito(session_id)
+        estado = dict(carrito.get('pendiente_confirmar') or {})
+        limpio = (valor or '').strip().lower()
+        if self._es_declinacion_cotizacion(limpio):
+            carrito.pop('pendiente_confirmar', None)
+            session._guardar_carrito(session_id, carrito)
+            texto = ("De nada 😊 Nada se agregó. Escribe *catálogo* o el "
+                     "nombre de un producto para seguir.")
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                self._redactar(env, texto, contexto={'accion': 'CANCELAR'}),
+                extra={'botones': self._botones_carrito(carrito)})
+        opciones = estado.get('opciones', [])
+        eleccion = None
+        if limpio in ('sí', 'si') and len(opciones) == 1:
+            eleccion = opciones[0]
+        else:
+            eleccion = next(
+                (op for op in opciones if op['id'] == limpio or op['id'].lower() == limpio),
+                None)
+        if not eleccion:
+            texto = (estado.get('pregunta') or
+                     "¿Qué prefieres? Escríbelo con claridad: ej. *del 4 quiero 2*.")
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                self._redactar(env, texto, contexto={'accion': 'AMBIGUO'}),
+                extra={'botones': [f"{op['id']}" for op in opciones] + ['🚫 Cancelar']})
+        producto, cantidad = eleccion['producto'], eleccion['cantidad']
+        carrito.pop('pendiente_confirmar', None)
+        session._guardar_carrito(session_id, carrito)
+        return self._ejecutar(
+            env, session_id, conversation_id, account_id, platform,
+            eleccion.get('tipo', 'AGREGAR'), producto, cantidad,
+            carrito.get('ultima_busqueda', []))
+
     def _offset_catalogo(self, env, session_id, producto_ref):
         """Devuelve el offset del catálogo según la paginación guardada.
 
@@ -782,6 +924,15 @@ class ChatbotCartController(http.Controller):
         'no', 'nop', 'nay', 'no gracias', 'no quiero', 'no ahora',
         'todavía no', 'todavia no', 'aún no', 'aun no',
     }
+    _AFIRMACIONES = {
+        'si', 'sí', 'sis', 'sip', 'siii', 'claro', 'claro que sí', 'claro que si',
+        'yo soy', 'ese soy yo', 'soy yo', 'correcto', 'exacto', 'ok', 'okay',
+    }
+
+    @staticmethod
+    def _es_afirmacion(valor):
+        """¿El cliente confirmó con un "sí" (SPEC 53: ¿eres {nombre}?)"""
+        return (valor or '').strip().lower() in ChatbotCartController._AFIRMACIONES
 
     @staticmethod
     def _es_declinacion(valor):
@@ -801,8 +952,9 @@ class ChatbotCartController(http.Controller):
         carrito['pendiente_cotizacion'] = {'paso': 'telefono', 'intentos': 0}
         session._guardar_carrito(session_id, carrito)
         texto = (
-            "¡Sin problema! 😊 ¿A qué teléfono te busco en el sistema? "
-            "Con tu teléfono armo la cotización con nombre y correo del cliente."
+            "¡Sin problema! 😊 Para armarte la cotización te pediré unos "
+            "datos, uno por mensaje. Empezamos por tu teléfono: ¿cuál es? "
+            "Después te pediré nombre y correo 😊"
         )
         texto = self._redactar(env, texto, contexto={
             'accion': 'COTIZACION', 'etapa': 'pedir_telefono'})
@@ -828,6 +980,9 @@ class ChatbotCartController(http.Controller):
         paso = estado.get('paso')
         if paso == 'telefono':
             return self._cotizacion_turno_telefono(
+                env, session_id, conversation_id, account_id, platform, valor, estado)
+        if paso == 'confirmar_partner':
+            return self._cotizacion_turno_confirmar_partner(
                 env, session_id, conversation_id, account_id, platform, valor, estado)
         if paso == 'email':
             return self._cotizacion_turno_email(
@@ -877,15 +1032,16 @@ class ChatbotCartController(http.Controller):
         partner = ChatBotUtils.find_partner_by_phone(env, valor)
         estado['telefono'] = valor.strip()
         if not partner:
-            estado['paso'] = 'email'
+            # SPEC 53: cliente nuevo paso a paso — nombre primero, correo después
+            estado['paso'] = 'nombre'
             estado['intentos'] = 0
             carrito['pendiente_cotizacion'] = estado
             session._guardar_carrito(session_id, carrito)
-            texto = ("Ese teléfono no está registrado 😊. Para crear tu "
-                     "ficha de cliente necesito tu correo y nombre. "
-                     "¿Cuál es tu correo?")
+            texto = ("Ese teléfono no está registrado 😊. Creo tu ficha de "
+                     "cliente con estos datos. ¿Cómo te llamas (nombre para "
+                     "la factura)?")
             texto = self._redactar(env, texto, contexto={
-                'accion': 'COTIZACION', 'etapa': 'cliente_nuevo'})
+                'accion': 'COTIZACION', 'etapa': 'pedir_nombre'})
             botones = ['🚫 Cancelar']
             return self._respuesta(session_id, conversation_id, account_id, platform, texto,
                                    extra={'botones': botones})
@@ -897,8 +1053,21 @@ class ChatbotCartController(http.Controller):
         if resp_vacio:
             return resp_vacio
         if partner_email:
-            return self._crear_cotizacion(
-                env, session_id, conversation_id, account_id, platform, estado, resumen)
+            # SPEC 53: confirmamos que es él antes de usar su ficha
+            estado['paso'] = 'confirmar_partner'
+            estado['intentos'] = 0
+            estado['tiene_email'] = True
+            carrito['pendiente_cotizacion'] = estado
+            session._guardar_carrito(session_id, carrito)
+            texto = (f"¡Te encontré {partner.name}! 😊 ¿Eres tú? (así armo la "
+                     "cotización con tus datos). Responde *sí* o *no*.")
+            texto = self._redactar(env, texto, contexto={
+                'accion': 'COTIZACION', 'etapa': 'confirmar_partner',
+                'partner': partner.name})
+            botones = ['✅ Sí, soy yo', '❌ No soy yo', '🚫 Cancelar']
+            return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                                   extra={'botones': botones})
+        # partner sin email en ficha: ya no pregunto si es él; pido el correo
         estado['paso'] = 'email'
         estado['intentos'] = 0
         carrito['pendiente_cotizacion'] = estado
@@ -911,6 +1080,82 @@ class ChatbotCartController(http.Controller):
         return self._respuesta(session_id, conversation_id, account_id, platform, texto,
                                extra={'botones': botones})
 
+    def _cotizacion_turno_confirmar_partner(self, env, session_id, conversation_id,
+                                            account_id, platform, valor, estado):
+        """SPEC 53: partner encontrado por teléfono — ¿eres tú? Sí → crear
+        si hay email en la ficha; no → tratarlo como cliente nuevo."""
+        session = env['chatbot.session'].sudo()
+        if not self._es_afirmacion(valor):
+            if self._es_declinacion_cotizacion(valor):
+                self._limpiar_flags_cotizacion(env, session_id)
+                texto = ("Cancelé la cotización. Tu carrito queda guardado 🛒 "
+                         "¿Quieres pagar ya? También puedes seguir viendo el catálogo.")
+                carrito = session._get_carrito(session_id)
+                return self._respuesta(
+                    session_id, conversation_id, account_id, platform,
+                    self._redactar(env, texto, contexto={
+                        'accion': 'COTIZACION', 'etapa': 'cancelada'}),
+                    extra={'botones': self._botones_carrito(carrito)})
+            if (valor or '').strip().lower() in {'no', 'no soy yo', '❌ no soy yo',
+                                                 'no eres yo', 'no es mio'}:
+                # SPEC 53: no es él → cliente nuevo paso a paso (nombre)
+                estado.pop('tiene_email', None)
+                estado.pop('partner_id', None)
+                estado['paso'] = 'nombre'
+                estado['intentos'] = 0
+                carrito = session._get_carrito(session_id)
+                carrito['pendiente_cotizacion'] = estado
+                session._guardar_carrito(session_id, carrito)
+                texto = ("¡Ups, perdón! 😊 Vamos con tus datos entonces. "
+                         "¿Cómo te llamas (nombre para la factura)?")
+                return self._respuesta(
+                    session_id, conversation_id, account_id, platform,
+                    self._redactar(env, texto, contexto={
+                        'accion': 'COTIZACION', 'etapa': 'pedir_nombre'}))
+            estado['intentos'] = int(estado.get('intentos') or 0) + 1
+            if estado['intentos'] >= 2:
+                self._limpiar_flags_cotizacion(env, session_id)
+                texto = ("No me quedó claro 😕. Dejo la cotización pendiente; "
+                         "tu carrito sigue guardado. Escribe *cotización* "
+                         "cuando quieras retomarla.")
+                return self._respuesta(
+                    session_id, conversation_id, account_id, platform,
+                    self._redactar(env, texto, contexto={
+                        'accion': 'COTIZACION', 'etapa': 'cancelada'}))
+            carrito = session._get_carrito(session_id)
+            carrito['pendiente_cotizacion'] = estado
+            session._guardar_carrito(session_id, carrito)
+            partner = self._partner_de_estado(env, estado)
+            texto = ("Perdón, no entendí 😅. Debe ser sí o no: ¿eres "
+                     f"{partner.name}?")
+            texto = self._redactar(env, texto, contexto={
+                'accion': 'COTIZACION', 'etapa': 'confirmar_partner'})
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform, texto,
+                extra={'botones': ['✅ Sí, soy yo', '❌ No soy yo', '🚫 Cancelar']})
+        # afirmación: si el estado traía el flag de email, crear directo;
+        # si no, pedir el correo que falta en la ficha
+        estado['intentos'] = 0
+        resumen, resp_vacio = self._resumen_o_vacio(
+            env, session_id, conversation_id, account_id, platform)
+        if resp_vacio:
+            return resp_vacio
+        partner = self._partner_de_estado(env, estado)
+        if estado.pop('tiene_email', None) and (partner.email or '').strip():
+            return self._crear_cotizacion(
+                env, session_id, conversation_id, account_id, platform, estado, resumen)
+        estado['paso'] = 'email'
+        carrito = session._get_carrito(session_id)
+        carrito['pendiente_cotizacion'] = estado
+        session._guardar_carrito(session_id, carrito)
+        texto = (f"¡Hola {partner.name}! 😊 Solo me falta tu correo para "
+                 "enviarte el PDF (Bs. y $). ¿Cuál es?")
+        return self._respuesta(
+            session_id, conversation_id, account_id, platform,
+            self._redactar(env, texto, contexto={
+                'accion': 'COTIZACION', 'etapa': 'pedir_email',
+                'partner': partner.name}))
+
     def _cotizacion_turno_email(self, env, session_id, conversation_id,
                                 account_id, platform, valor, estado):
         """Paso 2: email (para el PDF). Si es cliente nuevo, sigue nombre."""
@@ -921,6 +1166,13 @@ class ChatbotCartController(http.Controller):
             estado['email'] = email
             estado['intentos'] = 0
             partner = self._partner_de_estado(env, estado)
+            if estado.get('nombre') and len(estado['nombre']) >= 3 and '@' not in estado['nombre']:
+                resumen, resp_vacio = self._resumen_o_vacio(
+                    env, session_id, conversation_id, account_id, platform)
+                if resp_vacio:
+                    return resp_vacio
+                return self._crear_cotizacion(
+                    env, session_id, conversation_id, account_id, platform, estado, resumen)
             if partner is not None and (partner.name or '').strip():
                 resumen, resp_vacio = self._resumen_o_vacio(
                     env, session_id, conversation_id, account_id, platform)
@@ -982,12 +1234,18 @@ class ChatbotCartController(http.Controller):
                 self._redactar(env, texto, contexto={
                     'accion': 'COTIZACION', 'etapa': 'reformula_nombre'}))
         estado['nombre'] = nombre
-        resumen, resp_vacio = self._resumen_o_vacio(
-            env, session_id, conversation_id, account_id, platform)
-        if resp_vacio:
-            return resp_vacio
-        return self._crear_cotizacion(
-            env, session_id, conversation_id, account_id, platform, estado, resumen)
+        # SPEC 53: cliente nuevo — nombre primero, correo después
+        estado['paso'] = 'email'
+        estado['intentos'] = 0
+        session_sudo = env['chatbot.session'].sudo()
+        session_sudo._guardar_carrito(session_id, dict(
+            session_sudo._get_carrito(session_id), pendiente_cotizacion=estado))
+        texto = (f"¡Gracias, {nombre}! 😊 Último dato: tu correo para "
+                 "enviarte el PDF (Bs. y $). ¿Cuál es?")
+        return self._respuesta(
+            session_id, conversation_id, account_id, platform,
+            self._redactar(env, texto, contexto={
+                'accion': 'COTIZACION', 'etapa': 'pedir_email'}))
 
     @staticmethod
     def _partner_de_estado(env, estado):
