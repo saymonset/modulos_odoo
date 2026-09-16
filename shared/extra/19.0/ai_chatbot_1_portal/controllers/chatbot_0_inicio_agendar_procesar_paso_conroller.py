@@ -319,6 +319,20 @@ class InicioAgendarController(http.Controller):
                 if sesion and sesion.estado:
                     paso = sesion.estado.get('paso')
                 if not paso:
+                    # SPEC 48: sin flujo activo pero sesión en modo carrito ->
+                    # delegar al carrito en vez del texto genérico.
+                    try:
+                        from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import ChatbotCartController
+                        if getattr(session_model, '_esta_en_modo_carrito', None) \
+                                and session_model._esta_en_modo_carrito(session_id):
+                            return ChatbotCartController().procesar(
+                                session_id=session_id,
+                                conversation_id=conversation_id,
+                                account_id=account_id,
+                                platform=platform,
+                                valor=valor)
+                    except ImportError:
+                        pass
                     # Sin paso y sin sesión o sin flujo activo -> MENU_PRINCIPAL
                     return Response(json.dumps({
                         'success': True,
