@@ -9,6 +9,7 @@ from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import truncate_f
 
 from ..services.cart_service import CartService
 from ..services.product_buscar import ProductBuscarService
+from ..services.redactar import _hay_ia, redactar as _redactar_service
 from ..uses_cases.clasificar_accion_carrito_use_case import (
     _PALABRAS_AGREGAR, _PALABRAS_AYUDA, _PALABRAS_CATALOGO, _PALABRAS_CONSULTAR,
     _PALABRAS_MAS, _PALABRAS_MODIFICAR, _PALABRAS_PAGAR, _PALABRAS_QUITAR,
@@ -180,7 +181,23 @@ class ChatbotCartController(http.Controller):
                 'sections': [{'title': 'Categorías', 'rows': categorias}],
             }
         return self._respuesta(
-            session_id, conversation_id, account_id, platform, texto, extra=extra)
+            session_id, conversation_id, account_id, platform,
+            self._redactar(env, texto, contexto={
+                'accion': 'ACTIVACION_CARRITO', 'total_productos': total,
+                'categorias': [c['title'] for c in categorias]}),
+            extra=extra)
+
+    def _redactar(self, env, texto, contexto=None):
+        """SPEC 50: redacción IA del texto del motor (fallback integrado).
+
+        `texto` es la plantilla del motor; el vendedor IA la reescribe con
+        el `contexto` real. Si la IA falla queda la plantilla tal cual.
+        """
+        try:
+            return _redactar_service(env, texto, contexto)
+        except Exception as e:
+            _logger.warning("Redacción IA fallida, uso plantilla: %s", e)
+            return texto
 
     def _respuesta(self, session_id, conversation_id, account_id, platform, texto, imagenes=None, finalizado=False, extra=None):
         texto = truncate_for_platform(texto, platform)
@@ -216,6 +233,13 @@ class ChatbotCartController(http.Controller):
         env = request.env
         session = env['chatbot.session'].sudo()
         valor = (valor or '').strip()
+
+        # SPEC 50: gate de IA. Sin IA el carrito no sabe redactar como
+        # vendedor: aviso y salida directa al negocio conservando items.
+        if valor and not _hay_ia(env):
+            return self._json_response(self._aviso_sin_ia(
+                env, session_id, conversation_id, account_id, platform))
+
         if not valor:
             resp = self._respuesta(
                 session_id, conversation_id, account_id, platform,
@@ -378,7 +402,8 @@ class ChatbotCartController(http.Controller):
                     offset=0, buscador_first=True)
             texto = self.CART_SERVICE.formato_resumen_amigable(env, session_id)
             return self._respuesta(
-                session_id, conversation_id, account_id, platform, texto,
+                session_id, conversation_id, account_id, platform,
+                self._redactar(env, texto, contexto={'resumen': resumen}),
                 extra={'botones': self._botones_carrito(resumen)})
 
         if accion == 'CATALOGO':
@@ -432,6 +457,25 @@ class ChatbotCartController(http.Controller):
             "Para preguntas del negocio escribe *salir* y te atiendo."
         )
         return self._respuesta(session_id, conversation_id, account_id, platform, texto)
+
+    def _aviso_sin_ia(self, env, session_id, conversation_id, account_id, platform):
+        """SPEC 50: respuesta global sin IA: aviso amable y salida directa.
+
+        Conserva los items (igual que _salir_carrito de SPEC 49) para que
+        el cliente retome escribiendo "carrito" cuando la IA esté activa.
+        """
+        session = env['chatbot.session'].sudo()
+        resumen = self.CART_SERVICE.resumen(env, session_id)
+        session._salir_modo_carrito(session_id, vaciar=False)
+        items_linea = (
+            f" Te quedan {resumen['count']} item(s) guardados." if resumen['items'] else '')
+        texto = (
+            "😌 En este momento no tengo la IA activa para atenderte como "
+            "vendedor. Volvemos al negocio:"
+            f"{items_linea} Escribe *carrito* cuando quieras retomar tu compra."
+        )
+        return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                               finalizado=True)
 
     def _salir_carrito(self, env, session_id, conversation_id, account_id, platform):
         """Salida directa del modo carrito (SPEC 49).
@@ -520,8 +564,12 @@ class ChatbotCartController(http.Controller):
             resumen = service.resumen(env, session_id)
             texto = (f"✅ Agregué *{cantidad} x {producto.name}* al carrito. "
                      f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}")
-            return self._respuesta(session_id, conversation_id, account_id, platform, texto,
-                                   extra={'botones': self._botones_carrito(resumen)})
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                self._redactar(env, texto, contexto={
+                    'accion': 'AGREGAR', 'producto': producto.name, 'cantidad': cantidad,
+                    'resumen': resumen}),
+                extra={'botones': self._botones_carrito(resumen)})
 
         if accion == 'QUITAR':
             resultado = service.quitar(env, session_id, product_id)
@@ -531,8 +579,11 @@ class ChatbotCartController(http.Controller):
             resumen = service.resumen(env, session_id)
             texto = (f"🗑️ Producto eliminado. "
                      f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}")
-            return self._respuesta(session_id, conversation_id, account_id, platform, texto,
-                                   extra={'botones': self._botones_carrito(resumen)})
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                self._redactar(env, texto, contexto={
+                    'accion': 'QUITAR', 'resumen': resumen}),
+                extra={'botones': self._botones_carrito(resumen)})
 
         # MODIFICAR
         if not cantidad:
@@ -545,8 +596,11 @@ class ChatbotCartController(http.Controller):
         resumen = service.resumen(env, session_id)
         texto = (f"✏️ Cantidad actualizada a *{cantidad}*. "
                  f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}")
-        return self._respuesta(session_id, conversation_id, account_id, platform, texto,
-                               extra={'botones': self._botones_carrito(resumen)})
+        return self._respuesta(
+            session_id, conversation_id, account_id, platform,
+            self._redactar(env, texto, contexto={
+                'accion': 'MODIFICAR', 'cantidad': cantidad, 'resumen': resumen}),
+            extra={'botones': self._botones_carrito(resumen)})
 
     def _offset_catalogo(self, env, session_id, producto_ref):
         """Devuelve el offset del catálogo según la paginación guardada.
@@ -591,8 +645,12 @@ class ChatbotCartController(http.Controller):
         session._guardar_carrito(session_id, carrito)
         return self._respuesta(
             session_id, conversation_id, account_id, platform,
-            self.SEARCH_SERVICE.formato_lista_catalogo(
+            self._redactar(env, self.SEARCH_SERVICE.formato_lista_catalogo(
                 result, url_tienda=CartService.obtener_url_tienda_enlace(env) or ''),
+                contexto={
+                    'accion': 'CATALOGO',
+                    'productos': [p['name'] for p in result.get('productos', [])],
+                }),
             imagenes=self._imagenes_de_productos(result.get('productos', [])),
             extra={'botones': self._botones_carrito(carrito)})
 
@@ -640,8 +698,12 @@ class ChatbotCartController(http.Controller):
             "¡Gracias por tu compra! 🎉\n"
             "¿Quieres algo más? Escribe *catálogo*."
         )
-        return self._respuesta(session_id, conversation_id, account_id, platform, texto,
-                               finalizado=True, extra={'order_id': order.id, 'order_name': order.name})
+        return self._respuesta(
+            session_id, conversation_id, account_id, platform,
+            self._redactar(env, texto, contexto={
+                'accion': 'PAGAR', 'order_name': order.name, 'resumen': resumen,
+                'datos_pago': (self._seccion_pago(env))}),
+            finalizado=True, extra={'order_id': order.id, 'order_name': order.name})
 
     @staticmethod
     def _seccion_pago(env):
