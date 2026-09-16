@@ -170,6 +170,9 @@ class ChatbotCartController(http.Controller):
             "Escribe lo que buscas (ej. *pizza*) y te muestro opciones."
         )
         carrito = env['chatbot.session'].sudo()._get_carrito(session_id)
+        # SPEC 48: la entrada búsqueda-first también activa el modo carrito;
+        # sin persistir, el 2.º turno vuelve al flujo del negocio.
+        env['chatbot.session'].sudo()._guardar_carrito(session_id, carrito)
         extra = {'botones': self._botones_carrito(carrito)}
         if categorias:
             extra['lista_categorias'] = {
