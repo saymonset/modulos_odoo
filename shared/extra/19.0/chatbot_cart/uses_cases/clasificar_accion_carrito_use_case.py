@@ -30,6 +30,10 @@ _PALABRAS_CATALOGO = {
 _PALABRAS_MAS = {'ver más', 'ver mas', 'más productos', 'mas productos', 'siguientes', 'siguiente'}
 _PALABRAS_PAGAR = {'pagar', 'pago', 'finalizar', 'finalizar compra', 'proceder al pago', 'comprar',
                    'confirmar pedido', 'confirmar compra'}
+_PALABRAS_COTIZACION = {
+    'cotización', 'cotizacion', 'presupuesto', 'cotizar', 'cotización por favor',
+    'cotiza', 'dame una cotización', 'dame cotización', 'quiero una cotización',
+}
 _PALABRAS_QUITAR = {'quitar', 'quita', 'eliminar', 'elimina', 'saca', 'remover', 'borrar', 'borra',
                     'quita del carrito'}
 _PALABRAS_MODIFICAR = {'cambiar', 'cambia', 'modificar', 'modifica', 'poner', 'pon', 'cambia la cantidad'}
@@ -95,6 +99,9 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
         - BUSCAR: quiere buscar/ver productos sin agregarlos todavía ("muéstrame camisas", "qué venden").
         - CATALOGO: quiere ver el catálogo general de productos del negocio ("catálogo", "qué productos tienen", "qué venden", "productos", "catálogo de productos").
         - PAGAR: quiere pagar o finalizar la compra ("pagar", "finalizar compra").
+        - COTIZACION: quiere una cotización/presupuesto sin pagar ahora
+          ("cotización", "presupuesto", "cotiza", "no quiero pagar ahora",
+          "quiero una cotización").
         - AYUDA: pide ayuda u opciones ("ayuda", "qué puedo hacer").
         - SALIR: quiere salir o cancelar del carrito para volver al negocio
           ("salir", "cancelar", "menú principal", "volver").
@@ -164,6 +171,8 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
             return {"accion": "VACIAR", "producto": "", "cantidad": 0}, True
         if any(p in t for p in _PALABRAS_PAGAR):
             return {"accion": "PAGAR", "producto": "", "cantidad": 0}, True
+        if any(p in t for p in _PALABRAS_COTIZACION):
+            return {"accion": "COTIZACION", "producto": "", "cantidad": 0}, True
         if any(p in t for p in _PALABRAS_SALIR):
             return {"accion": "SALIR", "producto": "", "cantidad": 0}, True
         if any(p in t for p in _PALABRAS_AYUDA):

@@ -10,6 +10,9 @@ from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import truncate_f
 from ..services.cart_service import CartService
 from ..services.product_buscar import ProductBuscarService
 from ..services.redactar import _hay_ia, redactar as _redactar_service
+from ..services.cotizacion_service import (
+    CotizacionNoDisponible, crear_y_enviar_desde_carrito, es_email_valido,
+)
 from ..uses_cases.clasificar_accion_carrito_use_case import (
     _PALABRAS_AGREGAR, _PALABRAS_AYUDA, _PALABRAS_CATALOGO, _PALABRAS_CONSULTAR,
     _PALABRAS_MAS, _PALABRAS_MODIFICAR, _PALABRAS_PAGAR, _PALABRAS_QUITAR,
@@ -35,13 +38,26 @@ class ChatbotCartController(http.Controller):
     def _params(self):
         return json.loads(request.httprequest.data) if request.httprequest.data else {}
 
+    _PREGUNTA_PAGO = " ¿Quieres pagar ya?"
+
     def _botones_carrito(self, carrito):
-        """Botones interactivos dinámicos (SPEC 45): botón de salida siempre
-        visible, máximo 3 (límite de WhatsApp). Con items se prioriza pagar."""
+        """Botones interactivos dinámicos (SPEC 45/50): botón de salida siempre
+        visible, máximo 3 (límite de WhatsApp). Con items se prioriza pagar
+        y se ofrece la cotización (SPEC 50)."""
         boton_salir = '🏪 Volver al negocio'
         if carrito.get('items'):
-            return ['ver carrito', 'pagar', boton_salir]
+            return ['pagar', 'cotización', boton_salir]
         return ['catálogo', 'ayuda', boton_salir]
+
+    def _marcar_pendiente_pago(self, env, session_id):
+        """SPEC 50: marca `pendiente_pago` tras mostrar el total con items.
+
+        Un "no" en el turno siguiente deriva a la rama cotización (pedir
+        email y armar la cotización de SPEC 47)."""
+        session = env['chatbot.session'].sudo()
+        carrito = session._get_carrito(session_id)
+        carrito['pendiente_pago'] = True
+        session._guardar_carrito(session_id, carrito)
 
     def _resolver_producto(self, env, session_id, producto_ref, ultima_busqueda):
         """Resuelve la referencia del usuario a un product_id.
@@ -257,6 +273,18 @@ class ChatbotCartController(http.Controller):
             if resolucion:
                 return self._json_response(resolucion)
 
+        # SPEC 50: rama cotización. Esperando email tras el "no" al pago
+        # (o tras COTIZACION): el turno se interpreta como correo o
+        # reformulación; no pasa por el clasificador.
+        if carrito.get('pendiente_cotizacion'):
+            return self._json_response(self._cotizacion_email(
+                env, session_id, conversation_id, account_id, platform, valor))
+
+        # SPEC 50: "no" en el turno del total => cotizar en vez de pagar.
+        if carrito.get('pendiente_pago') and self._es_declinacion(valor):
+            return self._json_response(self._pedir_email_cotizacion(
+                env, session_id, conversation_id, account_id, platform))
+
         # SPEC 38: "responde el número" del catálogo/búsqueda agrega el item
         # mostrado, sin pasar por el clasificador (que interpreta un número
         # suelto como CONSULTAR y el carrito queda vacío).
@@ -400,7 +428,8 @@ class ChatbotCartController(http.Controller):
                 return self._mostrar_catalogo(
                     env, session_id, conversation_id, account_id, platform,
                     offset=0, buscador_first=True)
-            texto = self.CART_SERVICE.formato_resumen_amigable(env, session_id)
+            texto = self.CART_SERVICE.formato_resumen_amigable(env, session_id) + self._PREGUNTA_PAGO
+            self._marcar_pendiente_pago(env, session_id)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
                 self._redactar(env, texto, contexto={'resumen': resumen}),
@@ -448,6 +477,10 @@ class ChatbotCartController(http.Controller):
             return self._salir_carrito(
                 env, session_id, conversation_id, account_id, platform)
 
+        if accion == 'COTIZACION':
+            return self._pedir_email_cotizacion(
+                env, session_id, conversation_id, account_id, platform)
+
         if accion == 'PAGAR':
             return self._pagar(env, session_id, conversation_id, account_id, platform)
 
@@ -477,6 +510,13 @@ class ChatbotCartController(http.Controller):
         return self._respuesta(session_id, conversation_id, account_id, platform, texto,
                                finalizado=True)
 
+    def _limpiar_pendiente_pago(self, env, session_id):
+        """SPEC 50: desactiva `pendiente_pago` (pago o salida consumen el turno)."""
+        session = env['chatbot.session'].sudo()
+        carrito = session._get_carrito(session_id)
+        if carrito.pop('pendiente_pago', None) is not None:
+            session._guardar_carrito(session_id, carrito)
+
     def _salir_carrito(self, env, session_id, conversation_id, account_id, platform):
         """Salida directa del modo carrito (SPEC 49).
 
@@ -484,6 +524,7 @@ class ChatbotCartController(http.Controller):
         el usuario retoma el carrito escribiendo "carrito".
         """
         session = env['chatbot.session'].sudo()
+        self._limpiar_pendiente_pago(env, session_id)
         resumen = self.CART_SERVICE.resumen(env, session_id)
         session._salir_modo_carrito(session_id, vaciar=False)
         items_linea = (
@@ -563,7 +604,9 @@ class ChatbotCartController(http.Controller):
             producto = env['product.product'].sudo().browse(product_id)
             resumen = service.resumen(env, session_id)
             texto = (f"✅ Agregué *{cantidad} x {producto.name}* al carrito. "
-                     f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}")
+                     f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}"
+                     f"{self._PREGUNTA_PAGO}")
+            self._marcar_pendiente_pago(env, session_id)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
                 self._redactar(env, texto, contexto={
@@ -671,10 +714,122 @@ class ChatbotCartController(http.Controller):
             imagenes.append({'link': p['image_url'], 'caption': caption})
         return imagenes
 
+    # ==================================================================
+    #  COTIZACIÓN (SPEC 50, motor de SPEC 47)
+    # ==================================================================
+    _DECLINACIONES = {
+        'no', 'nop', 'nay', 'no gracias', 'no quiero', 'no ahora',
+        'todavía no', 'todavia no', 'aún no', 'aun no',
+    }
+
+    @staticmethod
+    def _es_declinacion(valor):
+        """¿El cliente respondió "no" al ¿quieres pagar ya?"""
+        return (valor or '').strip().lower() in ChatbotCartController._DECLINACIONES
+
+    def _pedir_email_cotizacion(self, env, session_id, conversation_id, account_id, platform):
+        """El cliente declinó pagar: pedir email para armar la cotización."""
+        session = env['chatbot.session'].sudo()
+        carrito = session._get_carrito(session_id)
+        carrito.pop('pendiente_pago', None)
+        carrito['pendiente_cotizacion'] = 0  # intentos de email (máx 2)
+        session._guardar_carrito(session_id, carrito)
+        texto = (
+            "¡Sin problema! 😊 ¿Cuál es tu correo? Con él te envío la "
+            "cotización en PDF con los productos que llevas."
+        )
+        texto = self._redactar(env, texto, contexto={
+            'accion': 'COTIZACION', 'etapa': 'pedir_email'})
+        botones = ['🚫 Cancelar', '🏪 Volver al negocio']
+        return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                               extra={'botones': botones})
+
+    def _cotizacion_email(self, env, session_id, conversation_id, account_id, platform, valor):
+        """Turno esperando el email de la cotización (SPEC 47)."""
+        session = env['chatbot.session'].sudo()
+        carrito = session._get_carrito(session_id)
+        intentos = int(carrito.get('pendiente_cotizacion') or 0)
+        email = (valor or '').strip()
+        if email.lower() in {'cancelar', '🚫 cancelar', 'salir'}:
+            self._limpiar_flags_cotizacion(env, session_id)
+            texto = ("Cancelé la cotización. Tu carrito queda guardado 🛒 "
+                     "¿Quieres pagar ya? También puedes seguir viendo el catálogo.")
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                self._redactar(env, texto, contexto={'accion': 'COTIZACION', 'etapa': 'cancelada'}),
+                finalizado=False, extra={'botones': self._botones_carrito(carrito)})
+
+        if not es_email_valido(email):
+            intentos += 1
+            if intentos >= 2:
+                self._limpiar_flags_cotizacion(env, session_id)
+                texto = (
+                    "No me quedó claro el correo 😕. Dejo la cotización "
+                    "pendiente; tu carrito sigue guardado. Escribe "
+                    "*cotización* cuando quieras retomarla.")
+                return self._respuesta(
+                    session_id, conversation_id, account_id, platform,
+                    self._redactar(env, texto, contexto={
+                        'accion': 'COTIZACION', 'etapa': 'cancelada'}))
+            carrito['pendiente_cotizacion'] = intentos
+            session._guardar_carrito(session_id, carrito)
+            texto = (f"El correo \"{email}\" no me lo reconoce 😅. "
+                     "Escríbelo así: nombre@dominio.com")
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                self._redactar(env, texto, contexto={
+                    'accion': 'COTIZACION', 'etapa': 'reformula_email'}))
+
+        # Email válido: armar cotización vía SPEC 47
+        resumen = self.CART_SERVICE.resumen(env, session_id)
+        if not resumen['items']:
+            self._limpiar_flags_cotizacion(env, session_id)
+            texto = ("Tu carrito está vacío, no hay nada que cotizar 🛒. "
+                     "Mira el catálogo y agrega algo primero.")
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                self._redactar(env, texto, contexto={'accion': 'COTIZACION', 'etapa': 'vacio'}))
+
+        try:
+            order_name = crear_y_enviar_desde_carrito(env, email, session_id, resumen)
+        except CotizacionNoDisponible as e:
+            _logger.warning("Cotización no disponible (SPEC 47): %s", e)
+            self._limpiar_flags_cotizacion(env, session_id)
+            texto = (
+                "Iba a usar la IA para tu cotización 😌 pero en este momento "
+                "no tiene los datos de la IA funcionando. Volvemos al negocio: "
+                "escribe *carrito* cuando quieras retomar tu compra.")
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                self._redactar(env, texto, contexto={'accion': 'COTIZACION', 'etapa': 'sin_servicio'}),
+                finalizado=True, extra={'botones': ['🏪 Volver al negocio']})
+
+        self._limpiar_flags_cotizacion(env, session_id)
+        texto = (
+            f"✅ ¡Cotización {order_name} creada! Te la envío en PDF "
+            f"a {email} con los totales en Bs. y $. "
+            "Revisa tu bandeja de entrada; si quieres ajustar productos, "
+            "escribe *cotización* o responde aquí mismo."
+        )
+        return self._respuesta(
+            session_id, conversation_id, account_id, platform,
+            self._redactar(env, texto, contexto={
+                'accion': 'COTIZACION', 'etapa': 'enviada', 'email': email,
+                'order_name': order_name, 'resumen': resumen}),
+            finalizado=False, extra={'botones': ['pagar', '🏪 Volver al negocio']})
+
+    def _limpiar_flags_cotizacion(self, env, session_id):
+        """Limpia `pendiente_cotizacion` (éxito, cancelación o máx intentos)."""
+        session = env['chatbot.session'].sudo()
+        carrito = session._get_carrito(session_id)
+        if carrito.pop('pendiente_cotizacion', None) is not None:
+            session._guardar_carrito(session_id, carrito)
+
     def _pagar(self, env, session_id, conversation_id, account_id, platform):
         """Materializa la orden y devuelve un recibo fiel al usuario (SPEC 41)."""
         # El resumen se captura ANTES de materializar: el materializador vacía
         # el carrito y un resumen posterior mostraría "0 items / 0.00".
+        self._limpiar_pendiente_pago(env, session_id)
         resumen = self.CART_SERVICE.resumen(env, session_id)
         if not resumen['items']:
             return self._respuesta(session_id, conversation_id, account_id, platform,
