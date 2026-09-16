@@ -276,7 +276,7 @@ class ChatbotCartController(http.Controller):
         # SPEC 50: rama cotización. Esperando email tras el "no" al pago
         # (o tras COTIZACION): el turno se interpreta como correo o
         # reformulación; no pasa por el clasificador.
-        if carrito.get('pendiente_cotizacion'):
+        if carrito.get('pendiente_cotizacion') is not None:
             return self._json_response(self._cotizacion_email(
                 env, session_id, conversation_id, account_id, platform, valor))
 
@@ -732,7 +732,7 @@ class ChatbotCartController(http.Controller):
         session = env['chatbot.session'].sudo()
         carrito = session._get_carrito(session_id)
         carrito.pop('pendiente_pago', None)
-        carrito['pendiente_cotizacion'] = 0  # intentos de email (máx 2)
+        carrito['pendiente_cotizacion'] = 0  # intentos fallidos de email (máx 2)
         session._guardar_carrito(session_id, carrito)
         texto = (
             "¡Sin problema! 😊 ¿Cuál es tu correo? Con él te envío la "
