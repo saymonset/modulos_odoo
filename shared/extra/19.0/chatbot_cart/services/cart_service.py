@@ -12,6 +12,71 @@ class CartService:
     """Operaciones CRUD y resumen sobre el carrito JSON de la sesión."""
 
     # ==================================================================
+    #  TIENDA ONLINE (SPEC 46)
+    # ==================================================================
+    _SHOP_URL_PARAM = 'chatbot_cart.tienda_url'
+    _SHOP_ROUTE = '/shop'
+
+    @classmethod
+    def obtener_url_tienda_enlace(cls, env):
+        """SPEC 46: URL pública de la tienda online del negocio o None.
+
+        Resuelve la URL de la tienda ecommerce de forma inteligente:
+        1. Override del negocio en ir.config_parameter `chatbot_cart.tienda_url`
+           (si el shop cambia de ruta/dominio, se configura sin tocar código).
+        2. Auto-detección: si `website_sale` está instalado, usa la base del
+           entorno (`web.base.url`) + `/shop` (ruta canónica del controller).
+        3. Fallback: dominio público del website configurado (`website_id`
+           / `website_ids` / char `website`) + `/shop`.
+        Sin nada configurado devuelve None y el texto no imprime la línea.
+        """
+        base_url = env['ir.config_parameter'].sudo().get_param('web.base.url', '') or ''
+
+        # 1. Override explícito del negocio.
+        override = env['ir.config_parameter'].sudo().get_param(
+            cls._SHOP_URL_PARAM, '').strip()
+        if override:
+            return override
+
+        # 2. Auto-detección de la tienda ecommerce (módulo website_sale).
+        website_sale = env['ir.module.module'].sudo().search_count([
+            ('name', '=', 'website_sale'), ('state', '=', 'installed'),
+        ])
+        if website_sale and base_url:
+            return f"{base_url.rstrip('/')}{cls._SHOP_ROUTE}"
+
+        # 3. Fallback: dominio público del website configurado + /shop.
+        domain = cls._website_domain(env.company)
+        if domain:
+            return f"{domain.rstrip('/')}{cls._SHOP_ROUTE}"
+        return None
+
+    @staticmethod
+    def _website_domain(company):
+        """Dominio público del website del negocio o ''.
+
+        Odoo 19: res.company.website_id es Many2one a website (el campo
+        website_ids m2m no existe). Se resuelve con preferencia y fallbacks.
+        """
+        try:
+            website = company.website_id
+        except AttributeError:
+            website = None
+        url = (website.domain or '').strip() if website else ''
+        if not url:
+            try:
+                website = company.website_ids[:1]
+            except AttributeError:
+                website = None
+            url = (website.domain or '').strip() if website else ''
+        if not url:
+            try:
+                url = (company.website or '').strip()
+            except AttributeError:
+                url = ''
+        return url
+
+    # ==================================================================
     #  GATE DE DISPONIBILIDAD
     # ==================================================================
     @staticmethod

@@ -147,7 +147,8 @@ class ChatbotCartController(http.Controller):
         session._guardar_carrito(session_id, carrito)
         return self._respuesta(
             session_id, conversation_id, account_id, platform,
-            self.SEARCH_SERVICE.formato_lista_catalogo(result),
+            self.SEARCH_SERVICE.formato_lista_catalogo(
+                result, url_tienda=CartService.obtener_url_tienda_enlace(env) or ''),
             imagenes=self._imagenes_de_productos(result.get('productos', [])),
             extra={'botones': self._botones_carrito(carrito)})
 
@@ -159,7 +160,12 @@ class ChatbotCartController(http.Controller):
         """
         total = self.SEARCH_SERVICE.contar_vendibles(env)
         categorias = self.SEARCH_SERVICE.categorias_con_conteo(env)
+        # SPEC 46: la entrada búsqueda-first también lleva el enlace a la
+        # tienda online (si el negocio tiene website configurado).
+        url_tienda = CartService.obtener_url_tienda_enlace(env)
+        linea_tienda = f"❗ Visita nuestra tienda online: {url_tienda}\n" if url_tienda else ''
         texto = (
+            f"{linea_tienda}"
             f"🛍️ Tenemos {total} productos en {len(categorias)} categorías.\n"
             "Escribe lo que buscas (ej. *pizza*) y te muestro opciones."
         )
@@ -537,7 +543,8 @@ class ChatbotCartController(http.Controller):
         session._guardar_carrito(session_id, carrito)
         return self._respuesta(
             session_id, conversation_id, account_id, platform,
-            self.SEARCH_SERVICE.formato_lista_catalogo(result),
+            self.SEARCH_SERVICE.formato_lista_catalogo(
+                result, url_tienda=CartService.obtener_url_tienda_enlace(env) or ''),
             imagenes=self._imagenes_de_productos(result.get('productos', [])),
             extra={'botones': self._botones_carrito(carrito)})
 

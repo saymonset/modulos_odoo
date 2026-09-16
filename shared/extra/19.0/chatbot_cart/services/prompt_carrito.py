@@ -7,7 +7,7 @@ _FLOW_CARTO = 'flujo_carrito_compra'
 
 _ANUNCIO_CARRITO = '💡 Escribe «carrito» para ver nuestro catálogo y comprar por WhatsApp.'
 
-_CART_INSTRUCTIONS = """=== CARRITO DE COMPRA ===
+_CART_INSTRUCTIONS_TEMPLATE = """=== CARRITO DE COMPRA ===
 La palabra "carrito" en el mensaje del usuario activa INMEDIATAMENTE
 flow_name="flujo_carrito_compra" y equipo_asignado="flujo_carrito_compra",
 en cualquier turno y para cualquier negocio, sin confirmación previa y
@@ -21,7 +21,27 @@ En cualquier otra respuesta normal, termina SIEMPRE con esta línea exacta:
 
 Salida al activar (frase corta): "¡Perfecto! 🛒 Entro al carrito de compra:
 te muestro productos con precio y pagas aquí mismo. ({flow_name})"
-""".format(flow_name=_FLOW_CARTO, anuncio=_ANUNCIO_CARRITO)
+{linea_tienda}"""
+
+
+def _linea_tienda(env):
+    """SPEC 46: línea de la tienda online del negocio o '' si no hay URL.
+
+    La bienvenida del carrito la genera el agente; esta línea (formato
+    `❗ Visita nuestra tienda online: <url>`) se añade al bloque para que
+    el agente la incluya al activar el carrito. Sin env o sin URL → ''.
+    """
+    if env is None:
+        return ''
+    url = CartService.obtener_url_tienda_enlace(env)
+    if not url:
+        return ''
+    return f'❗ Visita nuestra tienda online: {url}'
+
+
+def _render_instrucciones(linea_tienda=''):
+    return _CART_INSTRUCTIONS_TEMPLATE.format(
+        flow_name=_FLOW_CARTO, anuncio=_ANUNCIO_CARRITO, linea_tienda=linea_tienda)
 
 _MARKER = '=== CARRITO DE COMPRA ==='
 
@@ -35,9 +55,9 @@ def carrito_disponible(env):
     return bool(flujo)
 
 
-def render_instrucciones_carrito():
+def render_instrucciones_carrito(env=None):
     """Devuelve el bloque de instrucciones del carrito o None si no aplica."""
-    return _CART_INSTRUCTIONS
+    return _render_instrucciones(_linea_tienda(env))
 
 
 def render_prompt_carrito_solo():
@@ -59,10 +79,10 @@ def render_prompt_carrito_solo():
     )
 
 
-def append_cart_instructions(system_prompt):
+def append_cart_instructions(system_prompt, env=None):
     """Prepone el bloque del carrito al system prompt si no está."""
     if not system_prompt:
         return system_prompt
     if _MARKER in system_prompt:
         return system_prompt
-    return _CART_INSTRUCTIONS + '\n\n' + system_prompt
+    return _render_instrucciones(_linea_tienda(env)) + '\n\n' + system_prompt

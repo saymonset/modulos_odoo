@@ -419,7 +419,7 @@ class InicioAgendarController(http.Controller):
                     modo_carrito = True
                     system_prompt = render_prompt_carrito_solo()
                 elif carrito_disponible(request.env):
-                    system_prompt = append_cart_instructions(system_prompt)
+                    system_prompt = append_cart_instructions(system_prompt, request.env)
             except ImportError:
                 pass
             fallback_message = request.env['ir.config_parameter'].sudo().get_param(

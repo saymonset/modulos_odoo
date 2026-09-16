@@ -264,15 +264,24 @@ class ProductBuscarService:
         lines.append(self._pie_resultado(False, ''))
         return "\n".join(lines)
 
-    def formato_lista_catalogo(self, result):
-        """Renderiza una página del catálogo como texto listo para el bot."""
+    def formato_lista_catalogo(self, result, url_tienda=''):
+        """Renderiza una página del catálogo como texto listo para el bot.
+
+        :param url_tienda: URL de la tienda online del negocio (SPEC 46);
+        si viene, se antepone la línea de invitación.
+        """
         if not result.get('success'):
             return "No pude cargar el catálogo en este momento. Intenta de nuevo."
         if not result['productos']:
             return ("😕 No hay más productos en el catálogo. "
                     "Escribe *ver carrito*, *ayuda* o *cancelar*.")
-        lines = [f"🛍️ *Catálogo ({result['offset'] + 1}-{result['offset'] + result['count']} "
-                 f"de {result['total']}):*", ""]
+        lines = []
+        if url_tienda:
+            lines.append(f"❗ Visita nuestra tienda online: {url_tienda}")
+            lines.append("")
+        lines.append(f"🛍️ *Catálogo ({result['offset'] + 1}-{result['offset'] + result['count']} "
+                     f"de {result['total']}):*")
+        lines.append("")
         for i, p in enumerate(result['productos'], 1):
             lines.extend(self._lineas_producto(p, result, i))
         lines.append("")
