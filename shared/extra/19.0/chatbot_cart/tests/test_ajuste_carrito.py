@@ -53,6 +53,23 @@ class TestAjusteCarrito(BaseChatbotCartTestCase):
         self.assertIsNone(C._decision_mas_menos('ver carrito'))
         self.assertIsNone(C._decision_mas_menos('2'))
         self.assertIsNone(C._decision_mas_menos('quiero un 4'))
+        self.assertIsNone(C._decision_mas_menos('Responde *1 ➕* para sumar'))
+
+    def test_02b_eco_del_gateway_con_etiqueta(self):
+        """FIX E2E: el gateway antepone el cuerpo del mensaje anterior."""
+        from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (
+            ChatbotCartController as C,
+        )
+        self.assertEqual(
+            C._decision_mas_menos(
+                '¡Hola! Estoy aquí para ayudarte. ¿Ver catálogo? ➕ Sumar'),
+            ('SUMAR', None))
+        self.assertEqual(
+            C._decision_mas_menos(
+                'Tu carrito:\n1. Aros x4 — $88.84\n➖ Quitar'),
+            ('RESTAR', None))
+        self.assertEqual(C._decision_mas_menos('$88.84 2 ➕'), ('SUMAR', '2'))
+        self.assertIsNone(C._decision_mas_menos('precio $88.84 sin signo'))
 
     # --- 1 ➕ / 1 ➖ sobre el listado mostrado y el carrito ---
 
@@ -83,17 +100,17 @@ class TestAjusteCarrito(BaseChatbotCartTestCase):
         self.assertIn('catálogo', resp['texto_para_usuario'])
         self.assertEqual(self._carrito_flags()['items'], [])
 
-    def test_05_sin_seleccion_pide_indice_con_listado(self):
-        self._agregar_producto(self.product_a.id, qty=1)
+    def test_05_sin_seleccion_y_un_solo_item_operan_directo(self):
+        self._agregar_producto(self.product_a.id, qty=2)
         carrito = self._carrito_flags()
         carrito.pop('producto_seleccionado', None)
         self.env['chatbot.session'].sudo()._guardar_carrito(self.session_id, carrito)
         resp = self._controller()._ajustar_cantidad(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
-            'SUMAR', None, carrito)
-        texto = resp['texto_para_usuario']
-        self.assertIn('¿A qué producto?', texto)
-        self.assertIn('1 ➕', texto)
+            'SUMAR', None, self._carrito_flags())
+        self.assertIn('Sumé 1', resp['texto_para_usuario'])
+        self.assertEqual(
+            self._carrito_flags()['items'][0]['qty'], 3)
 
     def test_06_seleccionado_sin_seleccion_previa(self):
         self._agregar_producto(self.product_a.id, qty=2)

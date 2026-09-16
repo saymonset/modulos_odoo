@@ -59,6 +59,14 @@ carrito['producto_seleccionado'] = product_id   # último agregado/citado/modifi
 - [x] `1, quiero 3` y `del 2 quiero 5` siguen directo (SPEC 52) y "quiero un 4" sigue preguntando (SPEC 53).
 - [x] Suite `chatbot_cart` en verde (salvo los 2 FAIL preexistentes `test_recibo_pago`) + E2E lead de los 6 casos.
 
+## Fixes tras el E2E real (misma spec, 2026-09-16)
+
+El E2E WhatsApp mostró comportamiento extraño al tocar los botones ➕/➖:
+
+1. **n8n extractor** (`Obtener_Info_basica`, workflow `ycloud_create_lead_0_con_menu_whatsapp`): la cadena de extracción tenía `text.body` primero y al tocar un botón el gateway devuelve el echo del cuerpo anterior — el bot recibía basura (saludo + etiqueta). Reordenado: `interactive.button_reply/list_reply` primero, luego captions, `text.body` al final. Aplicado al export `n8n_json/ycloud/` (rama `lead` del skeleton) y al workflow live (bd n8n + restart).
+2. **Robustez del controller**: `_decision_mas_menos` ahora evalúa solo la ÚLTIMA línea (y cola de 24 chars con signo) para tolerar ecos residuales; los hints del propio bot ("Responde *1 ➕*…") no activan nada; `_ajustar_cantidad` usa el **único producto del carrito** como seleccionado cuando no hay selección.
+3. Tests: parse de eco (`eco + etiqueta`),guards contra hints; suite en verde; E2E HTTP lead con eco simulado en verde.
+
 ## Decisiones tomadas y descartadas
 
 - **Tomado:** botones ➕/➖ sobre el producto seleccionado (decisión del usuario).

@@ -197,12 +197,34 @@ class ChatbotCartController(http.Controller):
     @classmethod
     def _decision_mas_menos(cls, valor):
         """SPEC 54: acción +/- determinista. Devuelve ('SUMAR'|'RESTAR',
-        índice opcional referido al listado mostrado o al carrito) o None."""
+        índice opcional referido al listado mostrado o al carrito) o None.
+
+        Solo evalúa la ÚLTIMA línea (la etiqueta del botón que pulsó el
+        cliente va al final del eco del gateway).
+        """
         txt = (valor or '').strip()
+        lineas = [l.strip() for l in txt.split('\n') if l.strip()]
+        return cls._match_mas_menos(lineas[-1] if lineas else txt)
+
+    @classmethod
+    def _match_mas_menos(cls, linea):
         for accion, rex in (('SUMAR', cls._RE_MAS), ('RESTAR', cls._RE_MENOS)):
-            m = rex.match(txt)
+            m = rex.match(linea)
             if m:
                 return accion, next((g for g in m.groups() if g), None)
+        # FIX E2E: eco de una sola línea ("…compra? ➕ Sumar") — el signo y su
+        # índice pegADOS al fin de la línea deciden. Los hints del propio bot
+        # ("Responde *1 ➕* para sumar") no activan nada.
+        limpio = linea.lower()
+        if any(w in limpio for w in ('responde', 'pista', ' "&', 'escribe el')):
+            return None
+        cola = linea[-24:]
+        if '➕' in cola:
+            m = re.search(r'(\d{1,2})\s*➕|➕\s*(\d{1,2})', cola)
+            return 'SUMAR', (m and next(g for g in m.groups() if g)) if m else None
+        if '➖' in cola:
+            m = re.search(r'(\d{1,2})\s*➖|➖\s*(\d{1,2})', cola)
+            return 'RESTAR', (m and next(g for g in m.groups() if g)) if m else None
         return None
 
     @classmethod
@@ -971,8 +993,11 @@ class ChatbotCartController(http.Controller):
                     session_id, conversation_id, account_id, platform, texto)
         else:
             product_id = carrito.get('producto_seleccionado')
+            items = carrito.get('items', [])
+            if not product_id and len(items) == 1:
+                # SPEC 54 fix E2E: un único producto del carrito ES el seleccionado
+                product_id = items[0]['product_id']
             if not product_id:
-                items = carrito.get('items', [])
                 if not items:
                     texto = ("Agrega algo primero con *catálogo* 😊. "
                              "Después puedes sumar con el número y ➕.")
