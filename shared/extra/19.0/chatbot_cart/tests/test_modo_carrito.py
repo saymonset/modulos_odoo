@@ -49,7 +49,9 @@ class TestAislamientoModos(BaseChatbotCartTestCase):
         resp = ChatbotCartController()._salir_carrito(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp')
         self.assertTrue(resp['finalizado'])
-        self.assertIn('Volvemos al negocio', resp['texto_para_usuario'])
+        # SPEC 55: bienvenida del negocio, nunca "¡Listo! Volvemos al negocio"
+        self.assertIn('¡Hola', resp['texto_para_usuario'])
+        self.assertNotIn('Volvemos al negocio', resp['texto_para_usuario'])
         self.assertFalse(self._session()._esta_en_modo_carrito(self.session_id))
 
     def test_06_salir_con_items_directo_conserva(self):
@@ -61,7 +63,9 @@ class TestAislamientoModos(BaseChatbotCartTestCase):
         resp = ChatbotCartController()._salir_carrito(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp')
         self.assertTrue(resp['finalizado'])
-        self.assertIn('Volvemos al negocio', resp['texto_para_usuario'])
+        self.assertIn('¡Hola', resp['texto_para_usuario'])
+        self.assertIn('Te quedaron 1 item(s) guardados', resp['texto_para_usuario'])
+        self.assertNotIn('Volvemos al negocio', resp['texto_para_usuario'])
         self.assertFalse(self._session()._esta_en_modo_carrito(self.session_id))
         carrito = self._session()._get_carrito(self.session_id)
         self.assertEqual(len(carrito['items']), 1)

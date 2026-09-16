@@ -76,8 +76,11 @@ class TestMundoCarrito(BaseChatbotCartTestCase):
         resp = self._controller()._salir_carrito(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp')
         self.assertTrue(resp['finalizado'])
-        self.assertIn('Volvemos al negocio', resp['texto_para_usuario'])
-        self.assertIn('1 item(s)', resp['texto_para_usuario'])
+        # SPEC 55: re-bienvenida del negocio + línea de retoma
+        self.assertIn('¡Hola', resp['texto_para_usuario'])
+        self.assertIn('Te quedaron 1 item(s) guardados', resp['texto_para_usuario'])
+        self.assertIn('Escribe *carrito* para retomar', resp['texto_para_usuario'])
+        self.assertNotIn('¡Listo!', resp['texto_para_usuario'])
         self.assertFalse(session._esta_en_modo_carrito(self.session_id))
         carrito = session._get_carrito(self.session_id)
         self.assertEqual(carrito['items'][0]['product_id'], self.product_a.id)

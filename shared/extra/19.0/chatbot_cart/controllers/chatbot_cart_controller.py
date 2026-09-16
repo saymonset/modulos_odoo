@@ -676,7 +676,7 @@ class ChatbotCartController(http.Controller):
         return self._respuesta(session_id, conversation_id, account_id, platform, texto)
 
     def _aviso_sin_ia(self, env, session_id, conversation_id, account_id, platform):
-        """SPEC 50: respuesta global sin IA: aviso amable y salida directa.
+        """SPEC 50/55: respuesta global sin IA: aviso amable + re-bienvenida.
 
         Conserva los items (igual que _salir_carrito de SPEC 49) para que
         el cliente retome escribiendo "carrito" cuando la IA esté activa.
@@ -684,13 +684,11 @@ class ChatbotCartController(http.Controller):
         session = env['chatbot.session'].sudo()
         resumen = self.CART_SERVICE.resumen(env, session_id)
         session._salir_modo_carrito(session_id, vaciar=False)
-        items_linea = (
-            f" Te quedan {resumen['count']} item(s) guardados." if resumen['items'] else '')
         texto = (
             "😌 En este momento no tengo la IA activa para atenderte como "
-            "vendedor. Volvemos al negocio:"
-            f"{items_linea} Escribe *carrito* cuando quieras retomar tu compra."
-        )
+            "vendedor, volvemos al negocio.\n\n"
+            + self._bienvenida_para_salida(
+                env, items_count=resumen['count'] if resumen['items'] else 0))
         return self._respuesta(session_id, conversation_id, account_id, platform, texto,
                                finalizado=True)
 
@@ -701,22 +699,45 @@ class ChatbotCartController(http.Controller):
         if carrito.pop('pendiente_pago', None) is not None:
             session._guardar_carrito(session_id, carrito)
 
+    def _bienvenida_para_salida(self, env, items_count=0):
+        """SPEC 55: bienvenida del negocio para la salida del carrito.
+
+        Reutiliza el texto ya generado en la intención MENU (welcome + menú,
+        SPEC 14/17) — determinista y sin llamada a IA. Fallback: saludo
+        mínimo con la marca de la config activa.
+        """
+        config = env['chatbot.config'].sudo()._get_active_config()
+        menu = ''
+        if config:
+            menu_intencion = config.intencion_ids.filtered(
+                lambda i: i.nombre == 'MENU' and i.es_auto_rag)
+            if menu_intencion:
+                menu = menu_intencion[0].output_largo or ''
+        if not (menu or '').strip():
+            marca = (config.brand_name if config else '') or ''
+            marca = marca.strip()
+            menu = (
+                f'¡Hola! 👋 Te saluda *{marca}*. Encantados de ayudarte 😊'
+                if marca else '¡Hola! 👋 Encantados de ayudarte 😊')
+        if items_count:
+            menu += (
+                f"\n\n🛒 Te quedaron {items_count} item(s) guardados. "
+                "Escribe *carrito* para retomar tu compra.")
+        return menu
+
     def _salir_carrito(self, env, session_id, conversation_id, account_id, platform):
-        """Salida directa del modo carrito (SPEC 49).
+        """Salida directa del modo carrito (SPEC 49/55).
 
         Conserva los items y vuelve a modo negocio sin la pregunta 1/2/3:
-        el usuario retoma el carrito escribiendo "carrito".
+        responde con la bienvenida del negocio y, si hay items, la línea
+        para retomar escribiendo "carrito".
         """
         session = env['chatbot.session'].sudo()
         self._limpiar_pendiente_pago(env, session_id)
         resumen = self.CART_SERVICE.resumen(env, session_id)
         session._salir_modo_carrito(session_id, vaciar=False)
-        items_linea = (
-            f" (quedan guardados {resumen['count']} item(s))" if resumen['items'] else '')
-        texto = (
-            f"¡Listo! Volvemos al negocio{items_linea}. "
-            "Escribe *carrito* cuando quieras retomar tu compra."
-        )
+        texto = self._bienvenida_para_salida(
+            env, items_count=resumen['count'] if resumen['items'] else 0)
         return self._respuesta(session_id, conversation_id, account_id, platform, texto,
                                finalizado=True)
 
