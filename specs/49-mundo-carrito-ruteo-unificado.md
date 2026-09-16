@@ -1,6 +1,6 @@
 # SPEC 49 — Mundo carrito: ruteo unificado, catálogo clásico y IA solo-carrito
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 34, SPEC 40, SPEC 44, SPEC 45, SPEC 48
 > **Date:** 2026-09-16
 > **Objective:** Convertir el modo carrito en un mundo separado y completo: gate único por `modo_carrito` en el orquestador (sin callejones del subflow simple), "catálogo" que muestra la lista paginada, IA aislada para mensajes que el clasificador no entiende y salida directa al negocio.
