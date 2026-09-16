@@ -762,7 +762,8 @@ class ChatbotCartController(http.Controller):
             extra={'botones': self._botones_carrito(resumen)})
 
     def _preguntar_agregado_ambiguo(self, env, session_id, conversation_id,
-                                    account_id, platform, carrito, numero, cantidad):
+                                    account_id, platform, carrito, numero, cantidad,
+                                    valor=None):
         """SPEC 53: frase numérica no explícita — no agrega nada; muestra lo
         que entendió (2 interpretaciones o claridad) y guarda la elección."""
         session = env['chatbot.session'].sudo()
@@ -808,7 +809,8 @@ class ChatbotCartController(http.Controller):
                     'accion': 'AMBIGUO', 'valor': valor}),
                 extra={'botones': self._botones_carrito(carrito)})
         lineas = [f"{op['id']}. {op['etiqueta']}" for op in opciones]
-        texto = (f"Espera, ¿qué prefieres? 😊 Escribí *\"{valor}\"* que puede "
+        frase = valor or (f"{numero or cantidad}" or "")
+        texto = (f"Espera, ¿qué prefieres? 😊 Escribí *\"{frase}\"* que puede "
                  "significar\n" + "\n".join(lineas) +
                  "\nSi no es ninguna, escríbelo con claridad (ej. *del 4 "
                  "quiero 2* o *4 jabones*).")

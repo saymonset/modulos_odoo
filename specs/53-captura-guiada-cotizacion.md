@@ -52,14 +52,14 @@ pendiente_confirmar = {
 
 ## Acceptance criteria
 
-- [ ] `cotización` con carrito no vacío: el primer mensaje anuncia que se pedirán unos datos y pide solo el teléfono.
-- [ ] Teléfono no registrado: el siguiente turno pide **solo nombre**; el siguiente **solo correo**; nunca ambos juntos.
-- [ ] Teléfono registrado → Confirmar. ¿Eres {nombre}? → "Sí" crea la cotización; "No" pide los datos como cliente nuevo.
-- [ ] "Quiero un 4" no agrega nada: responde lo que entendió + opciones; sí/"1" agrega.
-- [ ] "1, quiero 3" sigue agregando 3 directo (SPEC 52 sin regresión).
-- [ ] Después de cada AGREGAR se puede ver la lista del carrito con total y acciones quitar/cambiar/ver/pagar.
-- [ ] Respuesta IA no explícita nunca ejecuta acciones sin confirmación.
-- [ ] Suite `chatbot_cart` en verde + E2E lead de los 5 casos.
+- [x] `cotización` con carrito no vacío: el primer mensaje anuncia que se pedirán unos datos y pide solo el teléfono.
+- [x] Teléfono no registrado: el siguiente turno pide **solo nombre**; el siguiente **solo correo**; nunca ambos juntos.
+- [x] Teléfono registrado → Confirmar. ¿Eres {nombre}? → "Sí" crea la cotización; "No" pide los datos como cliente nuevo.
+- [x] "Quiero un 4" no agrega nada: responde lo que entendió + opciones; sí/"1" agrega.
+- [x] "1, quiero 3" sigue agregando 3 directo (SPEC 52 sin regresión).
+- [x] Después de cada AGREGAR se puede ver la lista del carrito con total y acciones quitar/cambiar/ver/pagar.
+- [x] Respuesta IA no explícita nunca ejecuta acciones sin confirmación.
+- [x] Suite `chatbot_cart` en verde + E2E lead de los 5 casos.
 
 ## Decisiones tomadas y descartadas
 
