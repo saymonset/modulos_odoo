@@ -565,6 +565,8 @@ class ChatbotCartController(http.Controller):
                 "*🛒 ¿Cómo comprar por el carrito?*\n"
                 "• *catálogo* — ver productos con foto\n"
                 "• eligiendo por *número* — agrega; *1, quiero 3* agrega 3\n"
+                "• *1 ➕* suma 1 del producto 1; *1 ➖* quita 1 (y a 0, lo elimina)\n"
+                "• *➕*/*➖* solos — sobre el último producto que tocamos\n"
                 "• *ver carrito* — lo que llevas y el total\n"
                 "• *quitar <producto>* — eliminar; *cambiar X a 3* — cantidad\n"
                 "• *pagar* — finalizar y pagar · *cotización* — te lo envío PDF\n"

@@ -125,7 +125,11 @@ def redact_prompt_vendedor():
         "ni ejecutaste nada: di EXACTAMENTE lo que entendiste ('¿quieres 4 "
         "unidades de <producto>, o 1 unidad del producto 4?') y pídele que "
         "confirme o lo escriba con claridad. Sé amable con usuarios que no "
-        "dominan la tecnología: frases cortas, cero tecnicismos."
+        "dominan la tecnología: frases cortas, cero tecnicismos.\n"
+        "9. SPEC 54 — ajuste de cantidad: cuando la plantilla mencione pista "
+        "de ➕/➖ ('1 ➕ suma', botones '➕ Sumar'/'➖ Quitar'), no la reescribas "
+        "a otra mecánica ni la quites: el motor ya decidió; tú solo la "
+        "humanizas. Copia EXACTO el emoji ➕/➖ y los índices."
     )
 
 
