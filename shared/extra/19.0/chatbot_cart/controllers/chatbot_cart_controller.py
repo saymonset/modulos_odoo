@@ -324,13 +324,32 @@ class ChatbotCartController(http.Controller):
             extra={'botones': self._botones_carrito(carrito)})
 
     def _respuesta_buscador(self, env, session_id, conversation_id, account_id, platform):
-        """SPEC 40: entrada búsqueda-first cuando hay muchos productos.
+        """SPEC 40/55: entrada búsqueda-first cuando hay muchos productos.
 
-        Prompt de búsqueda + lista interactiva de categorías (si existen);
-        la paginación clásica queda como respaldo via "más".
+        Prompt de búsqueda con ejemplo real + lista interactiva de categorías
+        (si existen) + hasta 5 destacados como imágenes (SPEC 39); la
+        paginación clásica queda como respaldo via "más".
         """
         total = self.SEARCH_SERVICE.contar_vendibles(env)
         categorias = self.SEARCH_SERVICE.categorias_con_conteo(env)
+        session = env['chatbot.session'].sudo()
+        # SPEC 55: destacados con imagen (SPEC 39) numerados por SPEC 38.
+        destacados = self.SEARCH_SERVICE.catalogo(env, offset=0)
+        carrito = session._get_carrito(session_id)
+        carrito['pagina_catalogo'] = 0
+        carrito['ultima_busqueda'] = [
+            {
+                'product_id': p['product_id'],
+                'name': p['name'],
+                'default_code': p.get('default_code', ''),
+                'price_usd': p.get('price_usd', 0.0),
+                'image_url': p.get('image_url', ''),
+            }
+            for p in destacados.get('productos', [])
+        ]
+        session._guardar_carrito(session_id, carrito)
+        ejemplo = destacados['productos'][0]['name'] if destacados['productos'] else ''
+        ejemplo_linea = f"\n— p. ej. \"{ejemplo}\"" if ejemplo else ''
         # SPEC 46: la entrada búsqueda-first también lleva el enlace a la
         # tienda online (si el negocio tiene website configurado).
         url_tienda = CartService.obtener_url_tienda_enlace(env)
@@ -338,12 +357,11 @@ class ChatbotCartController(http.Controller):
         texto = (
             f"{linea_tienda}"
             f"🛍️ Tenemos {total} productos en {len(categorias)} categorías.\n"
-            "Escribe lo que necesites y te muestro opciones con foto y precio."
+            "Escribe lo que necesites y te muestro opciones con foto y precio "
+            f"{ejemplo_linea}"
         )
-        carrito = env['chatbot.session'].sudo()._get_carrito(session_id)
         # SPEC 48: la entrada búsqueda-first también activa el modo carrito;
         # sin persistir, el 2.º turno vuelve al flujo del negocio.
-        env['chatbot.session'].sudo()._guardar_carrito(session_id, carrito)
         extra = {'botones': self._botones_carrito(carrito)}
         if categorias:
             extra['lista_categorias'] = {
@@ -355,6 +373,9 @@ class ChatbotCartController(http.Controller):
             self._redactar(env, texto, contexto={
                 'accion': 'ACTIVACION_CARRITO', 'total_productos': total,
                 'categorias': [c['title'] for c in categorias]}),
+            imagenes=self._imagenes_de_productos(
+                destacados.get('productos', []), con_numeros=True,
+                items_carrito=carrito.get('items')),
             extra=extra)
 
     def _redactar(self, env, texto, contexto=None):
