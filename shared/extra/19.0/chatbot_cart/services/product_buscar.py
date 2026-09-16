@@ -219,25 +219,6 @@ class ProductBuscarService:
         }
 
     @staticmethod
-    def _linea_precio(p, result):
-        """Línea de precios de un producto según visibilidad COP."""
-        line = f"   Bs. {p['price_ves']:,.2f} / ${p['price_usd']:,.2f}"
-        if result['show_cop'] and p['price_cop']:
-            line += f" / COP ${p['price_cop']:,.2f}"
-        return line
-
-    @staticmethod
-    def _lineas_producto(p, result, idx):
-        """Líneas de un producto: nombre, descripción, precio."""
-        lines = [f"{idx}. {p['name']}"]
-        if p.get('description'):
-            lines.append(f"   {p['description']}")
-        if p.get('default_code'):
-            lines.append(f"   Ref: {p['default_code']}")
-        lines.append(ProductBuscarService._linea_precio(p, result))
-        return lines
-
-    @staticmethod
     def _pie_resultado(has_more, accion_final):
         """Pie de guía: agregar / ver más / acciones del carrito."""
         if has_more:
@@ -246,44 +227,48 @@ class ProductBuscarService:
         return ("Responde el número para agregarlo, o escribe *ver carrito*, *ayuda* "
                 "o *cancelar*.")
 
-    def formato_lista_productos(self, result):
-        """Renderiza el resultado de búsqueda como texto listo para el bot."""
+    def formato_lista_productos(self, result, url_tienda=''):
+        """SPEC 55: resultado de búsqueda solo textual-contado (guía).
+
+        La lista de productos viaja solo como imágenes con caption (SPEC 39);
+        aquí queda el conteo, la invitación a la búsqueda y la guía.
+        """
         if not result.get('success'):
             return "No pude buscar productos en este momento. Intenta de nuevo."
         if not result['productos']:
+            linea_tienda = (f"\n\n❗ O mira nuestra tienda online: {url_tienda}"
+                            if url_tienda else '')
             return (f"😕 No encontré productos que coincidan con \"{result['query']}\". "
-                    "Prueba con otra palabra o escribe *ayuda* para ver las opciones.")
+                    "Prueba con otra palabra o dime qué necesitas con tus palabras."
+                    f"{linea_tienda}")
         total = result.get('total_coincidencias', result['count'])
-        header = (f"📦 *Encontré {total} producto(s) (mostrando {result['count']}):*"
-                  if total > result['count']
-                  else f"📦 *Encontré {result['count']} producto(s):*")
-        lines = [header, ""]
-        for i, p in enumerate(result['productos'], 1):
-            lines.extend(self._lineas_producto(p, result, i))
-        lines.append("")
-        lines.append(self._pie_resultado(False, ''))
-        return "\n".join(lines)
+        if total > result['count']:
+            header = (f"📦 *Encontré {total} producto(s) — te muestro los primeros "
+                      f"{result['count']}. Afina tu búsqueda si no ves lo que quieres*")
+        else:
+            header = f"📦 *Encontré {result['count']} producto(s):*"
+        return "\n".join([header, "", self._pie_resultado(False, '')])
 
     def formato_lista_catalogo(self, result, url_tienda=''):
-        """Renderiza una página del catálogo como texto listo para el bot.
+        """SPEC 55: página del catálogo como guía sin lista textual.
 
-        :param url_tienda: URL de la tienda online del negocio (SPEC 46);
-        si viene, se antepone la línea de invitación.
+        Los productos viajan solo como imágenes con caption (SPEC 39); el
+        texto queda para la invitación a buscar con ejemplo real + guía.
         """
         if not result.get('success'):
             return "No pude cargar el catálogo en este momento. Intenta de nuevo."
         if not result['productos']:
             return ("😕 No hay más productos en el catálogo. "
                     "Escribe *ver carrito*, *ayuda* o *cancelar*.")
+        ejemplo = result['productos'][0]['name']
         lines = []
         if url_tienda:
             lines.append(f"❗ Visita nuestra tienda online: {url_tienda}")
             lines.append("")
-        lines.append(f"🛍️ *Catálogo ({result['offset'] + 1}-{result['offset'] + result['count']} "
-                     f"de {result['total']}):*")
-        lines.append("")
-        for i, p in enumerate(result['productos'], 1):
-            lines.extend(self._lineas_producto(p, result, i))
+        lines.append(
+            f"🛍️ Tenemos {result['total']} productos. ¿Buscas algo en particular? "
+            "Escríbelo con tus palabras")
+        lines.append(f"— p. ej. \"{ejemplo}\"")
         lines.append("")
         lines.append(self._pie_resultado(result['has_more'], ''))
         return "\n".join(lines)

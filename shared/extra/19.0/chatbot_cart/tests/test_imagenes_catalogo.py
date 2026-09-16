@@ -65,8 +65,24 @@ class TestImagenesCatalogo(BaseChatbotCartTestCase):
         imagenes = ChatbotCartController._imagenes_de_productos(productos)
         self.assertEqual(len(imagenes), 1)
         self.assertEqual(imagenes[0]['link'], productos[0]['image_url'])
+        # SPEC 55: sin carrito los items no aparecen; caption base igual
         self.assertEqual(imagenes[0]['caption'],
-                         'Pizza — Bs. 10,106.48 / $12.00\n(no está en tu carrito)')
+                         'Pizza — Bs. 10,106.48 / $12.00')
+
+    def test_04b_caption_con_total_carrito(self):
+        # SPEC 55: caption agrega total de items y valor del carrito.
+        productos = [
+            {'name': 'Pizza', 'price_ves': 10106.48, 'price_usd': 12.0,
+             'price_cop': 0.0, 'show_cop': False, 'has_image': True,
+             'image_url': 'https://x/img'},
+        ]
+        from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (
+            ChatbotCartController,
+        )
+        imagenes = ChatbotCartController._imagenes_de_productos(
+            productos, items_carrito=[
+                {'product_id': 99, 'qty': 2, 'price_usd': 5.0}])
+        self.assertIn('\n🛒 Llevas 1 items ($10.00)', imagenes[0]['caption'])
 
     def test_05_caption_con_cop(self):
         productos = [

@@ -56,7 +56,8 @@ class TestCatalogo(BaseChatbotCartTestCase):
         refresco = next(p for p in result['productos'] if p['name'] == 'Refresco')
         self.assertEqual(refresco['description'], '')
         texto = ProductBuscarService().formato_lista_catalogo(result)
-        self.assertIn('Refresco', texto)
+        # SPEC 55: el nombre del 1.º producto queda como ejemplo de búsqueda
+        self.assertIn(f"\"{result['productos'][0]['name']}\"", texto)
 
     def test_03b_descripcion_con_lang_de_company(self):
         # En Odoo 19 description_sale es JSON de traducciones; _descripcion_producto
@@ -73,7 +74,7 @@ class TestCatalogo(BaseChatbotCartTestCase):
         self.assertEqual(result['offset'], 1)
         self.assertGreaterEqual(result['count'], 1)
         texto = ProductBuscarService().formato_lista_catalogo(result)
-        self.assertIn('Catálogo', texto)
+        self.assertIn('Tenemos', texto)
 
     def test_05_formato_incluye_guia_persistente(self):
         result = self._catalogo()
@@ -96,7 +97,8 @@ class TestCatalogo(BaseChatbotCartTestCase):
             self.env, self.session_id, 'conv-1', '+58414000000', 'whatsapp',
             'CONSULTAR', '', 0, [])
         self.assertIn('texto_para_usuario', resp)
-        self.assertIn('Catálogo', resp['texto_para_usuario'])
+        # SPEC 55: guía de búsqueda (catálogo ya no imprime lista textual)
+        self.assertIn('¿Buscas algo en particular?', resp['texto_para_usuario'])
 
     def test_08_accion_catalogo_desde_controller(self):
         from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (
@@ -107,7 +109,7 @@ class TestCatalogo(BaseChatbotCartTestCase):
             self.env, self.session_id, 'conv-1', '+58414000000', 'whatsapp',
             'CATALOGO', '', 0, [])
         self.assertIn('texto_para_usuario', resp)
-        self.assertIn('Catálogo', resp['texto_para_usuario'])
+        self.assertIn('¿Buscas algo en particular?', resp['texto_para_usuario'])
         # Los botones interactivos se marcan para n8n (carrito vacío → SPEC 45).
         self.assertEqual(resp.get('botones'),
                          ['catálogo', 'ayuda', '🏪 Volver al negocio'])

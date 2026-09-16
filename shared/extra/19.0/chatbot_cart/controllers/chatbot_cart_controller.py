@@ -640,7 +640,9 @@ class ChatbotCartController(http.Controller):
                 session._guardar_carrito(session_id, carrito)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
-                self.SEARCH_SERVICE.formato_lista_productos(result)
+                self.SEARCH_SERVICE.formato_lista_productos(
+                    result,
+                    url_tienda=CartService.obtener_url_tienda_enlace(env) or '')
                 + self._PISTA_MAS_MENOS,
                 imagenes=self._imagenes_de_productos(
                     result.get('productos', []),
@@ -1166,16 +1168,19 @@ class ChatbotCartController(http.Controller):
 
     @staticmethod
     def _imagenes_de_productos(productos, con_numeros=False, items_carrito=None):
-        """SPEC 39/52/54: imágenes del catálogo/búsqueda como media-messages.
+        """SPEC 39/52/54/55: imágenes del catálogo/búsqueda como media-messages.
 
         Devuelve [{link, caption}] solo de productos con imagen y URL
-        absoluta; el caption lleva nombre y precios, el índice de la lista
-        si `con_numeros=True`, y el estado del carrito (SPEC 54): "🛒 en tu
-        carrito: N" o "(no está en tu carrito)".
+        absoluta; el caption lleva nombre, precios, índice de la lista si
+        `con_numeros=True`, el estado del producto en el carrito (SPEC 54)
+        y el total de items/valor del carrito (SPEC 55).
         """
         en_carrito = {
             it['product_id']: it.get('qty', 0) for it in (items_carrito or [])
         }
+        total_usd = round(sum(
+            it.get('price_usd', 0.0) * it.get('qty', 0)
+            for it in (items_carrito or [])), 2)
         imagenes = []
         for idx, p in enumerate(productos, 1):
             if not p.get('has_image') or not p.get('image_url'):
@@ -1185,9 +1190,11 @@ class ChatbotCartController(http.Controller):
             if p.get('show_cop') and p.get('price_cop'):
                 caption += f" / COP ${p['price_cop']:,.2f}"
             qty = en_carrito.get(p.get('product_id'))
-            caption += (
-                f"\n🛒 en tu carrito: {qty}" if qty
-                else "\n(no está en tu carrito)")
+            if qty:
+                caption += f"\n🛒 en tu carrito: {qty}"
+            if items_carrito:
+                caption += (
+                    f"\n🛒 Llevas {len(items_carrito)} items (${total_usd:,.2f})")
             imagenes.append({'link': p['image_url'], 'caption': caption})
         return imagenes
 
@@ -1658,7 +1665,8 @@ class ChatbotCartController(http.Controller):
         platform = platform or params.get('platform', 'whatsapp')
         env = request.env
         result = self.SEARCH_SERVICE.buscar(env, query, limit=5)
-        texto = self.SEARCH_SERVICE.formato_lista_productos(result)
+        texto = self.SEARCH_SERVICE.formato_lista_productos(
+            result, url_tienda=CartService.obtener_url_tienda_enlace(env) or '')
         return self._respuesta(
             session_id, conversation_id, account_id, platform,
             texto,

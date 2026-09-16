@@ -102,9 +102,10 @@ class TestMundoCarrito(BaseChatbotCartTestCase):
         resp = self._controller()._ejecutar(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
             'CATALOGO', '', 0, [])
-        self.assertIn('Catálogo', resp['texto_para_usuario'])
-        self.assertIn('1.', resp['texto_para_usuario'])
-        self.assertNotIn('Tenemos', resp['texto_para_usuario'])
+        # SPEC 55: clásico = guía de búsqueda con ejemplo real, sin listado
+        # textual numerado ni buscador-first.
+        self.assertIn('¿Buscas algo en particular?', resp['texto_para_usuario'])
+        self.assertNotIn('lista_categorias', resp)
 
     def test_06_activacion_consultar_vacio_usa_buscador(self):
         self._crear_productos(11)

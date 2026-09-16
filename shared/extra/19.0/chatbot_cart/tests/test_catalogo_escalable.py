@@ -38,7 +38,6 @@ class TestCatalogoEscalable(BaseChatbotCartTestCase):
     def test_01_umbral_pequeno_catalogo_clasico(self):
         resp = self.controller._mostrar_catalogo(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', offset=0)
-        self.assertIn('Catálogo', resp['texto_para_usuario'])
         self.assertNotIn('lista_categorias', resp)
 
     def test_02_umbral_grande_buscador_en_activacion(self):
@@ -61,15 +60,16 @@ class TestCatalogoEscalable(BaseChatbotCartTestCase):
         self._crear_productos(11)
         resp = self.controller._mostrar_catalogo(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', offset=0)
-        self.assertIn('Catálogo', resp['texto_para_usuario'])
-        self.assertNotIn('Tenemos', resp['texto_para_usuario'])
+        # SPEC 55: clásico promociona la búsqueda con ejemplo real, sin lista
+        # interactiva de categorías.
+        self.assertIn('¿Buscas algo en particular?', resp['texto_para_usuario'])
         self.assertNotIn('lista_categorias', resp)
 
     def test_03_umbral_grande_paginacion_respaldo(self):
         self._crear_productos(11)
         resp = self.controller._mostrar_catalogo(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', offset=5)
-        self.assertIn('Catálogo', resp['texto_para_usuario'])
+        self.assertIn('¿Buscas algo en particular?', resp['texto_para_usuario'])
 
     # --- categorías ---
 
@@ -117,8 +117,9 @@ class TestCatalogoEscalable(BaseChatbotCartTestCase):
         resp = self.controller._mostrar_catalogo_categoria(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
             self.categ_bebidas.id, offset=0)
-        self.assertIn('Catálogo', resp['texto_para_usuario'])
-        self.assertIn('Café Frío', resp['texto_para_usuario'])
+        # SPEC 55: guía de búsqueda, sin listado textual de productos
+        self.assertIn('p. ej. "Café Frío"', resp['texto_para_usuario'])
+        self.assertNotIn('1. Café Frío', resp['texto_para_usuario'])
         session = self.env['chatbot.session'].sudo().search(
             [('session_id', '=', self.session_id)], limit=1)
         ultima = (session.estado or {}).get('carrito', {}).get('ultima_busqueda', [])
@@ -149,7 +150,10 @@ class TestCatalogoEscalable(BaseChatbotCartTestCase):
         self.assertEqual(result['count'], 5)
         self.assertEqual(result['total_coincidencias'], 8)
         texto = self.search.formato_lista_productos(result)
-        self.assertIn('mostrando 5', texto)
+        # SPEC 55: conteo + invitación a afinar, sin lista textual
+        self.assertIn('Encontré 8 producto(s)', texto)
+        self.assertIn('Afina tu búsqueda', texto)
+        self.assertNotIn('Camisa Roja', texto)
 
     # --- regresión SPEC 38 (el número sigue agregando tras ver lista) ---
 

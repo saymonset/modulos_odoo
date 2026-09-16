@@ -100,7 +100,7 @@ class TestEnlaceTienda(BaseChatbotCartTestCase):
         result = ProductBuscarService().catalogo(self.env)
         texto = ProductBuscarService().formato_lista_catalogo(result)
         self.assertNotIn('Visita nuestra tienda online', texto)
-        self.assertIn('Catálogo', texto)
+        self.assertIn('Tenemos', texto)
 
     def test_08_catalogo_con_url_antecede_linea(self):
         from odoo.addons.chatbot_cart.services.product_buscar import ProductBuscarService
