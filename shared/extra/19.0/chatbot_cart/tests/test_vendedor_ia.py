@@ -267,6 +267,59 @@ class TestVendedorIA(BaseChatbotCartTestCase):
         res = ClasificarAccionCarritoUseCase._clasificar_fallback('busca perfumes')
         self.assertEqual(res[0]['accion'], 'BUSCAR')
 
+    # --- SPEC 52: descubrimiento ---
+
+    def test_21_decision_con_cantidad_en_la_frase(self):
+        from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (
+            ChatbotCartController as C,
+        )
+        lista = [{'product_id': 1}, {'product_id': 2}]
+        self.assertEqual(
+            C._decision_seleccion_numerica('1, quiero 3', lista),
+            ('AGREGAR', '1', 3))
+        self.assertEqual(
+            C._decision_seleccion_numerica('del 2 quiero 5', lista),
+            ('AGREGAR', '2', 5))
+        self.assertEqual(
+            C._decision_seleccion_numerica('1 y quiero 5', lista), ('AGREGAR', '1', 5))
+        self.assertEqual(
+            C._decision_seleccion_numerica('2', lista),
+            ('AGREGAR', '2', 1))
+        self.assertEqual(
+            C._decision_seleccion_numerica('que haces', lista), None)
+
+    def test_22_captions_con_numero(self):
+        controller = self._controller()
+        productos = [
+            {'has_image': True, 'image_url': 'https://x/1.png', 'name': 'Item A',
+             'price_ves': 100.0, 'price_usd': 5.0},
+            {'has_image': False, 'image_url': '', 'name': 'Item B',
+             'price_ves': 200.0, 'price_usd': 10.0},
+            {'has_image': True, 'image_url': 'https://x/c.png', 'name': 'Item C',
+             'price_ves': 300.0, 'price_usd': 15.0},
+        ]
+        caps = [im['caption'] for im in controller._imagenes_de_productos(
+            productos, con_numeros=True)]
+        self.assertTrue(caps[0].startswith('1. Item A'))
+        self.assertTrue(caps[1].startswith('3. Item C'))
+
+    def test_23_hint_acciones_en_agregar(self):
+        with self._patch_sin_ia():
+            resp = self._controller()._ejecutar_item(
+                self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
+                'AGREGAR', 'CAM-R', 1, [])
+        self.assertIn('Acciones:', resp['texto_para_usuario'])
+        self.assertIn('cotización', resp['texto_para_usuario'])
+
+    def test_24_hint_en_consultar_con_items(self):
+        self._agregar_producto(self.product_a.id, qty=1)
+        with self._patch_sin_ia():
+            resp = self._controller()._ejecutar(
+                self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
+                'CONSULTAR', '', 0, [])
+        self.assertIn('Acciones:', resp['texto_para_usuario'])
+        self.assertIn('vaciar', resp['texto_para_usuario'])
+
     def test_14_cotizacion_sin_servicio_responde_amable_y_sale(self):
         self._agregar_producto(self.product_a.id, qty=1)
         controller = self._controller()

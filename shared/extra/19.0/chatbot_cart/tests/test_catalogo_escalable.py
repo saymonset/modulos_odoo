@@ -158,4 +158,4 @@ class TestCatalogoEscalable(BaseChatbotCartTestCase):
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', offset=0)
         decision = self.controller._decision_seleccion_numerica(
             '1', [{'product_id': self.product_a.id}])
-        self.assertEqual(decision, ('AGREGAR', '1'))
+        self.assertEqual(decision, ('AGREGAR', '1', 1))

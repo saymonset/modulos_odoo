@@ -48,17 +48,17 @@ class TestSeleccionNumerica(BaseChatbotCartTestCase):
     def test_03_decision_agregar(self):
         self.assertEqual(
             self.controller._decision_seleccion_numerica('2', self.ultima_busqueda),
-            ('AGREGAR', '2'))
+            ('AGREGAR', '2', 1))
 
     def test_04_decision_sin_lista(self):
         self.assertEqual(
             self.controller._decision_seleccion_numerica('2', []),
-            ('SIN_LISTA', None))
+            ('SIN_LISTA', None, 1))
 
     def test_05_decision_fuera_de_rango(self):
         self.assertEqual(
             self.controller._decision_seleccion_numerica('7', self.ultima_busqueda),
-            ('FUERA_RANGO', 2))
+            ('FUERA_RANGO', 2, 1))
 
     def test_06_decision_no_numero(self):
         self.assertIsNone(

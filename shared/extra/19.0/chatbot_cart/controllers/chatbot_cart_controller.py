@@ -42,6 +42,11 @@ class ChatbotCartController(http.Controller):
 
     _PREGUNTA_PAGO = " ¿Quieres pagar ya?"
 
+    # SPEC 52: pista de descubrimiento tras cada acción con items.
+    _HINT_ACCIONES = (
+        "\nAcciones: *quitar <producto>* · *cambiar <producto> a <cantidad>* · "
+        "*ver carrito* · *pagar* · *cotización* · *vaciar* · *🏪 Volver al negocio*")
+
     def _botones_carrito(self, carrito):
         """Botones interactivos dinámicos (SPEC 45/50): botón de salida siempre
         visible, máximo 3 (límite de WhatsApp). Con items se prioriza pagar
@@ -61,7 +66,25 @@ class ChatbotCartController(http.Controller):
         carrito['pendiente_pago'] = True
         session._guardar_carrito(session_id, carrito)
 
-    def _resolver_producto(self, env, session_id, producto_ref, ultima_busqueda):
+    @staticmethod
+    def _limpiar_ref(accion, ref):
+        """SPEC 52: quita verbos y colas 'a <cantidad>' para BUSCAR el producto.
+
+        'cambiar Aros... a 2' → 'Aros de Hamburguesa...'; así el sufijo de
+        cantidad no se interpreta como índice ni rompe la búsqueda.
+        """
+        cleaned = (ref or '').strip()
+        if accion in ('QUITAR', 'MODIFICAR'):
+            cleaned = re.sub(
+                r'^(cambiar|cambia|modificar|modifica|quitar|quita|eliminar|'
+                r'elimina|saca|remover|borrar|borra)\b\s*', '', cleaned, flags=re.I)
+            cleaned = re.sub(
+                r'\s*\b(?:a|para|con)\s+\d+\s*(?:unidades?)?\s*$', '', cleaned,
+                flags=re.I).strip()
+        return cleaned
+
+    def _resolver_producto(self, env, session_id, producto_ref, ultima_busqueda,
+                           accion=None):
         """Resuelve la referencia del usuario a un product_id.
 
         Prioridad:
@@ -69,9 +92,17 @@ class ChatbotCartController(http.Controller):
         2. Nombre/código exacto único en búsqueda.
         Devuelve (product_id, mensaje_extra) o (None, mensaje_pedir_eleccion).
         """
-        ref = (producto_ref or '').strip()
+        ref = self._limpiar_ref(accion, (producto_ref or '').strip())
         if not ref:
             return None, "¿Cuál producto? Puedes responder el número o el nombre."
+
+        # SPEC 52: con cantidad en la frase ('cambiar X a 2'), el dígito de
+        # cantidad no es un índice: primero matching por nombre en la lista.
+        if accion in ('MODIFICAR', 'QUITAR') and ultima_busqueda and len(ref) > 3:
+            for fila in ultima_busqueda:
+                titulo = fila['name'].lower()
+                if ref.lower() in titulo or titulo in ref.lower():
+                    return fila['product_id'], ""
 
         # 1. Referencia numérica a la última lista mostrada
         match = re.search(r'(?<!\d)(\d{1,2})(?!\d)', ref)
@@ -100,22 +131,41 @@ class ChatbotCartController(http.Controller):
         m = re.match(r'^(?:el\s+)?(\d{1,2})$', (valor or '').strip(), re.IGNORECASE)
         return m.group(1) if m else None
 
+    _RE_SELEC_QTY = re.compile(
+        r'^\s*(?:del\s+)?(?:el\s+)?(\d{1,2})\b\s*[,.]?\s*'
+        r'(?:y\s*)?(?:quiero|llévame|llevame|manda|dame|necesito|'
+        r'comprar\s+a?l?)\s*(?:\d{1,2}\s*)?(\d{1,3})\s*(?:unidades)?\s*$',
+        re.IGNORECASE)
+    _RE_SELEC_QTY_INV = re.compile(
+        r'^\s*(?:comprar|dame|existe|hay|necesito|mandame|mándame)\s+'
+        r'(\d{1,3})\s*(?:unidades)?\s*(?:del|de la|de los)\s*(?:el\s+)?'
+        r'(\d{1,2})\s*$', re.IGNORECASE)
+
     @classmethod
     def _decision_seleccion_numerica(cls, valor, ultima_busqueda):
-        """SPEC 38: qué hacer con un número suelto según la lista mostrada.
+        """SPEC 38/52: qué hacer con un número suelto según la lista mostrada.
 
-        Devuelve ('AGREGAR', dígito), ('SIN_LISTA', None),
-        ('FUERA_RANGO', len(ultima_busqueda)) o None si `valor` no es un
-        número suelto.
+        Devuelve ('AGREGAR', dígito, cantidad), ('SIN_LISTA', None, 1),
+        ('FUERA_RANGO', len(ultima_busqueda), 1) o None si `valor` no es un
+        número suelto. SPEC 52: la frase puede traer cantidad —
+        "1, quiero 3" / "del 2 quiero 5" agrega M unidades del producto N.
         """
         numero = cls._es_seleccion_numerica(valor)
+        cantidad = 1
         if not numero:
-            return None
+            m = cls._RE_SELEC_QTY.match((valor or '').strip())
+            if m:
+                numero, cantidad = m.group(1), int(m.group(2))
+            else:
+                m = cls._RE_SELEC_QTY_INV.match((valor or '').strip())
+                if not m:
+                    return None
+                cantidad, numero = int(m.group(1)), m.group(2)
         if not ultima_busqueda:
-            return ('SIN_LISTA', None)
+            return ('SIN_LISTA', None, cantidad)
         if int(numero) > len(ultima_busqueda):
-            return ('FUERA_RANGO', len(ultima_busqueda))
-        return ('AGREGAR', numero)
+            return ('FUERA_RANGO', len(ultima_busqueda), cantidad)
+        return ('AGREGAR', numero, cantidad)
 
     # ==================================================================
     #  CATEGORÍAS (SPEC 40)
@@ -292,7 +342,7 @@ class ChatbotCartController(http.Controller):
         # suelto como CONSULTAR y el carrito queda vacío).
         decision = self._decision_seleccion_numerica(valor, ultima_busqueda)
         if decision:
-            tipo, ref = decision
+            tipo, ref, qty_num = decision
             if tipo == 'SIN_LISTA':
                 resp = self._respuesta(
                     session_id, conversation_id, account_id, platform,
@@ -306,7 +356,7 @@ class ChatbotCartController(http.Controller):
                     "Responde el número o escribe el nombre.",
                     extra={'botones': self._botones_carrito(carrito)})
                 return self._json_response(resp)
-            clasificacion = {'accion': 'AGREGAR', 'producto': ref, 'cantidad': 1}
+            clasificacion = {'accion': 'AGREGAR', 'producto': ref, 'cantidad': qty_num}
         else:
             # SPEC 40: selección de categoría (list_reply o nombre escrito),
             # con exclusión de comandos para no secuestrarlos.
@@ -410,17 +460,20 @@ class ChatbotCartController(http.Controller):
         session = env['chatbot.session'].sudo()
         if accion == 'AYUDA':
             texto = (
-                "*🛒 Carrito de compras — acciones:*\n"
-                "• *buscar <producto>* — ver productos disponibles\n"
-                "• *agregar <producto>* o *quiero 2 camisas* — agregar al carrito\n"
-                "• *ver carrito* — resumen de lo que llevas\n"
-                "• *quitar <producto>* — eliminar del carrito\n"
-                "• *cambiar <producto> a 3* — modificar cantidad\n"
-                "• *pagar* — finalizar la compra\n"
-                "• *vaciar* — quitar todo (pide confirmación)\n"
-                "• *cancelar* — salir del carrito"
+                "*🛒 ¿Cómo comprar por el carrito?*\n"
+                "• *catálogo* — ver productos con foto\n"
+                "• eligiendo por *número* — agrega; *1, quiero 3* agrega 3\n"
+                "• *ver carrito* — lo que llevas y el total\n"
+                "• *quitar <producto>* — eliminar; *cambiar X a 3* — cantidad\n"
+                "• *pagar* — finalizar y pagar · *cotización* — te lo envío PDF\n"
+                "• *vaciar* — quitar todo · *🏪 Volver al negocio* — cancelar"
             )
-            return self._respuesta(session_id, conversation_id, account_id, platform, texto)
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                self._redactar(env, texto, contexto={
+                    'accion': 'AYUDA', 'plantilla': False}),
+                extra={'botones': self._botones_carrito(
+                    session._get_carrito(session_id))})
 
         if accion == 'CONSULTAR':
             resumen = self.CART_SERVICE.resumen(env, session_id)
@@ -430,7 +483,7 @@ class ChatbotCartController(http.Controller):
                 return self._mostrar_catalogo(
                     env, session_id, conversation_id, account_id, platform,
                     offset=0, buscador_first=True)
-            texto = self.CART_SERVICE.formato_resumen_amigable(env, session_id) + self._PREGUNTA_PAGO
+            texto = self.CART_SERVICE.formato_resumen_amigable(env, session_id) + self._PREGUNTA_PAGO + self._HINT_ACCIONES
             self._marcar_pendiente_pago(env, session_id)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
@@ -592,7 +645,8 @@ class ChatbotCartController(http.Controller):
                        accion, producto_ref, cantidad, ultima_busqueda):
         """Ejecuta AGREGAR/QUITAR/MODIFICAR sobre un producto del carrito."""
         service = self.CART_SERVICE
-        product_id, mensaje = self._resolver_producto(env, session_id, producto_ref, ultima_busqueda)
+        product_id, mensaje = self._resolver_producto(
+            env, session_id, producto_ref, ultima_busqueda, accion=accion)
         if not product_id:
             return self._respuesta(session_id, conversation_id, account_id, platform, mensaje)
 
@@ -607,7 +661,8 @@ class ChatbotCartController(http.Controller):
             resumen = service.resumen(env, session_id)
             texto = (f"✅ Agregué *{cantidad} x {producto.name}* al carrito. "
                      f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}"
-                     f"{self._PREGUNTA_PAGO}")
+                     f"{self._PREGUNTA_PAGO}"
+                     f"{self._HINT_ACCIONES}")
             self._marcar_pendiente_pago(env, session_id)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
@@ -623,7 +678,8 @@ class ChatbotCartController(http.Controller):
                                        "Ese producto no está en tu carrito. Escribe *ver carrito* para revisar.")
             resumen = service.resumen(env, session_id)
             texto = (f"🗑️ Producto eliminado. "
-                     f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}")
+                     f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}"
+                     f"{self._HINT_ACCIONES}")
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
                 self._redactar(env, texto, contexto={
@@ -640,7 +696,8 @@ class ChatbotCartController(http.Controller):
                                    "Ese producto no está en tu carrito. Escribe *ver carrito* para revisar.")
         resumen = service.resumen(env, session_id)
         texto = (f"✏️ Cantidad actualizada a *{cantidad}*. "
-                 f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}")
+                 f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}"
+                 f"{self._HINT_ACCIONES}")
         return self._respuesta(
             session_id, conversation_id, account_id, platform,
             self._redactar(env, texto, contexto={
@@ -694,21 +751,25 @@ class ChatbotCartController(http.Controller):
             session_id, conversation_id, account_id, platform,
             self.SEARCH_SERVICE.formato_lista_catalogo(
                 result, url_tienda=CartService.obtener_url_tienda_enlace(env) or ''),
-            imagenes=self._imagenes_de_productos(result.get('productos', [])),
+            imagenes=self._imagenes_de_productos(
+                result.get('productos', []), con_numeros=True),
             extra={'botones': self._botones_carrito(carrito)})
 
     @staticmethod
-    def _imagenes_de_productos(productos):
-        """SPEC 39: imágenes del catálogo/búsqueda como media-messages.
+    def _imagenes_de_productos(productos, con_numeros=False):
+        """SPEC 39/52: imágenes del catálogo/búsqueda como media-messages.
 
         Devuelve [{link, caption}] solo de productos con imagen y URL
-        absoluta; el caption lleva nombre y precios.
+        absoluta; el caption lleva nombre y precios. SPEC 52: si
+        `con_numeros=True`, el caption incluye el índice de la lista (la
+        foto identificable con el número a responder).
         """
         imagenes = []
-        for p in productos:
+        for idx, p in enumerate(productos, 1):
             if not p.get('has_image') or not p.get('image_url'):
                 continue
-            caption = f"{p['name']} — Bs. {p['price_ves']:,.2f} / ${p['price_usd']:,.2f}"
+            caption = (f"{idx}. " if con_numeros else '') + f"{p['name']}"
+            caption += f" — Bs. {p['price_ves']:,.2f} / ${p['price_usd']:,.2f}"
             if p.get('show_cop') and p.get('price_cop'):
                 caption += f" / COP ${p['price_cop']:,.2f}"
             imagenes.append({'link': p['image_url'], 'caption': caption})

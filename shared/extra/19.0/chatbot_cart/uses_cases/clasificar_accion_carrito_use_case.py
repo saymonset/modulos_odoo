@@ -147,7 +147,14 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
 
     @staticmethod
     def _extraer_cantidad(texto):
-        """Extrae la cantidad del texto (número o palabra)."""
+        """Extrae la cantidad del texto (número o palabra).
+
+        SPEC 52: si el texto termina con 'a N' (cambiar X a 2), esa es la
+        cantidad — evita tomar el '5' de un código '2.5'.
+        """
+        colas = re.search(r'\b[aà]\s*(\d{1,3})\s*(?:unidades?)?\s*$', texto)
+        if colas:
+            return int(colas.group(1))
         match = re.search(r'\b(\d+)\b', texto)
         if match:
             return int(match.group(1))
