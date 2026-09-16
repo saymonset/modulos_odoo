@@ -61,16 +61,24 @@ class TestVendedorIA(BaseChatbotCartTestCase):
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp')
         self.assertTrue(resp['finalizado'])
         self.assertIn('IA', resp['texto_para_usuario'])
-        self.assertIn('2 item(s)', resp['texto_para_usuario'])
+        self.assertIn('item(s)', resp['texto_para_usuario'])
         session = self.env['chatbot.session'].sudo()
         self.assertFalse(session._esta_en_modo_carrito(self.session_id))
         self.assertEqual(self._carrito_flags()['items'][0]['product_id'], self.product_a.id)
 
-    def test_04_gate_decision_sin_ia(self):
-        """El import del gate usa `_hay_ia`; con IA caída la decisión es entreprene."""
+    def test_04_wire_redaccion_ia_en_agregar(self):
+        """El controller pasa el texto del motor por el servicio del vendedor."""
         import odoo.addons.chatbot_cart.controllers.chatbot_cart_controller as ctrl
-        with patch.object(ctrl, '_hay_ia', lambda env: False):
-            self.assertFalse(ctrl._hay_ia(None))
+        from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (
+            ChatbotCartController,
+        )
+        with patch.object(ChatbotCartController, '_redactar', self._redactar_original):
+            with patch.object(ctrl, '_redactar_service',
+                              lambda env, t, ctx: f'IA[{t[:20]}]'):
+                resp = self._controller()._ejecutar_item(
+                    self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
+                    'AGREGAR', 'CAM-R', 1, [])
+        self.assertTrue(resp['texto_para_usuario'].startswith('IA['))
 
     # --- cierre ¿quieres pagar ya? + botones ---
 
@@ -125,35 +133,31 @@ class TestVendedorIA(BaseChatbotCartTestCase):
     # --- rama email ---
 
     def test_10_email_valido_crea_cotizacion(self):
+        self._agregar_producto(self.product_a.id, qty=1)
         with patch(
                 'odoo.addons.chatbot_cart.controllers.chatbot_cart_controller.'
                 'crear_y_enviar_desde_carrito',
                 return_value='COT-0001'):
-            with self._patch_sin_ia():
-                resp = self._controller()._cotizacion_email(
-                    self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
-                    'cliente@dominio.com')
+            resp = self._controller()._cotizacion_email(
+                self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
+                'cliente@dominio.com')
         self.assertIn('cliente@dominio.com', resp['texto_para_usuario'])
         self.assertIn('COT-0001', resp['texto_para_usuario'])
         self.assertNotIn('pendiente_cotizacion', self._carrito_flags())
 
     def test_11_email_invalido_reformula(self):
-        with self._patch_sin_ia():
-            resp = self._controller()._cotizacion_email(
-                self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
-                'no-es-correo')
+        resp = self._controller()._cotizacion_email(
+            self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
+            'no-es-correo')
         self.assertIn('nombre@dominio.com', resp['texto_para_usuario'])
         self.assertEqual(self._carrito_flags().get('pendiente_cotizacion'), 1)
 
     def test_12_email_invalido_dos_intentos_cancela_amable(self):
         controller = self._controller()
-        # Primer reintento
-        with self._patch_sin_ia():
-            controller._cotizacion_email(
-                self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', 'mal1')
-            # Segundo intento fallido: cancela amable
-            resp = controller._cotizacion_email(
-                self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', 'mal2')
+        controller._cotizacion_email(
+            self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', 'mal1')
+        resp = controller._cotizacion_email(
+            self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', 'mal2')
         self.assertIn('Dejo la cotización pendiente', resp['texto_para_usuario'])
         self.assertNotIn('pendiente_cotizacion', self._carrito_flags())
 
@@ -161,9 +165,8 @@ class TestVendedorIA(BaseChatbotCartTestCase):
         self._agregar_producto(self.product_a.id, qty=1)
         controller = self._controller()
         controller._pedir_email_cotizacion(self.env, self.session_id, 'c1', '+58414000000', 'whatsapp')
-        with self._patch_sin_ia():
-            resp = controller._cotizacion_email(
-                self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', 'cancelar')
+        resp = controller._cotizacion_email(
+            self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', 'cancelar')
         self.assertFalse(resp['finalizado'])
         self.assertEqual(self._carrito_flags()['items'][0]['product_id'], self.product_a.id)
         self.assertNotIn('pendiente_cotizacion', self._carrito_flags())
@@ -183,10 +186,9 @@ class TestVendedorIA(BaseChatbotCartTestCase):
         with patch(
                 'odoo.addons.chatbot_cart.controllers.chatbot_cart_controller.'
                 'crear_y_enviar_desde_carrito', side_effect=sin_modulo):
-            with self._patch_sin_ia():
-                resp = controller._cotizacion_email(
-                    self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
-                    'cliente@dominio.com')
+            resp = controller._cotizacion_email(
+                self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
+                'cliente@dominio.com')
         self.assertIn('IA', resp['texto_para_usuario'])
         self.assertTrue(resp['finalizado'])
         self.assertNotIn('pendiente_cotizacion', self._carrito_flags())

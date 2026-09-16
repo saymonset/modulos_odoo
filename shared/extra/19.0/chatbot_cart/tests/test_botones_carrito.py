@@ -23,7 +23,7 @@ class TestBotonesCarrito(BaseChatbotCartTestCase):
 
     def test_02_carrito_con_items_prioriza_pagar(self):
         botones = self._botones({'items': [{'product_id': 1, 'qty': 2}]})
-        self.assertEqual(botones, ['ver carrito', 'pagar', '🏪 Volver al negocio'])
+        self.assertEqual(botones, ['pagar', 'cotización', '🏪 Volver al negocio'])
 
     def test_03_salida_siempre_visible(self):
         for carrito in ({'items': []}, {'items': [{'product_id': 1}]}):

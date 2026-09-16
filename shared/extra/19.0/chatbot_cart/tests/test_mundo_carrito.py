@@ -26,14 +26,15 @@ class TestMundoCarrito(BaseChatbotCartTestCase):
 
     # --- IA solo-carrito ---
 
-    def _patch_ia(self, respuesta):
+    def _patch_ia(self, respuesta=None):
+        if respuesta is None:
+            respuesta = '🛒 En el carrito solo gestiono compras: escribe *catálogo* o *salir*.'
         from unittest.mock import patch
         gpt = self.env['gpt.service'].sudo()
         fake_config = type('Cfg', (), {
             'api_key': 'test-key', 'default_model': 'gpt-test'})()
         fake_resp = type('Resp', (), {'choices': [
-            type('C', (), {'message': type('M', (), {'content': '🛒 En el carrito '
-                "solo gestiono compras: escribe *catálogo* o *salir*."})()})()]
+            type('C', (), {'message': type('M', (), {'content': respuesta})()})()]
         })()
         fake_client = type('Client', (), {})()
         fake_client.chat = type('Chat', (), {})()

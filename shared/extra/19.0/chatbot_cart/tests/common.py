@@ -17,6 +17,19 @@ class BaseChatbotCartTestCase(TransactionCase):
             no_reset_password=True,
             tracking_disable=True,
         ))
+        # SPEC 50: los tests del módulo validan las plantillas del motor;
+        # la redacción IA del vendedor se simula con passthrough aquí y se
+        # prueba a fondo (con mock) en test_vendedor_ia.
+        from unittest.mock import patch
+        from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (
+            ChatbotCartController,
+        )
+        cls._redactar_original = ChatbotCartController._redactar
+        patcher = patch.object(
+            ChatbotCartController, '_redactar',
+            lambda self, env, texto, contexto=None: texto)
+        patcher.start()
+        cls.addClassCleanup(patcher.stop)
         cls.partner = cls.env['res.partner'].create({'name': 'Test Partner'})
         cls.product_a = cls.env['product.product'].create({
             'name': 'Camisa Roja',
