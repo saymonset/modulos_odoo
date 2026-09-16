@@ -5,7 +5,9 @@ import logging
 import re
 import json
 
-from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import truncate_for_platform
+from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import (
+    truncate_for_platform, ChatBotUtils,
+)
 
 from ..services.cart_service import CartService
 from ..services.product_buscar import ProductBuscarService
@@ -277,7 +279,7 @@ class ChatbotCartController(http.Controller):
         # (o tras COTIZACION): el turno se interpreta como correo o
         # reformulación; no pasa por el clasificador.
         if carrito.get('pendiente_cotizacion') is not None:
-            return self._json_response(self._cotizacion_email(
+            return self._json_response(self._cotizacion_turno(
                 env, session_id, conversation_id, account_id, platform, valor))
 
         # SPEC 50: "no" en el turno del total => cotizar en vez de pagar.
@@ -728,30 +730,35 @@ class ChatbotCartController(http.Controller):
         return (valor or '').strip().lower() in ChatbotCartController._DECLINACIONES
 
     def _pedir_email_cotizacion(self, env, session_id, conversation_id, account_id, platform):
-        """El cliente declinó pagar: pedir email para armar la cotización."""
+        """El cliente declinó pagar: pedir TELÉFONO para armar la cotización.
+
+        SPEC 47 (ajuste SPEC 50): primero el teléfono; la búsqueda del
+        partner por teléfono reusa el matcher existente del chatbot. El
+        email y el nombre solo se piden si la búsqueda no los aporta.
+        """
         session = env['chatbot.session'].sudo()
         carrito = session._get_carrito(session_id)
         carrito.pop('pendiente_pago', None)
-        carrito['pendiente_cotizacion'] = 0  # intentos fallidos de email (máx 2)
+        carrito['pendiente_cotizacion'] = {'paso': 'telefono', 'intentos': 0}
         session._guardar_carrito(session_id, carrito)
         texto = (
-            "¡Sin problema! 😊 ¿Cuál es tu correo? Con él te envío la "
-            "cotización en PDF con los productos que llevas."
+            "¡Sin problema! 😊 ¿A qué teléfono te busco en el sistema? "
+            "Con tu teléfono armo la cotización con nombre y correo del cliente."
         )
         texto = self._redactar(env, texto, contexto={
-            'accion': 'COTIZACION', 'etapa': 'pedir_email'})
+            'accion': 'COTIZACION', 'etapa': 'pedir_telefono'})
         botones = ['🚫 Cancelar', '🏪 Volver al negocio']
         return self._respuesta(session_id, conversation_id, account_id, platform, texto,
                                extra={'botones': botones})
 
-    def _cotizacion_email(self, env, session_id, conversation_id, account_id, platform, valor):
-        """Turno esperando el email de la cotización (SPEC 47)."""
+    def _cotizacion_turno(self, env, session_id, conversation_id, account_id, platform, valor):
+        """Turno de la rama cotización: teléfono → email → nombre (SPEC 47)."""
         session = env['chatbot.session'].sudo()
         carrito = session._get_carrito(session_id)
-        intentos = int(carrito.get('pendiente_cotizacion') or 0)
-        email = (valor or '').strip()
-        if email.lower() in {'cancelar', '🚫 cancelar', 'salir'}:
+        estado = dict(carrito.get('pendiente_cotizacion') or {})
+        if self._es_declinacion_cotizacion(valor):
             self._limpiar_flags_cotizacion(env, session_id)
+            carrito = session._get_carrito(session_id)
             texto = ("Cancelé la cotización. Tu carrito queda guardado 🛒 "
                      "¿Quieres pagar ya? También puedes seguir viendo el catálogo.")
             return self._respuesta(
@@ -759,46 +766,194 @@ class ChatbotCartController(http.Controller):
                 self._redactar(env, texto, contexto={'accion': 'COTIZACION', 'etapa': 'cancelada'}),
                 finalizado=False, extra={'botones': self._botones_carrito(carrito)})
 
-        if not es_email_valido(email):
-            intentos += 1
-            if intentos >= 2:
-                self._limpiar_flags_cotizacion(env, session_id)
-                texto = (
-                    "No me quedó claro el correo 😕. Dejo la cotización "
-                    "pendiente; tu carrito sigue guardado. Escribe "
-                    "*cotización* cuando quieras retomarla.")
-                return self._respuesta(
-                    session_id, conversation_id, account_id, platform,
-                    self._redactar(env, texto, contexto={
-                        'accion': 'COTIZACION', 'etapa': 'cancelada'}))
-            carrito['pendiente_cotizacion'] = intentos
-            session._guardar_carrito(session_id, carrito)
-            texto = (f"El correo \"{email}\" no me lo reconoce 😅. "
-                     "Escríbelo así: nombre@dominio.com")
-            return self._respuesta(
-                session_id, conversation_id, account_id, platform,
-                self._redactar(env, texto, contexto={
-                    'accion': 'COTIZACION', 'etapa': 'reformula_email'}))
+        paso = estado.get('paso')
+        if paso == 'telefono':
+            return self._cotizacion_turno_telefono(
+                env, session_id, conversation_id, account_id, platform, valor, estado)
+        if paso == 'email':
+            return self._cotizacion_turno_email(
+                env, session_id, conversation_id, account_id, platform, valor, estado)
+        return self._cotizacion_turno_nombre(
+            env, session_id, conversation_id, account_id, platform, valor, estado)
 
-        # Email válido: armar cotización vía SPEC 47
+    def _resumen_o_vacio(self, env, session_id, conversation_id, account_id, platform):
+        """Resumen del carrito; si no hay items responde y devuelve None."""
         resumen = self.CART_SERVICE.resumen(env, session_id)
         if not resumen['items']:
             self._limpiar_flags_cotizacion(env, session_id)
             texto = ("Tu carrito está vacío, no hay nada que cotizar 🛒. "
                      "Mira el catálogo y agrega algo primero.")
-            return self._respuesta(
+            return None, self._respuesta(
                 session_id, conversation_id, account_id, platform,
                 self._redactar(env, texto, contexto={'accion': 'COTIZACION', 'etapa': 'vacio'}))
+        return resumen, None
 
+    def _cotizacion_turno_telefono(self, env, session_id, conversation_id,
+                                   account_id, platform, valor, estado):
+        """Paso 1: teléfono → matcher existente → partner y email."""
+        session = env['chatbot.session'].sudo()
+        carrito = session._get_carrito(session_id)
+        digits = ''.join(filter(str.isdigit, valor))
+        if len(digits) < 7:
+            estado['intentos'] = int(estado.get('intentos') or 0) + 1
+            if estado['intentos'] >= 2:
+                self._limpiar_flags_cotizacion(env, session_id)
+                texto = ("No me quedó claro el teléfono 😕. Dejo la cotización "
+                         "pendiente; tu carrito sigue guardado. Escribe "
+                         "*cotización* cuando quieras retomarla.")
+                return self._respuesta(
+                    session_id, conversation_id, account_id, platform,
+                    self._redactar(env, texto, contexto={
+                        'accion': 'COTIZACION', 'etapa': 'cancelada'}))
+            carrito['pendiente_cotizacion'] = dict(estado, paso='telefono')
+            session._guardar_carrito(session_id, carrito)
+            texto = (f"El teléfono \"{valor}\" no me lo reconoce 😅. "
+                     "Escríbeme el número completo (ej. 04141234567).")
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                self._redactar(env, texto, contexto={
+                    'accion': 'COTIZACION', 'etapa': 'reformula_telefono'}))
+
+        # SPEC 47: matcher existente del chatbot (comparación por dígitos)
+        partner = ChatBotUtils.find_partner_by_phone(env, valor)
+        estado['telefono'] = valor.strip()
+        if not partner:
+            estado['paso'] = 'email'
+            estado['intentos'] = 0
+            carrito['pendiente_cotizacion'] = estado
+            session._guardar_carrito(session_id, carrito)
+            texto = ("Ese teléfono no está registrado 😊. Para crear tu "
+                     "ficha de cliente necesito tu correo y nombre. "
+                     "¿Cuál es tu correo?")
+            texto = self._redactar(env, texto, contexto={
+                'accion': 'COTIZACION', 'etapa': 'cliente_nuevo'})
+            botones = ['🚫 Cancelar']
+            return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                                   extra={'botones': botones})
+
+        estado['partner_id'] = partner.id
+        partner_email = (partner.email or '').strip()
+        resumen, resp_vacio = self._resumen_o_vacio(
+            env, session_id, conversation_id, account_id, platform)
+        if resp_vacio:
+            return resp_vacio
+        if partner_email:
+            return self._crear_cotizacion(
+                env, session_id, conversation_id, account_id, platform, estado, resumen)
+        estado['paso'] = 'email'
+        estado['intentos'] = 0
+        carrito['pendiente_cotizacion'] = estado
+        session._guardar_carrito(session_id, carrito)
+        texto = (f"¡Te encontré {partner.name}! 😊 Solo me falta tu correo "
+                 "para enviarte el PDF (Bs. y $). ¿Cuál es?")
+        texto = self._redactar(env, texto, contexto={
+            'accion': 'COTIZACION', 'etapa': 'pedir_email', 'partner': partner.name})
+        botones = ['🚫 Cancelar']
+        return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                               extra={'botones': botones})
+
+    def _cotizacion_turno_email(self, env, session_id, conversation_id,
+                                account_id, platform, valor, estado):
+        """Paso 2: email (para el PDF). Si es cliente nuevo, sigue nombre."""
+        session = env['chatbot.session'].sudo()
+        carrito = session._get_carrito(session_id)
+        email = (valor or '').strip()
+        if es_email_valido(email):
+            estado['email'] = email
+            estado['intentos'] = 0
+            partner = self._partner_de_estado(env, estado)
+            if partner is not None and (partner.name or '').strip():
+                resumen, resp_vacio = self._resumen_o_vacio(
+                    env, session_id, conversation_id, account_id, platform)
+                if resp_vacio:
+                    return resp_vacio
+                return self._crear_cotizacion(
+                    env, session_id, conversation_id, account_id, platform, estado, resumen)
+            estado['paso'] = 'nombre'
+            carrito['pendiente_cotizacion'] = estado
+            session._guardar_carrito(session_id, carrito)
+            texto = ("¡Gracias! Para completar la cotización, ¿cómo te llamas "
+                     "(nombre para la factura)?")
+            texto = self._redactar(env, texto, contexto={
+                'accion': 'COTIZACION', 'etapa': 'pedir_nombre'})
+            botones = ['🚫 Cancelar']
+            return self._respuesta(session_id, conversation_id, account_id, platform, texto,
+                                   extra={'botones': botones})
+        estado['intentos'] = int(estado.get('intentos') or 0) + 1
+        if estado['intentos'] >= 2:
+            self._limpiar_flags_cotizacion(env, session_id)
+            texto = (
+                "No me quedó claro el correo 😕. Dejo la cotización "
+                "pendiente; tu carrito sigue guardado. Escribe "
+                "*cotización* cuando quieras retomarla.")
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                self._redactar(env, texto, contexto={
+                    'accion': 'COTIZACION', 'etapa': 'cancelada'}))
+        carrito['pendiente_cotizacion'] = estado
+        session._guardar_carrito(session_id, carrito)
+        texto = (f"El correo \"{email}\" no me lo reconoce 😅. "
+                 "Escríbelo así: nombre@dominio.com")
+        return self._respuesta(
+            session_id, conversation_id, account_id, platform,
+            self._redactar(env, texto, contexto={
+                'accion': 'COTIZACION', 'etapa': 'reformula_email'}))
+
+    def _cotizacion_turno_nombre(self, env, session_id, conversation_id,
+                                 account_id, platform, valor, estado):
+        """Paso 3 (solo cliente nuevo): nombre y crear cotización."""
+        nombre = (valor or '').strip()
+        if len(nombre) < 3 or '@' in nombre:
+            estado['intentos'] = int(estado.get('intentos') or 0) + 1
+            if estado['intentos'] >= 2:
+                self._limpiar_flags_cotizacion(env, session_id)
+                texto = ("No me quedó claro el nombre 😕. Dejo la cotización "
+                         "pendiente; tu carrito sigue guardado. Escribe "
+                         "*cotización* cuando quieras retomarla.")
+                return self._respuesta(
+                    session_id, conversation_id, account_id, platform,
+                    self._redactar(env, texto, contexto={
+                        'accion': 'COTIZACION', 'etapa': 'cancelada'}))
+            session_sudo = env['chatbot.session'].sudo()
+            session_sudo._guardar_carrito(session_id, dict(
+                session_sudo._get_carrito(session_id), pendiente_cotizacion=estado))
+            texto = "Ese nombre no me cuadra 😅. Escríbeme el nombre completo del cliente."
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                self._redactar(env, texto, contexto={
+                    'accion': 'COTIZACION', 'etapa': 'reformula_nombre'}))
+        estado['nombre'] = nombre
+        resumen, resp_vacio = self._resumen_o_vacio(
+            env, session_id, conversation_id, account_id, platform)
+        if resp_vacio:
+            return resp_vacio
+        return self._crear_cotizacion(
+            env, session_id, conversation_id, account_id, platform, estado, resumen)
+
+    @staticmethod
+    def _partner_de_estado(env, estado):
+        if not estado.get('partner_id'):
+            return None
+        partner = env['res.partner'].sudo().browse(estado['partner_id'])
+        return partner if partner.exists() else None
+
+    def _crear_cotizacion(self, env, session_id, conversation_id, account_id, platform,
+                          estado, resumen):
+        """Arma la cotización vía SPEC 47 con teléfono + email + nombre."""
+        partner = self._partner_de_estado(env, estado)
+        nombre = estado.get('nombre') or (partner.name if partner else '')
+        email = estado.get('email') or (partner.email if partner else '')
         try:
-            order_name = crear_y_enviar_desde_carrito(env, email, session_id, resumen)
+            order_name = crear_y_enviar_desde_carrito(
+                env, estado.get('telefono', ''), email,
+                nombre, session_id, resumen)
         except CotizacionNoDisponible as e:
             _logger.warning("Cotización no disponible (SPEC 47): %s", e)
             self._limpiar_flags_cotizacion(env, session_id)
             texto = (
                 "Iba a usar la IA para tu cotización 😌 pero en este momento "
-                "no tiene los datos de la IA funcionando. Volvemos al negocio: "
-                "escribe *carrito* cuando quieras retomar tu compra.")
+                "no tiene los datos de la cotización funcionando. Volvemos "
+                "al negocio: escribe *carrito* cuando quieras retomarla.")
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
                 self._redactar(env, texto, contexto={'accion': 'COTIZACION', 'etapa': 'sin_servicio'}),
@@ -806,10 +961,11 @@ class ChatbotCartController(http.Controller):
 
         self._limpiar_flags_cotizacion(env, session_id)
         texto = (
-            f"✅ ¡Cotización {order_name} creada! Te la envío en PDF "
-            f"a {email} con los totales en Bs. y $. "
-            "Revisa tu bandeja de entrada; si quieres ajustar productos, "
-            "escribe *cotización* o responde aquí mismo."
+            f"✅ ¡Cotización {order_name} creada!" + (
+                f" Te la envío en PDF a {email} con los totales en Bs. y $. "
+                "Revisa tu bandeja de entrada." if email else
+                " Tu cotización quedó lista para el negocio; apenas tengamos "
+                "un correo la enviamos.")
         )
         return self._respuesta(
             session_id, conversation_id, account_id, platform,
@@ -817,6 +973,11 @@ class ChatbotCartController(http.Controller):
                 'accion': 'COTIZACION', 'etapa': 'enviada', 'email': email,
                 'order_name': order_name, 'resumen': resumen}),
             finalizado=False, extra={'botones': ['pagar', '🏪 Volver al negocio']})
+
+    def _es_declinacion_cotizacion(self, valor):
+        """Cancela la cotización pendiente (palabra o botón)."""
+        return (valor or '').strip().lower() in {
+            'cancelar', '🚫 cancelar', 'salir', 'cancela'}
 
     def _limpiar_flags_cotizacion(self, env, session_id):
         """Limpia `pendiente_cotizacion` (éxito, cancelación o máx intentos)."""

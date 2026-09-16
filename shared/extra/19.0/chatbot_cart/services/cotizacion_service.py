@@ -24,11 +24,12 @@ def es_email_valido(email):
     return bool(re.fullmatch(_EMAIL_RE, (email or '').strip()))
 
 
-def crear_y_enviar_desde_carrito(env, email, session_id, resumen):
+def crear_y_enviar_desde_carrito(env, telefono, email, nombre, session_id, resumen):
     """Arma la cotización con los items del carrito y envía el PDF email.
 
-    Devuelve (order_name, None) en éxito. Lanza CotizacionNoDisponible si
-    el módulo de SPEC 47 no puede atender la operación.
+    Contrato SPEC 47: el partner lleva SIEMPRE teléfono + nombre + email.
+    Si `chatbot_cotizacion` no puede atender la operación, lanza
+    CotizacionNoDisponible.
     """
     items = [
         {
@@ -50,7 +51,9 @@ def crear_y_enviar_desde_carrito(env, email, session_id, resumen):
         raise CotizacionNoDisponible(f"chatbot_cotizacion no instalado: {e}") from e
 
     if hasattr(mod, 'cotizar_desde_carrito'):
-        order_id = mod.cotizar_desde_carrito(session_id=session_id, email=email, items=items)
+        order_id = mod.cotizar_desde_carrito(
+            session_id=session_id, telefono=telefono, email=email,
+            nombre=nombre, items=items)
         order = env['sale.order'].sudo().browse(order_id)
         return order.name
     raise CotizacionNoDisponible(
