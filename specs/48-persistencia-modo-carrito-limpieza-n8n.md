@@ -1,6 +1,6 @@
 # SPEC 48 — Persistencia del modo carrito y limpieza n8n
 
-> **Status:** Draft
+> **Status:** Approved
 > **Depends on:** SPEC 34, SPEC 40, SPEC 44, SPEC 46
 > **Date:** 2026-09-16
 > **Objective:** Hacer que el modo carrito persista en la sesión Odoo en la entrada búsqueda-first y que el 2.º turno ("catálogo") rutee directo al carrito, más limpieza quirúrgica de nodos muertos en los workflows ycloud.
