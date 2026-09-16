@@ -47,6 +47,22 @@ class ChatbotCartController(http.Controller):
         "\nAcciones: *quitar <producto>* · *cambiar <producto> a <cantidad>* · "
         "*ver carrito* · *pagar* · *cotización* · *vaciar* · *🏪 Volver al negocio*")
 
+    @staticmethod
+    def _lista_compacta_carrito(resumen):
+        """SPEC 53: listado compacto del carrito post-agregar (intangible IA:
+        líneas numeradas que el vendedor copia tal cual)."""
+        if not resumen.get('items'):
+            return "🛒 Tu carrito está vacío."
+        lineas = ["🛒 *Tu carrito:*"]
+        cop_show = resumen.get('show_cop')
+        for i, item in enumerate(resumen['items'], 1):
+            lineas.append(
+                f"{i}. {item['name']} x{item['qty']} — "
+                f"Bs. {item['subtotal_ves']:,.2f} / ${item['subtotal_usd']:,.2f}")
+            if cop_show:
+                lineas.append(f"   COP {item['subtotal_cop']:,.2f}")
+        return "\n".join(lineas)
+
     def _botones_carrito(self, carrito):
         """Botones interactivos dinámicos (SPEC 45/50): botón de salida siempre
         visible, máximo 3 (límite de WhatsApp). Con items se prioriza pagar
@@ -698,8 +714,10 @@ class ChatbotCartController(http.Controller):
                                        "No pude agregar ese producto. Intenta de nuevo.")
             producto = env['product.product'].sudo().browse(product_id)
             resumen = service.resumen(env, session_id)
-            texto = (f"✅ Agregué *{cantidad} x {producto.name}* al carrito. "
-                     f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}"
+            texto = (f"✅ Agregué *{cantidad} x {producto.name}* al carrito.\n"
+                     f"{self._lista_compacta_carrito(resumen)}"
+                     f"\n*Total: Bs. {resumen['total_ves']:,.2f} / "
+                     f"${resumen['total_usd']:,.2f}*"
                      f"{self._PREGUNTA_PAGO}"
                      f"{self._HINT_ACCIONES}")
             self._marcar_pendiente_pago(env, session_id)
