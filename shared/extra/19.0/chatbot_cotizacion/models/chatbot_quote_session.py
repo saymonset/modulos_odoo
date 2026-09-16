@@ -113,11 +113,13 @@ class ChatbotQuoteSession(models.Model):
                 'res_id': order.id,
                 'mimetype': 'application/pdf',
             })
+            from_email = (self.env.company.email or '').strip() or 'admin@integraia.lat'
             Mail.create({
                 'subject': f"Cotización {order.name}",
                 'body_html': (
                     f"<p>Adjunta tu cotización <b>{order.name}</b> con los "
                     "totales en Bs. y $.</p><p>¡Gracias por preferirnos!</p>"),
+                'email_from': from_email,
                 'email_to': email,
                 'attachment_ids': [(6, 0, [attachment.id])],
             }).send()
