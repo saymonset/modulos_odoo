@@ -42,10 +42,10 @@ class ChatbotCartController(http.Controller):
 
     _PREGUNTA_PAGO = " ¿Quieres pagar ya?"
 
-    # SPEC 52: pista de descubrimiento tras cada acción con items.
+    # SPEC 52/54: pista de descubrimiento tras cada acción con items.
     _HINT_ACCIONES = (
-        "\nAcciones: *quitar <producto>* · *cambiar <producto> a <cantidad>* · "
-        "*ver carrito* · *pagar* · *cotización* · *vaciar* · *🏪 Volver al negocio*")
+        "\nPista: *1 ➕* suma y *1 ➖* quita el producto de la lista · "
+        "también *pagar* · *cotización* · *vaciar* · *🏪 Volver al negocio*")
 
     @staticmethod
     def _lista_compacta_carrito(resumen):
@@ -64,13 +64,11 @@ class ChatbotCartController(http.Controller):
         return "\n".join(lineas)
 
     def _botones_carrito(self, carrito):
-        """Botones interactivos dinámicos (SPEC 45/50): botón de salida siempre
-        visible, máximo 3 (límite de WhatsApp). Con items se prioriza pagar
-        y se ofrece la cotización (SPEC 50)."""
-        boton_salir = '🏪 Volver al negocio'
+        """Botones interactivos dinámicos (SPEC 45/50/54): con items el foco
+        es el ajuste rápido ➕/➖ y pagar; se sale y cotiza por texto."""
         if carrito.get('items'):
-            return ['pagar', 'cotización', boton_salir]
-        return ['catálogo', 'ayuda', boton_salir]
+            return ['➕ Sumar', '➖ Quitar', 'pagar']
+        return ['catálogo', 'ayuda', '🏪 Volver al negocio']
 
     def _marcar_pendiente_pago(self, env, session_id):
         """SPEC 50: marca `pendiente_pago` tras mostrar el total con items.
@@ -179,10 +177,11 @@ class ChatbotCartController(http.Controller):
     # SPEC 54: número + signo — "1 ➕" suma, "1 ➖" resta; sin número operan
     # sobre el producto seleccionado. Determinista: la IA nunca ejecuta.
     _RE_MAS = re.compile(
-        r'^\s*(?:(\d{1,2})\s*➕\s*|➕\s*(\d{1,2})\s*➕?\s*|➕\s*|'
+        r'^\s*(?:(\d{1,2})\s*➕\s*|➕\s*(\d{1,2})\s*➕?\s*|➕\s*(?:sumar|suma)\s*|➕\s*|'
         r'(?:suma|sumar)\s+(\d{1,2})\s*|(?:suma|sumar)\s*)$', re.IGNORECASE)
     _RE_MENOS = re.compile(
-        r'^\s*(?:(\d{1,2})\s*(?:➖|-)\s*|(?:➖|-)\s*(\d{1,2})|➖\s*|'
+        r'^\s*(?:(\d{1,2})\s*(?:➖|-)\s*|(?:➖|-)\s*(\d{1,2})|'
+        r'(?:➖|-)\s*(?:quitar|resta|restar|menos)(?:\s+(\d{1,2}))?\s*|➖\s*|'
         r'(?:resta|restar|menos)\s+(\d{1,2})\s*|(?:resta|restar|menos)\s*)$',
         re.IGNORECASE)
     _QTY_PALABRA = {
