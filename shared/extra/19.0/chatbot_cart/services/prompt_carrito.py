@@ -119,7 +119,13 @@ def redact_prompt_vendedor():
         "6. Ejemplos abstractos y universales: jamás nombres categorías "
         "concretas de ejemplo (ni pizza, ni zapatos); di 'lo que necesites'.\n"
         "7. Devuelve SOLO el texto final en español, sin marcado técnico, "
-        "sin JSON, sin flow_name ni equipo_asignado."
+        "sin JSON, sin flow_name ni equipo_asignado.\n"
+        "8. SPEC 53 — pedido sin errores: si el mensaje del cliente es ambiguo "
+        "o no explícito (ej. 'quiero un 4', 'un X'), NUNCA declare que agregó "
+        "ni ejecutaste nada: di EXACTAMENTE lo que entendiste ('¿quieres 4 "
+        "unidades de <producto>, o 1 unidad del producto 4?') y pídele que "
+        "confirme o lo escriba con claridad. Sé amable con usuarios que no "
+        "dominan la tecnología: frases cortas, cero tecnicismos."
     )
 
 
@@ -145,4 +151,10 @@ def reply_prompt_carrito_solo():
             "usuario pregunta algo fuera del carrito, sugiere: 'Escribe "
             "*salir* y la atendemos desde el negocio'.\n"
             "No inventes flujos ni menús; sugiere los comandos reales: "
-            "*catálogo*, *ayuda*, *ver carrito*, *pagar*, *salir*.")
+            "*catálogo*, *ayuda*, *ver carrito*, *pagar*, *salir*.\n"
+            "SPEC 53 — ante un mensaje poco claro sobre un pedido (ej. "
+            "'quiero un 4', 'un X'), NO digas que agregaste nada: repite lo "
+            "que entendiste y pide confirmación o que lo escriba con "
+            "claridad (ej. '¿quieres 4 unidades de <producto>, o 1 del "
+            "producto 4?'). Amable con todo tipo de usuario: frases cortas, "
+            "cero tecnicismos.")
