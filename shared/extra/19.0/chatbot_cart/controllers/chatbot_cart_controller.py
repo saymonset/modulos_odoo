@@ -176,10 +176,30 @@ class ChatbotCartController(http.Controller):
         r'^\s*(?:dame|quiero|llévame|llevame|manda|necesito|asi|así)\s+'
         r'(?:un|una)?\s*(\d{1,2})\s*(?:unidades)?\s*$', re.IGNORECASE)
     _RE_AMBIGUO_ART = re.compile(r'^(?:un|una)\s+(\d{1,2})\s*$', re.IGNORECASE)
+    # SPEC 54: número + signo — "1 ➕" suma, "1 ➖" resta; sin número operan
+    # sobre el producto seleccionado. Determinista: la IA nunca ejecuta.
+    _RE_MAS = re.compile(
+        r'^\s*(?:(\d{1,2})\s*➕\s*|➕\s*(\d{1,2})\s*➕?\s*|➕\s*|'
+        r'(?:suma|sumar)\s+(\d{1,2})\s*|(?:suma|sumar)\s*)$', re.IGNORECASE)
+    _RE_MENOS = re.compile(
+        r'^\s*(?:(\d{1,2})\s*(?:➖|-)\s*|(?:➖|-)\s*(\d{1,2})|➖\s*|'
+        r'(?:resta|restar|menos)\s+(\d{1,2})\s*|(?:resta|restar|menos)\s*)$',
+        re.IGNORECASE)
     _QTY_PALABRA = {
         'un': 1, 'una': 1, 'dos': 2, 'tres': 3, 'cuatro': 4,
         'cinco': 5, 'seis': 6, 'siete': 7, 'ocho': 8, 'nueve': 9, 'diez': 10,
     }
+
+    @classmethod
+    def _decision_mas_menos(cls, valor):
+        """SPEC 54: acción +/- determinista. Devuelve ('SUMAR'|'RESTAR',
+        índice opcional referido al listado mostrado o al carrito) o None."""
+        txt = (valor or '').strip()
+        for accion, rex in (('SUMAR', cls._RE_MAS), ('RESTAR', cls._RE_MENOS)):
+            m = rex.match(txt)
+            if m:
+                return accion, next((g for g in m.groups() if g), None)
+        return None
 
     @classmethod
     def _decision_seleccion_numerica(cls, valor, ultima_busqueda):
@@ -393,6 +413,14 @@ class ChatbotCartController(http.Controller):
                 env, session_id, conversation_id, account_id, platform, valor)
             if resolucion is not None:
                 return self._json_response(resolucion)
+
+        # SPEC 54: número + signo / botones ➕ ➖ (determinista, sin IA)
+        mas_menos = self._decision_mas_menos(valor)
+        if mas_menos:
+            accion, signo_idx = mas_menos
+            return self._json_response(self._ajustar_cantidad(
+                env, session_id, conversation_id, account_id, platform,
+                accion, signo_idx, carrito))
 
         # SPEC 50: "no" en el turno del total => cotizar en vez de pagar.
         if carrito.get('pendiente_pago') and self._es_declinacion(valor):
@@ -727,6 +755,9 @@ class ChatbotCartController(http.Controller):
                                        "No pude agregar ese producto. Intenta de nuevo.")
             producto = env['product.product'].sudo().browse(product_id)
             resumen = service.resumen(env, session_id)
+            # SPEC 54: el agregado selecciona el producto (botones ➕/➖)
+            session._guardar_carrito(session_id, dict(
+                session._get_carrito(session_id), producto_seleccionado=product_id))
             texto = (f"✅ Agregué *{cantidad} x {producto.name}* al carrito.\n"
                      f"{self._lista_compacta_carrito(resumen)}"
                      f"\n*Total: Bs. {resumen['total_ves']:,.2f} / "
@@ -750,6 +781,11 @@ class ChatbotCartController(http.Controller):
             texto = (f"🗑️ Producto eliminado. "
                      f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}"
                      f"{self._HINT_ACCIONES}")
+            carrito = session._get_carrito(session_id)
+            if carrito.get('producto_seleccionado') == product_id:
+                # SPEC 54: eliminado ya no queda seleccionado
+                carrito.pop('producto_seleccionado', None)
+            session._guardar_carrito(session_id, carrito)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
                 self._redactar(env, texto, contexto={
@@ -765,6 +801,9 @@ class ChatbotCartController(http.Controller):
             return self._respuesta(session_id, conversation_id, account_id, platform,
                                    "Ese producto no está en tu carrito. Escribe *ver carrito* para revisar.")
         resumen = service.resumen(env, session_id)
+        # SPEC 54: el modificado selecciona el producto (botones ➕/➖)
+        session._guardar_carrito(session_id, dict(
+            session._get_carrito(session_id), producto_seleccionado=product_id))
         texto = (f"✏️ Cantidad actualizada a *{cantidad}*. "
                  f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}"
                  f"{self._HINT_ACCIONES}")
@@ -878,6 +917,127 @@ class ChatbotCartController(http.Controller):
             env, session_id, conversation_id, account_id, platform,
             eleccion.get('tipo', 'AGREGAR'), producto, cantidad,
             carrito.get('ultima_busqueda', []))
+
+    def _ajustar_cantidad(self, env, session_id, conversation_id, account_id,
+                          platform, accion, signo_idx, carrito):
+        """SPEC 54: suma/resta 1 unidad del producto referido (índice del
+        listado mostrado, del carrito o el producto seleccionado).
+
+        SUMAR respeta el inventario libre (free_qty) en productos con
+        stockeable (`type=='product'`); RESTAR a cero elimina el item.
+        """
+        session = env['chatbot.session'].sudo()
+        ultima_busqueda = carrito.get('ultima_busqueda', [])
+        product_id = None
+        if signo_idx is not None:
+            idx = int(signo_idx) - 1
+            if ultima_busqueda and 0 <= idx < len(ultima_busqueda):
+                product_id = ultima_busqueda[idx]['product_id']
+            else:
+                items_idx = carrito.get('items', [])
+                if 0 <= idx < len(items_idx):
+                    product_id = items_idx[idx]['product_id']
+            if not product_id:
+                texto = ("Ese número no está en la lista 😅. Escribe "
+                         "*catálogo* o *ver carrito* para ver qué hay.")
+                return self._respuesta(
+                    session_id, conversation_id, account_id, platform, texto)
+        else:
+            product_id = carrito.get('producto_seleccionado')
+            if not product_id:
+                items = carrito.get('items', [])
+                if not items:
+                    texto = ("Agrega algo primero con *catálogo* 😊. "
+                             "Después puedes sumar con el número y ➕.")
+                    return self._respuesta(
+                        session_id, conversation_id, account_id, platform, texto)
+                texto = ("¿A qué producto? Escribe el número y el signo "
+                         "(ej. *1 ➕* o *1 ➖*):\n"
+                         + self._lista_compacta_carrito(
+                             self.CART_SERVICE.resumen(env, session_id)))
+                return self._respuesta(
+                    session_id, conversation_id, account_id, platform, texto)
+
+        if not product_id or not env['product.product'].sudo().browse(
+                product_id).exists():
+            return self._respuesta(
+                session_id, conversation_id, account_id, platform,
+                "Ese producto ya no quedó disponible. Escribe *catálogo* para ver más.")
+        product = env['product.product'].sudo().browse(product_id)
+        carrito = session._get_carrito(session_id)
+        items = carrito.get('items', [])
+        actual = next(
+            (it['qty'] for it in items if it['product_id'] == product_id), 0)
+
+        if accion == 'SUMAR':
+            if product.type == 'product':
+                libre = max(int(product.free_qty or 0), 0)
+                if actual + 1 > libre:
+                    if libre <= 0:
+                        texto = (f"Sin inventario 😕 de *{product.name}*: no "
+                                 "quedan unidades disponibles ahora mismo.")
+                    else:
+                        texto = (f"Solo quedan {libre} de *{product.name}* "
+                                 "en inventario — te dejo como está.")
+                    return self._respuesta(
+                        session_id, conversation_id, account_id, platform,
+                        self._redactar(env, texto, contexto={
+                            'accion': 'SUMAR', 'producto': product.name,
+                            'resumen': self.CART_SERVICE.resumen(env, session_id)}))
+            resultado = self.CART_SERVICE.agregar(env, session_id, product_id, 1)
+            if not resultado.get('success'):
+                return self._respuesta(
+                    session_id, conversation_id, account_id, platform,
+                    "No pude agregar ese producto. Intenta de nuevo.")
+            self._marcar_pendiente_pago(env, session_id)
+            estado_txt = "Sumé 1"
+        else:
+            if not actual:
+                texto = (f"*{product.name}* no está en tu carrito 😊. "
+                         "Suma con *N ➕* desde el catálogo.")
+                return self._respuesta(
+                    session_id, conversation_id, account_id, platform, texto)
+            if actual == 1:
+                self.CART_SERVICE.quitar(env, session_id, product_id)
+                resumen = self.CART_SERVICE.resumen(env, session_id)
+                texto = (f"Quité *{product.name}* 🗑️.\n"
+                         f"{self._lista_compacta_carrito(resumen)}\n"
+                         f"{self._HINT_ACCIONES}")
+                if not resumen['items']:
+                    texto += "\nEscribe *catálogo* para elegir otra cosa."
+                carrito = session._get_carrito(session_id)
+                carrito['pendiente_pago'] = bool(resumen['items'])
+                session._guardar_carrito(session_id, carrito)
+                return self._respuesta(
+                    session_id, conversation_id, account_id, platform,
+                    self._redactar(env, texto, contexto={
+                        'accion': 'QUITAR', 'resumen': resumen,
+                        'producto': product.name}),
+                    extra={'botones': self._botones_carrito(resumen)})
+            resultado = self.CART_SERVICE.modificar(
+                env, session_id, product_id, actual - 1)
+            if not resultado.get('success'):
+                return self._respuesta(
+                    session_id, conversation_id, account_id, platform,
+                    "No pude actualizar la cantidad. Intenta de nuevo.")
+            self._marcar_pendiente_pago(env, session_id)
+            estado_txt = f"Ahora *{product.name} x{actual - 1}*."
+
+        carrito = session._get_carrito(session_id)
+        carrito['producto_seleccionado'] = product_id
+        session._guardar_carrito(session_id, carrito)
+        resumen = self.CART_SERVICE.resumen(env, session_id)
+        texto = (f"{estado_txt} 🛒\n"
+                 f"{self._lista_compacta_carrito(resumen)}"
+                 f"\n*Total: Bs. {resumen['total_ves']:,.2f} / "
+                 f"${resumen['total_usd']:,.2f}*"
+                 f"{self._PREGUNTA_PAGO}"
+                 f"{self._HINT_ACCIONES}")
+        return self._respuesta(
+            session_id, conversation_id, account_id, platform,
+            self._redactar(env, texto, contexto={
+                'accion': accion, 'producto': product.name, 'resumen': resumen}),
+            extra={'botones': ['➕ Sumar', '➖ Quitar', 'pagar']})
 
     def _offset_catalogo(self, env, session_id, producto_ref):
         """Devuelve el offset del catálogo según la paginación guardada.
