@@ -40,12 +40,9 @@ class ChatbotCartController(http.Controller):
     def _params(self):
         return json.loads(request.httprequest.data) if request.httprequest.data else {}
 
-    _PREGUNTA_PAGO = " ¿Quieres pagar ya?"
-
-    # SPEC 52/54: pista de descubrimiento tras cada acción con items.
-    _HINT_ACCIONES = (
-        "\nPista: *1 ➕* suma y *1 ➖* quita el producto de la lista · "
-        "también *pagar* · *cotización* · *vaciar* · *🏪 Volver al negocio*")
+    # Extensión SPEC 55: guía universal (sin productos inventados ni
+    # presión de pago); única fuente en CartService.GUIA_AJUSTES.
+    _HINT_ACCIONES = "\n" + CartService.GUIA_AJUSTES
 
     # SPEC 54: pie del catálogo/búsqueda — regla número + signo.
     _PISTA_MAS_MENOS = (
@@ -54,25 +51,32 @@ class ChatbotCartController(http.Controller):
 
     @staticmethod
     def _lista_compacta_carrito(resumen):
-        """SPEC 53: listado compacto del carrito post-agregar (intangible IA:
-        líneas numeradas que el vendedor copia tal cual)."""
+        """SPEC 53 / ext. 55: listado compacto con unidades, Σ total y guía
+        universal (intangible IA: el vendedor copia tal cual)."""
         if not resumen.get('items'):
             return "🛒 Tu carrito está vacío."
         lineas = ["🛒 *Tu carrito:*"]
         cop_show = resumen.get('show_cop')
         for i, item in enumerate(resumen['items'], 1):
             lineas.append(
-                f"{i}. {item['name']} x{item['qty']} — "
+                f"{i}. {item['name']} — {item['qty']} unid. — "
                 f"Bs. {item['subtotal_ves']:,.2f} / ${item['subtotal_usd']:,.2f}")
             if cop_show:
                 lineas.append(f"   COP {item['subtotal_cop']:,.2f}")
+        lineas.append(
+            f"Σ *Total: {resumen['total_unidades']} unid. en "
+            f"{resumen['count']} producto(s) — "
+            f"Bs. {resumen['total_ves']:,.2f} / ${resumen['total_usd']:,.2f}")
+        lineas.append(CartService.GUIA_AJUSTES)
         return "\n".join(lineas)
 
     def _botones_carrito(self, carrito):
         """Botones interactivos dinámicos (SPEC 45/50/54): con items el foco
         es el ajuste rápido ➕/➖ y pagar; se sale y cotiza por texto."""
         if carrito.get('items'):
-            return ['➕ Sumar', '➖ Quitar', 'pagar']
+            # Extensión SPEC 55: la salida a productos va en botón; el pago
+            # y la salida quedan en la guía de texto.
+            return ['➕ Sumar', '➖ Quitar', 'catálogo']
         return ['catálogo', 'ayuda', '🏪 Volver al negocio']
 
     def _marcar_pendiente_pago(self, env, session_id):
@@ -630,11 +634,16 @@ class ChatbotCartController(http.Controller):
                 return self._mostrar_catalogo(
                     env, session_id, conversation_id, account_id, platform,
                     offset=0, buscador_first=True)
-            texto = self.CART_SERVICE.formato_resumen_amigable(env, session_id) + self._PREGUNTA_PAGO + self._HINT_ACCIONES
+            # Extensión SPEC 55: listado EXACTO del motor con imágenes de los
+            # items (sin `_redactar`, lección SPEC 51) y guía universal.
+            texto = self.CART_SERVICE.formato_resumen_amigable(env, session_id)
             self._marcar_pendiente_pago(env, session_id)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
-                self._redactar(env, texto, contexto={'resumen': resumen}),
+                texto,
+                imagenes=self._imagenes_de_productos(
+                    self._productos_del_carrito(resumen),
+                    con_numeros=True, items_carrito=resumen['items']),
                 extra={'botones': self._botones_carrito(resumen)})
 
         if accion == 'CATALOGO':
@@ -836,12 +845,8 @@ class ChatbotCartController(http.Controller):
             # SPEC 54: el agregado selecciona el producto (botones ➕/➖)
             session._guardar_carrito(session_id, dict(
                 session._get_carrito(session_id), producto_seleccionado=product_id))
-            texto = (f"✅ Agregué *{cantidad} x {producto.name}* al carrito.\n"
-                     f"{self._lista_compacta_carrito(resumen)}"
-                     f"\n*Total: Bs. {resumen['total_ves']:,.2f} / "
-                     f"${resumen['total_usd']:,.2f}*"
-                     f"{self._PREGUNTA_PAGO}"
-                     f"{self._HINT_ACCIONES}")
+            texto = (f"✅ Agregué *{producto.name} ({cantidad} unid.)* al carrito.\n"
+                     f"{self._lista_compacta_carrito(resumen)}")
             self._marcar_pendiente_pago(env, session_id)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
@@ -1116,23 +1121,19 @@ class ChatbotCartController(http.Controller):
                     session_id, conversation_id, account_id, platform,
                     "No pude actualizar la cantidad. Intenta de nuevo.")
             self._marcar_pendiente_pago(env, session_id)
-            estado_txt = f"Ahora *{product.name} x{actual - 1}*."
+            estado_txt = f"Ahora *{product.name} ({actual - 1} unid.)*."
 
         carrito = session._get_carrito(session_id)
         carrito['producto_seleccionado'] = product_id
         session._guardar_carrito(session_id, carrito)
         resumen = self.CART_SERVICE.resumen(env, session_id)
         texto = (f"{estado_txt} 🛒\n"
-                 f"{self._lista_compacta_carrito(resumen)}"
-                 f"\n*Total: Bs. {resumen['total_ves']:,.2f} / "
-                 f"${resumen['total_usd']:,.2f}*"
-                 f"{self._PREGUNTA_PAGO}"
-                 f"{self._HINT_ACCIONES}")
+                 f"{self._lista_compacta_carrito(resumen)}")
         return self._respuesta(
             session_id, conversation_id, account_id, platform,
             self._redactar(env, texto, contexto={
                 'accion': accion, 'producto': product.name, 'resumen': resumen}),
-            extra={'botones': ['➕ Sumar', '➖ Quitar', 'pagar']})
+            extra={'botones': self._botones_carrito(carrito)})
 
     def _offset_catalogo(self, env, session_id, producto_ref):
         """Devuelve el offset del catálogo según la paginación guardada.
@@ -1188,6 +1189,25 @@ class ChatbotCartController(http.Controller):
             extra={'botones': self._botones_carrito(carrito)})
 
     @staticmethod
+    def _productos_del_carrito(resumen):
+        """Extensión SPEC 55: dicts de producto de los items del carrito para
+        reusar `_imagenes_de_productos` (imagen + caption con unid./subtotal)."""
+        productos = []
+        for item in resumen['items']:
+            productos.append({
+                'product_id': item['product_id'],
+                'name': item['name'],
+                'description': '',
+                'price_ves': item.get('subtotal_ves', 0.0),
+                'price_usd': item.get('subtotal_usd', 0.0),
+                'price_cop': item.get('subtotal_cop', 0.0),
+                'show_cop': resumen.get('show_cop'),
+                'image_url': item.get('image_url', ''),
+                'has_image': bool(item.get('image_url')),
+            })
+        return productos
+
+    @staticmethod
     def _imagenes_de_productos(productos, con_numeros=False, items_carrito=None):
         """SPEC 39/52/54/55: imágenes del catálogo/búsqueda como media-messages.
 
@@ -1212,10 +1232,12 @@ class ChatbotCartController(http.Controller):
                 caption += f" / COP ${p['price_cop']:,.2f}"
             qty = en_carrito.get(p.get('product_id'))
             if qty:
-                caption += f"\n🛒 en tu carrito: {qty}"
+                caption += f"\n🛒 en tu carrito: {qty} unid."
             if items_carrito:
+                unidades = sum(it.get('qty', 0) for it in items_carrito)
                 caption += (
-                    f"\n🛒 Llevas {len(items_carrito)} items (${total_usd:,.2f})")
+                    f"\n🛒 Tu carrito: {unidades} unid. en "
+                    f"{len(items_carrito)} producto(s) — ${total_usd:,.2f}")
             imagenes.append({'link': p['image_url'], 'caption': caption})
         return imagenes
 
@@ -1272,8 +1294,8 @@ class ChatbotCartController(http.Controller):
         if self._es_declinacion_cotizacion(valor):
             self._limpiar_flags_cotizacion(env, session_id)
             carrito = session._get_carrito(session_id)
-            texto = ("Cancelé la cotización. Tu carrito queda guardado 🛒 "
-                     "¿Quieres pagar ya? También puedes seguir viendo el catálogo.")
+            texto = ("Cancelé la cotización. Tu carrito queda guardado 🛒\n"
+                     + CartService.GUIA_AJUSTES)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
                 self._redactar(env, texto, contexto={'accion': 'COTIZACION', 'etapa': 'cancelada'}),
@@ -1390,8 +1412,8 @@ class ChatbotCartController(http.Controller):
         if not self._es_afirmacion(valor):
             if self._es_declinacion_cotizacion(valor):
                 self._limpiar_flags_cotizacion(env, session_id)
-                texto = ("Cancelé la cotización. Tu carrito queda guardado 🛒 "
-                         "¿Quieres pagar ya? También puedes seguir viendo el catálogo.")
+                texto = ("Cancelé la cotización. Tu carrito queda guardado 🛒\n"
+                         + CartService.GUIA_AJUSTES)
                 carrito = session._get_carrito(session_id)
                 return self._respuesta(
                     session_id, conversation_id, account_id, platform,

@@ -172,6 +172,9 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
         False cuando el mensaje es ambiguo (la IA puede clasificarlo).
         """
         t = texto.lower().strip()
+        # Extensión SPEC 55: tolerancia a símbolos pegados a las letras
+        # ("ver carri`to", "carrito!"): se comparan solo letras/números.
+        t = re.sub(r'[^a-z0-9áéíóúñü\s]', '', t)
         cantidad = ClasificarAccionCarritoUseCase._extraer_cantidad(t)
 
         if any(p in t for p in _PALABRAS_VACIAR):

@@ -97,7 +97,7 @@ class TestCapturaGuiada(BaseChatbotCartTestCase):
         self.env['chatbot.session'].sudo()._guardar_carrito(self.session_id, carrito)
         resp = controller._resolver_pendiente_confirmar(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', '1')
-        self.assertIn('Agregué *4 x Camisa Roja*', resp['texto_para_usuario'])
+        self.assertIn('Agregué *Camisa Roja (4 unid.)*', resp['texto_para_usuario'])
         self.assertIn('Tu carrito:', resp['texto_para_usuario'])
         self.assertNotIn('pendiente_confirmar', self._carrito_flags())
         carrito = self._carrito_flags()
@@ -155,10 +155,10 @@ class TestCapturaGuiada(BaseChatbotCartTestCase):
                 'AGREGAR', 'CAM-R', 2, [])
         texto = resp['texto_para_usuario']
         self.assertIn('Tu carrito:', texto)
-        self.assertIn('1. Camisa Roja x2', texto)
+        self.assertIn('1. Camisa Roja — 2 unid.', texto)
         self.assertIn('Bs. 260.00', texto)
-        self.assertIn('1 ➕', texto)
-        self.assertIn('1 ➖', texto)
+        self.assertIn('➕', texto)
+        self.assertIn('➖', texto)
 
     def test_09_lista_compacta_con_cop(self):
         self._configurar_tasas(bcv_rate=20.0, cop_rate=1200.0, cop_show=True)
@@ -166,5 +166,5 @@ class TestCapturaGuiada(BaseChatbotCartTestCase):
         from odoo.addons.chatbot_cart.services.cart_service import CartService
         resumen = CartService().resumen(self.env, self.session_id)
         lista = self._controller()._lista_compacta_carrito(resumen)
-        self.assertIn('1. Camisa Roja x2', lista)
+        self.assertIn('1. Camisa Roja — 2 unid.', lista)
         self.assertIn('COP', lista)

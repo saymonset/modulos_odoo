@@ -11,6 +11,13 @@ _COP_SHOW_KEY = 'cop_show_fields'
 class CartService:
     """Operaciones CRUD y resumen sobre el carrito JSON de la sesión."""
 
+    # Extensión SPEC 55: guía universal sin productos inventados ni
+    # presión de pago (el pie es copia exacta de lo que ve el vendedor IA).
+    GUIA_AJUSTES = (
+        "¿Quieres algo más? Escribe lo que buscas o toca *catálogo* 🛍️\n"
+        "Ajustar: responde el número con ➕ para sumar o ➖ para quitar.\n"
+        "*pagar* cuando termines · *salir* para volver al negocio")
+
     # ==================================================================
     #  TIENDA ONLINE (SPEC 46)
     # ==================================================================
@@ -223,23 +230,30 @@ class CartService:
             'bcv_rate': rates[_RATE_BCV_KEY],
             'cop_rate': rates[_RATE_COP_KEY] if rates[_COP_SHOW_KEY] else 0.0,
             'count': len(items),
+            # Extensión SPEC 55: unidades reales (suma de qty), no líneas.
+            'total_unidades': sum(item.get('qty', 0) for item in items),
         }
         return resumen
 
     def formato_resumen_amigable(self, env, session_id):
-        """Renderiza el resumen como texto listo para enviar al usuario."""
+        """Extensión SPEC 55: resumen visual con unidades y guía universal."""
         resumen = self.resumen(env, session_id)
         if not resumen['items']:
             return "🛒 Tu carrito está vacío. Escribe *carrito* para ver las acciones disponibles."
         lines = ["🛒 *Tu carrito:*", ""]
         for i, item in enumerate(resumen['items'], 1):
-            lines.append(f"{i}. {item['name']} x{item['qty']} — Bs. {item['subtotal_ves']:,.2f} / ${item['subtotal_usd']:,.2f}")
+            lines.append(
+                f"{i}. {item['name']} — {item['qty']} unid. — "
+                f"Bs. {item['subtotal_ves']:,.2f} / ${item['subtotal_usd']:,.2f}")
             if resumen['show_cop']:
                 lines.append(f"   COP {item['subtotal_cop']:,.2f}")
         lines.append("")
-        lines.append(f"*Total: Bs. {resumen['total_ves']:,.2f} / ${resumen['total_usd']:,.2f}")
+        lines.append(
+            f"Σ *Total: {resumen['total_unidades']} unid. en "
+            f"{resumen['count']} producto(s) — "
+            f"Bs. {resumen['total_ves']:,.2f} / ${resumen['total_usd']:,.2f}")
         if resumen['show_cop']:
             lines.append(f"Total COP: ${resumen['total_cop']:,.2f}")
         lines.append("")
-        lines.append("Opciones: *ver carrito*, *agregar 2 camisas*, *quitar 1*, *cambiar 1 a 3*, *pagar*, *ayuda*, *cancelar*.")
+        lines.append(CartService.GUIA_AJUSTES)
         return "\n".join(lines)

@@ -129,3 +129,48 @@ de menú de `chatbot.config` (ya determinista, con fallback sin IA).
 - Cambios al subflow n8n (SPEC 44).
 
 Cada uno de esos, si llega, va en su propia spec.
+
+## Extensión B (16/9) — Ver carrito visual, unidades claras y guía universal
+
+Casos reales Teresa/Simon (16/9): (a) "ver carri`to" con backtick no matchea el
+fallback determinista → la IA responde relleno "Déjame procesar eso" sin mostrar
+el carrito; (b) "ver carrito" exitoso pasa por `_redactar` IA y diluye el
+listado; (c) las vistas del carrito no dan salida a buscar más productos
+(botones `➕ Sumar/➖ Quitar/pagar`) y el pie hardcodeado dice "*agregar 2
+camisas*" en cualquier negocio; (d) "x2" y "Llevas 1 items" no comunican la
+cantidad real.
+
+**In (extensión):**
+
+1. **Sanitización de typos (determinista):** en `_clasificar_fallback`, quitar
+   caracteres no alfabéticos (`[^\w\s]`) del texto ANTES del match por substring
+   → "ver carri`to" = "carrito" (CONSULTAR), sin IA ni fuzzy.
+2. **CONSULTAR (ver carrito) con items:** texto EXACTO del motor (sin
+   `_redactar`, lección SPEC 51) + imágenes de los items del carrito con
+   caption `N. Nombre — M unid. — subtotal Bs. X / $Y` + `Σ Total: N productos
+   (M unid.) — Bs. X / $Y`.
+3. **Unidades claras:** `CartService.resumen` agrega `total_unidades` (suma de
+   qty; `count` intacto). Líneas: "x2" → "2 unid."; caption de imagen
+   (SPEC 55): "🛒 Tu carrito: N productos (M unid.) — $Y" (deja "Llevas N
+   items", que contaba líneas).
+4. **Guía universal:** pie único tras carrito/agregar con salida a productos y
+   pago, sin productos inventados: "¿Quieres algo más? Escribe lo que buscas o
+   toca *catálogo* 🛍️ · *pagar* cuando termines · *salir* para volver al
+   negocio". Reemplaza el "¿Quieres pagar ya?"/"agregar 2 camisas" (leaked
+   de `cart_service.py:244` y `_PREGUNTA_PAGO`).
+5. **Botones con items:** `['➕ Sumar', '➖ Quitar', 'catálogo']` — el pago
+   queda por texto/pie; la búsqueda vuelve a estar a un botón de distancia.
+   Nota: WhatsApp no permite botones por imagen; ➕/➖ sigue via "número ➕/➖"
+   (SPEC 54) explicado en el pie.
+
+**Out (extensión):** botones por imagen (no existe en WhatsApp API), fuzzy
+matching adicional, checkout.
+
+- [ ] "ver carri`to" (y variantes con símbolos) clasifica CONSULTAR de forma
+      determinista (sin IA).
+- [ ] "ver carrito" con items: texto exacto del motor + imágenes de los items
+      con unid. y subtotal + Σ Total con unidades; jamás pasa por `_redactar`.
+- [ ] Ningún template del carrito menciona productos inventados ("camisas").
+- [ ] Botones con items = ['➕ Sumar', '➖ Quitar', 'catálogo']; cap 3.
+- [ ] `resumen.total_unidades` correcto; captions usan productos+unidades.
+- [ ] Suites `chatbot_cart` en verde; bump `19.0.1.13.0`.

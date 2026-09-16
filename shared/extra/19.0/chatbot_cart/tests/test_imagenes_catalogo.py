@@ -82,7 +82,8 @@ class TestImagenesCatalogo(BaseChatbotCartTestCase):
         imagenes = ChatbotCartController._imagenes_de_productos(
             productos, items_carrito=[
                 {'product_id': 99, 'qty': 2, 'price_usd': 5.0}])
-        self.assertIn('\n🛒 Llevas 1 items ($10.00)', imagenes[0]['caption'])
+        self.assertIn('\n🛒 Tu carrito: 2 unid. en 1 producto(s) — $10.00',
+                      imagenes[0]['caption'])
 
     def test_05_caption_con_cop(self):
         productos = [
