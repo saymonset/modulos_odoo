@@ -16,6 +16,11 @@ class TestReciboPago(BaseChatbotCartTestCase):
         self.controller = ChatbotCartController()
         self.cart = CartService()
         self.cart.agregar(self.env, self.session_id, self.product_a.id, 1)
+        # Tests deterministas: sin datos de pago pre-existentes en la config
+        # activa (el DB de test puede traer la config real del negocio).
+        active = self.env['chatbot.config'].sudo()._get_active_config()
+        if active:
+            active.write({'payment_instructions': ''})
 
     # --- recibo con items ---
 
