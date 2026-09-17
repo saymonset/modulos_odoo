@@ -69,12 +69,13 @@ class TestImagenesCatalogo(BaseChatbotCartTestCase):
         self.assertEqual(imagenes[0]['caption'],
                          'Pizza — Bs. 10,106.48 / $12.00')
 
-    def test_04b_caption_con_total_carrito(self):
-        # SPEC 55: caption agrega total de items y valor del carrito.
+    def test_04b_caption_sin_total_duplicado(self):
+        # SPEC 57: el total del carrito NO se repite en cada caption; solo
+        # el estado del producto individual (si está en el carrito).
         productos = [
             {'name': 'Pizza', 'price_ves': 10106.48, 'price_usd': 12.0,
              'price_cop': 0.0, 'show_cop': False, 'has_image': True,
-             'image_url': 'https://x/img'},
+             'image_url': 'https://x/img', 'product_id': 99},
         ]
         from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (
             ChatbotCartController,
@@ -82,8 +83,8 @@ class TestImagenesCatalogo(BaseChatbotCartTestCase):
         imagenes = ChatbotCartController._imagenes_de_productos(
             productos, items_carrito=[
                 {'product_id': 99, 'qty': 2, 'price_usd': 5.0}])
-        self.assertIn('\n🛒 Tu carrito: 2 unid. en 1 producto(s) — $10.00',
-                      imagenes[0]['caption'])
+        self.assertIn('\n🛒 en tu carrito: 2 unid.', imagenes[0]['caption'])
+        self.assertNotIn('Tu carrito: 2 unid. en 1 producto(s)', imagenes[0]['caption'])
 
     def test_05_caption_con_cop(self):
         productos = [

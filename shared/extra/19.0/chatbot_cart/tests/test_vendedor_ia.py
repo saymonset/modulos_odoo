@@ -67,7 +67,7 @@ class TestVendedorIA(BaseChatbotCartTestCase):
         self.assertEqual(self._carrito_flags()['items'][0]['product_id'], self.product_a.id)
 
     def test_04_wire_redaccion_ia_en_agregar(self):
-        """El controller pasa el texto del motor por el servicio del vendedor."""
+        """SPEC 57: AGREGAR ya NO pasa por `_redactar` (IA) — texto determinista."""
         import odoo.addons.chatbot_cart.controllers.chatbot_cart_controller as ctrl
         from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import (
             ChatbotCartController,
@@ -78,7 +78,9 @@ class TestVendedorIA(BaseChatbotCartTestCase):
                 resp = self._controller()._ejecutar_item(
                     self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
                     'AGREGAR', 'CAM-R', 1, [])
-        self.assertTrue(resp['texto_para_usuario'].startswith('IA['))
+        # El texto es el del motor, NO el del servicio IA
+        self.assertFalse(resp['texto_para_usuario'].startswith('IA['))
+        self.assertIn('Agregué *Camisa Roja (1 unid.)*', resp['texto_para_usuario'])
 
     # --- cierre ¿quieres pagar ya? + botones ---
 
@@ -103,8 +105,10 @@ class TestVendedorIA(BaseChatbotCartTestCase):
                 self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
                 'CONSULTAR', '', 0, [])
         texto = resp['texto_para_usuario']
-        self.assertIn('Σ *Total:', texto)
-        self.assertIn('unid.', texto)
+        # SPEC 57: texto mínimo con total; el detalle va en la List Message
+        self.assertIn('unid. en', texto)
+        self.assertIn('$', texto)
+        self.assertIn('lista_carrito', resp)
         self.assertNotIn('¿Quieres pagar ya?', texto)
         # SPEC 56: con items el 3er botón es Pagar (catálogo por texto)
         self.assertEqual(resp['botones'], ['➕ Sumar', '➖ Quitar', '💳 Pagar'])
@@ -354,9 +358,9 @@ class TestVendedorIA(BaseChatbotCartTestCase):
             resp = self._controller()._ejecutar(
                 self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
                 'CONSULTAR', '', 0, [])
-        texto = resp['texto_para_usuario']
-        self.assertIn('Ajustar:', texto)
-        self.assertIn('pagar', texto)
+        # SPEC 57: el detalle y la guía van en la List Message / botones
+        self.assertIn('lista_carrito', resp)
+        self.assertIn('💳 Pagar', resp['botones'])
 
     def test_14_cotizacion_sin_servicio_responde_amable_y_sale(self):
         self._agregar_producto(self.product_a.id, qty=1)

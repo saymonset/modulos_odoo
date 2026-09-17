@@ -167,11 +167,11 @@ class TestAjusteCarrito(BaseChatbotCartTestCase):
         productos = self._lista_ejemplo()
         caps = {c['caption'] for c in controller._imagenes_de_productos(
             productos, con_numeros=True, items_carrito=carrito.get('items'))}
-        # producto 1 (Camisa Roja) con qty, producto 2 sin (SPEC 55 ext.:
-        # métrica productos + unidades, ambos captions llevan el total)
+        # producto 1 (Camisa Roja) con qty, producto 2 sin (SPEC 57: el total
+        # NO va en cada caption; solo el estado del producto individual)
         self.assertTrue(any('🛒 en tu carrito: 3 unid.' in c for c in caps
                             if c.startswith('1.')))
-        self.assertTrue(any('🛒 Tu carrito: ' in c for c in caps))
+        self.assertFalse(any('🛒 Tu carrito: ' in c for c in caps))
 
     def test_11_pista_mas_menos_en_busqueda(self):
         controller = self._controller()

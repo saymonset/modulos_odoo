@@ -106,15 +106,17 @@ class TestSpec55SalidaBienvenida(BaseChatbotCartTestCase):
 
     # --- caption con total del carrito ---
 
-    def test_08_captions_destacados_llevan_total(self):
+    def test_08_captions_destacados_sin_total_duplicado(self):
         self._agregar_producto(self.product_a.id, qty=2)
         resp = self.controller._ejecutar(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
             'CATALOGO', '', 0, [])
-        caption_con_total = [
-            c['caption'] for c in resp['imagenes']
-            if '🛒 Tu carrito: ' in c['caption']]
-        self.assertTrue(caption_con_total)
+        # SPEC 57: el total del carrito ya no se repite en cada caption
+        captions = [c['caption'] for c in resp['imagenes']]
+        self.assertTrue(captions)
+        self.assertFalse(any('🛒 Tu carrito: ' in c for c in captions))
+        # el estado por producto (SPEC 54) se prueba directo en
+        # test_ajuste_carrito.test_10 y test_imagenes_catalogo.test_04b
 
 
 @tagged("-at_install", "post_install")
@@ -139,19 +141,23 @@ class TestSpec55VerCarritoVisual(BaseChatbotCartTestCase):
                 ClasificarAccionCarritoUseCase._clasificar_fallback(typo)[0]['accion'],
                 'CONSULTAR', f'"{typo}" debe ser CONSULTAR')
 
-    def test_02_ver_carrito_con_items_texto_exacto_e_imagenes(self):
+    def test_02_ver_carrito_con_items_lista_interactiva(self):
         self._agregar_producto(self.product_a.id, qty=2)
         resp = self.controller._ejecutar(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
             'CONSULTAR', '', 0, [])
         texto = resp['texto_para_usuario']
-        # listado EXACTO del motor (sin reflow IA): unid. + Σ total
-        self.assertIn('1. Camisa Roja — 2 unid. —', texto)
-        self.assertIn('Σ *Total: 2 unid. en 1 producto(s)', texto)
+        # SPEC 57: texto mínimo con total; el detalle va en la List Message
+        self.assertIn('2 unid. en 1 producto(s)', texto)
         self.assertNotIn('¿Quieres pagar ya?', texto)
-        self.assertIn('¿Quieres algo más?', texto)
-        # imágenes del carrito con la métrica productos+unidades
-        self.assertTrue(resp['imagenes'])
+        self.assertNotIn('¿Quieres algo más?', texto)
+        # lista interactiva del carrito (sin imágenes por item)
+        lista = resp['lista_carrito']
+        filas = lista['sections'][0]['rows']
+        self.assertEqual(len(filas), 1)
+        self.assertEqual(filas[0]['id'], 'modificar_1')
+        self.assertIn('2 unid.', filas[0]['description'])
+        self.assertEqual(resp['imagenes'], [])
 
     def test_03_resumen_lleva_total_unidades(self):
         self._agregar_producto(self.product_a.id, qty=2)

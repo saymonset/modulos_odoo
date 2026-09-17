@@ -210,6 +210,22 @@ class ChatbotCartController(http.Controller):
         lineas = [l.strip() for l in txt.split('\n') if l.strip()]
         return cls._match_mas_menos(lineas[-1] if lineas else txt)
 
+    @staticmethod
+    def _decision_fila_lista(valor):
+        """SPEC 57: tap en una fila de la List Message del carrito.
+
+        Devuelve ('MODIFICAR', N) para `modificar_N` (cambiar cantidad del
+        item N) o ('MAS', None) para la fila "… y N más". None si no es una
+        fila del carrito.
+        """
+        txt = (valor or '').strip().lower()
+        m = re.match(r'^modificar_(\d{1,2})$', txt)
+        if m:
+            return 'MODIFICAR', m.group(1)
+        if txt == 'mas':
+            return 'MAS', None
+        return None
+
     @classmethod
     def _match_mas_menos(cls, linea):
         for accion, rex in (('SUMAR', cls._RE_MAS), ('RESTAR', cls._RE_MENOS)):
@@ -497,6 +513,20 @@ class ChatbotCartController(http.Controller):
                 env, session_id, conversation_id, account_id, platform,
                 accion, signo_idx, carrito))
 
+        # SPEC 57: tap en una fila de la List Message del carrito.
+        fila = self._decision_fila_lista(valor)
+        if fila:
+            accion, ref = fila
+            if accion == 'MODIFICAR':
+                return self._json_response(self._ejecutar_item(
+                    env, session_id, conversation_id, account_id, platform,
+                    'MODIFICAR', ref, 0, []))
+            # MAS: pagina la siguiente tanda de items (10 por mensaje)
+            offset = int(carrito.get('offset_carrito', 0) or 0)
+            return self._json_response(self._consultar_carrito_mas(
+                env, session_id, conversation_id, account_id, platform,
+                offset + 10))
+
         # SPEC 50: "no" en el turno del total => cotizar en vez de pagar.
         if carrito.get('pendiente_pago') and self._es_declinacion(valor):
             return self._json_response(self._pedir_email_cotizacion(
@@ -625,6 +655,38 @@ class ChatbotCartController(http.Controller):
                 session_id, conversation_id, account_id, platform,
                 texto_generico, extra=extra)
 
+    def _ver_carrito(self, env, session_id, conversation_id, account_id,
+                     platform, offset=0):
+        """SPEC 57: muestra el carrito como List Message paginada.
+
+        Guarda el offset en la sesión para que "mas" pagina la siguiente tanda
+        de items (máx. 10 filas por mensaje).
+        """
+        session = env['chatbot.session'].sudo()
+        resumen = self.CART_SERVICE.resumen(env, session_id)
+        self._marcar_pendiente_pago(env, session_id)
+        carrito = session._get_carrito(session_id)
+        carrito['offset_carrito'] = offset
+        session._guardar_carrito(session_id, carrito)
+        texto = (
+            f"🛒 *Tu carrito* — {resumen['total_unidades']} unid. en "
+            f"{resumen['count']} producto(s)\n"
+            f"Bs. {resumen['total_ves']:,.2f} / ${resumen['total_usd']:,.2f}"
+        )
+        return self._respuesta(
+            session_id, conversation_id, account_id, platform,
+            texto,
+            extra={'botones': self._botones_carrito(resumen),
+                   'lista_carrito': self._lista_interactiva_carrito(
+                       resumen, offset=offset),
+                   'resumen_carrito': self._resumen_carrito_dict(resumen)})
+
+    def _consultar_carrito_mas(self, env, session_id, conversation_id,
+                               account_id, platform, offset):
+        """SPEC 57: pagina la siguiente tanda de items del carrito."""
+        return self._ver_carrito(
+            env, session_id, conversation_id, account_id, platform, offset)
+
     def _ejecutar(self, env, session_id, conversation_id, account_id, platform,
                   accion, producto_ref, cantidad, ultima_busqueda):
         """Ejecuta la acción clasificada sobre el carrito."""
@@ -656,18 +718,11 @@ class ChatbotCartController(http.Controller):
                 return self._mostrar_catalogo(
                     env, session_id, conversation_id, account_id, platform,
                     offset=0, buscador_first=True)
-            # Extensión SPEC 55: listado EXACTO del motor con imágenes de los
-            # items (sin `_redactar`, lección SPEC 51) y guía universal.
-            texto = self.CART_SERVICE.formato_resumen_amigable(env, session_id)
-            self._marcar_pendiente_pago(env, session_id)
-            return self._respuesta(
-                session_id, conversation_id, account_id, platform,
-                texto,
-                imagenes=self._imagenes_de_productos(
-                    self._productos_del_carrito(resumen),
-                    con_numeros=True, items_carrito=resumen['items']),
-                extra={'botones': self._botones_carrito(resumen),
-                       'resumen_carrito': self._resumen_carrito_dict(resumen)})
+            # SPEC 57: el carrito se ve como WhatsApp List Message (filas
+            # Nombre — Qty — Subtotal) en vez de texto + imágenes por item.
+            return self._ver_carrito(
+                env, session_id, conversation_id, account_id, platform,
+                offset=0)
 
         if accion == 'CATALOGO':
             # SPEC 49: "catálogo" explícito muestra SIEMPRE la lista paginada
@@ -867,6 +922,22 @@ class ChatbotCartController(http.Controller):
                     f"{hint}")
         return ''
 
+    @staticmethod
+    def _texto_agregar(nombre_producto, cantidad, resumen):
+        """SPEC 57: respuesta de AGREGAR minimalista y directa.
+
+        "✅ N unid. de X agregado. Total: $Y. 💳 Pagar o sigue buscando."
+        Sin saludo, sin resumen numerado (el usuario solo quiere confirmación).
+        """
+        cop_linea = (
+            f" / COP ${resumen.get('total_cop', 0.0):,.2f}"
+            if resumen.get('show_cop') else '')
+        return (
+            f"✅ *{cantidad} unid. de {nombre_producto}* agregado.\n"
+            f"Total: Bs. {resumen['total_ves']:,.2f} / ${resumen['total_usd']:,.2f}"
+            f"{cop_linea}\n"
+            "Toca *💳 Pagar* o sigue buscando.")
+
     def _ejecutar_item(self, env, session_id, conversation_id, account_id, platform,
                        accion, producto_ref, cantidad, ultima_busqueda):
         """Ejecuta AGREGAR/QUITAR/MODIFICAR sobre un producto del carrito."""
@@ -889,8 +960,7 @@ class ChatbotCartController(http.Controller):
             # SPEC 54: el agregado selecciona el producto (botones ➕/➖)
             session._guardar_carrito(session_id, dict(
                 session._get_carrito(session_id), producto_seleccionado=product_id))
-            texto = (f"✅ Agregué *{producto.name} ({cantidad} unid.)* al carrito.\n"
-                     f"{self._lista_compacta_carrito(resumen)}")
+            texto = self._texto_agregar(producto.name, cantidad, resumen)
             self._marcar_pendiente_pago(env, session_id)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
@@ -926,13 +996,11 @@ class ChatbotCartController(http.Controller):
         # SPEC 54: el modificado selecciona el producto (botones ➕/➖)
         session._guardar_carrito(session_id, dict(
             session._get_carrito(session_id), producto_seleccionado=product_id))
-        texto = (f"✏️ Cantidad actualizada a *{cantidad}*. "
-                 f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}"
-                 f"{self._HINT_ACCIONES}")
         return self._respuesta(
             session_id, conversation_id, account_id, platform,
-            self._redactar(env, texto, contexto={
-                'accion': 'MODIFICAR', 'cantidad': cantidad, 'resumen': resumen}),
+            self._texto_operacion(
+                'MODIFICAR', cantidad=cantidad, resumen=resumen,
+                hint=self._HINT_ACCIONES),
             extra={'botones': self._botones_carrito(resumen)})
 
     def _preguntar_agregado_ambiguo(self, env, session_id, conversation_id,
@@ -1119,10 +1187,7 @@ class ChatbotCartController(http.Controller):
                     texto = (f"Solo quedan {libre} de *{product.name}* "
                              "en inventario — te dejo como está.")
                 return self._respuesta(
-                    session_id, conversation_id, account_id, platform,
-                    self._redactar(env, texto, contexto={
-                        'accion': 'SUMAR', 'producto': product.name,
-                        'resumen': self.CART_SERVICE.resumen(env, session_id)}))
+                    session_id, conversation_id, account_id, platform, texto)
             resultado = self.CART_SERVICE.agregar(env, session_id, product_id, 1)
             if not resultado.get('success'):
                 return self._respuesta(
@@ -1149,9 +1214,7 @@ class ChatbotCartController(http.Controller):
                 session._guardar_carrito(session_id, carrito)
                 return self._respuesta(
                     session_id, conversation_id, account_id, platform,
-                    self._redactar(env, texto, contexto={
-                        'accion': 'QUITAR', 'resumen': resumen,
-                        'producto': product.name}),
+                    texto,
                     extra={'botones': self._botones_carrito(resumen)})
             resultado = self.CART_SERVICE.modificar(
                 env, session_id, product_id, actual - 1)
@@ -1170,8 +1233,7 @@ class ChatbotCartController(http.Controller):
                  f"{self._lista_compacta_carrito(resumen)}")
         return self._respuesta(
             session_id, conversation_id, account_id, platform,
-            self._redactar(env, texto, contexto={
-                'accion': accion, 'producto': product.name, 'resumen': resumen}),
+            texto,
             extra={'botones': self._botones_carrito(carrito)})
 
     def _offset_catalogo(self, env, session_id, producto_ref):
@@ -1245,6 +1307,38 @@ class ChatbotCartController(http.Controller):
                 'has_image': bool(item.get('image_url')),
             })
         return productos
+
+    @staticmethod
+    def _lista_interactiva_carrito(resumen, offset=0):
+        """SPEC 57: WhatsApp List Message con los items del carrito.
+
+        Cada fila: `Nombre — Qty — Subtotal`. Máx. 10 filas por mensaje
+        (límite WhatsApp); con más items se pagina con `mas` (fila que deja
+        ver la siguiente tanda). El id de la fila (`modificar_N`) deja tocar
+        la cantidad desde la lista.
+        """
+        MAX_FILAS = 10
+        items = resumen.get('items', [])
+        ventana = items[offset:offset + MAX_FILAS]
+        rows = []
+        for i, item in enumerate(ventana, offset + 1):
+            subtotal = item.get('subtotal_usd', 0.0)
+            title = f"{i}. {item['name']}"
+            rows.append({
+                'id': f"modificar_{i}",
+                'title': title[:24].rstrip(),
+                'description': f"{item.get('qty', 0)} unid. — ${subtotal:,.2f}",
+            })
+        if offset + MAX_FILAS < len(items):
+            rows.append({
+                'id': 'mas',
+                'title': f"… y {len(items) - (offset + MAX_FILAS)} más",
+                'description': f"Total ${resumen.get('total_usd', 0.0):,.2f}",
+            })
+        return {
+            'button': 'Ver carrito',
+            'sections': [{'title': 'Tu carrito', 'rows': rows}],
+        }
 
     @staticmethod
     def _imagenes_de_productos(productos, con_numeros=False, items_carrito=None):
@@ -1689,9 +1783,7 @@ class ChatbotCartController(http.Controller):
         )
         return self._respuesta(
             session_id, conversation_id, account_id, platform,
-            self._redactar(env, texto, contexto={
-                'accion': 'PAGAR', 'order_name': order.name, 'resumen': resumen,
-                'datos_pago': (self._seccion_pago(env))}),
+            texto,
             finalizado=True,
             extra={'order_id': order.id, 'order_name': order.name,
                    'resumen_carrito': self._resumen_carrito_dict(resumen)})
