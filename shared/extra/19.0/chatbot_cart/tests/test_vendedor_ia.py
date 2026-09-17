@@ -92,7 +92,8 @@ class TestVendedorIA(BaseChatbotCartTestCase):
         # Extensión SPEC 55: guía universal, sin presión de pago
         self.assertIn('¿Quieres algo más?', texto)
         self.assertNotIn('¿Quieres pagar ya?', texto)
-        self.assertEqual(resp['botones'], ['➕ Sumar', '➖ Quitar', 'catálogo'])
+        # SPEC 56: con items el 3er botón es Pagar (catálogo por texto)
+        self.assertEqual(resp['botones'], ['➕ Sumar', '➖ Quitar', '💳 Pagar'])
         self.assertTrue(self._carrito_flags().get('pendiente_pago'))
 
     def test_06_ver_carrito_con_items_cierra_con_guia(self):
@@ -105,7 +106,8 @@ class TestVendedorIA(BaseChatbotCartTestCase):
         self.assertIn('Σ *Total:', texto)
         self.assertIn('unid.', texto)
         self.assertNotIn('¿Quieres pagar ya?', texto)
-        self.assertEqual(resp['botones'], ['➕ Sumar', '➖ Quitar', 'catálogo'])
+        # SPEC 56: con items el 3er botón es Pagar (catálogo por texto)
+        self.assertEqual(resp['botones'], ['➕ Sumar', '➖ Quitar', '💳 Pagar'])
         self.assertTrue(self._carrito_flags().get('pendiente_pago'))
 
     def test_07_pagar_limpia_pendiente_pago(self):

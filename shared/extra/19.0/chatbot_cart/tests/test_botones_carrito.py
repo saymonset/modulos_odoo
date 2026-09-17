@@ -23,12 +23,12 @@ class TestBotonesCarrito(BaseChatbotCartTestCase):
 
     def test_02_carrito_con_items_prioriza_pagar(self):
         botones = self._botones({'items': [{'product_id': 1, 'qty': 2}]})
-        # Extensión SPEC 55: la salida a productos va en botón (no "pagar")
-        self.assertEqual(botones, ['➕ Sumar', '➖ Quitar', 'catálogo'])
+        # SPEC 56: con items el trío es ➕/➖/Pagar (catálogo queda por texto)
+        self.assertEqual(botones, ['➕ Sumar', '➖ Quitar', '💳 Pagar'])
 
     def test_03_salida_y_cotizacion_por_texto_con_items(self):
-        """Ext. SPEC 55: con items el trío es ➕/➖/catálogo; pagar, salir y
-        cotizar por texto (la guía lo anuncia)."""
+        """SPEC 56: con items el trío es ➕/➖/Pagar; salir y cotizar por
+        texto (la guía lo anuncia)."""
         self.assertEqual(self._botones({'items': []}), ['catálogo', 'ayuda', '🏪 Volver al negocio'])
 
     def test_04_maximo_tres_botones(self):

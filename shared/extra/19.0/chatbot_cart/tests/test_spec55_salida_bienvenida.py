@@ -175,4 +175,5 @@ class TestSpec55VerCarritoVisual(BaseChatbotCartTestCase):
         resp = self.controller._ejecutar(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
             'CONSULTAR', '', 0, [])
-        self.assertEqual(resp['botones'], ['➕ Sumar', '➖ Quitar', 'catálogo'])
+        # SPEC 56: el 3er botón pasa a Pagar (catálogo queda en la guía)
+        self.assertEqual(resp['botones'], ['➕ Sumar', '➖ Quitar', '💳 Pagar'])

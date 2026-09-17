@@ -82,8 +82,9 @@ class TestSeleccionNumerica(BaseChatbotCartTestCase):
             'AGREGAR', '2', 1, self.ultima_busqueda)
         self.assertTrue(resp['success'])
         self.assertIn('Agregué', resp['texto_para_usuario'])
+        # SPEC 56: con items el 3er botón es Pagar (catálogo por texto)
         self.assertEqual(resp['botones'],
-                         ['➕ Sumar', '➖ Quitar', 'catálogo'])
+                         ['➕ Sumar', '➖ Quitar', '💳 Pagar'])
 
         from odoo.addons.chatbot_cart.services.cart_service import CartService
         resumen = CartService().resumen(self.env, self.session_id)
