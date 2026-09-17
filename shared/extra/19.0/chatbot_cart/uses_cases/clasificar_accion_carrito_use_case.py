@@ -45,6 +45,13 @@ _VERBOS_CANTIDAD = {
     'seis': 6, 'siete': 7, 'ocho': 8, 'nueve': 9, 'diez': 10,
 }
 
+# SPEC 57: preguntas naturales de disponibilidad de un producto concreto.
+# "tienen pizzas?" → BUSCAR "pizzas". Se evalúa DESPUÉS de CATALOGO para que
+# "qué tienen"/"que tienen" sigan siendo catálogo general.
+_RE_PREGUNTA_PRODUCTO = re.compile(
+    r'^\s*(?:tienen|tienes|venden|vende|hay|manejan|manejas|busco|buscan)\s+'
+    r'(.+?)\s*\??\s*$', re.IGNORECASE)
+
 
 class ClasificarAccionCarritoUseCase(models.TransientModel):
     _name = 'clasificar.accion.carrito.use.case'
@@ -205,6 +212,15 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
             return {"accion": "CATALOGO", "producto": "MAS", "cantidad": 0}, True
         if any(p in t for p in _PALABRAS_CATALOGO):
             return {"accion": "CATALOGO", "producto": "", "cantidad": 0}, True
+
+        # SPEC 57: preguntas naturales de disponibilidad → BUSCAR el producto.
+        # "tienen pizzas?" / "venden pizzas?" / "hay pizzas?" → BUSCAR "pizzas".
+        # OJO: va DESPUÉS de CATALOGO para que "qué tienen"/"que tienen"
+        # (catálogo general) y "tienen catálogo" no se conviertan en búsqueda.
+        m_preg = _RE_PREGUNTA_PRODUCTO.match(t)
+        if m_preg:
+            return {"accion": "BUSCAR", "producto": m_preg.group(1).strip(),
+                    "cantidad": 0}, True
 
         tokens = set(re.findall(r'[a-záéíóúñü]+', t))
         if tokens & {'buscar', 'busca', 'muestrame', 'muéstrame', 'mostrar', 'lista', 'catalogo', 'catálogo'}:

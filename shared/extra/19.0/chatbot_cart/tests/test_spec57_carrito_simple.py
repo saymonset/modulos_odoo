@@ -41,6 +41,44 @@ class TestSpec57CarritoSimple(BaseChatbotCartTestCase):
         r = self._clasificar('quiero 2 camisas rojas')
         self.assertEqual(r['accion'], 'AGREGAR')
 
+    # --- preguntas naturales → BUSCAR producto ---
+
+    def test_09_preguntas_naturales_buscan_producto(self):
+        for frase, prod in (('tienen pizzas', 'pizzas'),
+                            ('tienen pizzas?', 'pizzas'),
+                            ('venden pizzas?', 'pizzas'),
+                            ('hay pizzas', 'pizzas'),
+                            ('tienes camisas rojas?', 'camisas rojas'),
+                            ('busco aros de hamburguesa', 'aros de hamburguesa')):
+            r = self._clasificar(frase)
+            self.assertEqual(r['accion'], 'BUSCAR', f'"{frase}" debe ser BUSCAR')
+            self.assertEqual(r['producto'].strip(), prod, f'"{frase}" producto={prod}')
+
+    def test_10_catalogo_general_sigue_siendo_catalogo(self):
+        for frase in ('qué tienen', 'que tienen', 'tienen catalogo',
+                      'qué venden', 'que venden'):
+            r = self._clasificar(frase)
+            self.assertEqual(r['accion'], 'CATALOGO', f'"{frase}" debe ser CATALOGO')
+
+    def test_11_comandos_no_se_secuestran(self):
+        for frase, accion in (('tienen carrito', 'CONSULTAR'),
+                              ('tienes ayuda', 'AYUDA'),
+                              ('hay más', 'CATALOGO')):
+            r = self._clasificar(frase)
+            self.assertEqual(r['accion'], accion, f'"{frase}" debe ser {accion}')
+
+    # --- FALLBACK con botones fijos (sin ➕/➖/Pagar) ---
+
+    def test_12_fallback_botones_fijos_aunque_carrito_con_items(self):
+        self._agregar_producto(self.product_a.id, qty=2)
+        resp = self.controller._atender_fallback_ia(
+            self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
+            'tienen pizzas?')
+        # Nunca ➕/➖/Pagar de items que el usuario no ve en este turno
+        self.assertEqual(resp['botones'],
+                         ['catálogo', 'ayuda', '🏪 Volver al negocio'])
+        self.assertNotIn('➕ Sumar', resp['botones'])
+
     # --- captions sin total duplicado ---
 
     def test_04_caption_sin_total_duplicado(self):

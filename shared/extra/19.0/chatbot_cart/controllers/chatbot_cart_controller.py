@@ -624,8 +624,10 @@ class ChatbotCartController(http.Controller):
             "*catálogo*, *ver carrito* o el nombre de un producto.\n"
             "Para preguntas del negocio escribe *salir* y te atiendo."
         )
-        carrito = env['chatbot.session'].sudo()._get_carrito(session_id)
-        extra = {'botones': self._botones_carrito(carrito)}
+        # SPEC 57: el FALLBACK no conoce el carrito del usuario (pudo ser un
+        # mensaje del negocio como "tienen pizzas?"). Botones fijos del
+        # catálogo/ayuda/salida, NUNCA ➕/➖/Pagar de items que no se ven.
+        extra = {'botones': ['catálogo', 'ayuda', '🏪 Volver al negocio']}
         try:
             from odoo.addons.chatbot_cart.services.prompt_carrito import (
                 reply_prompt_carrito_solo,
