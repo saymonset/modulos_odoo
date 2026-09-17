@@ -188,3 +188,30 @@ class TestModoConversacional(BaseChatbotTestCase):
         config.action_recargar_todo_desde_rag()
 
         self.assertIn('en orden', config.diagnostico or '')
+
+    def test_08_prompt_conversacional_incluye_prioridades_rag_first(self):
+        """SPEC 59: en modo conversacional el prompt incluye las prioridades
+        RAG-first y la regla de saludo con typo."""
+        config = self._crear_config(menu_enabled=False)
+        prompt = render_prompt(config)
+
+        self.assertIn('PRIORIDAD DE RESPUESTA (modo conversacional)', prompt)
+        self.assertIn('Responde SIEMPRE con la información disponible del '
+                      'negocio (RAG)', prompt)
+        self.assertIn('NUNCA uses la intención FALLBACK si la pregunta guarda '
+                      'relación con el negocio', prompt)
+        self.assertIn('FALLBACK solo ante mensajes que no traten del negocio',
+                      prompt)
+        self.assertIn('SALUDO con typo', prompt)
+        self.assertIn('ghola', prompt)
+        self.assertIn('nunca uses FALLBACK ante un saludo', prompt)
+
+    def test_09_prompt_flag_on_no_incluye_prioridades(self):
+        """Rollback: con menú (flag on) las prioridades RAG-first no se
+        inyectan."""
+        config = self._crear_config(menu_enabled=True)
+        prompt = render_prompt(config)
+
+        self.assertNotIn('PRIORIDAD DE RESPUESTA (modo conversacional)',
+                         prompt)
+        self.assertNotIn('SALUDO con typo', prompt)

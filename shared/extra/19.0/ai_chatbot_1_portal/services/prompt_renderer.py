@@ -131,6 +131,21 @@ _MENU_RULE_OFF = (
     'discreta el siguiente paso (regla 16). Si el usuario escribe "cancelar" '
     'o "salir", responde con las intenciones CANCELAR/SALIR.')
 
+_PRIORIDADES_RAG_FIRST = (
+    "PRIORIDAD DE RESPUESTA (modo conversacional):\n"
+    "1. Responde SIEMPRE con la información disponible del negocio (RAG).\n"
+    "2. NUNCA uses la intención FALLBACK si la pregunta guarda relación con "
+    "el negocio.\n"
+    "3. FALLBACK solo ante mensajes que no traten del negocio.\n"
+    "4. Ante saludos y preguntas generales (\"hola\", \"qué hacen\", \"qué "
+    "es esto\"), presenta las capacidades del negocio con la información "
+    "disponible del RAG.\n"
+    "5. SALUDO con typo: si el mensaje contiene \"hola\" aunque venga con "
+    "errores de tecleo (\"ghola\", \"holaa\", \"holaa?\"), trátalo como "
+    "SALUDO y responde la bienvenida del negocio; nunca uses FALLBACK ante "
+    "un saludo."
+)
+
 
 def _render_universal_skeleton(brand='', menu_enabled=True):
     json_block = ",\n".join("  " + k for k in _JSON_KEYS)
@@ -293,5 +308,9 @@ def render_prompt(config):
         config.brand_name or config.name or '',
         menu_enabled=config.menu_enabled,
     ))
+    if not config.menu_enabled:
+        # SPEC 59: prioridades RAG-first al final del prompt del negocio.
+        lines.append('')
+        lines.append(_PRIORIDADES_RAG_FIRST)
 
     return '\n'.join(lines)
