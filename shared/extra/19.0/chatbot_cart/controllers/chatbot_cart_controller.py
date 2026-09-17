@@ -846,6 +846,27 @@ class ChatbotCartController(http.Controller):
         return self._respuesta(session_id, conversation_id, account_id, platform, texto,
                                extra={'botones': self._botones_carrito(carrito)})
 
+    @staticmethod
+    def _texto_operacion(accion, producto=None, cantidad=None, resumen=None, hint=''):
+        """SPEC 57: respuestas mecánicas del carrito SIEMPRE deterministas.
+
+        Sin `_redactar` (IA): el usuario solo quiere ver qué pasó y el total.
+        AGREGAR usa `_texto_agregar` (SPEC 57, minimalista); QUITAR/MODIFICAR
+        usan plantilla directa. `resumen` es el dict de CartService.resumen().
+        """
+        if accion == 'AGREGAR':
+            return (f"✅ Agregué *{producto} ({cantidad} unid.)* al carrito.\n"
+                    f"{resumen}")
+        if accion == 'QUITAR':
+            return (f"🗑️ Producto eliminado. "
+                    f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}"
+                    f"{hint}")
+        if accion == 'MODIFICAR':
+            return (f"✏️ Cantidad actualizada a *{cantidad}*. "
+                    f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}"
+                    f"{hint}")
+        return ''
+
     def _ejecutar_item(self, env, session_id, conversation_id, account_id, platform,
                        accion, producto_ref, cantidad, ultima_busqueda):
         """Ejecuta AGREGAR/QUITAR/MODIFICAR sobre un producto del carrito."""
@@ -873,9 +894,7 @@ class ChatbotCartController(http.Controller):
             self._marcar_pendiente_pago(env, session_id)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
-                self._redactar(env, texto, contexto={
-                    'accion': 'AGREGAR', 'producto': producto.name, 'cantidad': cantidad,
-                    'resumen': resumen}),
+                texto,
                 extra={'botones': self._botones_carrito(resumen)})
 
         if accion == 'QUITAR':
@@ -884,9 +903,6 @@ class ChatbotCartController(http.Controller):
                 return self._respuesta(session_id, conversation_id, account_id, platform,
                                        "Ese producto no está en tu carrito. Escribe *ver carrito* para revisar.")
             resumen = service.resumen(env, session_id)
-            texto = (f"🗑️ Producto eliminado. "
-                     f"🛒 {resumen['count']} item(s) — ${resumen['total_usd']:,.2f}"
-                     f"{self._HINT_ACCIONES}")
             carrito = session._get_carrito(session_id)
             if carrito.get('producto_seleccionado') == product_id:
                 # SPEC 54: eliminado ya no queda seleccionado
@@ -894,8 +910,8 @@ class ChatbotCartController(http.Controller):
             session._guardar_carrito(session_id, carrito)
             return self._respuesta(
                 session_id, conversation_id, account_id, platform,
-                self._redactar(env, texto, contexto={
-                    'accion': 'QUITAR', 'resumen': resumen}),
+                self._texto_operacion(
+                    'QUITAR', resumen=resumen, hint=self._HINT_ACCIONES),
                 extra={'botones': self._botones_carrito(resumen)})
 
         # MODIFICAR
@@ -1232,19 +1248,17 @@ class ChatbotCartController(http.Controller):
 
     @staticmethod
     def _imagenes_de_productos(productos, con_numeros=False, items_carrito=None):
-        """SPEC 39/52/54/55: imágenes del catálogo/búsqueda como media-messages.
+        """SPEC 39/52/54/55/57: imágenes del catálogo/búsqueda como media-messages.
 
         Devuelve [{link, caption}] solo de productos con imagen y URL
         absoluta; el caption lleva nombre, precios, índice de la lista si
-        `con_numeros=True`, el estado del producto en el carrito (SPEC 54)
-        y el total de items/valor del carrito (SPEC 55).
+        `con_numeros=True` y el estado del producto en el carrito (SPEC 54).
+        SPEC 57: el total del carrito NO va en cada caption (se repite una vez
+        por imagen); el total se muestra una sola vez en el texto/resumen.
         """
         en_carrito = {
             it['product_id']: it.get('qty', 0) for it in (items_carrito or [])
         }
-        total_usd = round(sum(
-            it.get('price_usd', 0.0) * it.get('qty', 0)
-            for it in (items_carrito or [])), 2)
         imagenes = []
         for idx, p in enumerate(productos, 1):
             if not p.get('has_image') or not p.get('image_url'):
@@ -1256,11 +1270,6 @@ class ChatbotCartController(http.Controller):
             qty = en_carrito.get(p.get('product_id'))
             if qty:
                 caption += f"\n🛒 en tu carrito: {qty} unid."
-            if items_carrito:
-                unidades = sum(it.get('qty', 0) for it in items_carrito)
-                caption += (
-                    f"\n🛒 Tu carrito: {unidades} unid. en "
-                    f"{len(items_carrito)} producto(s) — ${total_usd:,.2f}")
             imagenes.append({'link': p['image_url'], 'caption': caption})
         return imagenes
 
