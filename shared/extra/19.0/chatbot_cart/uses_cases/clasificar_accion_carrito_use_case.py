@@ -191,6 +191,12 @@ class ClasificarAccionCarritoUseCase(models.TransientModel):
             return {"accion": "QUITAR", "producto": t, "cantidad": cantidad}, True
         if any(p in t for p in _PALABRAS_MODIFICAR):
             return {"accion": "MODIFICAR", "producto": t, "cantidad": cantidad}, True
+        # SPEC 57: "del 5 solo 4" / "quiero del 5 solo 4" → MODIFICAR cantidad
+        # del producto N a X. Prioridad sobre AGREGAR (contiene "quiero").
+        m_solo = re.search(r'(?:quiero\s+)?del\s+(\d{1,2})\s+solo\s+(\d{1,3})\b', t)
+        if m_solo:
+            return {"accion": "MODIFICAR", "producto": m_solo.group(1),
+                    "cantidad": int(m_solo.group(2))}, True
         if any(p in t for p in _PALABRAS_AGREGAR):
             return {"accion": "AGREGAR", "producto": t, "cantidad": cantidad}, True
         if any(p in t for p in _PALABRAS_CONSULTAR):
