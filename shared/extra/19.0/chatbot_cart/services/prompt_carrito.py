@@ -5,8 +5,6 @@ from odoo.addons.chatbot_cart.services.cart_service import CartService
 
 _FLOW_CARTO = 'flujo_carrito_compra'
 
-_ANUNCIO_CARRITO = '💡 Escribe «carrito» para ver nuestro catálogo y comprar por WhatsApp.'
-
 _CART_INSTRUCTIONS_TEMPLATE = """=== CARRITO DE COMPRA ===
 La palabra "carrito" en el mensaje del usuario activa INMEDIATAMENTE
 flow_name="flujo_carrito_compra" y equipo_asignado="flujo_carrito_compra",
@@ -16,20 +14,16 @@ conversacional.
 
 Tras la activación, las operaciones del carrito las gestiona Odoo
 (/chatbot_cart/procesar): NO las respondas tú, regresa el flujo al endpoint.
-En cualquier otra respuesta normal, termina SIEMPRE con esta línea exacta:
-{anuncio}
-
-Salida al activar (frase corta): "¡Perfecto! 🛒 Entro al carrito de compra:
-te muestro productos con precio y pagas aquí mismo. ({flow_name})"
-{linea_tienda}"""
+{seccion_anuncio}Salida al activar (frase corta): "¡Perfecto! 🛒 Entro al carrito de compra:
+te muestro productos con precio y pagas aquí mismo. ({flow_name})" """
 
 
 def _linea_tienda(env):
-    """SPEC 46: línea de la tienda online del negocio o '' si no hay URL.
+    """SPEC 46/58: línea de la tienda online del negocio o '' si no hay URL.
 
-    La bienvenida del carrito la genera el agente; esta línea (formato
-    `❗ Visita nuestra tienda online: <url>`) se añade al bloque para que
-    el agente la incluya al activar el carrito. Sin env o sin URL → ''.
+    SPEC 58: esta línea es el anuncio único de compra. Con tienda pública se
+    instruye al agente a cerrar cada respuesta normal con ella; sin tienda no
+    se anuncia nada del carrito. Sin env o sin URL → ''.
     """
     if env is None:
         return ''
@@ -39,9 +33,20 @@ def _linea_tienda(env):
     return f'❗ Visita nuestra tienda online: {url}'
 
 
-def _render_instrucciones(linea_tienda=''):
+def _seccion_anuncio(anuncio):
+    """SPEC 58: instrucción de cierre de las respuestas normales.
+
+    Solo existe cuando hay anuncio (tienda pública). Sin anuncio se omite
+    para no incitar a comprar por carrito.
+    """
+    if not anuncio:
+        return ''
+    return f"En cualquier otra respuesta normal, termina SIEMPRE con esta línea exacta:\n{anuncio}\n\n"
+
+
+def _render_instrucciones(anuncio=''):
     return _CART_INSTRUCTIONS_TEMPLATE.format(
-        flow_name=_FLOW_CARTO, anuncio=_ANUNCIO_CARRITO, linea_tienda=linea_tienda)
+        flow_name=_FLOW_CARTO, seccion_anuncio=_seccion_anuncio(anuncio))
 
 _MARKER = '=== CARRITO DE COMPRA ==='
 

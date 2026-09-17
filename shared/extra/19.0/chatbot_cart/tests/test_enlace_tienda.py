@@ -67,6 +67,7 @@ class TestEnlaceTienda(BaseChatbotCartTestCase):
         self._set_param('web.base.url', '')
         bloque = render_instrucciones_carrito(self.env)
         self.assertNotIn('Visita nuestra tienda online', bloque)
+        self.assertNotIn('termina SIEMPRE con esta línea exacta', bloque)
         self.assertIn('Salida al activar', bloque)
 
     def test_05_prompt_con_url_imprime_linea(self):
@@ -77,8 +78,12 @@ class TestEnlaceTienda(BaseChatbotCartTestCase):
         self._limpiar_websites()
         self._set_param('web.base.url', 'https://lead.integraia.lat')
         bloque = render_instrucciones_carrito(self.env)
-        self.assertIn(
-            f'❗ Visita nuestra tienda online: {self._base_url()}/shop', bloque)
+        linea = f'❗ Visita nuestra tienda online: {self._base_url()}/shop'
+        self.assertIn('termina SIEMPRE con esta línea exacta', bloque)
+        self.assertIn(linea, bloque)
+        # SPEC 58: el enlace es el anuncio (antes de la frase de activación),
+        # ya no va al final del bloque como línea de tienda.
+        self.assertLess(bloque.index(linea), bloque.index('Salida al activar'))
 
     def test_06_append_cart_instructions_recibe_env(self):
         from odoo.addons.chatbot_cart.services.prompt_carrito import (

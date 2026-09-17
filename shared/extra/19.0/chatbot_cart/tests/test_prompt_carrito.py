@@ -8,7 +8,6 @@ class TestPromptCarrito(BaseChatbotCartTestCase):
 
     def test_01_append_agrega_instrucciones(self):
         from odoo.addons.chatbot_cart.services.prompt_carrito import (
-            _ANUNCIO_CARRITO,
             _FLOW_CARTO,
             append_cart_instructions,
             render_instrucciones_carrito,
@@ -18,7 +17,6 @@ class TestPromptCarrito(BaseChatbotCartTestCase):
         self.assertIn(f'flow_name="{_FLOW_CARTO}"', bloque)
         self.assertIn(f'equipo_asignado="{_FLOW_CARTO}"', bloque)
         self.assertIn('/chatbot_cart/procesar', bloque)
-        self.assertIn(_ANUNCIO_CARRITO, bloque)
         self.assertIn('PRIORIDAD sobre la REGLA 3', bloque)
 
         prompt = '=== ESQUELETO ==='
@@ -39,16 +37,24 @@ class TestPromptCarrito(BaseChatbotCartTestCase):
         self.assertEqual(append_cart_instructions(''), '')
         self.assertEqual(append_cart_instructions(None), None)
 
-    def test_04_anuncio_carrito_presente(self):
-        from odoo.addons.chatbot_cart.services.prompt_carrito import (
-            _ANUNCIO_CARRITO,
-            render_instrucciones_carrito,
-        )
+    def test_04_sin_url_no_hay_anuncio(self):
+        from odoo.addons.chatbot_cart.services.prompt_carrito import render_instrucciones_carrito
         bloque = render_instrucciones_carrito()
-        self.assertTrue(_ANUNCIO_CARRITO.strip())
-        self.assertIn(_ANUNCIO_CARRITO, bloque)
+        self.assertNotIn('Escribe «carrito»', bloque)
+        self.assertNotIn('Visita nuestra tienda online', bloque)
+        self.assertNotIn('termina SIEMPRE con esta línea exacta', bloque)
 
-    def test_05_disparo_por_palabra_clave(self):
+    def test_05_con_url_anuncio_tienda(self):
+        from odoo.addons.chatbot_cart.services.prompt_carrito import render_instrucciones_carrito
+        param = self.env['ir.config_parameter'].sudo()
+        param.set_param('chatbot_cart.tienda_url', 'https://tienda.integraia.lat')
+        bloque = render_instrucciones_carrito(self.env)
+        self.assertIn('termina SIEMPRE con esta línea exacta', bloque)
+        self.assertIn('❗ Visita nuestra tienda online: https://tienda.integraia.lat', bloque)
+        self.assertNotIn('Escribe «carrito»', bloque)
+        param.set_param('chatbot_cart.tienda_url', '')
+
+    def test_06_disparo_por_palabra_clave(self):
         from odoo.addons.chatbot_cart.services.prompt_carrito import (
             _FLOW_CARTO,
             render_instrucciones_carrito,
@@ -59,7 +65,7 @@ class TestPromptCarrito(BaseChatbotCartTestCase):
         self.assertIn(f'equipo_asignado="{_FLOW_CARTO}"', bloque)
         self.assertIn('en cualquier turno', bloque)
 
-    def test_06_prioridad_sobre_regla_3(self):
+    def test_07_prioridad_sobre_regla_3(self):
         from odoo.addons.chatbot_cart.services.prompt_carrito import render_instrucciones_carrito
         bloque = render_instrucciones_carrito()
         self.assertIn('PRIORIDAD sobre la REGLA 3', bloque)
