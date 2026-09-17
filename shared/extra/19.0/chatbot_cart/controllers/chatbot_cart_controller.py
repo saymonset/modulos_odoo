@@ -6,7 +6,8 @@ import re
 import json
 
 from odoo.addons.ai_chatbot_1_portal.controllers.chatbot_utils import (
-    truncate_for_platform, ChatBotUtils,
+    truncate_for_platform, build_buttons_for_platform,
+    hint_acciones_por_plataforma, ChatBotUtils,
 )
 
 from ..services.cart_service import CartService
@@ -71,12 +72,11 @@ class ChatbotCartController(http.Controller):
         return "\n".join(lineas)
 
     def _botones_carrito(self, carrito):
-        """Botones interactivos dinámicos (SPEC 45/50/54): con items el foco
-        es el ajuste rápido ➕/➖ y pagar; se sale y cotiza por texto."""
+        """Botones interactivos dinámicos (SPEC 45/50/54/56): con items el foco
+        es ajustar ➕/➖ y pagar (SPEC 56: 'Pagar' reemplaza 'catálogo', que ya
+        está en la guía de texto); sin items el foco es entrar al catálogo."""
         if carrito.get('items'):
-            # Extensión SPEC 55: la salida a productos va en botón; el pago
-            # y la salida quedan en la guía de texto.
-            return ['➕ Sumar', '➖ Quitar', 'catálogo']
+            return ['➕ Sumar', '➖ Quitar', '💳 Pagar']
         return ['catálogo', 'ayuda', '🏪 Volver al negocio']
 
     def _marcar_pendiente_pago(self, env, session_id):
@@ -410,7 +410,29 @@ class ChatbotCartController(http.Controller):
         }
         if extra:
             resp.update(extra)
+        # SPEC 56: botones adaptados por canal. El n8n lee
+        # `botones_por_plataforma[platform]` con fallback a `botones`.
+        botones = resp.get('botones') or []
+        resp['botones_por_plataforma'] = {
+            p: build_buttons_for_platform(botones, p)
+            for p in ('whatsapp', 'messenger', 'instagram')
+        }
+        # SPEC 56: canales sin botones nativos (Instagram/Meta) reciben el
+        # hint de texto para que la acción de pago no se pierda.
+        hint = hint_acciones_por_plataforma(platform)
+        if hint:
+            resp['texto_para_usuario'] = resp['text'] = resp['texto_para_usuario'] + hint
         return resp
+
+    @staticmethod
+    def _resumen_carrito_dict(resumen):
+        """SPEC 56: campos del resumen expuestos en el JSON para cliente/n8n."""
+        return {
+            'total_ves': resumen.get('total_ves', 0.0),
+            'total_usd': resumen.get('total_usd', 0.0),
+            'total_unidades': resumen.get('total_unidades', 0),
+            'count': resumen.get('count', 0),
+        }
 
     # ==================================================================
     #  ENDPOINT PRINCIPAL
@@ -644,7 +666,8 @@ class ChatbotCartController(http.Controller):
                 imagenes=self._imagenes_de_productos(
                     self._productos_del_carrito(resumen),
                     con_numeros=True, items_carrito=resumen['items']),
-                extra={'botones': self._botones_carrito(resumen)})
+                extra={'botones': self._botones_carrito(resumen),
+                       'resumen_carrito': self._resumen_carrito_dict(resumen)})
 
         if accion == 'CATALOGO':
             # SPEC 49: "catálogo" explícito muestra SIEMPRE la lista paginada
@@ -1660,7 +1683,9 @@ class ChatbotCartController(http.Controller):
             self._redactar(env, texto, contexto={
                 'accion': 'PAGAR', 'order_name': order.name, 'resumen': resumen,
                 'datos_pago': (self._seccion_pago(env))}),
-            finalizado=True, extra={'order_id': order.id, 'order_name': order.name})
+            finalizado=True,
+            extra={'order_id': order.id, 'order_name': order.name,
+                   'resumen_carrito': self._resumen_carrito_dict(resumen)})
 
     @staticmethod
     def _seccion_pago(env):

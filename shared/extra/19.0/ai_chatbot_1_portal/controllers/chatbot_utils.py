@@ -53,6 +53,30 @@ def truncate_for_platform(text, platform):
     return truncated.rstrip() + '...'
 
 
+def build_buttons_for_platform(botones, platform):
+    """SPEC 56: devuelve los botones del carrito adaptados al canal.
+
+    WhatsApp y Messenger usan quick replies (misma lista). Instagram no tiene
+    botones nativos: se conserva la lista para que el hint de texto la explique.
+    """
+    return [b for b in (botones or []) if b]
+
+
+# SPEC 56: canales sin botones interactivos nativos (Instagram/Meta).
+NO_BUTTON_PLATFORMS = {'instagram', 'facebook', 'meta'}
+
+
+def hint_acciones_por_plataforma(platform):
+    """SPEC 56: hint de texto para canales sin botones nativos (Instagram/Meta).
+
+    WhatsApp/Messenger muestran los botones interactivos; las redes Meta no, así
+    que la acción de pago y el ajuste ➕/➖ se explican en texto.
+    """
+    if (platform or '').lower() in NO_BUTTON_PLATFORMS:
+        return "\n\nEscribe *pagar* para confirmar, o el número con ➕ para sumar / ➖ para restar."
+    return ""
+
+
 class ChatBotUtils:
     
     @staticmethod
