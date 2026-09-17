@@ -80,7 +80,7 @@ class TestVendedorIA(BaseChatbotCartTestCase):
                     'AGREGAR', 'CAM-R', 1, [])
         # El texto es el del motor, NO el del servicio IA
         self.assertFalse(resp['texto_para_usuario'].startswith('IA['))
-        self.assertIn('Agregué *Camisa Roja (1 unid.)*', resp['texto_para_usuario'])
+        self.assertIn('agregado', resp['texto_para_usuario'])
 
     # --- cierre ¿quieres pagar ya? + botones ---
 
@@ -90,9 +90,10 @@ class TestVendedorIA(BaseChatbotCartTestCase):
                 self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
                 'AGREGAR', 'CAM-R', 2, [])
         texto = resp['texto_para_usuario']
-        self.assertIn('Agregué', texto)
-        # Extensión SPEC 55: guía universal, sin presión de pago
-        self.assertIn('¿Quieres algo más?', texto)
+        # SPEC 57: AGREGAR minimalista — confirmación directa con total
+        self.assertIn('agregado', texto)
+        self.assertIn('Total:', texto)
+        self.assertIn('Toca *💳 Pagar*', texto)
         self.assertNotIn('¿Quieres pagar ya?', texto)
         # SPEC 56: con items el 3er botón es Pagar (catálogo por texto)
         self.assertEqual(resp['botones'], ['➕ Sumar', '➖ Quitar', '💳 Pagar'])
@@ -346,11 +347,12 @@ class TestVendedorIA(BaseChatbotCartTestCase):
             resp = self._controller()._ejecutar_item(
                 self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
                 'AGREGAR', 'CAM-R', 1, [])
-        # Ext. SPEC 55: guía universal (mantiene la pista ➕/➖ y las salidas)
+        # SPEC 57: AGREGAR minimalista — confirmación + CTA de pago
         texto = resp['texto_para_usuario']
-        self.assertIn('Ajustar:', texto)
-        self.assertIn('➕', texto)
-        self.assertIn('catálogo', texto)
+        self.assertIn('agregado', texto)
+        self.assertIn('Toca *💳 Pagar*', texto)
+        # el botón Pagar está disponible con items (SPEC 56)
+        self.assertEqual(resp['botones'], ['➕ Sumar', '➖ Quitar', '💳 Pagar'])
 
     def test_24_hint_en_consultar_con_items(self):
         self._agregar_producto(self.product_a.id, qty=1)

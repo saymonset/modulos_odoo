@@ -81,7 +81,8 @@ class TestSeleccionNumerica(BaseChatbotCartTestCase):
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
             'AGREGAR', '2', 1, self.ultima_busqueda)
         self.assertTrue(resp['success'])
-        self.assertIn('Agregué', resp['texto_para_usuario'])
+        # SPEC 57: AGREGAR minimalista
+        self.assertIn('agregado', resp['texto_para_usuario'])
         # SPEC 56: con items el 3er botón es Pagar (catálogo por texto)
         self.assertEqual(resp['botones'],
                          ['➕ Sumar', '➖ Quitar', '💳 Pagar'])

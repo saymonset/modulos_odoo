@@ -17,3 +17,4 @@ from . import test_captura_guiada
 from . import test_ajuste_carrito
 from . import test_spec55_salida_bienvenida
 from . import test_spec56_carrito_visual_multicanal
+from . import test_spec57_carrito_simple

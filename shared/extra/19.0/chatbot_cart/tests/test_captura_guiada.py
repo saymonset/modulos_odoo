@@ -97,8 +97,9 @@ class TestCapturaGuiada(BaseChatbotCartTestCase):
         self.env['chatbot.session'].sudo()._guardar_carrito(self.session_id, carrito)
         resp = controller._resolver_pendiente_confirmar(
             self.env, self.session_id, 'c1', '+58414000000', 'whatsapp', '1')
-        self.assertIn('Agregué *Camisa Roja (4 unid.)*', resp['texto_para_usuario'])
-        self.assertIn('Tu carrito:', resp['texto_para_usuario'])
+        # SPEC 57: AGREGAR minimalista tras confirmar la ambigüedad
+        self.assertIn('agregado', resp['texto_para_usuario'])
+        self.assertIn('Total:', resp['texto_para_usuario'])
         self.assertNotIn('pendiente_confirmar', self._carrito_flags())
         carrito = self._carrito_flags()
         self.assertEqual(carrito['items'][0]['qty'], 5)
@@ -154,11 +155,13 @@ class TestCapturaGuiada(BaseChatbotCartTestCase):
                 self.env, self.session_id, 'c1', '+58414000000', 'whatsapp',
                 'AGREGAR', 'CAM-R', 2, [])
         texto = resp['texto_para_usuario']
-        self.assertIn('Tu carrito:', texto)
-        self.assertIn('1. Camisa Roja — 2 unid.', texto)
+        # SPEC 57: AGREGAR minimalista — confirmación + total + CTA
+        self.assertIn('agregado', texto)
+        self.assertIn('Total:', texto)
         self.assertIn('Bs. 260.00', texto)
-        self.assertIn('➕', texto)
-        self.assertIn('➖', texto)
+        self.assertIn('Toca *💳 Pagar*', texto)
+        # el detalle del carrito se consulta con *ver carrito* (List Message)
+        self.assertEqual(resp['botones'], ['➕ Sumar', '➖ Quitar', '💳 Pagar'])
 
     def test_09_lista_compacta_con_cop(self):
         self._configurar_tasas(bcv_rate=20.0, cop_rate=1200.0, cop_show=True)
