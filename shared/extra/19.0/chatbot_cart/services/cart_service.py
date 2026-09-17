@@ -236,7 +236,8 @@ class CartService:
         return resumen
 
     def formato_resumen_amigable(self, env, session_id):
-        """Extensión SPEC 55: resumen visual con unidades y guía universal."""
+        """Extensión SPEC 55/56: resumen visual con unidades, total destacado y
+        guía universal."""
         resumen = self.resumen(env, session_id)
         if not resumen['items']:
             return "🛒 Tu carrito está vacío. Escribe *carrito* para ver las acciones disponibles."
@@ -248,12 +249,16 @@ class CartService:
             if resumen['show_cop']:
                 lines.append(f"   COP {item['subtotal_cop']:,.2f}")
         lines.append("")
+        lines.append("──────────────────────")
         lines.append(
             f"Σ *Total: {resumen['total_unidades']} unid. en "
             f"{resumen['count']} producto(s) — "
             f"Bs. {resumen['total_ves']:,.2f} / ${resumen['total_usd']:,.2f}")
         if resumen['show_cop']:
             lines.append(f"Total COP: ${resumen['total_cop']:,.2f}")
+        lines.append("")
+        # SPEC 56: CTA de pago explícito antes de la guía universal.
+        lines.append("Toca *💳 Pagar* para confirmar tu pedido.")
         lines.append("")
         lines.append(CartService.GUIA_AJUSTES)
         return "\n".join(lines)
