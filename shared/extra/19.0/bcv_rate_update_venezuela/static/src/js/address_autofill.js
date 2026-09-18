@@ -75,7 +75,7 @@ export class AddressAutofill extends Component {
     _revealFields() {
         FIELD_WRAPPERS.forEach(id => {
             const div = document.getElementById(id);
-            if (div) div.style.display = '';
+            if (div) div.style.setProperty('display', 'block', 'important');
         });
     }
 

@@ -6,4 +6,9 @@
             <owl-component name="bcv_rate_update_venezuela.AddressAutofill"/>
         </xpath>
     </template>
+
+    <!-- Elimina "¿Ya tiene una cuenta? / Sign in" del checkout anónimo: redunda con el login del header -->
+    <template id="address_remove_signin" inherit_id="website_sale.address" name="Remove Redundant Sign-in Prompt">
+        <xpath expr="//div[hasclass('o_address_signin')]" position="replace"/>
+    </template>
 </odoo>

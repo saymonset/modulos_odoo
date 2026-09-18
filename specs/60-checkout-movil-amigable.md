@@ -1,6 +1,6 @@
 # SPEC 60 — Checkout móvil amigable: pago por transferencia con pasos claros y contraste
 
-> **Estado:** Approved
+> **Estado:** Implemented
 > **Depende de:** SPEC 42 (checkout teléfono primero)
 > **Fecha:** 2026-09-19
 > **Objetivo:** Hacer las pantallas de Detalles (teléfono) y Pago (transferencia/pago móvil) del checkout web claras y usables en móvil, reordenando el formulario, dando contraste real a fondo/inputs y agregando botón Continuar e instrucción visible, sin tocar ninguna funcionalidad.
