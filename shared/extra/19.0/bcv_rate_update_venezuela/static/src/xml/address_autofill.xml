@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="bcv_rate_update_venezuela.AddressAutofill" owl="1">
-        <div t-if="state.status !== 'idle'" id="address_autofill_banner">
-            <div t-if="state.status === 'loading'" class="alert alert-info py-2 mb-0 d-flex align-items-center">
+        <div id="address_autofill_banner">
+            <div t-if="state.status === 'idle'" class="phone-instruction-card">
+                <i class="fa fa-phone me-2"></i>
+                Escribe tu teléfono y presiona <strong>Continuar</strong> para cargar tus datos.
+            </div>
+            <div t-elif="state.status === 'loading'" class="alert alert-info py-2 mb-0 d-flex align-items-center">
                 <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                 Buscando tu información...
             </div>

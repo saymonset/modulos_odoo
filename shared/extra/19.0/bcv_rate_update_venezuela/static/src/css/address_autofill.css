@@ -18,6 +18,56 @@ form[name="address_form"] #div_phone {
     display: block !important;
 }
 
+/* Resaltar el campo Teléfono: borde visible y foco azul */
+form[name="address_form"] #o_phone {
+    background-color: #ffffff;
+    color: #2a3a4b;
+    border: 1px solid #4a90e2;
+    border-radius: 0.375rem;
+    font-size: 16px;
+    min-height: 44px;
+}
+
+form[name="address_form"] #o_phone:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+}
+
+form[name="address_form"] #div_phone .form-label {
+    color: #2a3a4b;
+    font-weight: 600;
+}
+
+/* Tarjeta de instrucción inicial (estado idle) */
+.phone-instruction-card {
+    background-color: #eaf3fc;
+    border: 1px solid #4a90e2;
+    border-left: 4px solid #4a90e2;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: #2a3a4b;
+    margin-bottom: 1rem;
+}
+
+.phone-instruction-card strong {
+    color: #2a3a4b;
+}
+
+/* Botón Continuar: área táctil clara */
+.phone-continue-btn {
+    min-height: 44px;
+    font-size: 16px;
+    background-color: #4a90e2;
+    border-color: #4a90e2;
+    border-radius: 0.375rem;
+}
+
+.phone-continue-btn:hover,
+.phone-continue-btn:focus {
+    background-color: #3a7bcb;
+    border-color: #3a7bcb;
+}
+
 /* Banner del autocompletado por teléfono */
 #address_autofill_banner {
     margin-bottom: 1rem;

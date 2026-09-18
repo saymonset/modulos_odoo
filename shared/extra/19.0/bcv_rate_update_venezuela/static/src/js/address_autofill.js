@@ -50,12 +50,26 @@ export class AddressAutofill extends Component {
                 }
             });
             phone.addEventListener('blur', trigger);
+
+            this._injectContinueButton(phone, trigger);
         });
     }
 
     _setStatus(status, name = '') {
         this.state.status = status;
         this.state.name = name || '';
+    }
+
+    _injectContinueButton(phone, trigger) {
+        const wrapper = phone.closest('#div_phone');
+        if (!wrapper || wrapper.querySelector('.phone-continue-btn')) return;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-primary phone-continue-btn w-100 mt-2';
+        btn.textContent = 'Continuar';
+        btn.addEventListener('click', trigger);
+        wrapper.appendChild(btn);
     }
 
     _revealFields() {
