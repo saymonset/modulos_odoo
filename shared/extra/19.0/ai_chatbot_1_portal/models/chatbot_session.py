@@ -1034,7 +1034,8 @@ class SessionState(models.Model):
             lead_info = lead_resultado.get('lead_info', {})
             lead_id = lead_info.get('lead_id')
         pie = ChatBotUtils._pie_mensaje(lead_id, equipo_asignado, env=self.env)
-        return msg + "\n\n" + pie
+        encabezado = ChatBotUtils._encabezado_registro(equipo_asignado)
+        return encabezado + "\n\n" + msg + "\n\n" + pie
     
     def _generar_mensaje_expirado(self, texto_usuario):
         try:
