@@ -243,6 +243,13 @@ class ChatbotConfig(models.Model):
         string="Rol / objetivo",
         help='"TÚ ERES" / objetivo de venta del agente para este negocio.',
     )
+    presentacion_texto = fields.Text(
+        string="Presentación del negocio",
+        help="Texto autoritativo que el bot usa al saludar/presentarse "
+             "(modo conversacional). Se genera automáticamente desde el rol, "
+             "los temas RAG, la tienda y el contacto; editable manualmente "
+             "(no se sobreescribe si ya tiene contenido).",
+    )
     cta_url = fields.Char(
         string="URL de llamada a la acción",
         help='Web del negocio (ej. integraia.lat).',
@@ -316,12 +323,20 @@ class ChatbotConfig(models.Model):
         ),
     )
 
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        records._generar_presentacion_si_vacia()
+        return records
+
     def write(self, vals):
         res = super().write(vals)
         # Si cambian campos que afectan el menú, marcar stale
         menu_relevant = {'role', 'brand_name', 'flujo_ids'}
         if menu_relevant & set(vals.keys()) and not self.env.context.get('_menu_regeneration'):
             self.sudo().write({'menu_stale': True})
+        # SPEC 65: auto-generar presentación si quedó vacía y hay datos fuente.
+        if not self.env.context.get('_presentacion_auto'):
+            self._generar_presentacion_si_vacia()
         return res
 
     @api.constrains('brand_name', 'role')
@@ -684,6 +699,72 @@ class ChatbotConfig(models.Model):
             'modo': modo,
         }
 
+    def _extraer_temas_conocimiento(self):
+        """Extrae la lista de temas del bloque_conocimiento (SPEC 65).
+
+        El bloque generado por la sync RAG trae el marcador
+        "Temas disponibles: ..." al final; si no está (texto manual), se
+        devuelve el texto completo.
+        """
+        texto = (self.bloque_conocimiento or '').strip()
+        if not texto:
+            return ''
+        m = re.search(r'Temas disponibles:\s*(.+)', texto, re.IGNORECASE)
+        if m:
+            return m.group(1).strip()
+        return texto
+
+    def _generar_presentacion_conversacional(self):
+        """Arma la presentación del negocio para el modo conversacional.
+
+        Combina marca + role completo + temas del bloque de conocimiento +
+        enlace de tienda + contacto, omitiendo los bloques vacíos. No altera
+        los campos fuente. El role completo garantiza que el objetivo y el
+        enlace de la tienda (aunque estén en bullets) queden dentro de la
+        presentación.
+        """
+        self.ensure_one()
+        bloques = []
+
+        marca = (self.brand_name or self.name or '').strip()
+        if marca:
+            bloques.append(f'¡Hola! Te saluda *{marca}*.')
+
+        role = (self.role or '').strip()
+        if role:
+            bloques.append(role)
+
+        temas = self._extraer_temas_conocimiento()
+        if temas:
+            bloques.append(f'Puedo ayudarte con: {temas}')
+
+        cta = (self.cta_url or '').strip()
+        if cta:
+            bloques.append(f'Visita nuestra tienda online: {cta}')
+
+        contacto = (self.contacto or '').strip()
+        if contacto:
+            bloques.append(contacto)
+
+        if not bloques:
+            return ''
+        bloques.append('¿En qué puedo ayudarte? 😊')
+        return '\n\n'.join(bloques)
+
+    def _generar_presentacion_si_vacia(self):
+        """SPEC 65: llena presentacion_texto solo si quedó vacío.
+
+        Guardia estricta: nunca pisa una edición manual. Se invoca desde
+        create/write y desde la sync RAG.
+        """
+        for config in self:
+            if (config.presentacion_texto or '').strip():
+                continue
+            texto = config._generar_presentacion_conversacional()
+            if texto:
+                config.with_context(_presentacion_auto=True).write({
+                    'presentacion_texto': texto})
+
     def _generar_fallback_con_marca(self, menu_texto):
         """Arma el FALLBACK con bienvenida humana + menú completo (SPEC 14).
 
@@ -800,6 +881,7 @@ class ChatbotConfig(models.Model):
             )
         if datos['contacto']:
             vals_config['contacto'] = datos['contacto'][:4000]
+        presentacion_previa = (self.presentacion_texto or '').strip()
         if vals_config:
             self.write(vals_config)
 
@@ -868,6 +950,11 @@ class ChatbotConfig(models.Model):
         if vals:
             self.env['chatbot.intencion'].create(vals)
 
+        # SPEC 65: auto-generar presentación solo si quedó vacía (nunca pisa
+        # la edición manual); si la sync sí toca role/contacto, el write
+        # anterior ya la generó, este refuerzo cubre el caso sin cambios.
+        self._generar_presentacion_si_vacia()
+
         mensaje = (
             'Documentos: %d · Secciones: %d · Intenciones creadas: %d. '
             'Bloque de conocimiento actualizado.'
@@ -877,6 +964,10 @@ class ChatbotConfig(models.Model):
         else:
             mensaje += (' No se encontró sección TÚ ERES: '
                         'se conservó el role actual.')
+        if not datos['contacto'] and (self.contacto or '').strip():
+            mensaje += ' Sin sección CONTACTO: se conservó el contacto actual.'
+        if not presentacion_previa and (self.presentacion_texto or '').strip():
+            mensaje += ' Presentación generada desde la configuración.'
         return {
             'ok': True, 'titulo': 'Refrescar desde RAG', 'mensaje': mensaje,
             'tipo': 'success', 'documentos': datos['documentos'],

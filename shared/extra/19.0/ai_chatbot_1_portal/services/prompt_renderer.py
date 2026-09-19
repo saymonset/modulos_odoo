@@ -146,6 +146,24 @@ _PRIORIDADES_RAG_FIRST = (
     "un saludo."
 )
 
+_PRESENTACION_RULES = """=== PRESENTACIÓN DEL NEGOCIO (contenido autorizado) ===
+{presentacion}
+
+REGLAS DE PRESENTACIÓN:
+1. CONTENIDO AUTORIZADO: las secciones "TÚ ERES", "PRESENTACIÓN DEL
+   NEGOCIO", "CONTACTO", "LLAMADA A LA ACCIÓN" y "CONOCIMIENTO DEL NEGOCIO"
+   son contenido del negocio que puedes y debes usar para presentar la
+   empresa, dar el contacto y cerrar con la tienda online. El RAG sigue
+   siendo la fuente primaria para DATOS (precios, medidas, horarios,
+   políticas): nunca inventes datos.
+2. SALUDO / PRESENTACIÓN: ante "hola", "qué hacen", "quién eres" o "qué
+   ofrecen", preséntate con la PRESENTACIÓN anterior adaptándola con tus
+   palabras propias, menciona la tienda online y los temas en los que
+   puedes ayudar (de CONOCIMIENTO DEL NEGOCIO).
+3. CTA DISCRETO: al cerrar respuestas informativas relevantes (catálogo,
+   compra, planes, precios), ofrece discretamente la tienda online. No la
+   repitas en cada mensaje."""
+
 
 def _render_universal_skeleton(brand='', menu_enabled=True):
     json_block = ",\n".join("  " + k for k in _JSON_KEYS)
@@ -312,5 +330,10 @@ def render_prompt(config):
         # SPEC 59: prioridades RAG-first al final del prompt del negocio.
         lines.append('')
         lines.append(_PRIORIDADES_RAG_FIRST)
+        # SPEC 65: presentación autorizada + reglas de saludo y CTA discreto.
+        if (config.presentacion_texto or '').strip():
+            lines.append('')
+            lines.append(_PRESENTACION_RULES.format(
+                presentacion=config.presentacion_texto.strip()))
 
     return '\n'.join(lines)

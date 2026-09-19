@@ -110,6 +110,7 @@
                         </group>
                         <group string="Contenido del agente">
                             <field name="role" widget="text"/>
+                            <field name="presentacion_texto" widget="text"/>
                             <field name="contacto" widget="text"/>
                             <field name="bloque_conocimiento" widget="text"/>
                         </group>
