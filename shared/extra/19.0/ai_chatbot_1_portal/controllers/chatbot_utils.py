@@ -27,6 +27,17 @@ PLATFORM_LIMITS = {
 DEFAULT_OUTPUT_LIMIT = 4000   # whatsapp y resto
 EMPTY_PLATFORM_LIMIT = 1000   # platform vacío
 
+# Nombres legibles por plataforma (clave normalizada en minúsculas)
+PLATFORM_DISPLAY_NAMES = {
+    'whatsapp': 'WhatsApp',
+    'instagram': 'Instagram',
+    'telegram': 'Telegram',
+    'facebook': 'Facebook',
+    'messenger': 'Facebook Messenger',
+    'web': 'Web',
+    'sms': 'SMS',
+}
+
 
 def truncate_for_platform(text, platform):
     """Recorta un mensaje para no exceder el límite de la plataforma.
@@ -51,6 +62,30 @@ def truncate_for_platform(text, platform):
     if cut > 0:
         truncated = truncated[:cut]
     return truncated.rstrip() + '...'
+
+
+def build_buttons_for_platform(botones, platform):
+    """SPEC 56: devuelve los botones del carrito adaptados al canal.
+
+    WhatsApp y Messenger usan quick replies (misma lista). Instagram no tiene
+    botones nativos: se conserva la lista para que el hint de texto la explique.
+    """
+    return [b for b in (botones or []) if b]
+
+
+# SPEC 56: canales sin botones interactivos nativos (Instagram/Meta).
+NO_BUTTON_PLATFORMS = {'instagram', 'facebook', 'meta'}
+
+
+def hint_acciones_por_plataforma(platform):
+    """SPEC 56: hint de texto para canales sin botones nativos (Instagram/Meta).
+
+    WhatsApp/Messenger muestran los botones interactivos; las redes Meta no, así
+    que la acción de pago y el ajuste ➕/➖ se explican en texto.
+    """
+    if (platform or '').lower() in NO_BUTTON_PLATFORMS:
+        return "\n\nEscribe *pagar* para confirmar, o el número con ➕ para sumar / ➖ para restar."
+    return ""
 
 
 class ChatBotUtils:
@@ -370,14 +405,27 @@ class ChatBotUtils:
         return teams
 
     @staticmethod
+    def _normalizar_plataforma(value='whatsapp'):
+        """Normaliza el identificador de plataforma a su forma canónica en
+        minúsculas (p. ej. 'Channel::Telegram' -> 'telegram'). Default 'whatsapp'."""
+        if not value:
+            return 'whatsapp'
+        plataforma = str(value).strip()
+        if plataforma.lower().startswith('channel::'):
+            plataforma = plataforma.split('::', 1)[1]
+        return plataforma.lower() or 'whatsapp'
+
+    @staticmethod
+    def _plataforma_display(value='whatsapp'):
+        """Devuelve el nombre legible de la plataforma (p. ej. 'telegram' -> 'Telegram')."""
+        plataforma = ChatBotUtils._normalizar_plataforma(value)
+        return PLATFORM_DISPLAY_NAMES.get(plataforma, plataforma.title())
+
+    @staticmethod
     def setup_utm(env, platform='whatsapp'):
         """Configurar medium, source y campaign según la plataforma"""
-        platform = platform.lower().strip() if platform else 'whatsapp'
-        platform_names = {
-            'whatsapp': 'WhatsApp', 'instagram': 'Instagram', 'telegram': 'Telegram',
-            'facebook': 'Facebook', 'messenger': 'Facebook Messenger', 'web': 'Web', 'sms': 'SMS'
-        }
-        platform_display = platform_names.get(platform, platform.title())
+        platform = ChatBotUtils._normalizar_plataforma(platform)
+        platform_display = ChatBotUtils._plataforma_display(platform)
         medium = env['utm.medium'].search([('name', '=ilike', platform_display)], limit=1)
         if not medium:
             medium = env['utm.medium'].create({'name': platform_display})
@@ -479,7 +527,7 @@ class ChatBotUtils:
 
 • Identificación del cliente: {identificacion}
 • Documento solicitado: {estudio}
-• Plataforma: {data.get('plataforma', 'WhatsApp')}
+• Plataforma: {ChatBotUtils._plataforma_display(data.get('plataforma', 'whatsapp'))}
 • Fecha de solicitud: {datetime.now().strftime('%d/%m/%Y %H:%M')}
 """
         
@@ -578,9 +626,7 @@ class ChatBotUtils:
     @staticmethod
     def generate_description(data):
         """Generar descripción del lead, incluyendo email y consentimiento."""
-        platform = data.get('plataforma', 'WhatsApp')
-        if platform.lower() == 'whatsapp':
-            platform = 'WhatsApp'
+        platform = ChatBotUtils._plataforma_display(data.get('plataforma', 'whatsapp'))
         lines = [f"Solicitud desde {platform} Bot \n"]
 
         defaults = {

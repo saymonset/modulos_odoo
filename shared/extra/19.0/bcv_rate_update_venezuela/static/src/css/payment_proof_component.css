@@ -1,0 +1,114 @@
+/* === FORMULARIO DE PAGO — TARJETA, CONTRASTE Y MÓVIL (SPEC 60) === */
+
+/* Tarjeta principal: distinguible del fondo blanco de la página */
+#payment_proof_form_container {
+    background-color: #f5f7fa;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1rem;
+}
+
+/* Encabezados de pasos numerados */
+#payment_proof_form_container .payment-step-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #2a3a4b;
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 2px solid #4a90e2;
+}
+
+#payment_proof_form_container .payment-step-title .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background-color: #4a90e2;
+    color: #ffffff;
+    font-size: 0.85rem;
+    margin-right: 0.4rem;
+}
+
+/* Etiquetas: oscuras y legibles */
+#payment_proof_form_container .form-label {
+    color: #2a3a4b;
+    font-weight: 600;
+}
+
+/* Inputs y selects: borde visible, foco azul */
+#payment_proof_form_container .form-control {
+    background-color: #ffffff;
+    color: #2a3a4b;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.375rem;
+}
+
+#payment_proof_form_container .form-control:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+}
+
+#payment_proof_form_container .form-control[readonly] {
+    background-color: #eef2f7;
+    color: #475569;
+    cursor: not-allowed;
+}
+
+/* Datos del banco destino: tarjeta propia debajo del select */
+#payment_proof_form_container .bank-details-card {
+    background-color: #ffffff;
+    border: 1px solid #4a90e2;
+    border-left: 4px solid #4a90e2;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: #2a3a4b;
+}
+
+#payment_proof_form_container .bank-details-card strong {
+    color: #2a3a4b;
+}
+
+/* Alerta de validación del monto: legible sobre la tarjeta */
+#payment_proof_form_container .alert {
+    border-radius: 0.5rem;
+}
+
+/* Botón "Adjuntar comprobante": área táctil clara */
+#payment_proof_form_container input[type="file"] {
+    min-height: 2.75rem;
+    padding: 0.45rem 0.6rem;
+    background-color: #ffffff;
+    color: #2a3a4b;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.375rem;
+}
+
+/* === MÓVIL: área táctil ≥44px y 16px para evitar zoom de iOS === */
+@media (max-width: 991.98px) {
+    #payment_proof_form_container {
+        padding: 0.75rem;
+        margin-left: -0.25rem;
+        margin-right: -0.25rem;
+    }
+
+    #payment_proof_form_container .form-control,
+    #payment_proof_form_container .btn,
+    #payment_proof_form_container input[type="file"] {
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    #payment_proof_form_container .form-label {
+        font-size: 0.95rem;
+    }
+}
+
+/* === CHECKOUT MÓVIL: ocultar la burbuja del chatbot n8n para que no tape el pago === */
+@media (max-width: 991.98px) {
+    body:has(#payment_proof_form_container) .chat-window-wrapper,
+    body:has(form[name="address_form"]) .chat-window-wrapper {
+        display: none !important;
+    }
+}

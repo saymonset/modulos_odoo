@@ -3,7 +3,26 @@
   "skills": {
     "paths": ["~/.agents/skills/odoo-19", ".agents/skills"]
   },
+  "agent": {
+    "spec-verify": {
+      "description": "Verifica, corrige y marca los checks de 'Criterios de aceptación' de un spec en specs/. Usa Context7 si el spec depende de librerías externas.",
+      "mode": "primary",
+      "prompt": "{file:./.agents/spec-verify.prompt.md}",
+      "permission": {
+        "edit": {
+          "specs/**": "allow",
+          "*": "deny"
+        },
+        "bash": "ask"
+      }
+    }
+  },
   "command": {
+    "spec-verify": {
+      "description": "Verifica los criterios de aceptación de un spec.",
+      "agent": "spec-verify",
+      "template": "Verifica los criterios de aceptación del spec: $ARGUMENTS"
+    },
     "spec": {
       "description": "Crea especificaciones de pantallas y funcionalidades",
       "template": "Carga y sigue la skill spec en .agents/skills/spec/SKILL.md.\n\nFeature: $ARGUMENTS"
@@ -37,7 +56,7 @@
         "LD_LIBRARY_PATH": "/home/odoo/.local/lib/alsa"
       },
       "timeout": 20000,
-      "enabled": true
+      "enabled": false
     }
   }
 }

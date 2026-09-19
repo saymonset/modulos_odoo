@@ -154,6 +154,7 @@ class InicioAgendarController(http.Controller):
             name_flow = data.get('name_flow')
             equipo_asignado = data.get('equipo_asignado')
             telefono_busqueda = data.get('telefono', data.get('solicitar_phone', ''))
+            plataforma = data.get('plataforma')
 
             if not session_id:
                 return Response(
@@ -220,6 +221,7 @@ class InicioAgendarController(http.Controller):
                 datos_precargados=datos_precargados,
                 account_id=account_id,
                 conversation_id=conversation_id,
+                plataforma=plataforma,
             )
             
             # Usar los pasos y primer paso del modelo (ya viene con pregunta amigable generada)
@@ -319,6 +321,20 @@ class InicioAgendarController(http.Controller):
                 if sesion and sesion.estado:
                     paso = sesion.estado.get('paso')
                 if not paso:
+                    # SPEC 48: sin flujo activo pero sesión en modo carrito ->
+                    # delegar al carrito en vez del texto genérico.
+                    try:
+                        from odoo.addons.chatbot_cart.controllers.chatbot_cart_controller import ChatbotCartController
+                        if getattr(session_model, '_esta_en_modo_carrito', None) \
+                                and session_model._esta_en_modo_carrito(session_id):
+                            return ChatbotCartController().procesar(
+                                session_id=session_id,
+                                conversation_id=conversation_id,
+                                account_id=account_id,
+                                platform=platform,
+                                valor=valor)
+                    except ImportError:
+                        pass
                     # Sin paso y sin sesión o sin flujo activo -> MENU_PRINCIPAL
                     return Response(json.dumps({
                         'success': True,
@@ -404,11 +420,30 @@ class InicioAgendarController(http.Controller):
                     )
 
             system_prompt = ChatBotUtils.build_agent_system_prompt(request.env)
+            modo_carrito = False
+            try:
+                from odoo.addons.chatbot_cart.services.prompt_carrito import (
+                    append_cart_instructions,
+                    carrito_disponible,
+                    render_prompt_carrito_solo,
+                )
+                session_id = data.get('session_id', '')
+                session = request.env['chatbot.session'].sudo()
+                if session_id and session._esta_en_modo_carrito(session_id):
+                    # SPEC 34: aislamiento total — en modo carrito el agente
+                    # solo recibe instrucciones del carrito (sin negocio ni RAG).
+                    modo_carrito = True
+                    system_prompt = render_prompt_carrito_solo()
+                elif carrito_disponible(request.env):
+                    system_prompt = append_cart_instructions(system_prompt, request.env)
+            except ImportError:
+                pass
             fallback_message = request.env['ir.config_parameter'].sudo().get_param(
                 'ai_chatbot_1_portal.fallback_message',
                 'No pudimos procesar tu solicitud en este momento. Por favor intenta más tarde.')
 
             data['system_prompt'] = system_prompt or fallback_message
+            data['modo_carrito'] = modo_carrito
             data['fallback_message'] = fallback_message
             data['flow_map'] = request.env['chatbot.flujo'].sudo()._get_flow_routing_map()
             # SPEC 18: True = modo menú determinista (SPEC 13/17); False =

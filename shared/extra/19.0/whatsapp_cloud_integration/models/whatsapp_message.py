@@ -6,6 +6,9 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+MAX_CAPTION_LENGTH = 1024
+
+
 class WhatsappMessageWizard(models.TransientModel):
     _name = 'whatsapp.message.wizard'
     _description = 'Wizard para enviar mensajes de WhatsApp'
@@ -19,18 +22,92 @@ class WhatsappMessageWizard(models.TransientModel):
         help='Ej: ["https://urlvideo.mp4", "Simón"] (primero la URL del video si la plantilla tiene header)'
     )
 
-    def action_send_whatsapp_message(self):
-        self.ensure_one()
-        recipient = self.partner_id.phone
-        if not recipient:
-            raise UserError(_('El cliente no tiene número de teléfono.'))
-
+    @staticmethod
+    def _normalizar_telefono(recipient):
+        """Normaliza un número de teléfono al formato internacional para Meta."""
         recipient = recipient.strip().replace(' ', '').replace('+', '').replace('-', '')
         # Formatear números de Venezuela si vienen sin código de país (ej: 0412... -> 58412...)
         if recipient.startswith('04') and len(recipient) == 11:
             recipient = '58' + recipient[1:]
         elif recipient.startswith('4') and len(recipient) == 10:
             recipient = '58' + recipient
+        return recipient
+
+    def send_image_with_caption(self, partner_id, image_url, caption, waba_account_id=None):
+        """Envía una imagen pública con caption en una conversación iniciada.
+
+        Se usa para mostrar productos con su nombre y precio en el carrito del
+        chatbot (no requiere plantilla aprobada porque responde a un mensaje
+        del usuario dentro de la ventana de conversación de 24h).
+        """
+        partner = self.env['res.partner'].sudo().browse(partner_id)
+        if not partner.phone:
+            return {'success': False, 'message': 'El cliente no tiene número de teléfono.'}
+
+        waba = self.env['waba.account'].sudo().browse(waba_account_id) if waba_account_id \
+            else self.env['waba.account'].sudo().search([('active', '=', True)], limit=1)
+        if not waba:
+            return {'success': False, 'message': 'No hay cuenta WABA activa.'}
+
+        to_number = self._normalizar_telefono(partner.phone)
+        url = f"https://graph.facebook.com/v25.0/{waba.phone_number_id}/messages"
+        headers = {
+            'Authorization': f'Bearer {waba.access_token}',
+            'Content-Type': 'application/json'
+        }
+        payload = {
+            'messaging_product': 'whatsapp',
+            'to': to_number,
+            'type': 'image',
+            'image': {
+                'link': image_url,
+                'caption': (caption or '')[:MAX_CAPTION_LENGTH],
+            },
+        }
+        try:
+            _logger.info("=== PAYLOAD IMAGEN CON CAPTION ===")
+            _logger.info(json.dumps(payload, indent=2))
+            _logger.info("==================================")
+            response = requests.post(url, headers=headers, json=payload, timeout=15)
+            response.raise_for_status()
+            result = response.json()
+            self.env['whatsapp.history'].create({
+                'partner_id': partner.id,
+                'waba_account_id': waba.id,
+                'direction': 'outgoing',
+                'recipient_number': to_number,
+                'message_body': caption,
+                'response_data': json.dumps(result, indent=2),
+                'status': 'sent',
+                'message_id': result.get('messages', [{}])[0].get('id', ''),
+            })
+            return {'success': True, 'message_id': result.get('messages', [{}])[0].get('id', '')}
+        except requests.exceptions.RequestException as e:
+            error_detail = str(e)
+            if e.response is not None:
+                try:
+                    error_detail = e.response.json().get('error', {}).get('message', error_detail)
+                except Exception:
+                    pass
+            self.env['whatsapp.history'].create({
+                'partner_id': partner.id,
+                'waba_account_id': waba.id,
+                'direction': 'outgoing',
+                'recipient_number': to_number,
+                'message_body': caption,
+                'response_data': error_detail,
+                'status': 'error',
+            })
+            _logger.error(f"Error enviando imagen a {to_number}: {error_detail}")
+            return {'success': False, 'message': error_detail}
+
+    def action_send_whatsapp_message(self):
+        self.ensure_one()
+        recipient = self.partner_id.phone
+        if not recipient:
+            raise UserError(_('El cliente no tiene número de teléfono.'))
+
+        recipient = self._normalizar_telefono(recipient)
 
         url = f"https://graph.facebook.com/v25.0/{self.waba_account_id.phone_number_id}/messages"
         headers = {

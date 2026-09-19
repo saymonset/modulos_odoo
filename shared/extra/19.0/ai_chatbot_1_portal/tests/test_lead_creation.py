@@ -240,3 +240,55 @@ class TestLeadCreation(BaseChatbotTestCase):
         self.assertTrue(lead.id)
         ChatBotUtils.assign_lead_round_robin(self.env, lead, self.team)
         self.assertTrue(lead.user_id.id, "Lead debe tener usuario asignado")
+
+    def _paso(self, nombre_interno, nombre_mostrar, tipo_dato, campo_destino, mensaje_prompt):
+        return {
+            'nombre_interno': nombre_interno,
+            'nombre_mostrar': nombre_mostrar,
+            'tipo_dato': tipo_dato,
+            'campo_destino': campo_destino,
+            'mensaje_prompt': mensaje_prompt,
+            'mensaje_error': '',
+            'es_requerido': True,
+            'es_paso_telefono': False,
+        }
+
+    def _pasos_flujo_basico(self):
+        return [
+            self._paso('solicitar_name', 'Nombre completo', 'text', 'name', '¿Cómo te llamas?'),
+            self._paso('solicitar_phone', 'Teléfono', 'text', 'phone', '¿Cuál es tu teléfono?'),
+        ]
+
+    def _lead_de_flujo(self, session_id, steps, equipo_asignado, plataforma=None):
+        """Ejecuta un flujo completo y devuelve el lead creado al finalizarlo."""
+        session_model = self.env['chatbot.session']
+        session_model.iniciar_flujo(
+            session_id, 'flujo_ventas', steps, equipo_asignado, plataforma=plataforma)
+        res_1 = session_model.procesar_paso(session_id, 'Juan Pérez', None, 'c1', 'a1', plataforma or 'whatsapp')
+        self.assertFalse(res_1.get('finalizado'))
+        res_2 = session_model.procesar_paso(session_id, '04141234567', None, 'c1', 'a1', plataforma or 'whatsapp')
+        self.assertTrue(res_2.get('finalizado'), 'Al completar el flujo debe crearse el lead')
+        lead_id = res_2.get('lead_resultado', {}).get('lead_info', {}).get('lead_id')
+        lead = self.env['crm.lead'].browse(lead_id)
+        self.assertTrue(lead.exists())
+        return lead
+
+    def test_09_propaga_plataforma_telegram(self):
+        """Flujo desde Telegram registra la plataforma real en el lead (SPEC 62)"""
+        lead = self._lead_de_flujo(
+            'pp_telegram', self._pasos_flujo_basico(), 'RESULTADOS_IMAGENES',
+            plataforma='Channel::Telegram')
+
+        self.assertIn('Plataforma: Telegram', lead.description)
+        self.assertEqual(lead.medium_id.name, 'Telegram')
+        self.assertEqual(lead.source_id.name, 'Telegram Bot IntegraIA')
+        self.assertIn('Telegram Bot', lead.tag_ids.mapped('name'))
+
+    def test_10_regresion_plataforma_whatsapp(self):
+        """Sin plataforma, el flujo registra WhatsApp como canal (SPEC 62)"""
+        lead = self._lead_de_flujo(
+            'pp_whatsapp', self._pasos_flujo_basico(), 'RESULTADOS_IMAGENES')
+
+        self.assertIn('Plataforma: WhatsApp', lead.description)
+        self.assertEqual(lead.medium_id.name, 'WhatsApp')
+        self.assertEqual(lead.source_id.name, 'WhatsApp Bot IntegraIA')

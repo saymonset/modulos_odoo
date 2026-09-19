@@ -1,6 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="bcv_rate_update_venezuela.AddressAutofill" owl="1">
-        <div class="d-none" t-att-data-loading="state.loading"></div>
+        <div id="address_autofill_banner">
+            <div t-if="state.status === 'idle'" class="phone-instruction-card">
+                <i class="fa fa-phone me-2"></i>
+                Escribe tu teléfono y presiona <strong>Continuar</strong> para cargar tus datos.
+            </div>
+            <div t-elif="state.status === 'loading'" class="alert alert-info py-2 mb-0 d-flex align-items-center">
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Buscando tu información...
+            </div>
+            <div t-elif="state.status === 'found'" class="alert alert-success py-2 mb-0 d-flex align-items-center justify-content-between gap-2">
+                <span>
+                    Hola <strong t-esc="state.name"></strong>, tus datos están cargados.
+                </span>
+                <button type="button" class="btn btn-link btn-sm p-0 text-nowrap" t-on-click="_notYou">
+                    ¿No eres tú? Completa tus datos
+                </button>
+            </div>
+            <div t-elif="state.status === 'not_found'" class="alert alert-warning py-2 mb-0">
+                No encontramos tu teléfono. Completa tus datos para continuar.
+            </div>
+        </div>
     </t>
 </templates>

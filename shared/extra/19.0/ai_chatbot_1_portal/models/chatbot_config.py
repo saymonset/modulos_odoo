@@ -5,6 +5,10 @@ import unicodedata
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
+from odoo.addons.ai_chatbot_1_portal.models.chatbot_flujo import (
+    _FLUJOS_NO_AUTODETECTADOS,
+)
+
 _logger = logging.getLogger(__name__)
 
 _STOPWORDS = set("""
@@ -939,6 +943,8 @@ class ChatbotConfig(models.Model):
         candidatos = []
         matched = []
         for flujo in flujos:
+            if flujo.name in _FLUJOS_NO_AUTODETECTADOS:
+                continue
             keywords = [k.strip() for k in (flujo.palabras_clave or '').split(',')]
             keywords = [_normalizar(k) for k in keywords if k]
             if not keywords:
@@ -1053,6 +1059,9 @@ class ChatbotConfig(models.Model):
         # (archivados) para que la detección tenga candidatos.
         flujo_model = self.env['chatbot.flujo'].sudo()
         flujo_model._ensure_catalogo_flujos()
+        # SPEC 32: el flujo del carrito también se auto-recupera si se borró
+        # a mano (inactivo; la activación sigue siendo manual).
+        flujo_model._ensure_flujo_carrito()
         flujos = flujo_model.with_context(active_test=False).search([])
 
         texto = "\n\n".join(filter(None, [
@@ -1061,8 +1070,19 @@ class ChatbotConfig(models.Model):
         flujos_detectados = deteccion['flujos']
         metodo = deteccion['metodo']
 
-        if flujos_detectados:
-            self.write({'flujo_ids': [(6, 0, flujos_detectados.ids)]})
+        # SPEC 29/31: capturar ANTES del replace la marca manual de flujos
+        # no-autodetectados (ej. flujo_carrito_compra) para que la sync no los
+        # desmarque ni los archive; la detección nunca los agrega ni los quita.
+        marcados_manuales = self.flujo_ids.filtered(
+            lambda f: f.name in _FLUJOS_NO_AUTODETECTADOS)
+
+        flujos_ids = flujos_detectados.ids
+        if flujos_ids:
+            flujos_ids = list(flujos_ids) + [
+                f.id for f in marcados_manuales if f.id not in flujos_ids]
+            self.write({'flujo_ids': [(6, 0, flujos_ids)]})
+        elif marcados_manuales:
+            self.write({'flujo_ids': [(6, 0, marcados_manuales.ids)]})
 
         # Recoger temas de contenido RAG para el menú
         accion_nombres_menu = {_normalizar(n) for n in _INTENCIONES_ACCION}

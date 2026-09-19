@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_chatbot_config_form_cart" model="ir.ui.view">
+        <field name="name">chatbot.config.form.cart</field>
+        <field name="model">chatbot.config</field>
+        <field name="inherit_id" ref="ai_chatbot_1_portal.view_chatbot_config_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='flujo_ids']" position="after">
+                <group string="Pago del carrito">
+                    <field name="payment_instructions"/>
+                </group>
+                <button
+                    name="action_activar_carrito"
+                    type="object"
+                    string="Activar carrito"
+                    invisible="carrito_compra_activo"/>
+                <button
+                    name="action_activar_carrito"
+                    type="object"
+                    string="Desactivar carrito"
+                    invisible="not carrito_compra_activo"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

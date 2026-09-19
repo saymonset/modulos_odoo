@@ -201,7 +201,7 @@ class ChatBotController(http.Controller):
             })
             
             # Configurar UTM y etiquetas
-            plataforma = data.get('plataforma', 'whatsapp')
+            plataforma = ChatBotUtils._normalizar_plataforma(data.get('plataforma', 'whatsapp'))
             medium, source, campaign = ChatBotUtils.setup_utm(env, plataforma)
             tag = ChatBotUtils.get_or_create_bot_tag(env, plataforma)
             teams = ChatBotUtils.get_or_create_crm_teams(env)

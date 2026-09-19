@@ -183,12 +183,13 @@ class SessionState(models.Model):
     #  MÉTODOS PRINCIPALES DEL FLUJO
     # ==================================================================
     @api.model
-    def iniciar_flujo(self, session_id, flow_name, steps, equipo_asignado, datos_precargados=None, account_id=None, conversation_id=None):
+    def iniciar_flujo(self, session_id, flow_name, steps, equipo_asignado, datos_precargados=None, account_id=None, conversation_id=None, plataforma=None):
         """
         Inicia un flujo para una sesión, guardando los pasos pendientes y estableciendo el primer paso.
         steps: lista de diccionarios con la definición de cada paso.
         datos_precargados: dict con datos del cliente ya existentes (opcional).
         account_id/conversation_id: se inyectan en datos_paciente para que el hook Chatwoot funcione.
+        plataforma: canal real de la conversación (p. ej. 'telegram'), normalizado.
         """
         _logger.info("Iniciando flujo para session_id: %s, flow_name: %s", session_id, flow_name)
         _logger.info("Datos precargados: %s", datos_precargados)
@@ -197,6 +198,7 @@ class SessionState(models.Model):
         datos_paciente = datos_precargados.copy() if datos_precargados else {}
         datos_paciente['equipo_asignado'] = equipo_asignado
         datos_paciente['flow_name'] = flow_name
+        datos_paciente['plataforma'] = ChatBotUtils._normalizar_plataforma(plataforma)
         if account_id:
             datos_paciente['account_id'] = account_id
         if conversation_id:
@@ -343,6 +345,18 @@ class SessionState(models.Model):
             return self._respuesta_menu_sin_sesion(session_id, conversation_id, account_id, platform)
         
         _logger.info("Sesión encontrada (ID: %s). Modo actual: %s", registro.id, registro.modo)
+
+        # Sincronizar el canal real de la conversación en datos_paciente (SPEC 62)
+        if platform:
+            try:
+                estado = registro.estado or {}
+                datos_p = estado.setdefault('datos_paciente', {})
+                plataforma_norm = ChatBotUtils._normalizar_plataforma(platform)
+                if datos_p.get('plataforma') != plataforma_norm:
+                    datos_p['plataforma'] = plataforma_norm
+                    registro.write({'estado': estado})
+            except Exception:
+                _logger.exception("Error sincronizando plataforma en sesión %s", session_id)
 
         # Expiración por inactividad (10 minutos)
         delta = fields.Datetime.now() - registro.last_activity
@@ -911,7 +925,7 @@ class SessionState(models.Model):
             _logger.info("Datos para actualizar/crear contacto: %s", partner_data)
             
             partner = ChatBotUtils.update_create_contact(env, partner_data)
-            plataforma = datos.get('plataforma', 'whatsapp')
+            plataforma = ChatBotUtils._normalizar_plataforma(datos.get('plataforma', 'whatsapp'))
             medium, source, campaign = ChatBotUtils.setup_utm(env, plataforma)
             tag = ChatBotUtils.get_or_create_bot_tag(env, plataforma)
             teams = ChatBotUtils.get_or_create_crm_teams(env)
