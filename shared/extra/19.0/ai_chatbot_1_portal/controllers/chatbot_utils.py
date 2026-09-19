@@ -394,9 +394,20 @@ class ChatBotUtils:
         return teams
 
     @staticmethod
+    def _normalizar_plataforma(value='whatsapp'):
+        """Normaliza el identificador de plataforma a su forma canónica en
+        minúsculas (p. ej. 'Channel::Telegram' -> 'telegram'). Default 'whatsapp'."""
+        if not value:
+            return 'whatsapp'
+        plataforma = str(value).strip()
+        if plataforma.lower().startswith('channel::'):
+            plataforma = plataforma.split('::', 1)[1]
+        return plataforma.lower() or 'whatsapp'
+
+    @staticmethod
     def setup_utm(env, platform='whatsapp'):
         """Configurar medium, source y campaign según la plataforma"""
-        platform = platform.lower().strip() if platform else 'whatsapp'
+        platform = ChatBotUtils._normalizar_plataforma(platform)
         platform_names = {
             'whatsapp': 'WhatsApp', 'instagram': 'Instagram', 'telegram': 'Telegram',
             'facebook': 'Facebook', 'messenger': 'Facebook Messenger', 'web': 'Web', 'sms': 'SMS'
