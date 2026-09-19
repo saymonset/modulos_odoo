@@ -316,7 +316,6 @@ class ChatBotController(http.Controller):
                                          'inbox_id': mapping['inbox_id'],
                                          'prefer_assign_to_agent': mapping['prefer_assign_to_agent'],
                                          'tags': mapping['tags'],
-                                         'notify_message_len': len(mapping.get('notify_message', '')),
                                      })
                         result = env['chatwoot.client'].assign_conversation(account_id_cw, conversation_id_cw, mapping)
                         _logger.info('RR[HTTP] assign_conversation RESULTADO: %s', result)

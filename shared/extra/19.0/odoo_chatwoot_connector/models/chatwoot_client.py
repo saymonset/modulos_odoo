@@ -309,7 +309,7 @@ class ChatwootClient(models.AbstractModel):
 
     @api.model
     def assign_conversation(self, account_id, conversation_id, mapping):
-        """mapping: dict with optional keys: agent_id, agent_email, inbox_id, tags (list), notify_message
+        """mapping: dict with optional keys: agent_id, agent_email, inbox_id, tags (list), equipo_asignado
         Behavior: try assign to agent_id (or resolve agent_email) using Chatwoot assignments API.
         If assignment to agent fails, keep conversation in its inbox as fallback and continue."""
         base_url = self.env['ir.config_parameter'].sudo().get_param('chatwoot.base_url') or ''
