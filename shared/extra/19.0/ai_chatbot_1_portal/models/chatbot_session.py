@@ -346,6 +346,18 @@ class SessionState(models.Model):
         
         _logger.info("Sesión encontrada (ID: %s). Modo actual: %s", registro.id, registro.modo)
 
+        # Sincronizar el canal real de la conversación en datos_paciente (SPEC 62)
+        if platform:
+            try:
+                estado = registro.estado or {}
+                datos_p = estado.setdefault('datos_paciente', {})
+                plataforma_norm = ChatBotUtils._normalizar_plataforma(platform)
+                if datos_p.get('plataforma') != plataforma_norm:
+                    datos_p['plataforma'] = plataforma_norm
+                    registro.write({'estado': estado})
+            except Exception:
+                _logger.exception("Error sincronizando plataforma en sesión %s", session_id)
+
         # Expiración por inactividad (10 minutos)
         delta = fields.Datetime.now() - registro.last_activity
         if delta.total_seconds() > 600:

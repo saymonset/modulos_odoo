@@ -154,6 +154,7 @@ class InicioAgendarController(http.Controller):
             name_flow = data.get('name_flow')
             equipo_asignado = data.get('equipo_asignado')
             telefono_busqueda = data.get('telefono', data.get('solicitar_phone', ''))
+            plataforma = data.get('plataforma')
 
             if not session_id:
                 return Response(
@@ -220,6 +221,7 @@ class InicioAgendarController(http.Controller):
                 datos_precargados=datos_precargados,
                 account_id=account_id,
                 conversation_id=conversation_id,
+                plataforma=plataforma,
             )
             
             # Usar los pasos y primer paso del modelo (ya viene con pregunta amigable generada)
