@@ -387,17 +387,6 @@ class ChatwootClient(models.AbstractModel):
             _logger.info('assign_conversation[conv=%s]: preserving existing assignee id=%s name=%s email=%s',
                          conversation_id, current_assignee_id, current_assignee_name, current_assignee_email)
             assigned = 'preserved'
-            # Override notify_message with informative message about the new flow and current agent
-            if mapping.get('notify_message'):
-                mapping = dict(mapping)
-                equipo_legible = (mapping.get('equipo_asignado', '') or '').replace('_', ' ') or 'la misma'
-                msg = (
-                    f"Ya tienes una solicitud en curso.\n"
-                    f"Tu nueva consulta sobre {equipo_legible} ha sido registrada.\n"
-                )
-                if current_assignee_email:
-                    msg += f"Agente asignado: {current_assignee_email}"
-                mapping['notify_message'] = msg
 
         if agent_id and mapping.get('inbox_id'):
             try:
@@ -483,23 +472,6 @@ class ChatwootClient(models.AbstractModel):
                             errors.extend(label_result.get('errors', []))
             except Exception as e:
                 errors.append(f'exception_apply_labels:{e}')
-
-        # Notify message whenever assignment is attempted successfully.
-        if mapping.get('notify_message'):
-            try:
-                content = mapping['notify_message']
-                try:
-                    _brand, enabled, text = self.env['chatbot.config']._get_brand_settings()
-                    if enabled:
-                        content += f"\n\n_Atención automatizada por {text or '@integraiaconodoo'}_"
-                except Exception:
-                    pass
-                url = f"{base_url}/api/v1/accounts/{account_id}/conversations/{conversation_id}/messages"
-                r = requests.post(url, json={"content": content}, headers=headers, timeout=timeout)
-                if r.status_code not in (200, 201):
-                    errors.append(f'notify_failed:{r.status_code}:{r.text}')
-            except Exception as e:
-                errors.append(f'exception_notify:{e}')
 
         ok = assigned is not None and len(errors) == 0
         final_assignee_id = current_assignee_id if preserve else (agent_id if assigned == 'agent' else None)
