@@ -40,15 +40,15 @@ class TestPresentacionConfig(BaseChatbotTestCase):
         self.assertIn('¿En qué puedo ayudarte?', texto)
 
     def test_02_generador_omite_bloques_vacios(self):
-        config = self.env['chatbot.config'].create({'name': 'Minimal'})
-        self.assertEqual(config._generar_presentacion_conversacional(), '')
-        config2 = self.env['chatbot.config'].create({
-            'name': 'Solo marca',
-            'brand_name': 'B',
+        config = self.env['chatbot.config'].create({
+            'name': 'Minimal',
+            'role': 'Solo rol, sin tienda ni contacto.',
         })
-        texto = config2._generar_presentacion_conversacional()
-        self.assertIn('¡Hola! Te saluda *B*.', texto)
+        texto = config._generar_presentacion_conversacional()
+        self.assertIn('¡Hola! Te saluda *Minimal*.', texto)
+        self.assertIn('Solo rol, sin tienda ni contacto.', texto)
         self.assertNotIn('Visita nuestra tienda online', texto)
+        self.assertNotIn('Puedo ayudarte con:', texto)
 
     def test_03_auto_generacion_al_crear(self):
         config = self._crear_config()
@@ -113,10 +113,9 @@ class TestPresentacionConfig(BaseChatbotTestCase):
         self._crear_tabla_n8n_vectors()
         self._insertar_documento('doc1', 'CONTENIDO:\nPrecio X: 10 USD', 1)
         config = self._crear_config()
-        # Simula presentación vacía (sin pasar por write para no regenerarla).
-        self.env.cr.execute(
-            "UPDATE chatbot_config SET presentacion_texto = NULL WHERE id=%s",
-            (config.id,))
+        # Simula presentación vacía sin pasar por la auto-generación del write.
+        config.with_context(_presentacion_auto=True).write(
+            {'presentacion_texto': False})
         config.invalidate_recordset()
         self.assertFalse((config.presentacion_texto or '').strip())
         res = config._refrescar_desde_rag()
