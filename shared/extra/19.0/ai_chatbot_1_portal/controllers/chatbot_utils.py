@@ -1142,6 +1142,7 @@ class ChatBotUtils:
     @staticmethod
     def generate_response(data, lead_id=None, equipo_asignado=None, env=None):
         """Generar respuesta personalizada según el flujo, usando IA si está disponible."""
+        encabezado = ChatBotUtils._encabezado_registro(equipo_asignado)
         pie = ChatBotUtils._pie_mensaje(lead_id, equipo_asignado, env=env)
 
         grupo_texto = 'atención al cliente'
@@ -1169,7 +1170,7 @@ class ChatBotUtils:
                     resultado = service.sudo().generar_mensaje_finalizacion(contexto)
                     if resultado and resultado.get('mensaje_final'):
                         return truncate_for_platform(
-                            resultado['mensaje_final'] + "\n\n" + pie,
+                            encabezado + "\n\n" + resultado['mensaje_final'] + "\n\n" + pie,
                             data.get('platform'),
                         )
             except Exception:
@@ -1178,7 +1179,9 @@ class ChatBotUtils:
         # Fallback manual con formato neutro
         name = data.get('solicitar_name', '').strip()
         resumen = ChatBotUtils.format_patient_summary(data)
-        lines = ["Confirmación: Hemos recibido tu información correctamente."]
+        lines = [encabezado]
+        lines.append("")
+        lines.append("Confirmación: Hemos recibido tu información correctamente.")
         lines.append("")
         if name:
             lines.append(f"{name}, a continuación un resumen de lo registrado:")
