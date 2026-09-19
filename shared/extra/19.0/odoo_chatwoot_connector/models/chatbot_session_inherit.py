@@ -127,17 +127,12 @@ class ChatbotSessionInherit(models.Model):
                     _logger.warning('RR[session] NO se obtuvieron agent_details - agent_id=%s agent_email=%s',
                                     mapping_rec.chatwoot_agent_id, mapping_rec.chatwoot_agent_email)
 
-                notify_msg = ChatBotUtils._build_notify_message_with_audit(
-                    mapping_rec, assigned_agent_email, audit_info
-                )
-
                 mapping = {
                     'agent_id': mapping_rec.chatwoot_agent_id or None,
                     'agent_email': mapping_rec.chatwoot_agent_email or None,
                     'inbox_id': mapping_rec.chatwoot_inbox_id or None,
                     'prefer_assign_to_agent': mapping_rec.prefer_assign_to_agent,
                     'tags': [t.strip() for t in (mapping_rec.chatwoot_tags or '').split(',') if t.strip()],
-                    'notify_message': notify_msg,
                     'equipo_asignado': mapping_rec.equipo_asignado or '',
                 }
                 _logger.info('RR[session] asignando conversación conv=%s account=%s mapping=%s',
@@ -147,7 +142,6 @@ class ChatbotSessionInherit(models.Model):
                                  'inbox_id': mapping['inbox_id'],
                                  'prefer_assign_to_agent': mapping['prefer_assign_to_agent'],
                                  'tags': mapping['tags'],
-                                 'notify_message_len': len(mapping.get('notify_message', '')),
                              })
                 # call client
                 try:

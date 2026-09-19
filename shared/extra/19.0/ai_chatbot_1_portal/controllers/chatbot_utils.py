@@ -1002,6 +1002,17 @@ class ChatBotUtils:
         return "\n".join(line for line in pie if line)
 
     @staticmethod
+    def _encabezado_registro(equipo_asignado):
+        """Encabezado del mensaje único de registro al cliente.
+
+        Sin email del agente ni audit técnico; solo confirma el registro.
+        """
+        equipo = (equipo_asignado or '').replace('_', ' ').strip()
+        if equipo:
+            return f"Tu consulta sobre {equipo} ha sido registrada."
+        return "Tu consulta ha sido registrada."
+
+    @staticmethod
     def _build_flow_audit(env, name_flow, data):
         """
         Auditoría técnica de la ejecución del flujo para personal interno.
@@ -1100,37 +1111,9 @@ class ChatBotUtils:
         return data
 
     @staticmethod
-    def _build_notify_message_with_audit(mapping_rec, assigned_agent_email, audit):
-        """
-        Mensaje de notificación interna para el agente Chatwoot.
-
-        Incluye la referencia del flujo y el estado de cumplimiento de pasos
-        (completados vs esperados) para que el personal técnico pueda auditar
-        si el flujo se comportó correctamente.
-        """
-        equipo = (mapping_rec.equipo_asignado or '').replace('_', ' ')
-        lines = [f"Tu consulta sobre {equipo} ha sido registrada."]
-        if assigned_agent_email:
-            lines.append(f"Agente asignado: {assigned_agent_email}")
-
-        if audit and audit.get('flow_name'):
-            lines.append("")
-            lines.append(f"Flujo: {audit.get('flow_name')}")
-            if audit.get('flow_ok') is not None:
-                estado = 'COMPLETADO' if audit['flow_ok'] else 'INCOMPLETO'
-                lines.append(f"Estado: {estado}")
-            completados = set(audit.get('steps_completed', []))
-            lineas_pasos = []
-            for paso in audit.get('steps_expected', []):
-                campo = paso.get('campo_destino')
-                marca = '✓' if campo in completados else '✗'
-                lineas_pasos.append(f"{marca} {paso.get('nombre')}")
-            lines.append("Pasos: " + " | ".join(lineas_pasos))
-        return "\n".join(lines)
-
-    @staticmethod
     def generate_response(data, lead_id=None, equipo_asignado=None, env=None):
         """Generar respuesta personalizada según el flujo, usando IA si está disponible."""
+        encabezado = ChatBotUtils._encabezado_registro(equipo_asignado)
         pie = ChatBotUtils._pie_mensaje(lead_id, equipo_asignado, env=env)
 
         grupo_texto = 'atención al cliente'
@@ -1158,7 +1141,7 @@ class ChatBotUtils:
                     resultado = service.sudo().generar_mensaje_finalizacion(contexto)
                     if resultado and resultado.get('mensaje_final'):
                         return truncate_for_platform(
-                            resultado['mensaje_final'] + "\n\n" + pie,
+                            encabezado + "\n\n" + resultado['mensaje_final'] + "\n\n" + pie,
                             data.get('platform'),
                         )
             except Exception:
@@ -1167,7 +1150,9 @@ class ChatBotUtils:
         # Fallback manual con formato neutro
         name = data.get('solicitar_name', '').strip()
         resumen = ChatBotUtils.format_patient_summary(data)
-        lines = ["Confirmación: Hemos recibido tu información correctamente."]
+        lines = [encabezado]
+        lines.append("")
+        lines.append("Confirmación: Hemos recibido tu información correctamente.")
         lines.append("")
         if name:
             lines.append(f"{name}, a continuación un resumen de lo registrado:")

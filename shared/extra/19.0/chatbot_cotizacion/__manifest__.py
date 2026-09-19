@@ -21,4 +21,10 @@ token para el agente de n8n y contrato cotizar_desde_carrito para el carrito."""
     'installable': True,
     'application': True,
     'license': 'LGPL-3',
+     'images': [
+                'ai_chatbot_0_core/static/description/icon.png'
+            ],
+       
+    
+    
 }
