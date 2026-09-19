@@ -15,3 +15,4 @@ from . import test_modo_conversacional
 from . import test_salir_limpia_sesion
 from . import test_flujos_no_autodetectados
 from . import test_configuracion_agente_modo_carrito
+from . import test_mensaje_unico_registro
