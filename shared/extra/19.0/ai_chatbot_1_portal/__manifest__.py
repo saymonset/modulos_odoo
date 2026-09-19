@@ -45,4 +45,9 @@
     'installable': True,
     'auto_install': False,
     'license': 'LGPL-3',
+    'images': [
+            'ai_chatbot_0_core/static/description/icon.png'
+        ],
+    
+    
 }

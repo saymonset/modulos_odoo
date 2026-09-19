@@ -23,4 +23,9 @@ bcv_rate_update_venezuela.""",
     'installable': True,
     'application': True,
     'license': 'LGPL-3',
+     'images': [
+                'ai_chatbot_0_core/static/description/icon.png'
+            ],
+       
+    
 }
