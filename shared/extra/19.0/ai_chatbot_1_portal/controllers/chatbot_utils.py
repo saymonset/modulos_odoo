@@ -1002,6 +1002,17 @@ class ChatBotUtils:
         return "\n".join(line for line in pie if line)
 
     @staticmethod
+    def _encabezado_registro(equipo_asignado):
+        """Encabezado del mensaje único de registro al cliente.
+
+        Sin email del agente ni audit técnico; solo confirma el registro.
+        """
+        equipo = (equipo_asignado or '').replace('_', ' ').strip()
+        if equipo:
+            return f"Tu consulta sobre {equipo} ha sido registrada."
+        return "Tu consulta ha sido registrada."
+
+    @staticmethod
     def _build_flow_audit(env, name_flow, data):
         """
         Auditoría técnica de la ejecución del flujo para personal interno.
