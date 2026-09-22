@@ -1,22 +1,22 @@
-# SPEC 67 — Visión progresiva del sitio web: de fachada profesional a tienda 24/7
+# SPEC 67 — Portada web profesional + carrito de venta, escalable
 
 > **Estado:** Implemented
 > **Depende de:** —
 > **Fecha:** 2026-09-20
-> **Objetivo:** Mejorar el texto del prompt comercial para comunicar la visión progresiva: el cliente empieza con un sitio web profesional inicial (dominio y SMTP pagados por él con ayuda de INTEGRAIA) y puede escalarlo hasta tener su propia tienda de productos vendiendo 24/7.
+> **Objetivo:** Corregir el texto del prompt comercial para comunicar que el cliente recibe la portada web profesional de su empresa (dominio y SMTP pagados por él con ayuda de INTEGRAIA) y su carrito de compra ya configurado para vender, y que puede escalar esa web por su cuenta o pedirle a INTEGRAIA que se la escale.
 
 ## Por qué existe esta spec
 
-El prompt actual menciona en 5.1: "Configuración de Dominio corporativo y servidor de correo SMTP (el registro/renovación del dominio y el servicio de correo son contratados por el cliente)" y "Fachada y Sitio Web inicial listo para producción". El mensaje es técnico y frío: no transmite la visión de crecimiento. El cliente necesita entender que empieza con una web profesional y va creciendo hasta tener su tienda propia vendiendo 24/7.
+El prompt mencionaba en 5.1 "Configuración de Dominio corporativo y servidor de correo SMTP (el registro/renovación del dominio y el servicio de correo son contratados por el cliente)" y "Fachada y Sitio Web inicial listo para producción". El mensaje era técnico y frío, y una primera redacción lo planteó como "empieza pequeño y crece", lo cual es incorrecto: el cliente recibe su portada y su carrito funcionando desde el día 1. El mensaje correcto es: portada profesional + carrito configurado para vender, y la web se puede escalar (por el cliente con el editor visual de Odoo, o por INTEGRAIA).
 
 ## Scope
 
 **In:**
 
-1. Mejorar la sección 1 (ROL / OBJETIVO PRINCIPAL): agregar la visión progresiva — "empiezas con una web profesional y creces hasta tu tienda 24/7".
-2. Reemplazar "Fachada y Sitio Web inicial" en 5.1 por un mensaje que comunique: sitio web profesional inicial listo para producción, personalizable con el editor visual de Odoo, con potencial de escalar a eCommerce completo.
+1. Mejorar la sección 1 (OBJETIVO PRINCIPAL): comunicar que el cliente recibe la portada profesional de su empresa con carrito de compra configurado para vender, y que la puede escalar él mismo o pedir a INTEGRAIA que se la escale.
+2. Reemplazar "Sitio web profesional inicial" por "Portada web profesional de tu empresa" en 5.1.
 3. Aclarar en 5.1: dominio corporativo y servidor SMTP son contratados por el cliente, pero INTEGRAIA lo ayuda a configurarlos desde el día 1.
-4. Agregar un bloque que destaque el eCommerce como visión de crecimiento para cualquier tipo de negocio.
+4. Cambiar el bloque "CRECIMIENTO PROGRESIVO" por "TU WEB + TU TIENDA 24/7 — DESDE EL DÍA 1": portada profesional + carrito configurado para vender, escalable por el cliente o por INTEGRAIA.
 5. No tocar la web `/pricing`, ni los precios, ni ninguna otra sección del prompt.
 
 **Out of scope (para futuras specs):**
@@ -30,36 +30,37 @@ El prompt actual menciona en 5.1: "Configuración de Dominio corporativo y servi
 
 No se introducen nuevos datos. Solo se modifica texto existente en:
 
-- `/home/odoo/prod/odoo19-skeleton/tools/prompt_integraia_v2.txt` — secciones 1 y 5.1.
+- `/home/odoo/prod/odoo19-skeleton/tools/prompt_integraia_v2.txt` — secciones 1, 2 y 5.1.
 
 ## Plan de implementación
 
-1. **Sección 1 — OBJETIVO PRINCIPAL:** agregar después del párrafo actual una línea de visión progresiva: "Empiezas con un sitio web profesional listo para producción, y cuando estés listo, lo escalas a tu propia tienda online con carrito de compras activo 24/7 vendiendo tus propios productos."
+1. **Sección 1 — OBJETIVO PRINCIPAL:** línea con "Te damos la portada profesional de tu empresa lista para producción, con tu carrito de compra configurado para vender. La puedes escalar tú mismo con el editor visual de Odoo o pedirnos que te la escalemos."
 
-2. **Sección 5.1 — Instalación Base ERP:** reemplazar las dos líneas actuales de dominio/SMTP y "Fachada" por:
-   - "Sitio web profesional inicial listo para producción, personalizable mediante el editor visual de Odoo. Empiezas con una presencia web corporativa y creces hasta tu propia tienda online con carrito de compras activo 24/7."
+2. **Sección 5.1 — Instalación Base ERP:**
+   - "Portada web profesional de tu empresa, lista para producción y personalizable con el editor visual de Odoo."
+   - "Carrito de compra configurado para vender 24/7 con tus propios productos."
    - "Dominio corporativo y servidor de correo SMTP: te ayudo a elegir, contratar y configurar. El registro, renovación y servicio son contratados por ti."
 
-3. **Bloque de eCommerce progresivo:** un párrafo corto que destaque: "Cualquier negocio empieza con una web profesional. Cuando estás listo, INTEGRAIA activa su eCommerce: catálogo de productos, carrito de compras, pago móvil integrado y venta 24/7. Sin cambiar de plataforma: todo crece sobre Odoo Community."
+3. **Bloque "TU WEB + TU TIENDA 24/7 — DESDE EL DÍA 1":** "Te damos la portada profesional de tu empresa con su propio dominio y correo corporativo, y tu carrito de compra configurado para vender. Si quieres más páginas, más secciones o una tienda más amplia, lo haces tú con el editor visual de Odoo o te lo escalamos nosotros. Todo sobre la misma plataforma, Odoo Community, sin pagar licencias."
 
-4. **Verificar:** leer el archivo completo, confirmar que no hay duplicados ni rupturas de formato, y que el mensaje progresivo es claro y coherente en todo el documento.
+4. **Verificar:** leer el archivo completo, confirmar que no hay duplicados ni rupturas de formato, y que el mensaje es claro y coherente en todo el documento.
 
 ## Criterios de aceptación
 
-- [ ] La sección 1 (OBJETIVO PRINCIPAL) menciona la visión progresiva de web → tienda 24/7.
-- [ ] La sección 5.1 reemplaza "Fachada y Sitio Web inicial" por el nuevo mensaje de sitio web profesional inicial + escalabilidad a eCommerce.
-- [ ] La sección 5.1 aclara que dominio y SMTP son contratados por el cliente pero con ayuda de INTEGRAIA.
-- [ ] Se agrega un bloque de eCommerce progresivo.
-- [ ] El archivo no tiene texto duplicado ni secciones rotas.
-- [ ] No se modificaron precios ni la web de producción.
-- [ ] Terminología: "Sitio web profesional inicial" (no "fachada").
-- [ ] No se incluyen cifras de dominio/SMTP.
+- [x] La sección 1 (OBJETIVO PRINCIPAL) comunica portada profesional + carrito configurado para vender + escalable por el cliente o por INTEGRAIA.
+- [x] La sección 5.1 usa "Portada web profesional de tu empresa" (no "Sitio web profesional inicial" ni "Fachada").
+- [x] La sección 5.1 aclara que dominio y SMTP son contratados por el cliente pero con ayuda de INTEGRAIA.
+- [x] El bloque "TU WEB + TU TIENDA 24/7 — DESDE EL DÍA 1" existe y es coherente.
+- [x] El archivo no tiene texto duplicado ni secciones rotas.
+- [x] No se modificaron precios ni la web de producción.
+- [x] No se incluyen cifras de dominio/SMTP.
 
 ## Decisiones tomadas y descartadas
 
-- **Tomado:** solo actualizar el prompt — **descartado** tocar la web `/pricing` por ahora (rápido y directo, el prompt es la fuente de verdad).
-- **Tomado:** mensaje progresivo (empieza pequeño → crece → tienda 24/7) — **descartado** "todo incluido desde el día 1" (vende la visión de crecimiento sin asustar con complejidad).
-- **Tomado:** "Sitio web profesional inicial" — **descartado** "fachada" (puede sonar a algo falso o incompleto).
+- **Tomado:** solo actualizar el prompt — **descartado** tocar la web `/pricing` por ahora (el prompt es la fuente de verdad).
+- **Tomado:** mensaje "portada profesional + carrito configurado para vender desde el día 1, escalable" — **descartado** "empiezas pequeño y creces" (incorrecto: el carrito ya está configurado y funcional).
+- **Tomado:** "Portada web profesional de tu empresa" — **descartado** "Sitio web profesional inicial" y "fachada" (no reflejaban que ya está lista y vendiendo).
+- **Tomado:** el cliente puede escalar la web por su cuenta o pedir a INTEGRAIA que se la escale.
 - **Tomado:** sin cifras de dominio/SMTP — **descartado** incluir precios estimados (varían por proveedor y país).
 
 ## What is **not** in this spec
