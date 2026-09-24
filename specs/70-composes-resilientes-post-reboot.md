@@ -1,6 +1,6 @@
 # SPEC 70 — Composes resilientes al reboot (restart policies + arranque ordenado)
 
-> **Estado:** Approved
+> **Estado:** Implemented
 > **Depende de:** — (complementa SPEC 68/69: misma clase de incidente del 24-sep)
 > **Fecha:** 2026-09-24
 > **Objetivo:** Que tras un reboot del host todos los servicios del camino crítico arranquen solos y en orden, eliminando el crash-loop de n8n (224 % de CPU, load 35) observado el 24-sep.
