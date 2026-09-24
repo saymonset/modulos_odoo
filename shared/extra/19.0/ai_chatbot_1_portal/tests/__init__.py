@@ -17,3 +17,5 @@ from . import test_flujos_no_autodetectados
 from . import test_configuracion_agente_modo_carrito
 from . import test_mensaje_unico_registro
 from . import test_presentacion_config
+from . import test_extraer_telefono
+from . import test_inicioagendar_mensaje_usuario
