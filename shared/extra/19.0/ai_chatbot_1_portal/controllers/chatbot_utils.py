@@ -166,6 +166,11 @@ class ChatBotUtils:
         if not digits:
             return phone_str
         
+        # Internacional explícito (no +58): conservarlo como E.164 (SPEC 71).
+        if phone_str.startswith('+') and not phone_str.startswith('+58') \
+                and 8 <= len(digits) <= 15:
+            return f"+{digits}"
+        
         # Si ya tiene el formato con + y 58, devolverlo
         if phone_str.startswith('+58') and len(digits) >= 11:
             return f"+{digits}"
@@ -188,6 +193,36 @@ class ChatBotUtils:
         
         # Fallback: agregar +58
         return f"+58{digits}"
+
+    # Candidato a teléfono dentro de texto libre: secuencia de dígitos con
+    # separadores habituales (espacios, puntos, guiones, paréntesis).
+    RE_TELEFONO_CANDIDATO = re.compile(r'\+?\d[\d\s.\-()]{6,18}\d')
+
+    @staticmethod
+    def _extraer_telefono(texto):
+        """Extrae el primer teléfono venezolano o internacional explícito
+        embebido en un texto libre.
+
+        Móvil VZ: 04XXXXXXXXX (11 dígitos), 4XXXXXXXXX (10), 58XXXXXXXXXXX (12)
+        con separadores habituales → normalizado a +58XXXXXXXXXX.
+        Internacional: candidato que empieza con '+' con 8–15 dígitos
+        (cualquier país) → se devuelve como E.164 '+dígitos'.
+        Devuelve None si no hay candidato válido (precios, fechas, cantidades
+        o números locales ambiguos sin '+' no se extraen).
+        """
+        if not texto:
+            return None
+        for candidato in ChatBotUtils.RE_TELEFONO_CANDIDATO.findall(str(texto)):
+            digitos = ''.join(c for c in candidato if c.isdigit())
+            if candidato.startswith('+') and 8 <= len(digitos) <= 15:
+                return f'+{digitos}'
+            if len(digitos) == 11 and digitos.startswith('04'):
+                return f'+58{digitos[1:]}'
+            if len(digitos) == 10 and digitos.startswith('4'):
+                return f'+58{digitos}'
+            if len(digitos) == 12 and digitos.startswith('58') and digitos[2] == '4':
+                return f'+{digitos}'
+        return None
 
     @staticmethod
     def find_partner_by_phone(env, phone):

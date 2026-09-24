@@ -114,7 +114,10 @@ class InicioAgendarController(http.Controller):
             "account_id": "...",
             "name_flow": "...",
             "equipo_asignado": "...",
-            "telefono": "..."  # Opcional: para precargar datos
+            "telefono": "...",  # Opcional: para precargar datos
+            "mensaje_usuario": "..."  # Opcional (SPEC 71): texto que disparó
+                                      # el flujo; si trae teléfono se captura
+                                      # aquí y el flujo no lo vuelve a pedir
         }
         """
         try:
@@ -155,6 +158,15 @@ class InicioAgendarController(http.Controller):
             equipo_asignado = data.get('equipo_asignado')
             telefono_busqueda = data.get('telefono', data.get('solicitar_phone', ''))
             plataforma = data.get('plataforma')
+
+            # SPEC 71: si no llegó teléfono explícito, se extrae del mensaje
+            # que disparó el flujo ("Sí, mi número es 0414...") para precargarlo
+            # y que el paso de teléfono no se vuelva a pedir.
+            telefono_extraido = ''
+            if not telefono_busqueda:
+                telefono_extraido = ChatBotUtils._extraer_telefono(
+                    data.get('mensaje_usuario') or '') or ''
+                telefono_busqueda = telefono_extraido
 
             if not session_id:
                 return Response(
@@ -210,6 +222,13 @@ class InicioAgendarController(http.Controller):
                     _logger.info("Cliente encontrado, se precargarán los datos")
                 else:
                     _logger.info("No se encontró cliente con teléfono: %s", telefono_busqueda)
+
+            # SPEC 71: cliente nuevo (o sin precarga) → sembrar el teléfono
+            # extraído con las claves canónicas; nunca pisa un valor existente.
+            if telefono_extraido and not (datos_precargados or {}).get('telefono'):
+                datos_precargados = datos_precargados or {}
+                for clave in ('telefono', 'phone', 'solicitar_phone'):
+                    datos_precargados.setdefault(clave, telefono_extraido)
             
             # Inicializar el flujo en la sesión (pasar datos precargados si existen)
             session_state = env['chatbot.session'].sudo()

@@ -22,7 +22,8 @@ La solución usa machinery que ya existe: `iniciar_flujo` filtra los pasos cuyo 
 
 1. `ai_chatbot_1_portal/services/prompt_renderer.py` — extender la **regla 16** del `_UNIVERSAL_SKELETON`: una **afirmación explícita** de querer ser contactado / asesoría / cotización / cita ("me gustaría contactarlos", "quiero una asesoría", "contáctenme", "quiero plantearles mi idea") **es en sí la confirmación**: dispara el flujo en ese mismo mensaje, sin segunda pregunta "Sí o No". La regla 17 (una pregunta nunca es confirmación) y el gate "no sé → ¿quiere un asesor? Responde Sí o No" de SPEC 06 quedan **intactos**.
 2. `ai_chatbot_1_portal/services/prompt_renderer.py` — nueva **regla 19 anti-credenciales**: jamás pedir ni aceptar contraseñas, PINs, códigos de verificación ni datos de acceso de cuentas del cliente, aunque un documento del RAG describa procedimientos que lo impliquen; ofrecer en su lugar coordinación con un humano (flujo de asesor).
-3. `ai_chatbot_1_portal/controllers/chatbot_utils.py` — helper `ChatBotUtils._extraer_telefono(texto)`: candidatea secuencias de dígitos con regex y valida/normaliza con `_normalizar_telefono` existente (móvil venezolano: 04XX…, 414…, +58…, 58…; 10 dígitos). Sin candidato válido → `None`.
+3. `ai_chatbot_1_portal/controllers/chatbot_utils.py` — helper `ChatBotUtils._extraer_telefono(texto)`: candidatea secuencias de dígitos con regex. Acepta (a) móvil venezolano: 04XX…, 4XX…, 584XX… → normaliza a `+58…`, y (b) **internacional explícito**: candidato que empieza con `+` y tiene 8–15 dígitos (Cualquier país: `+57 300…`, `+1 212…`) → se devuelve como E.164 `+dígitos`. Sin candidato válido → `None` (un número sin `+` ni pinta venezolana es ambiguo y NO se extrae: el paso del flujo lo pregunta).
+3bis. `ai_chatbot_1_portal/controllers/chatbot_utils.py` — bug corregido en `normalizar_telefono_internacional`: un valor que ya llega en formato internacional explícito (`+XX…` distinto de `+58`, 8–15 dígitos — p. ej. `+57 3001234567` respondido en el paso de teléfono) se conserva tal cual; ya no se le fuerza el prefijo `+58` (antes quedaba `+58573001234567`, corrupto). Comportamiento venezolano (`04XX…`, `4XX…`, `+58…`, `584XX…`) intacto.
 4. `ai_chatbot_1_portal/controllers/chatbot_0_inicio_agendar_procesar_paso_conroller.py` — `/inicioagendar` acepta campo opcional `mensaje_usuario` (string). Si no vino `telefono` explícito, se extrae el teléfono de `mensaje_usuario` y: (a) alimenta `telefono_busqueda` para `_precargar_datos_cliente` (cliente existente: precarga nombre/email/etc. como hoy), y (b) si no hay partner, se inyecta en `datos_precargados` con las claves canónicas `telefono`, `phone`, `solicitar_phone` (las que usan `iniciar_flujo`/`capturar_lead`) → el paso teléfono se salta.
 5. n8n (`/home/odoo/lead/odoo19-skeleton/n8n_json/chatwoot/chatbot_create_lead_0_con_menu_whatsapp.json`, nodo `paso_0_inicio_agendar`) — añadir al `jsonBody`:
    `"mensaje_usuario": {{ JSON.stringify($('Obtener_configuracion_agente').item.json.text || '') }}`
@@ -54,10 +55,14 @@ Sin modelos ni campos nuevos en Odoo. Cambia el contrato HTTP de `/ai_chatbot_1_
 }
 
 # ChatBotUtils._extraer_telefono(texto) -> str | None
-#   entrada libre → normaliza a +58XXXXXXXXXX solo si es móvil venezolano válido
-#   "Si mi numero es 04143160999" → "+584143160999"
-#   "te quiero mucho"             → None
-#   "cuesta $25 x 2"              → None   (no es secuencia de 10 dígitos 04XX)
+#   entrada libre → móvil VZ normalizado a +58XXXXXXXXXX, o internacional
+#   explícito con '+' conservado como E.164 (8–15 dígitos); si no, None
+#   "Si mi numero es 04143160999"   → "+584143160999"
+#   "mi numero es +57 300 1234567"  → "+573001234567"
+#   "escríbeme al +1 212 555 1234"  → "+12125551234"
+#   "te quiero mucho"               → None
+#   "cuesta $25 x 2"                → None (no es secuencia válida)
+#   "3001234567" (CO local, sin +)  → None (ambiguo: lo pregunta el paso)
 
 # Semilla en datos_precargados cuando no hay partner (claves que ya consumen
 # iniciar_flujo por campo_destino y capturar_lead):
@@ -83,7 +88,8 @@ Reglas del flujo de datos:
 ## Criterios de aceptación
 
 - [ ] El prompt renderizado contiene la extensión de la regla 16 ("afirmación explícita de contacto/asesoría/cotización/cita es la confirmación; no se vuelve a preguntar") y la regla 19 anti-credenciales, y conserva textualmente la regla 17 y el protocolo "NO SÉ" (tests exactos).
-- [ ] `ChatBotUtils._extraer_telefono` devuelve el móvil normalizado a `+58…` para los formatos 04143160999 / +58 414 3160999 / 584143160999 embebidos en prosa, y `None` para texto sin móvil o con solo precios/cantidades.
+- [ ] `ChatBotUtils._extraer_telefono` devuelve el móvil normalizado a `+58…` para los formatos 04143160999 / +58 414 3160999 / 584143160999 embebidos en prosa, conserva como E.164 internacionales explícitos (`+57 300…` → `+57300…`, `+1 212…`), y `None` para texto sin móvil, solo precios/cantidades o números locales ambiguos sin `+`.
+- [ ] `normalizar_telefono_internacional('+57 3001234567')` devuelve `+573001234567` (sin prefijo +58 forzado) y los casos venezolanos (`0414…`, `414…`, `+58…`, `584…`) siguen normalizando exactamente como hoy.
 - [ ] POST `/inicioagendar` con `mensaje_usuario="Si mi numero de teléfono es 04143160999"` y flujo de contacto: `datos_paciente.telefono='+584143160999'` y `primer_paso.nombre_interno != 'telefono'` (el paso teléfono se saltó).
 - [ ] POST `/inicioagendar` sin `mensaje_usuario` o sin teléfono en él: comportamiento idéntico al actual (step teléfono se pregunta) — cero regresión.
 - [ ] El nodo `paso_0_inicio_agendar` del export de lead envía `mensaje_usuario` con el texto crudo escapado (JSON válido aunque el mensaje contenga comillas o saltos).
