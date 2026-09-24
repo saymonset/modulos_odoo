@@ -1,6 +1,6 @@
 # SPEC 71 — Confirmación única por intención explícita y teléfono capturado del mensaje de disparo
 
-> **Estado:** Approved
+> **Estado:** Implemented
 > **Depende de:** SPEC 06 (protocolo "no sé" y reglas 16/17), SPEC 01 (motor de flujos), SPEC 43 (workspace n8n_json en lead), SPEC 64 (risgo documentado: n8n nunca envía teléfono a /inicioagendar)
 > **Fecha:** 2026-09-24
 > **Objetivo:** Que el flujo de contacto se dispare con la primera afirmación explícita de intención del cliente y arranque con el teléfono ya extraído de su mensaje, eliminando el doble "Responde Sí" y la re-pregunta del teléfono.
